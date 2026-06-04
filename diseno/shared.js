@@ -2,7 +2,7 @@
     //
     // Incluir en todas las páginas del wizard (excepto ingresoToken.html):
     //   <script src="shared.js"></script>   ← antes de cerrar </body>
-    const BACKEND_URL = "https://ceecmweb.onrender.com";
+    const BACKEND_URL = "https://smartbuilderec.onrender.com";
 
 // ─── Sistema de Modales Personalizados ───────────────────────────────────────
 

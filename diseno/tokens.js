@@ -53,7 +53,7 @@ button.addEventListener("click", async () => {
         return;
     }
 
-    const response = await fetch("https://ceecmweb.onrender.com/validate-token",{
+    const response = await fetch("https://smartbuilderec.onrender.com/validate-token",{
 
         method:"POST",
 
