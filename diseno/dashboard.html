@@ -1,23 +1,23 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi cuenta — CEECM</title>
+  <title>Mi cuenta — SmartBuilderEC</title>
   <link rel="stylesheet" href="styles.css">
   <style>
     body { background: var(--c-bg); }
 
     .dash-header {
       background: var(--c-blue-600);
-      padding: 16px 32px;
+      padding: 14px 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
     }
-    .dash-header img { max-height: 44px; }
-    .dash-header-right { display: flex; align-items: center; gap: 12px; }
+    .dash-header img { max-height: 40px; }
+    .dash-header-right { display: flex; align-items: center; gap: 10px; }
     .dash-header-right span { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; }
     .dash-header-right button, .dash-header-right a {
       background: rgba(255,255,255,0.15); color: white; border: none;
@@ -25,13 +25,23 @@
       font-family: inherit; cursor: pointer; text-decoration: none;
       transition: background var(--t-fast);
     }
-    .dash-header-right button:hover, .dash-header-right a:hover { background: rgba(255,255,255,0.28); }
+    .dash-header-right button:hover,
+    .dash-header-right a:hover { background: rgba(255,255,255,0.28); }
 
-    .dash-main { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+    .dash-main { max-width: 980px; margin: 0 auto; padding: 36px 24px; }
 
-    .dash-bienvenida { margin-bottom: 32px; }
-    .dash-bienvenida h1 { font-size: 24px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
-    .dash-bienvenida p { color: var(--c-text-2); font-size: 15px; }
+    .dash-welcome { margin-bottom: 32px; }
+    .dash-welcome h1 { font-size: 24px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+    .dash-welcome p  { color: var(--c-text-2); font-size: 15px; }
+
+    .rol-badge {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      vertical-align: middle; margin-left: 8px;
+    }
+    .badge-super_admin { background: #ede9fe; color: #5b21b6; }
+    .badge-admin       { background: #fef3c7; color: #92400e; }
+    .badge-user        { background: #dbeafe; color: #1e40af; }
 
     .dash-section { margin-bottom: 36px; }
     .dash-section h2 {
@@ -42,12 +52,12 @@
     }
     .dash-section h2 a {
       font-size: 13px; font-weight: 600; color: var(--c-blue-600);
-      text-decoration: none; font-weight: normal;
+      text-decoration: none;
     }
+    .dash-section h2 a:hover { text-decoration: underline; }
 
-    .dash-empty { color: var(--c-text-3); font-size: 14px; padding: 20px 0; }
-
-    .planeacion-item, .curso-item {
+    /* Tarjeta de planeación */
+    .planeacion-card {
       background: var(--c-surface);
       border: 1px solid var(--c-border);
       border-radius: var(--r-lg);
@@ -59,11 +69,19 @@
       margin-bottom: 10px;
       transition: box-shadow var(--t-fast);
     }
-    .planeacion-item:hover, .curso-item:hover { box-shadow: var(--shadow-sm); }
-    .item-info { flex: 1; min-width: 0; }
-    .item-titulo { font-size: 15px; font-weight: 600; color: var(--c-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .item-meta { font-size: 12px; color: var(--c-text-3); margin-top: 3px; }
-    .item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .planeacion-card:hover { box-shadow: var(--shadow-sm); }
+    .card-info { flex: 1; min-width: 0; }
+    .card-titulo {
+      font-size: 15px; font-weight: 600; color: var(--c-text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .card-meta { font-size: 12px; color: var(--c-text-3); margin-top: 3px; }
+    .card-paso {
+      font-size: 11px; font-weight: 700; color: var(--c-blue-600);
+      background: #dbeafe; padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+    }
+    .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
     .btn-sm {
       background: var(--c-surface-2); color: var(--c-text-2);
       border: 1px solid var(--c-border-s); padding: 6px 12px;
@@ -74,214 +92,188 @@
     .btn-sm:hover { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
     .btn-sm.danger:hover { background: #c0392b; color: white; border-color: #c0392b; }
 
-    .btn-nueva-planeacion {
+    .btn-nueva {
       background: var(--c-blue-600); color: white; border: none;
       padding: 10px 18px; border-radius: var(--r-md);
       font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
       text-decoration: none; display: inline-block;
       transition: background var(--t-fast);
     }
-    .btn-nueva-planeacion:hover { background: var(--c-blue-700); }
+    .btn-nueva:hover { background: var(--c-blue-700); }
 
-    .admin-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card {
+    /* Panel cards de acceso rápido */
+    .panel-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .panel-card {
       background: var(--c-surface); border: 1px solid var(--c-border);
-      border-radius: var(--r-lg); padding: 20px;
-      text-align: center;
+      border-radius: var(--r-lg); padding: 22px 20px; text-decoration: none;
+      display: block; transition: all var(--t-fast);
     }
-    .stat-num { font-size: 32px; font-weight: 800; color: var(--c-blue-600); }
-    .stat-label { font-size: 13px; color: var(--c-text-3); margin-top: 4px; }
+    .panel-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .panel-card-icon { font-size: 28px; margin-bottom: 10px; }
+    .panel-card-title { font-size: 15px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+    .panel-card-desc  { font-size: 13px; color: var(--c-text-2); }
 
-    .loading { color: var(--c-text-3); padding: 20px 0; }
-    .rol-badge {
-      display: inline-block; padding: 2px 10px;
-      border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;
-    }
-    .rol-admin      { background: #fef3c7; color: #92400e; }
-    .rol-instructor { background: #dbeafe; color: #1e40af; }
-    .rol-estudiante { background: #d1fae5; color: #065f46; }
+    .loading-txt { color: var(--c-text-3); padding: 20px 0; }
+    .empty-txt   { color: var(--c-text-3); font-size: 14px; padding: 20px 0; }
   </style>
 </head>
 <body>
   <header class="dash-header">
-    <a href="catalogo.html"><img src="img/LogoECM.png" alt="CEECM"></a>
+    <img src="img/LogoECM.png" alt="CEECM">
     <div class="dash-header-right">
       <span id="headerNombre"></span>
-      <a href="catalogo.html">Cursos</a>
-      <button onclick="logout()">Salir</button>
+      <button onclick="logout()">Cerrar sesión</button>
     </div>
   </header>
 
   <main class="dash-main">
-    <div class="dash-bienvenida">
-      <h1 id="bienvenida">Mi cuenta</h1>
-      <p id="subBienvenida"></p>
+    <div class="dash-welcome">
+      <h1 id="tituloWelcome">Cargando...</h1>
+      <p id="subtituloWelcome"></p>
     </div>
     <div id="contenidoDash">
-      <p class="loading">Cargando...</p>
+      <p class="loading-txt">Cargando tu cuenta...</p>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script>
-    const BACKEND_URL = "https://ceecmweb.onrender.com";
+    const BACKEND = "https://smartbuilderec.onrender.com";
 
-    async function inicializar() {
-      const session = await getSession();
-      if (!session) { window.location.href = "login.html"; return; }
+    async function init() {
+      const session = await authGuard();
+      if (!session) return;
 
-      const meta = session.user?.user_metadata || {};
-      const nombre = meta.nombre ? `${meta.nombre} ${meta.apellido || ""}`.trim() : session.user.email;
-      const rol = meta.rol || "estudiante";
+      const profile = await getUserProfile();
+      if (!profile) { window.location.href = "login.html"; return; }
 
-      document.getElementById("headerNombre").textContent = nombre;
-      document.getElementById("bienvenida").textContent = `Hola, ${meta.nombre || nombre}`;
-      document.getElementById("subBienvenida").innerHTML =
-        `<span class="rol-badge rol-${rol}">${rol}</span>`;
+      const nombreDisplay = [profile.nombre, profile.apellido].filter(Boolean).join(" ") || profile.email;
+      document.getElementById("headerNombre").textContent = nombreDisplay;
+      document.getElementById("tituloWelcome").innerHTML =
+        `Hola, ${profile.nombre || "usuario"} <span class="rol-badge badge-${profile.rol}">${profile.rol.replace("_", " ")}</span>`;
 
-      if (rol === "admin") {
-        renderAdmin();
-      } else if (rol === "instructor") {
-        renderInstructor();
+      if (profile.rol === "super_admin") {
+        renderSuperAdmin(profile);
+      } else if (profile.rol === "admin") {
+        renderAdmin(profile);
       } else {
-        renderEstudiante();
+        renderUser(profile);
       }
     }
 
-    // ── Vista Instructor ──────────────────────────────────────────
-    async function renderInstructor() {
-      const headers = await getAuthHeaders();
+    // ── Vista Usuario ─────────────────────────────────────────────────────────
+    async function renderUser(profile) {
+      document.getElementById("subtituloWelcome").textContent = "Gestiona tus cursos en elaboración.";
       const dash = document.getElementById("contenidoDash");
       dash.innerHTML = `
         <div class="dash-section">
-          <h2>Mis planeaciones <a href="index.html">+ Nueva planeación</a></h2>
-          <div id="listaPlaneaciones"><p class="loading">Cargando...</p></div>
-        </div>
-      `;
+          <h2>Mis cursos <a href="index.html?new=1">+ Nuevo curso</a></h2>
+          <div id="listaPlaneaciones"><p class="loading-txt">Cargando...</p></div>
+        </div>`;
 
+      const headers = await getAuthHeaders();
       try {
-        const res = await fetch(`${BACKEND_URL}/planeaciones`, { headers });
-        const planeaciones = await res.json();
-        const lista = document.getElementById("listaPlaneaciones");
+        const { data: planeaciones, error } = await _supabase
+          .from("planeaciones")
+          .select("id, nombre_curso, paso_actual, status, updated_at")
+          .eq("user_id", profile.id)
+          .order("updated_at", { ascending: false });
 
-        if (!planeaciones.length) {
-          lista.innerHTML = '<p class="dash-empty">Aún no tienes planeaciones guardadas. <a href="index.html">Crear una nueva</a>.</p>';
+        const lista = document.getElementById("listaPlaneaciones");
+        if (error || !planeaciones?.length) {
+          lista.innerHTML = '<p class="empty-txt">Aún no tienes cursos en elaboración. <a href="index.html?new=1">Crear el primero</a>.</p>';
           return;
         }
 
         lista.innerHTML = planeaciones.map(p => `
-          <div class="planeacion-item">
-            <div class="item-info">
-              <div class="item-titulo">${p.titulo || "(Sin título)"}</div>
-              <div class="item-meta">${new Date(p.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" })}</div>
+          <div class="planeacion-card">
+            <div class="card-info">
+              <div class="card-titulo">${p.nombre_curso || "(Sin título)"}</div>
+              <div class="card-meta">Última edición: ${new Date(p.updated_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" })}</div>
             </div>
-            <div class="item-actions">
-              <button class="btn-sm" onclick="abrirPlaneacion('${p.id}')">Abrir</button>
+            <span class="card-paso">Paso ${p.paso_actual}/16</span>
+            <div class="card-actions">
+              <button class="btn-sm" onclick="abrirPlaneacion('${p.id}')">Continuar</button>
               <button class="btn-sm danger" onclick="eliminarPlaneacion('${p.id}', this)">Eliminar</button>
             </div>
-          </div>
-        `).join("");
+          </div>`).join("");
       } catch (_) {
-        document.getElementById("listaPlaneaciones").innerHTML = '<p class="dash-empty">Error al cargar planeaciones.</p>';
+        document.getElementById("listaPlaneaciones").innerHTML = '<p class="empty-txt">Error al cargar. Recarga la página.</p>';
       }
     }
 
     async function abrirPlaneacion(id) {
-      const headers = await getAuthHeaders();
-      try {
-        const res = await fetch(`${BACKEND_URL}/planeaciones/${id}`, { headers });
-        const p = await res.json();
-        if (p.datos) {
-          Object.entries(p.datos).forEach(([key, val]) => {
-            if (typeof val === "object") localStorage.setItem(`ec0217_${key}`, JSON.stringify(val));
-            else if (val !== null && val !== undefined) localStorage.setItem(`ec0217_${key}`, String(val));
-          });
-        }
-        window.location.href = "index.html";
-      } catch (_) {
-        alert("Error al cargar la planeación.");
+      const { data: p } = await _supabase.from("planeaciones").select("datos, paso_actual").eq("id", id).single();
+      if (!p) { alert("No se pudo cargar el curso."); return; }
+
+      // Volcar datos al localStorage para que el wizard los lea
+      if (p.datos && typeof p.datos === "object") {
+        Object.entries(p.datos).forEach(([key, val]) => {
+          localStorage.setItem(`ec0217_${key}`, typeof val === "string" ? val : JSON.stringify(val));
+        });
       }
+      localStorage.setItem("sbe_planeacion_id", id);
+      window.location.href = "index.html";
     }
 
     async function eliminarPlaneacion(id, btn) {
-      if (!confirm("¿Eliminar esta planeación?")) return;
+      if (!confirm("¿Eliminar este curso? Esta acción no se puede deshacer.")) return;
       btn.disabled = true;
-      const headers = await getAuthHeaders();
-      await fetch(`${BACKEND_URL}/planeaciones/${id}`, { method: "DELETE", headers });
-      btn.closest(".planeacion-item").remove();
+      await _supabase.from("planeaciones").delete().eq("id", id);
+      btn.closest(".planeacion-card").remove();
     }
 
-    // ── Vista Estudiante ──────────────────────────────────────────
-    async function renderEstudiante() {
-      const headers = await getAuthHeaders();
-      const dash = document.getElementById("contenidoDash");
-      dash.innerHTML = `
-        <div class="dash-section">
-          <h2>Mis cursos <a href="catalogo.html">Ver catálogo</a></h2>
-          <div id="listaCursos"><p class="loading">Cargando...</p></div>
-        </div>
-      `;
-
-      try {
-        const res = await fetch(`${BACKEND_URL}/inscripciones/mias`, { headers });
-        const inscripciones = await res.json();
-        const lista = document.getElementById("listaCursos");
-
-        if (!inscripciones.length) {
-          lista.innerHTML = '<p class="dash-empty">Aún no tienes cursos. <a href="catalogo.html">Explorar catálogo</a>.</p>';
-          return;
-        }
-
-        lista.innerHTML = inscripciones.map(i => {
-          const c = i.cursos || {};
-          const fecha = new Date(i.fecha_pago).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
-          return `
-            <div class="curso-item">
-              <div class="item-info">
-                <div class="item-titulo">${c.titulo || "(Sin nombre)"}</div>
-                <div class="item-meta">Inscrito el ${fecha} · ${c.duracion_horas ? c.duracion_horas + "h" : ""}</div>
-              </div>
-            </div>
-          `;
-        }).join("");
-      } catch (_) {
-        document.getElementById("listaCursos").innerHTML = '<p class="dash-empty">Error al cargar cursos.</p>';
-      }
-    }
-
-    // ── Vista Admin ───────────────────────────────────────────────
-    async function renderAdmin() {
-      const headers = await getAuthHeaders();
-      const dash = document.getElementById("contenidoDash");
-      dash.innerHTML = `
+    // ── Vista Admin ───────────────────────────────────────────────────────────
+    async function renderAdmin(profile) {
+      document.getElementById("subtituloWelcome").textContent =
+        `Créditos disponibles: ${profile.credits} usuario${profile.credits !== 1 ? "s" : ""}`;
+      document.getElementById("contenidoDash").innerHTML = `
         <div class="dash-section">
           <h2>Panel de administración</h2>
-          <div class="admin-stats" id="adminStats"><p class="loading">Cargando estadísticas...</p></div>
-        </div>
-        <div class="dash-section">
-          <h2>Gestión de cursos <a href="catalogo.html">Ver catálogo</a></h2>
-          <p class="dash-empty">Gestiona los cursos directamente desde el panel de Supabase o desde el Wizard.</p>
-        </div>
-      `;
-
-      // Cargar estadísticas básicas vía Supabase JS directamente
-      try {
-        const [perfilesRes, cursosRes, inscrRes] = await Promise.all([
-          fetch(`${BACKEND_URL}/perfil`, { headers }), // solo para verificar acceso
-          fetch(`${BACKEND_URL}/cursos`),
-          fetch(`${BACKEND_URL}/inscripciones/mias`, { headers }),
-        ]);
-        const cursos = await cursosRes.json();
-        document.getElementById("adminStats").innerHTML = `
-          <div class="stat-card"><div class="stat-num">${cursos.length}</div><div class="stat-label">Cursos activos</div></div>
-        `;
-      } catch (_) {
-        document.getElementById("adminStats").innerHTML = '<p class="dash-empty">Error al cargar estadísticas.</p>';
-      }
+          <div class="panel-cards">
+            <a href="admin.html" class="panel-card">
+              <div class="panel-card-icon">👥</div>
+              <div class="panel-card-title">Mis usuarios</div>
+              <div class="panel-card-desc">Gestionar usuarios, créditos y códigos de acceso.</div>
+            </a>
+            <a href="index.html?new=1" class="panel-card">
+              <div class="panel-card-icon">📋</div>
+              <div class="panel-card-title">Nueva planeación</div>
+              <div class="panel-card-desc">Crear un nuevo expediente didáctico EC0217.</div>
+            </a>
+          </div>
+        </div>`;
     }
 
-    inicializar();
+    // ── Vista Super Admin ─────────────────────────────────────────────────────
+    async function renderSuperAdmin(profile) {
+      document.getElementById("subtituloWelcome").textContent = "Panel de control de la plataforma.";
+      document.getElementById("contenidoDash").innerHTML = `
+        <div class="dash-section">
+          <h2>Panel Super Admin</h2>
+          <div class="panel-cards">
+            <a href="superadmin.html" class="panel-card">
+              <div class="panel-card-icon">🛡️</div>
+              <div class="panel-card-title">Gestión global</div>
+              <div class="panel-card-desc">Administrar admins, créditos y vista global de la plataforma.</div>
+            </a>
+            <a href="admin.html" class="panel-card">
+              <div class="panel-card-icon">👥</div>
+              <div class="panel-card-title">Panel Admin</div>
+              <div class="panel-card-desc">Gestionar usuarios y códigos de acceso.</div>
+            </a>
+            <a href="index.html?new=1" class="panel-card">
+              <div class="panel-card-icon">📋</div>
+              <div class="panel-card-title">Nueva planeación</div>
+              <div class="panel-card-desc">Crear un expediente didáctico EC0217.</div>
+            </a>
+          </div>
+        </div>`;
+    }
+
+    init();
   </script>
 </body>
-</html> -->
+</html>

@@ -23,10 +23,10 @@ function abrirGrupoActivo() {
   }
 }
 
-// (async () => {
-//   const session = await getSession();
-//   if (!session) window.location.href = "login.html";
-// })();
+(async () => {
+  if (!await authGuard()) return;  // redirige a login.html si no hay sesión
+  await storageSync.init();         // carga el estado desde Supabase
+})();
 
 
 

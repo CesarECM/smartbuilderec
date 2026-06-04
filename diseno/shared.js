@@ -202,7 +202,10 @@ function _cmDetectTitle(msg) {
     //     return null;
     //   }
     //   return session;
-    function authGuard() {}
+    // authGuard real viene de auth.js — solo define el stub si no está cargado
+    if (typeof window.authGuard !== "function") {
+      window.authGuard = async function() { return null; };
+    }
     // ─── Migración única: mueve datos ec0217_* de sessionStorage a localStorage ──
     // Corre solo una vez al cargar la página; copia datos existentes sin borrarlos.
     (function migrarALocalStorage() {
@@ -450,6 +453,9 @@ function _cmDetectTitle(msg) {
 
         if (jsonObj.evaluaciones) jsonObj.evaluaciones = normalizarEvaluaciones(jsonObj.evaluaciones);
 
+        // Al importar, desvincular de la planeación activa para que se cree una nueva en Supabase
+        if (typeof storageSync !== "undefined") storageSync.limpiar();
+
         for (const [campo, clave] of Object.entries(CLAVES)) {
             if (jsonObj[campo] === undefined) continue;
             // No sobreescribir tiempos con array vacío; se usará la estructura por defecto
@@ -518,6 +524,8 @@ function _cmDetectTitle(msg) {
 
     modalOverlay.querySelector(".sd-modal-btn-cancelar").addEventListener("click", cerrarModalLimpiar);
     modalOverlay.querySelector(".sd-modal-btn-aceptar").addEventListener("click", () => {
+        // Desconectar de la planeación en Supabase antes de limpiar localStorage
+        if (typeof storageSync !== "undefined") storageSync.limpiar();
         Object.keys(localStorage)
             .filter(k => k.startsWith("ec0217_"))
             .forEach(k => localStorage.removeItem(k));
