@@ -1,0 +1,51 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes generar una evaluación diagnóstica de opción múltiple para el siguiente curso.
+
+Nombre del curso:
+{nombreCurso}
+
+Objetivo general:
+{objetivoGeneral}
+
+Objetivo cognitivo:
+{objetivoCognitivo}
+
+Objetivo psicomotriz:
+{objetivoPsicomotriz}
+
+Objetivo afectivo:
+{objetivoAfectivo}
+
+Instrucciones:
+- Genera exactamente 5 preguntas de opción múltiple.
+- Cada pregunta debe tener 4 opciones: A, B, C y D.
+- Indica la respuesta correcta en el campo "respuesta_correcta".
+- Las preguntas deben explorar los conocimientos PREVIOS del participante sobre el tema del curso, no evaluar lo que aún no ha aprendido.
+- Distribuye las 5 preguntas en estos niveles de dificultad:
+  1. Muy fácil — concepto básico o de sentido común relacionado con el tema.
+  2. Fácil — definición o concepto elemental del área.
+  3. Intermedia — aplicación básica o reconocimiento de situaciones.
+  4. Difícil — comprensión más profunda o criterio profesional.
+  5. Muy difícil — integración de conceptos o situación compleja del área.
+- Las preguntas deben ser específicas al nombre del curso y al perfil de los participantes implícito en los objetivos.
+- No uses viñetas fuera del JSON.
+- Las opciones incorrectas deben ser plausibles (no obviamente falsas).
+
+Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "preguntas": [
+    {{
+      "pregunta": "",
+      "opciones": {{
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      }},
+      "respuesta_correcta": "A",
+      "nivel_dificultad": "Muy fácil"
+    }}
+  ]
+}}

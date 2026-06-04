@@ -1,0 +1,33 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+ 
+Redacta 2 preguntas que el instructor leerá a los participantes para que se comprometan a aplicar los conocimientos adquiridos en el curso.
+ 
+Nombre del curso:
+{nombreCurso}
+ 
+Objetivo general:
+{objetivoGeneral}
+ 
+Objetivo cognitivo:
+{objetivoCognitivo}
+ 
+Objetivo psicomotriz:
+{objetivoPsicomotriz}
+ 
+Objetivo afectivo:
+{objetivoAfectivo}
+ 
+Instrucciones:
+- Redacta exactamente 2 preguntas.
+- Las preguntas deben invitar a los participantes a reflexionar sobre cómo aplicarán lo aprendido en su contexto laboral o cotidiano.
+- Deben estar relacionadas con los objetivos del curso.
+- Deben estar redactadas en segunda persona (dirigidas al participante).
+- Usa un tono motivador, reflexivo y profesional.
+- No uses viñetas ni numeración.
+- Devuelve únicamente JSON válido con esta estructura:
+ 
+{{
+  "texto": ""
+}}
+ 
+El campo "texto" debe contener las 2 preguntas separadas por un salto de línea (\n).

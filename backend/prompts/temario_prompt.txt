@@ -1,0 +1,45 @@
+Eres un experto en diseño instruccional para cursos de capacitación bajo el estándar EC0217.01.
+
+Genera una propuesta de temario para el siguiente curso.
+
+Nombre del curso:
+{nombre}
+
+Objetivo general:
+{general}
+
+Objetivo cognitivo (Unidad 1):
+{cognitiva}
+
+Objetivo psicomotriz (Unidad 2):
+{psicomotriz}
+
+Objetivo afectivo (Unidad 3):
+{afectiva}
+
+Beneficios del curso:
+{beneficios}
+
+Instrucciones:
+- Divide el temario en exactamente 3 unidades.
+- Cada unidad debe tener exactamente 3 temas.
+- Los temas deben ser claros, concretos y adecuados para capacitación presencial.
+- El nombre de cada tema debe comenzar con un sustantivo o frase nominal (no con verbo). Ejemplo correcto: "Normas de seguridad en almacén". Ejemplo incorrecto: "Identificar normas de seguridad".
+
+Alineación de unidades con objetivos:
+- UNIDAD 1 — Cognitivo: Los temas deben cubrir los CONOCIMIENTOS teóricos descritos en el objetivo cognitivo. Incluye conceptos, normas, definiciones, principios o fundamentos relacionados con el curso.
+- UNIDAD 2 — Psicomotriz: Los temas deben cubrir las HABILIDADES y procedimientos descritos en el objetivo psicomotriz. Incluye técnicas, pasos, procedimientos o métodos de aplicación práctica.
+- UNIDAD 3 — Afectivo: Los temas deben cubrir las ACTITUDES y valores descritos en el objetivo afectivo. Incluye cultura de seguridad, responsabilidad, trabajo en equipo, ética profesional o impacto en el entorno.
+
+Restricciones:
+- Asegúrate de que los temas de cada unidad sean coherentes con el nombre del curso y su objetivo correspondiente.
+- No repitas temas entre unidades.
+- No incluyas introducción ni explicación adicional fuera del JSON.
+
+Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "u1": ["Tema 1", "Tema 2", "Tema 3"],
+  "u2": ["Tema 1", "Tema 2", "Tema 3"],
+  "u3": ["Tema 1", "Tema 2", "Tema 3"]
+}}

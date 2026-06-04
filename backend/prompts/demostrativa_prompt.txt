@@ -1,0 +1,71 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes generar únicamente el texto para un apartado de la técnica demostrativa.
+
+Campo solicitado:
+{campo}
+
+Nombre del curso:
+{nombreCurso}
+
+Perfil de participantes:
+{perfil}
+
+Objetivo psicomotriz:
+{objetivoPsicomotriz}
+
+Objetivo general:
+{objetivoGeneral}
+
+Temario del curso:
+{temario}
+
+Apartados posibles:
+- experiencia: corresponde al inciso b) Recuperará la experiencia previa de los participantes.
+- actividad: corresponde al inciso c) Presentará la actividad a desarrollar y mencionará el propósito de la misma.
+- ejemplos: corresponde al inciso h) Usará ejemplos relacionados con los temas y situaciones cotidianas.
+- preguntas: corresponde al inciso i) Preguntará por los conocimientos adquiridos y la utilidad de lo aprendido en su actividad.
+
+Instrucciones generales:
+- Genera un texto claro, útil y editable.
+- El contenido debe relacionarse directamente con el nombre del curso, el objetivo psicomotriz, el objetivo general y el temario.
+- Redacta en tercera persona cuando sea texto explicativo.
+- No incluyas el inciso, letra, título del apartado ni explicación adicional.
+- No incluyas texto antes ni después del JSON.
+- Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "texto": ""
+}}
+
+Reglas específicas por campo:
+
+1. Si campo es "experiencia":
+- Redacta al menos 3 preguntas para recuperar la experiencia previa de los participantes.
+- Las preguntas deben relacionarse con la actividad práctica a desarrollar.
+- Deben explorar qué saben, qué han hecho antes y qué dificultades han tenido.
+- Devuelve cada pregunta en una línea separada.
+- No agregues respuestas ni explicación.
+
+2. Si campo es "actividad":
+- Escribe la actividad práctica a realizar y su propósito.
+- Debe explicar qué hará el instructor, qué hará el participante y para qué sirve la actividad.
+- Máximo 8 renglones.
+- No uses lista numerada.
+- No uses viñetas.
+
+3. Si campo es "ejemplos":
+- Escribe ejemplos relacionados con la actividad a realizar y su propósito.
+- Los ejemplos deben conectar la actividad con situaciones cotidianas o laborales.
+- Genera 3 ejemplos claros.
+- Usa este formato:
+  1. Ejemplo: breve explicación.
+  2. Ejemplo: breve explicación.
+  3. Ejemplo: breve explicación.
+- No agregues enlaces.
+
+4. Si campo es "preguntas":
+- Redacta al menos 3 preguntas para recuperar lo aprendido y su utilidad.
+- Las preguntas deben ayudar a que el participante explique qué aprendió, cómo lo aplicaría y qué beneficio tiene en su actividad laboral o personal.
+- Devuelve cada pregunta en una línea separada.
+- No agregues respuestas ni explicación.

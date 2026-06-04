@@ -1,0 +1,40 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Redacta un texto de cierre que el instructor leerá a los participantes al finalizar el curso. Este texto debe ser una conclusión del curso que motive a los participantes y finalmente les agradezca su participación.
+
+Nombre del curso:
+{nombreCurso}
+
+Objetivo general:
+{objetivoGeneral}
+
+Objetivo cognitivo:
+{objetivoCognitivo}
+
+Objetivo psicomotriz:
+{objetivoPsicomotriz}
+
+Objetivo afectivo:
+{objetivoAfectivo}
+
+Desarrollo de la técnica expositiva:
+{desarrolloExpositiva}
+
+Actividad de la técnica demostrativa:
+{actividadDemostrativa}
+
+Instrucciones de la técnica diálogo/discusión:
+{instruccionesDialogo}
+
+Instrucciones:
+- Redacta en segunda persona plural, dirigiéndote directamente a los participantes.
+- El texto debe tener tres partes naturales: una conclusión de lo aprendido, una parte motivacional que los impulse a aplicar sus conocimientos, y un agradecimiento sincero por su participación.
+- No uses listas numeradas ni viñetas.
+- No menciones nombres técnicos de secciones ni incisos.
+- Usa un tono cálido, cercano y profesional.
+- Extensión sugerida: de 2 a 3 párrafos.
+- Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "texto": ""
+}}

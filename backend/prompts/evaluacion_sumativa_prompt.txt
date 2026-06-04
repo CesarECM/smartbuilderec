@@ -1,0 +1,47 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes generar una evaluación sumativa de opción múltiple para el siguiente curso.
+
+Nombre del curso:
+{nombreCurso}
+
+Objetivo general:
+{objetivoGeneral}
+
+Objetivo cognitivo:
+{objetivoCognitivo}
+
+Objetivo psicomotriz:
+{objetivoPsicomotriz}
+
+Objetivo afectivo:
+{objetivoAfectivo}
+
+Instrucciones:
+- Genera exactamente 5 preguntas de opción múltiple.
+- Todas las preguntas deben ser de dificultad alta (no indiques la dificultad en el texto de la pregunta).
+- Cada pregunta debe tener 4 opciones: A, B, C y D.
+- Indica la respuesta correcta en el campo "respuesta_correcta".
+- Las preguntas deben evaluar el logro integral de los 4 objetivos del curso: cognitivo, psicomotriz, afectivo y general.
+- Al menos 1 pregunta debe evaluar aplicación práctica (psicomotriz).
+- Al menos 1 pregunta debe evaluar actitudes o valores (afectivo).
+- No uses preguntas triviales ni de memorización simple.
+- No uses viñetas ni numeración fuera del JSON.
+- Asegúrate de que cada opción sea plausible (no haya una respuesta obviamente incorrecta).
+
+Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "preguntas": [
+    {{
+      "pregunta": "",
+      "opciones": {{
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      }},
+      "respuesta_correcta": "A"
+    }}
+  ]
+}}

@@ -1,0 +1,64 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes generar únicamente el texto para un apartado de la técnica diálogo/discusión.
+
+Campo solicitado:
+{campo}
+
+Nombre del curso:
+{nombreCurso}
+
+Perfil de participantes:
+{perfil}
+
+Objetivo afectivo:
+{objetivoAfectivo}
+
+Objetivo general:
+{objetivoGeneral}
+
+Temario del curso:
+{temario}
+
+Apartados posibles:
+- actividad: corresponde al inciso b) Presentará la actividad a desarrollar.
+- instrucciones: corresponde al inciso d) Indicará las instrucciones de la actividad.
+- ejemplos: corresponde al inciso h) Utilizará ejemplos relacionados con los temas y las situaciones cotidianas.
+- conclusion: corresponde al inciso i) Desarrollará junto con el grupo las conclusiones acerca del tema discutido y su utilidad.
+
+Instrucciones generales:
+- Genera un texto claro, útil y editable.
+- El contenido debe relacionarse directamente con el nombre del curso, el objetivo afectivo, el objetivo general y el temario.
+- Redacta en tercera persona cuando sea texto explicativo.
+- No incluyas el inciso, letra, título del apartado ni explicación adicional.
+- No incluyas texto antes ni después del JSON.
+- Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "texto": ""
+}}
+
+Reglas específicas por campo:
+
+1. Si campo es "actividad":
+- Redacta el beneficio o propósito de la actividad.
+- Explica brevemente para qué servirá la discusión.
+- Máximo 6 renglones.
+- No uses lista numerada.
+
+2. Si campo es "instrucciones":
+- Redacta instrucciones claras para realizar la actividad.
+- Incluye cómo participará el grupo.
+- Puedes usar lista numerada breve de 3 a 5 pasos.
+
+3. Si campo es "ejemplos":
+- Redacta exactamente 2 ejemplos relacionados con situaciones cotidianas.
+- Los ejemplos deben conectar el tema del curso con la vida profesional o personal.
+- Usa este formato:
+  1. Ejemplo: breve explicación.
+  2. Ejemplo: breve explicación.
+
+4. Si campo es "conclusion":
+- Redacta una breve conclusión del tema discutido.
+- Debe mencionar la utilidad del tema para los participantes.
+- Máximo 6 renglones.

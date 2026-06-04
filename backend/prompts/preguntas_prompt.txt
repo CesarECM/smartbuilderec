@@ -1,0 +1,25 @@
+Eres un experto en diseño instruccional para cursos de capacitación bajo el estándar EC0217.01.
+
+Genera 4 preguntas de experiencia para iniciar un curso.
+
+Nombre del curso:
+{nombre}
+
+Perfil de los participantes:
+{perfil}
+
+Instrucciones:
+- Las preguntas deben servir para recuperar experiencias previas de los participantes.
+- Deben estar relacionadas con el nombre del curso y el perfil de los participantes.
+- Deben ser claras, breves y abiertas.
+- No incluyas introducción ni explicación.
+- Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "preguntas": [
+    "Pregunta 1",
+    "Pregunta 2",
+    "Pregunta 3",
+    "Pregunta 4"
+  ]
+}}  

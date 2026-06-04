@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBuilder EC – Datos del Curso</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+
+    <button class="menu-toggle" id="menuToggle">
+    <i class="fa fa-bars"></i>
+    </button>
+
+    <div class="layout">
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="logo-container">
+        <img src="img/LogoECM.png" alt="Logo CEECM" class="logo-img">
+        </div>
+
+        <nav class="menu">
+        <ul>
+            <li id="nav-1" class="nav-item active">
+            <i class="fa fa-file-text-o"></i> Datos del Curso
+            </li>
+            <li id="nav-2" class="nav-item disabled">
+            <i class="fa fa-bullseye"></i> Objetivos
+            </li>
+            <li id="nav-3" class="nav-item disabled">
+            <i class="fa fa-star-o"></i> Beneficios
+            </li>
+            <li id="nav-4" class="nav-item disabled">
+            <i class="fa fa-list"></i> Temario
+            </li>
+            <li id="nav-5" class="nav-item disabled">
+            <i class="fa fa-handshake-o"></i> Encuadre
+            </li>
+            <li id="nav-6" class="nav-item disabled">
+            <i class="fa fa-users"></i> Técnicas Grupales
+            </li>
+            <li id="nav-7" class="nav-item disabled">
+            <i class="fa fa-check-square-o"></i> Evaluaciones
+            </li>
+            <li id="nav-8" class="nav-item disabled">
+            <i class="fa fa-download"></i> Formatos
+            </li>
+        </ul>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <p class="paso-titulo">Paso 1 de 8</p>
+        <h1>Datos del Curso</h1>
+
+        <div class="card" style="max-width: 800px;">
+        <div class="form-grid">
+
+            <div class="form-group full-width">
+            <label for="nombreCurso">Nombre del curso *</label>
+            <input type="text" id="nombreCurso" placeholder="Ej. Manejo de Extintores">
+            <span class="error-msg" id="err-nombreCurso">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+            <label for="instructor">Instructor *</label>
+            <input type="text" id="instructor" placeholder="Nombre completo del instructor">
+            <span class="error-msg" id="err-instructor">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+            <label for="disenador" style="display:flex; align-items:center; gap:8px;">
+              Diseñador *
+                <button type="button" id="btnCopiarInstructor" title="Copiar nombre del instructor"
+                style="background:none; border:1.5px solid #1f3b6d; border-radius:6px; padding:2px 8px; font-size:11px; color:#1f3b6d; cursor:pointer; line-height:1.6;">
+                <i class="fa fa-copy"></i> Usar el mismo nombre de instructor
+                </button>
+            </label>
+            <input type="text" id="disenador" placeholder="Nombre completo del diseñador">
+            <span class="error-msg" id="err-disenador">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+            <label for="lugar">Lugar *</label>
+            <input type="text" id="lugar" placeholder="Ciudad o instalación">
+            <span class="error-msg" id="err-lugar">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+            <label for="fecha">Fecha *</label>
+            <input type="date" id="fecha">
+            <span class="error-msg" id="err-fecha">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+            <label for="duracion">Duración (minutos) *</label>
+            <input type="number" id="duracion" placeholder="Mínimo 120" min="120">
+            <span class="hint">Mínimo 120 minutos según EC0217.01</span>
+            <span class="error-msg" id="err-duracion">Mínimo 120 minutos.</span>
+            </div>
+
+            <div class="form-group">
+            <label for="participantes">Número de participantes *</label>
+            <input type="number" id="participantes" placeholder="Mínimo 4" min="4">
+            <span class="hint">Mínimo 4 participantes según EC0217.01</span>
+            <span class="error-msg" id="err-participantes">Mínimo 4 participantes.</span>
+            </div>
+
+
+            <div class="form-group full-width">
+            <label for="perfil">Perfil del participante *</label>
+            <textarea id="perfil"
+                placeholder="Describe el perfil: puesto, experiencia previa, nivel educativo, etc."></textarea>
+            <span class="error-msg" id="err-perfil">Este campo es requerido.</span>
+            </div>
+
+        </div>
+
+        <button class="btn-siguiente" id="btnSiguiente">
+            Siguiente → Objetivos
+        </button>
+        </div>
+    </main>
+
+    </div>
+
+    <script src="datos.js"></script>
+    <script src="shared.js"></script>
+</body>
+</html>

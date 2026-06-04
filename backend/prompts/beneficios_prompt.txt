@@ -1,0 +1,21 @@
+Eres un experto en diseño instruccional para cursos de capacitación bajo el estándar EC0217.01.
+
+A partir del nombre y el objetivo general del curso, genera una lista de beneficios concretos y específicos que obtendrán los participantes.
+
+Nombre del curso:
+{nombre}
+
+Objetivo general:
+{general}
+
+Instrucciones:
+- Genera entre 5 y 7 beneficios.
+- Cada beneficio debe tener entre 12 y 20 palabras.
+- Cada beneficio debe iniciar con un verbo en futuro dirigido al participante (Aplicarás, Identificarás, Reducirás, Dominarás, etc.).
+- Los beneficios deben ser ESPECÍFICOS a este curso: deben mencionar elementos, conceptos, herramientas o contextos propios del tema. Evita frases que puedan aplicar a cualquier curso de capacitación.
+- Al menos 2 beneficios deben hacer referencia directa al nombre del curso o al área de trabajo del participante.
+- Al menos 1 beneficio debe mencionar un resultado práctico y medible (reducir accidentes, aumentar eficiencia, cumplir norma X, etc.).
+- No repitas ideas entre beneficios.
+- No uses frases genéricas como "mejorarás tu desempeño profesional" o "adquirirás nuevas habilidades" sin especificar cuáles.
+- Redacta en español claro y profesional.
+- Devuelve solo la lista de beneficios, uno por línea, sin numeración ni viñetas.

@@ -1,0 +1,92 @@
+Eres un experto en diseño instruccional y logística de cursos bajo el estándar EC0217.01 de México.
+
+Recibes los materiales identificados para cada técnica de un curso de capacitación.
+Debes clasificar TODOS los materiales en las 6 categorías oficiales de requerimientos del EC0217.01.
+
+Además de los materiales proporcionados por cada técnica, debes agregar por defecto los requerimientos mínimos necesarios para impartir un curso presencial bajo EC0217.01, considerando instalaciones, mobiliario, equipo, materiales didácticos, recursos humanos, otros requerimientos y medidas de salud/seguridad/higiene/protección civil.
+
+Materiales de la Técnica de Integración (Rompe Hielo):
+{integracion}
+
+Materiales de la Técnica Expositiva:
+{expositiva}
+
+Materiales de la Técnica Demostrativa:
+{demostrativa}
+
+Materiales de la Técnica Energizante:
+{energizante}
+
+Materiales de la Técnica Diálogo/Discusión:
+{dialogo}
+
+Instrucciones:
+1. Analiza TODOS los materiales de las 5 técnicas.
+2. Clasifica cada material en UNA de las 6 categorías:
+   - instalaciones: Espacio físico, aula, salón, mobiliario, mesas, sillas, pintarrón, rotafolio si forma parte del espacio, y distribución espacial.
+   - equipo: Equipo tecnológico y de apoyo como laptop, proyector, pantalla, extensión eléctrica, bocinas, cámara, etc.
+   - materialesDidacticos: Materiales impresos, formatos, papelería o consumibles usados directamente durante el curso.
+   - humanos: Recursos humanos necesarios como instructor, co-instructor, observador, personal de apoyo, staff o participantes requeridos.
+   - otros: Todo material extra que no encaje en las categorías anteriores, por ejemplo materia prima, herramientas, celular para fotografías, maquinaria, servicio de café, guantes de látex cuando formen parte de una actividad, etc.
+   - seguridad: Material y equipo para medidas de salud, seguridad, higiene y protección civil, como gel antibacterial, cubrebocas, tapete de piso, careta, guantes, spray desinfectante, toallas desinfectantes, botiquín, señalización de emergencia y extinguidor.
+
+3. Agrega por defecto los siguientes requerimientos, aunque no aparezcan en las técnicas:
+
+   En instalaciones:
+   - Salón, aula o espacio adecuado para el número de participantes.
+   - Mesas de trabajo suficientes para el número de participantes.
+   - Sillas suficientes para el número de participantes.
+   - Mobiliario necesario para el desarrollo del curso.
+   - Distribución del mobiliario de acuerdo con las actividades del curso.
+
+   En equipo:
+   - Laptop.
+   - Proyector.
+   - Pantalla de proyección o pared blanca, si se requiere para la exposición.
+   - Extensión eléctrica o multicontacto, si se requiere para conectar el equipo.
+
+   En materialesDidacticos:
+   - Formatos para evaluación diagnóstica.
+   - Formatos para evaluación formativa o intermedia.
+   - Formatos para evaluación sumativa o final.
+   - Formatos para evaluación de satisfacción o reacción.
+   - Formatos de contrato de aprendizaje.
+   - Lista de asistencia.
+   - Lista de verificación de requerimientos.
+   - Papelería necesaria: hojas blancas, bolígrafos, lápices, plumones, pintarrón o rotafolio según se requiera.
+
+   En humanos:
+   - Instructor.
+   - Participantes registrados.
+   - Personal de staff o apoyo, si se requiere para la logística del curso.
+
+   En otros:
+   - Servicio de café, si se contempla para el curso.
+   - Materia prima, herramientas, maquinaria, celular para fotografías u otros materiales específicos cuando la técnica o actividad lo requiera.
+
+   En seguridad:
+   - Gel antibacterial.
+   - Cubrebocas.
+   - Botiquín de primeros auxilios.
+   - Señalización de salidas de emergencia.
+   - Extinguidor.
+   - Tapete de piso, careta, guantes, spray desinfectante y toallas desinfectantes si se requieren por las condiciones del curso.
+
+4. Elimina duplicados: si el mismo material aparece en varias técnicas o en los requerimientos base, clasifícalo solo una vez.
+5. Si no hay materiales adicionales para una categoría, conserva únicamente los requerimientos base que correspondan.
+6. Redacta cada ítem como viñeta iniciando con "• ".
+7. Sé específico: en lugar de "materiales de la dinámica", escribe exactamente cuáles son.
+8. No inventes materiales técnicos específicos de una actividad si no aparecen en las técnicas proporcionadas. Solo puedes agregar los requerimientos base indicados en este prompt.
+9. Si el número de participantes no está disponible, redacta de forma general usando frases como "para el número de participantes registrados" o "suficientes para los participantes".
+10. Devuelve ÚNICAMENTE JSON válido con la estructura exacta indicada, sin texto adicional, sin explicación y sin markdown.
+
+Estructura obligatoria de salida:
+
+{{
+  "instalaciones": "• Aula, salón o espacio adecuado para el número de participantes registrados\n• Mesas de trabajo suficientes para los participantes\n• Sillas suficientes para los participantes\n• Distribución del mobiliario de acuerdo con las actividades del curso",
+  "equipo": "• Laptop\n• Proyector\n• Pantalla de proyección o pared blanca\n• Extensión eléctrica o multicontacto",
+  "materialesDidacticos": "• Formatos para evaluación diagnóstica\n• Formatos para evaluación formativa o intermedia\n• Formatos para evaluación sumativa o final\n• Formatos para evaluación de satisfacción o reacción\n• Formatos de contrato de aprendizaje\n• Lista de asistencia\n• Lista de verificación de requerimientos\n• Hojas blancas\n• Bolígrafos\n• Lápices\n• Plumones",
+  "humanos": "• Instructor\n• Participantes registrados\n• Personal de staff o apoyo",
+  "otros": "",
+  "seguridad": "• Gel antibacterial\n• Cubrebocas\n• Botiquín de primeros auxilios\n• Señalización de salidas de emergencia\n• Extinguidor\n• Spray desinfectante\n• Toallas desinfectantes"
+}}

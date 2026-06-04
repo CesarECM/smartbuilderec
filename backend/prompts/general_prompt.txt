@@ -1,0 +1,132 @@
+Actúa como experto en diseño instruccional con base en el EC0217.01
+(CONOCER/SEP).
+
+════════════════════════════════════════
+CONTEXTO
+════════════════════════════════════════
+El objetivo general de un curso EC0217.01 integra los resultados
+de los tres objetivos particulares en un solo enunciado coherente.
+Debe contener los 4 verbos de los particulares (1 cognitivo,
+1 psicomotriz, 2 afectivo-relacional social) con sus respectivos
+complementos, ordenados y redactados de forma fluida.
+
+════════════════════════════════════════
+OBJETIVOS PARTICULARES DEL CURSO
+════════════════════════════════════════
+Cognitivo:   {cognitiva}
+Psicomotriz: {psicomotriz}
+Afectivo:    {afectiva}
+
+════════════════════════════════════════
+INSTRUCCIÓN DE CONSTRUCCIÓN
+════════════════════════════════════════
+Sigue este proceso de tres pasos:
+
+Paso 1 — Extrae de cada objetivo particular:
+  Del COGNITIVO:
+    - Verbo 1: el verbo cognitivo en futuro
+    - Complemento 1: el objeto directo de ese verbo
+
+  Del PSICOMOTRIZ:
+    - Verbo 2: el verbo psicomotriz en futuro
+    - Complemento 2: el objeto directo de ese verbo
+
+  Del AFECTIVO-RELACIONAL SOCIAL:
+    - Verbo 3: el verbo actitudinal en futuro
+    - Complemento 3: el objeto de ese verbo actitudinal
+    - Verbo 4: el verbo relacional-social en futuro
+    - Complemento 4: el objeto de ese verbo relacional
+
+Paso 2 — Identifica los elementos compartidos:
+  - Sujeto: el mismo que usan los tres particulares
+  - Cuando: la expresión temporal más amplia (referida
+    al curso completo, nunca a una unidad específica).
+    Si los particulares usan referencias a unidades,
+    usa "al concluir el curso". Es opcional si no aparece
+    en ningún particular.
+  - Condición: la condición más representativa o la
+    síntesis de las condiciones de los tres particulares.
+  - Finalidad: la finalidad más amplia o común entre
+    los tres particulares.
+
+Paso 3 — Redacta el objetivo general con esta estructura:
+  [SUJETO] + [CUANDO opcional] + [VERBO 1] + [COMPLEMENTO 1],
+  [VERBO 2] + [COMPLEMENTO 2], [VERBO 3] + [COMPLEMENTO 3]
+  y [VERBO 4] + [COMPLEMENTO 4], [CONDICIÓN],
+  con la finalidad de [FINALIDAD].
+
+════════════════════════════════════════
+REGLAS DE REDACCIÓN
+════════════════════════════════════════
+- Usa exactamente el mismo sujeto que aparece en los particulares.
+- Los 4 verbos deben aparecer en el mismo tiempo verbal
+  que los particulares (generalmente futuro: conocerá,
+  aplicará, valorará, promoverá...).
+- Conecta los 4 verbos con sus complementos de forma fluida,
+  usando comas y el conector "y" antes del último verbo.
+- La condición y la finalidad van al final, después de
+  los 4 verbos con sus complementos.
+- Máximo dos oraciones.
+- No agregues verbos ni complementos que no estén en
+  los particulares.
+- No omitas ninguno de los 4 verbos.
+
+════════════════════════════════════════
+EJEMPLO DE CONSTRUCCIÓN
+════════════════════════════════════════
+Particulares de entrada:
+
+  Cognitivo:
+  "El participante durante el curso conocerá los lineamientos
+  de la Norma ISO 9001:2015 con el principio de enfoque a
+  procesos con la finalidad de facilitar el cumplimiento de
+  sus funciones de manera metódica."
+  → Verbo 1: conocerá
+  → Complemento 1: los lineamientos de la Norma ISO 9001:2015
+
+  Psicomotriz:
+  "El participante durante el curso identificará y rectificará
+  los procesos de su área de trabajo identificando la
+  interacción de entradas, proceso y salidas con la finalidad
+  de reconocer el impacto de su trabajo."
+  → Verbo 2: identificará y rectificará
+  → Complemento 2: los procesos de su área de trabajo
+
+  Afectivo:
+  "El participante durante el curso valorará la importancia
+  del trabajo en equipo siendo responsable de sus actividades,
+  fomentando una cultura de apoyo mutuo en su organización,
+  con apego a procesos, con la finalidad de contribuir al
+  logro de los objetivos organizacionales."
+  → Verbo 3: valorará
+  → Complemento 3: la importancia del trabajo en equipo
+  → Verbo 4: fomentará
+  → Complemento 4: una cultura de apoyo mutuo en su organización
+
+✅ Objetivo general CORRECTO:
+"El participante durante el curso conocerá los lineamientos
+de la Norma ISO 9001:2015, identificará y rectificará los
+procesos de su área de trabajo, valorará la importancia del
+trabajo en equipo y fomentará una cultura de apoyo mutuo en
+su organización, con enfoque a procesos y responsabilidad en
+sus actividades, con la finalidad de contribuir al logro de
+los objetivos organizacionales de manera metódica."
+
+→ Verbo 1 ✓ conocerá | Complemento 1 ✓
+→ Verbo 2 ✓ identificará y rectificará | Complemento 2 ✓
+→ Verbo 3 ✓ valorará | Complemento 3 ✓
+→ Verbo 4 ✓ fomentará | Complemento 4 ✓
+→ Condición ✓ | Finalidad ✓
+
+❌ Objetivo general INCORRECTO (verbos sin complementos,
+   falta verbo relacional):
+"El participante conocerá la norma, aplicará los procesos
+y valorará el trabajo en equipo."
+→ Error: complementos incompletos, falta verbo 4,
+  falta condición y finalidad.
+
+════════════════════════════════════════
+SALIDA ESPERADA
+════════════════════════════════════════
+Devuelve SOLO el texto del objetivo general, sin explicaciones,
+sin etiquetas, sin comillas externas.

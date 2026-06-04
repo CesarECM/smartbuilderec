@@ -1,0 +1,94 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes generar únicamente el texto para un apartado de la técnica expositiva.
+
+Campo solicitado:
+{campo}
+
+Nombre del curso:
+{nombreCurso}
+
+Perfil de participantes:
+{perfil}
+
+Objetivo cognitivo:
+{objetivoCognitivo}
+
+Objetivo general:
+{objetivoGeneral}
+
+Temario del curso:
+{temario}
+
+Apartados posibles:
+- introduccion: corresponde al inciso b) Realizará una introducción general al contenido temático.
+- experiencia: corresponde al inciso c) Recuperará la experiencia previa de los participantes, preguntando sobre sus conocimientos previos del contenido temático.
+- desarrollo: corresponde al inciso d) Desarrollará el contenido.
+- ejemplos: corresponde al inciso e) Utilizará ejemplos relacionados con los temas y las situaciones cotidianas.
+- sintesis: corresponde al inciso f) Realizará la síntesis haciendo énfasis en los aspectos sobresalientes, invitando a los participantes a participar.
+- preguntas: corresponde al inciso g) Planteará preguntas dirigidas que verifiquen la comprensión del tema.
+- utilidad: corresponde al inciso h) Promoverá comentarios sobre la utilidad y aplicación de los temas en su vida profesional y personal.
+
+Instrucciones generales:
+- Genera un texto claro, útil y editable.
+- El contenido debe relacionarse directamente con el nombre del curso, el objetivo cognitivo, el objetivo general y el temario.
+- Redacta en tercera persona, iniciando preferentemente con “El instructor...”, excepto cuando se pidan preguntas o listas.
+- No incluyas el inciso, letra, título del apartado ni explicación adicional.
+- No incluyas texto antes ni después del JSON.
+- Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "texto": ""
+}}
+
+Reglas específicas por campo:
+
+1. Si campo es "introduccion":
+- Genera una introducción general al contenido temático.
+- Máximo 8 renglones.
+- Debe contextualizar el tema del curso y explicar brevemente su importancia.
+- No uses lista numerada.
+- No uses viñetas.
+
+2. Si campo es "experiencia":
+- Genera exactamente 3 preguntas.
+- Las preguntas deben recuperar conocimientos o experiencias previas de los participantes.
+- Las preguntas deben relacionarse con el contenido temático del curso.
+- Devuelve las preguntas en líneas separadas.
+- No agregues respuestas ni explicación.
+
+3. Si campo es "desarrollo":
+- Genera el desarrollo del contenido temático.
+- Máximo 10 renglones.
+- Debe explicar de forma clara y ordenada los puntos principales del temario.
+- No uses lista larga.
+- No incluyas enlaces.
+
+4. Si campo es "ejemplos":
+- Genera exactamente 3 ejemplos concretos relacionados con el tema del curso y el perfil de los participantes.
+- Cada ejemplo debe describir una situación real, cotidiana o laboral que ilustre la aplicación del tema.
+- Los ejemplos deben ser específicos al contexto del curso: menciona el tipo de equipo, proceso, riesgo o situación propio del tema.
+- NO incluyas URLs ni enlaces de ningún tipo.
+- Usa este formato por cada ejemplo:
+  1. Situación: [descripción de la situación]. Relevancia: [por qué es importante para el participante].
+- No incluyas más de 3 ejemplos.
+
+5. Si campo es "sintesis":
+- Genera entre 5 y 10 ítems.
+- Cada ítem debe tener entre 2 y 3 palabras.
+- Los ítems deben resumir los aspectos sobresalientes del tema.
+- Devuelve cada ítem en una línea separada.
+- No agregues explicación adicional.
+
+6. Si campo es "preguntas":
+- Genera exactamente 3 preguntas como máximo.
+- Las preguntas deben verificar la comprensión del tema.
+- Deben ser preguntas dirigidas, claras y breves.
+- No agregues respuestas.
+- Devuelve cada pregunta en una línea separada.
+
+7. Si campo es "utilidad":
+- Genera exactamente 2 preguntas como máximo.
+- Las preguntas deben promover comentarios sobre la utilidad y aplicación de los temas en la vida profesional y personal.
+- No agregues respuestas.
+- Devuelve cada pregunta en una línea separada.

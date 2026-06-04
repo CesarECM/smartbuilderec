@@ -1,0 +1,273 @@
+<!-- <!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Cursos — CEECM</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--c-bg); }
+
+    .cat-header {
+      background: var(--c-blue-600);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .cat-header img { max-height: 48px; }
+    .cat-header-actions { display: flex; gap: 10px; align-items: center; }
+    .cat-header-actions a, .cat-header-actions button {
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background var(--t-fast);
+    }
+    .cat-header-actions a:hover,
+    .cat-header-actions button:hover { background: rgba(255,255,255,0.28); }
+
+    .cat-main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+    .cat-title { font-size: 26px; font-weight: 700; color: var(--c-text); margin-bottom: 8px; }
+    .cat-subtitle { color: var(--c-text-2); margin-bottom: 32px; }
+
+    .cursos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .curso-card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--t-fast), transform var(--t-fast);
+    }
+    .curso-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+    .curso-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: var(--c-surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: var(--c-text-3);
+    }
+    .curso-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .curso-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .curso-titulo { font-size: 16px; font-weight: 700; color: var(--c-text); }
+    .curso-desc { font-size: 13px; color: var(--c-text-2); line-height: 1.5; flex: 1; }
+    .curso-meta { display: flex; gap: 12px; font-size: 12px; color: var(--c-text-3); }
+    .curso-instructor { font-size: 12px; color: var(--c-text-3); }
+
+    .curso-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--c-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .curso-precio { font-size: 20px; font-weight: 800; color: var(--c-blue-600); }
+    .curso-precio.gratis { color: #27ae60; }
+
+    .btn-comprar {
+      background: var(--c-blue-600);
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: var(--r-md);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all var(--t-fast);
+    }
+    .btn-comprar:hover:not(:disabled) { background: var(--c-blue-700); transform: translateY(-1px); }
+    .btn-comprar:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-comprar.inscrito { background: #27ae60; }
+
+    .cat-empty { text-align: center; padding: 60px 20px; color: var(--c-text-3); font-size: 16px; }
+    .cat-loading { text-align: center; padding: 60px 20px; color: var(--c-text-3); }
+    .cat-error { text-align: center; padding: 40px; color: #c0392b; }
+  </style>
+</head>
+<body>
+  <header class="cat-header">
+    <img src="img/LogoECM.png" alt="CEECM">
+    <div class="cat-header-actions" id="headerActions">
+      <a href="login.html">Iniciar sesión</a>
+      <a href="registro.html">Registrarse</a>
+    </div>
+  </header>
+
+  <main class="cat-main">
+    <h1 class="cat-title">Catálogo de Cursos</h1>
+    <p class="cat-subtitle">Explora nuestra oferta de capacitación y certificación.</p>
+
+    <div class="cursos-grid" id="cursosGrid">
+      <div class="cat-loading">Cargando cursos...</div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script>
+    const BACKEND_URL = "https://ceecmweb.onrender.com";
+    let sesionActual = null;
+    let inscripcionesUsuario = new Set();
+
+    async function inicializar() {
+      sesionActual = await getSession();
+
+      // Actualizar header según estado de sesión
+      const headerActions = document.getElementById("headerActions");
+      if (sesionActual) {
+        const meta = sesionActual.user?.user_metadata || {};
+        const nombre = meta.nombre || sesionActual.user.email;
+        const rol = meta.rol || "estudiante";
+        headerActions.innerHTML = `
+          <span style="color:rgba(255,255,255,0.85);font-size:14px;">${nombre}</span>
+          ${rol === "instructor" || rol === "admin" ? '<a href="index.html">Wizard</a>' : ''}
+          <a href="dashboard.html">Mi cuenta</a>
+          <button onclick="logout()">Salir</button>
+        `;
+        await cargarInscripciones();
+      }
+
+      await cargarCursos();
+    }
+
+    async function cargarInscripciones() {
+      if (!sesionActual) return;
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/inscripciones/mias`, { headers });
+        if (!res.ok) return;
+        const data = await res.json();
+        data.forEach(i => inscripcionesUsuario.add(i.curso_id));
+      } catch (_) {}
+    }
+
+    async function cargarCursos() {
+      const grid = document.getElementById("cursosGrid");
+      try {
+        const res = await fetch(`${BACKEND_URL}/cursos`);
+        if (!res.ok) throw new Error("Error al cargar cursos");
+        const cursos = await res.json();
+
+        if (!cursos.length) {
+          grid.innerHTML = '<div class="cat-empty">No hay cursos disponibles por el momento.</div>';
+          return;
+        }
+
+        grid.innerHTML = cursos.map(c => renderCurso(c)).join("");
+      } catch (err) {
+        grid.innerHTML = `<div class="cat-error">Error al cargar los cursos. Intenta de nuevo más tarde.</div>`;
+      }
+    }
+
+    function renderCurso(c) {
+      const instructor = c.profiles ? `${c.profiles.nombre || ""} ${c.profiles.apellido || ""}`.trim() : "";
+      const precioStr = c.precio === 0 ? "Gratis" : `$${Number(c.precio).toLocaleString("es-MX")} MXN`;
+      const esGratis = c.precio === 0;
+      const yaInscrito = inscripcionesUsuario.has(c.id);
+
+      const imgHTML = c.imagen_url
+        ? `<div class="curso-img"><img src="${c.imagen_url}" alt="${c.titulo}"></div>`
+        : `<div class="curso-img">📚</div>`;
+
+      let btnHTML;
+      if (yaInscrito) {
+        btnHTML = `<button class="btn-comprar inscrito" disabled>Inscrito</button>`;
+      } else if (!sesionActual) {
+        btnHTML = `<button class="btn-comprar" onclick="window.location.href='login.html'">Comprar</button>`;
+      } else if (esGratis) {
+        btnHTML = `<button class="btn-comprar" onclick="inscribirseGratis('${c.id}', this)">Inscribirse</button>`;
+      } else {
+        btnHTML = `<button class="btn-comprar" onclick="comprar('${c.id}', this)">Comprar</button>`;
+      }
+
+      return `
+        <div class="curso-card">
+          ${imgHTML}
+          <div class="curso-body">
+            <div class="curso-titulo">${c.titulo}</div>
+            <div class="curso-desc">${c.descripcion || ""}</div>
+            <div class="curso-meta">
+              ${c.duracion_horas ? `<span>⏱ ${c.duracion_horas}h</span>` : ""}
+            </div>
+            ${instructor ? `<div class="curso-instructor">Instructor: ${instructor}</div>` : ""}
+          </div>
+          <div class="curso-footer">
+            <span class="curso-precio ${esGratis ? 'gratis' : ''}">${precioStr}</span>
+            ${btnHTML}
+          </div>
+        </div>
+      `;
+    }
+
+    async function comprar(cursoId, btn) {
+      btn.disabled = true;
+      btn.textContent = "Procesando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/checkout/session`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            curso_id: cursoId,
+            success_url: `${window.location.origin}/diseno/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: window.location.href
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Error al iniciar el pago");
+        }
+        const data = await res.json();
+        window.location.href = data.checkout_url;
+      } catch (err) {
+        alert(err.message || "Error al procesar el pago. Intenta de nuevo.");
+        btn.disabled = false;
+        btn.textContent = "Comprar";
+      }
+    }
+
+    async function inscribirseGratis(cursoId, btn) {
+      btn.disabled = true;
+      btn.textContent = "Inscribiendo...";
+      try {
+        const headers = await getAuthHeaders();
+        await fetch(`${BACKEND_URL}/inscripciones/gratis`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ curso_id: cursoId })
+        });
+        btn.textContent = "Inscrito";
+        btn.className = "btn-comprar inscrito";
+        inscripcionesUsuario.add(cursoId);
+      } catch (_) {
+        btn.disabled = false;
+        btn.textContent = "Inscribirse";
+      }
+    }
+
+    inicializar();
+  </script>
+</body>
+</html> -->

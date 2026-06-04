@@ -1,0 +1,59 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes redactar el cierre del curso en forma de resumen para que el instructor lo lea directamente a los participantes.
+
+Nombre del curso:
+{nombreCurso}
+
+Objetivos del curso:
+
+Objetivo general:
+{objetivoGeneral}
+
+Objetivo cognitivo:
+{objetivoCognitivo}
+
+Objetivo psicomotriz:
+{objetivoPsicomotriz}
+
+Objetivo afectivo:
+{objetivoAfectivo}
+
+Información base para el cierre:
+
+Inciso d) de la técnica expositiva — desarrollo del contenido:
+{desarrolloExpositiva}
+
+Inciso c) de la técnica demostrativa — actividad a desarrollar y propósito:
+{actividadDemostrativa}
+
+Inciso d) de la técnica diálogo/discusión — instrucciones de la actividad:
+{instruccionesDialogo}
+
+Sugerencias de continuidad de aprendizaje:
+{sugerenciasContinuidad}
+
+Referencias bibliográficas:
+{referenciasBibliograficas}
+
+Compromisos de aplicación del aprendizaje:
+{compromisos}
+
+Instrucciones:
+- Debe considerar el objetivo general, cognitivo, psicomotriz y afectivo para redactar el cierre.
+- Redacta un resumen en prosa.
+- Redacta en tiempo pasado.
+- Debe sonar como un mensaje que el instructor leerá al grupo al finalizar.
+- Debe integrar lo trabajado en la técnica expositiva, demostrativa y diálogo/discusión.
+- Puede apoyarse en las sugerencias de continuidad, referencias bibliográficas y compromisos, pero sin convertirlos en lista.
+- No uses lista numerada.
+- No uses viñetas.
+- No menciones los incisos por letra.
+- No digas "inciso d", "inciso c" ni nombres técnicos de las secciones.
+- Usa un tono claro, profesional y cercano.
+- Extensión sugerida: de 1 a 3 párrafos.
+- Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "texto": ""
+}}

@@ -1,0 +1,51 @@
+Eres un diseñador instruccional experto en evaluación por competencias bajo el estándar EC0217.01.
+
+Vas a generar reactivos para el instrumento de evaluación formativa del curso.
+
+La información base debe tomarse únicamente del siguiente texto, el cual corresponde al apartado:
+
+"c) Presentará la actividad a desarrollar y mencionará el propósito de la misma"
+
+de la sección "Técnica Demostrativa".
+
+Nombre del curso:
+{nombre_curso}
+
+Texto del apartado c) de Técnica Demostrativa:
+{actividad}
+
+Instrucciones:
+1. Analiza cuidadosamente la actividad descrita.
+2. Identifica qué realizará el participante y cuál es el propósito de la actividad.
+3. Determina si la actividad genera un producto tangible, evidencia física o evidencia digital.
+4. Si la actividad genera un producto tangible, físico o digital, clasifica el instrumento como "lista_cotejo".
+5. Si la actividad evalúa principalmente ejecución, desempeño, procedimiento o comportamiento observable, clasifica el instrumento como "guia_observacion".
+6. Genera entre 5 y 7 reactivos.
+7. Cada reactivo debe poder calificarse con "cumple" o "no cumple", pero NO escribas esas opciones.
+8. Si corresponde a guía de observación, cada reactivo debe describir una acción observable realizada por el participante y debe iniciar con un verbo observable.
+9. Si corresponde a lista de cotejo, cada reactivo debe describir una característica verificable del producto entregado.
+10. Evita reactivos subjetivos como "comprende", "conoce", "sabe", "entiende", "valora" o "reflexiona".
+11. No inventes otra actividad distinta. Usa solamente la actividad descrita en el apartado c).
+12. Usa lenguaje claro, formal y directamente evaluable.
+
+Reglas de salida:
+- Devuelve únicamente JSON válido.
+- No agregues explicaciones antes ni después del JSON.
+- El campo "tipoInstrumento" debe ser exactamente uno de estos dos valores:
+  - "lista_cotejo"
+  - "guia_observacion"
+- El campo "reactivos" debe contener únicamente los reactivos redactados.
+- No incluyas "cumple" ni "no cumple" dentro de los reactivos.
+
+Devuelve exactamente esta estructura:
+
+{{
+  "tipoInstrumento": "lista_cotejo",
+  "reactivos": [
+    "Reactivo 1",
+    "Reactivo 2",
+    "Reactivo 3",
+    "Reactivo 4",
+    "Reactivo 5"
+  ]
+}}

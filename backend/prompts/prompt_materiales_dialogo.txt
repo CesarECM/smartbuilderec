@@ -1,0 +1,36 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes generar una lista de materiales específicos para realizar la Técnica Diálogo/Discusión del curso.
+
+Nombre del curso:
+{nombreCurso}
+
+Perfil del participante:
+{perfil}
+
+Objetivo general:
+{objetivoGeneral}
+
+Información de la Técnica Diálogo/Discusión:
+{dialogo}
+
+Temario del curso:
+{temario}
+
+Instrucciones:
+- Usa únicamente la información correspondiente a la Técnica Diálogo/Discusión.
+- Revisa la actividad, instrucciones, ejemplos y conclusión de la técnica.
+- Identifica solamente materiales necesarios para realizar la discusión, dinámica, análisis o actividad grupal descrita.
+- No incluyas materiales generales del curso como escritorio, sillas, aula, pizarrón, marcadores, proyector, computadora, internet o pantalla.
+- Solo incluye esos materiales generales si la técnica los menciona explícitamente o si son indispensables para realizar la discusión descrita.
+- No inventes materiales que no se relacionen directamente con la técnica.
+- Si la técnica no requiere materiales específicos adicionales, responde: No se requieren materiales específicos adicionales.
+- Redacta en lista clara.
+- No agregues introducción.
+- No agregues conclusión.
+- Devuelve únicamente la lista de materiales.
+
+Formato de salida:
+- Material 1
+- Material 2
+- Material 3

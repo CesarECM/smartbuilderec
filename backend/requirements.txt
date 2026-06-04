@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-dotenv
+pyotp
+python-docx
+python-pptx
+openai
+# supabase
+# python-jose[cryptography]
+# stripe
+# httpx

@@ -1,0 +1,22 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01.
+
+Debes transformar el texto de cierre del curso en una descripción general redactada en futuro.
+
+Texto de cierre:
+{cierre}
+
+Instrucciones:
+- Redacta el texto en futuro.
+- Mantén la idea principal del cierre.
+- El texto debe explicar lo que se realizará o logrará durante el curso.
+- Debe sonar como una descripción general del curso o de la evaluación.
+- Usa tono claro, profesional y formal.
+- No uses lista numerada.
+- No uses viñetas.
+- No agregues información que no esté relacionada con el cierre.
+- Extensión sugerida: 1 a 2 párrafos.
+- Devuelve únicamente JSON válido con esta estructura:
+
+{{
+  "texto": ""
+}}

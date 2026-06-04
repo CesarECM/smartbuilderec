@@ -1,0 +1,113 @@
+<!-- <!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pago exitoso — CEECM</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .success-container {
+      max-width: 480px;
+      margin: 100px auto;
+      background: var(--c-surface);
+      padding: 48px 40px;
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--c-border);
+      text-align: center;
+    }
+    .success-icon { font-size: 64px; margin-bottom: 20px; }
+    .success-container h2 { font-size: 24px; font-weight: 700; color: var(--c-text); margin-bottom: 10px; }
+    .success-container p { color: var(--c-text-2); margin-bottom: 8px; line-height: 1.6; }
+    .curso-nombre { font-size: 18px; font-weight: 700; color: var(--c-blue-600); margin: 16px 0; }
+    .success-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 28px; }
+    .btn-primary {
+      background: var(--c-blue-600); color: white; border: none; padding: 13px;
+      font-size: 15px; font-weight: 600; font-family: inherit;
+      border-radius: var(--r-md); cursor: pointer; text-decoration: none;
+      transition: background var(--t-fast);
+    }
+    .btn-primary:hover { background: var(--c-blue-700); }
+    .btn-secondary {
+      background: var(--c-surface-2); color: var(--c-text); border: 1px solid var(--c-border-s);
+      padding: 13px; font-size: 15px; font-weight: 600; font-family: inherit;
+      border-radius: var(--r-md); cursor: pointer; text-decoration: none;
+      transition: background var(--t-fast);
+    }
+    .btn-secondary:hover { background: var(--c-surface); }
+    .loading { color: var(--c-text-3); font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="success-container">
+    <div id="contenido">
+      <p class="loading">Verificando pago...</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script>
+    const BACKEND_URL = "https://ceecmweb.onrender.com";
+
+    async function verificar() {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id");
+      const contenido = document.getElementById("contenido");
+
+      if (!sessionId) {
+        contenido.innerHTML = `
+          <div class="success-icon">❌</div>
+          <h2>Sesión no encontrada</h2>
+          <p>No se pudo verificar tu pago.</p>
+          <div class="success-btns">
+            <a href="catalogo.html" class="btn-primary">Ver cursos</a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/checkout/verify?session_id=${sessionId}`);
+        const data = await res.json();
+
+        if (data.status === "paid") {
+          const cursoNombre = data.curso?.titulo || "el curso";
+          contenido.innerHTML = `
+            <div class="success-icon">✅</div>
+            <h2>¡Pago exitoso!</h2>
+            <p>Te has inscrito correctamente en:</p>
+            <div class="curso-nombre">${cursoNombre}</div>
+            <p>Revisa tu correo para los detalles de acceso.</p>
+            <div class="success-btns">
+              <a href="dashboard.html" class="btn-primary">Ir a mi cuenta</a>
+              <a href="catalogo.html" class="btn-secondary">Ver más cursos</a>
+            </div>
+          `;
+        } else {
+          contenido.innerHTML = `
+            <div class="success-icon">⏳</div>
+            <h2>Pago pendiente</h2>
+            <p>Tu pago está siendo procesado. En unos momentos recibirás confirmación por correo.</p>
+            <div class="success-btns">
+              <a href="dashboard.html" class="btn-primary">Ir a mi cuenta</a>
+            </div>
+          `;
+        }
+      } catch (_) {
+        contenido.innerHTML = `
+          <div class="success-icon">✅</div>
+          <h2>¡Gracias por tu compra!</h2>
+          <p>Tu inscripción fue procesada. Recibirás un correo de confirmación.</p>
+          <div class="success-btns">
+            <a href="dashboard.html" class="btn-primary">Ir a mi cuenta</a>
+            <a href="catalogo.html" class="btn-secondary">Ver más cursos</a>
+          </div>
+        `;
+      }
+    }
+
+    verificar();
+  </script>
+</body>
+</html> -->
