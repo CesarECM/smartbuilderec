@@ -125,6 +125,22 @@
         <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="login-btn" id="btnLogin">Entrar</button>
+      <p style="text-align:center;margin-top:12px;font-size:13px;">
+        <a href="#" id="btnForgot" style="color:var(--c-blue-600);text-decoration:none;font-weight:600;">¿Olvidaste tu contraseña?</a>
+      </p>
+    </div>
+
+    <!-- Formulario: recuperar contraseña -->
+    <div id="formForgot" style="display:none">
+      <div class="login-field">
+        <label for="forgotEmail">Correo electrónico</label>
+        <input type="email" id="forgotEmail" placeholder="correo@ejemplo.com" autocomplete="email">
+      </div>
+      <p class="magic-hint">Te enviaremos un enlace para establecer una nueva contraseña.</p>
+      <button class="login-btn" id="btnSendReset">Enviar enlace de recuperación</button>
+      <p style="text-align:center;margin-top:12px;font-size:13px;">
+        <a href="#" id="btnBackLogin" style="color:var(--c-blue-600);text-decoration:none;">← Volver al inicio de sesión</a>
+      </p>
     </div>
 
     <!-- Formulario: magic link (sin contraseña) -->
@@ -250,9 +266,49 @@
     document.getElementById("btnGoogle").addEventListener("click", async () => {
       try {
         await loginWithGoogle();
-        // La redirección la maneja Supabase automáticamente vía redirectTo
       } catch (err) {
         setMsg("Error al conectar con Google. Intenta de nuevo.", "error");
+      }
+    });
+
+    // ── Olvidé mi contraseña ──────────────────────────────────────────────────
+    document.getElementById("btnForgot").addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("formPassword").style.display = "none";
+      document.getElementById("formForgot").style.display = "";
+      // Pre-llenar el email si ya lo escribió
+      const emailVal = document.getElementById("email").value.trim();
+      if (emailVal) document.getElementById("forgotEmail").value = emailVal;
+      setMsg("", "");
+    });
+
+    document.getElementById("btnBackLogin").addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("formForgot").style.display = "none";
+      document.getElementById("formPassword").style.display = "";
+      setMsg("", "");
+    });
+
+    document.getElementById("btnSendReset").addEventListener("click", async () => {
+      const email = document.getElementById("forgotEmail").value.trim();
+      const btn   = document.getElementById("btnSendReset");
+
+      if (!email) { setMsg("Ingresa tu correo electrónico.", "error"); return; }
+
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+      setMsg("", "");
+
+      try {
+        await _supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password.html`
+        });
+        setMsg("¡Enlace enviado! Revisa tu correo (y la carpeta de spam).", "ok");
+        btn.textContent = "Enviado ✓";
+      } catch (err) {
+        setMsg("Error al enviar el enlace. Verifica el correo e intenta de nuevo.", "error");
+        btn.disabled = false;
+        btn.textContent = "Enviar enlace de recuperación";
       }
     });
   </script>
