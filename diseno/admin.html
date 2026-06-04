@@ -564,6 +564,16 @@
       btn.disabled = true;
       btn.textContent = "Generando...";
 
+      // Verificar créditos frescos antes de generar
+      const { data: perfil } = await _supabase
+        .from("profiles").select("credits").eq("id", _perfil.id).single();
+      if (!perfil || perfil.credits <= 0) {
+        btn.disabled = false;
+        btn.textContent = "🔑 Generar código";
+        alert("No tienes créditos disponibles. Contacta al administrador de la plataforma para recargar.");
+        return;
+      }
+
       // Intentar hasta encontrar un código único
       let code, intentos = 0;
       while (intentos < 10) {
@@ -581,7 +591,7 @@
         .single();
 
       btn.disabled = false;
-      btn.textContent = "🔑 Generar código de acceso";
+      btn.textContent = "🔑 Generar código";
 
       if (error) {
         alert("Error al generar código: " + error.message);
