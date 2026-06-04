@@ -51,10 +51,57 @@
       margin-bottom: 8px;
       font-style: italic;
     }
+
+    /* ── Wizard navbar ──────────────────────────────────────── */
+    #wiz-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      height: 48px; background: var(--c-blue-700);
+      display: flex; align-items: center; padding: 0 16px; gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .wiz-nav-back {
+      color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 600;
+      text-decoration: none; white-space: nowrap; padding: 5px 10px;
+      border-radius: 6px; background: rgba(255,255,255,0.12);
+      transition: background 0.15s;
+    }
+    .wiz-nav-back:hover { background: rgba(255,255,255,0.22); color: white; }
+    .wiz-nav-curso {
+      flex: 1; text-align: center; color: rgba(255,255,255,0.6);
+      font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 0 8px;
+    }
+    .wiz-nav-user { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    #wiz-nav-nombre {
+      color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; white-space: nowrap;
+    }
+    .wiz-nav-logout {
+      background: rgba(255,255,255,0.12); border: none; color: rgba(255,255,255,0.8);
+      padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .wiz-nav-logout:hover { background: rgba(255,255,255,0.22); color: white; }
+    /* Empujar layout debajo del navbar */
+    .layout { margin-top: 48px !important; height: calc(100vh - 48px) !important; }
+    @media (max-width: 768px) {
+      .sidebar { top: 48px !important; height: calc(100vh - 48px) !important; }
+      .menu-toggle { top: 62px !important; }
+      #wiz-nav-nombre { display: none; }
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- Navbar de navegación superior -->
+  <nav id="wiz-nav">
+    <a href="dashboard.html" class="wiz-nav-back">← Mi Dashboard</a>
+    <span id="wiz-nav-curso" class="wiz-nav-curso"></span>
+    <div class="wiz-nav-user">
+      <span id="wiz-nav-nombre"></span>
+      <button class="wiz-nav-logout" onclick="logout()">Salir</button>
+    </div>
+  </nav>
 
   <!-- Pestaña para salir del modo Focus — siempre visible en el borde izquierdo -->
   <button id="btnFocusExit" title="Mostrar sidebar (Esc)">▶ SIDEBAR</button>
@@ -2149,6 +2196,27 @@
   <script src="storage.js"></script>
   <script src="shared.js"></script>
   <script src="app.js"></script>
+
+  <script>
+    // Poblar navbar: nombre del curso y del usuario
+    (async function () {
+      try {
+        const raw = localStorage.getItem("ec0217_datos");
+        if (raw) {
+          const d = JSON.parse(raw);
+          const nombre = d.nombreCurso || d.nombre_curso || "";
+          if (nombre) document.getElementById("wiz-nav-curso").textContent = nombre;
+        }
+      } catch (_) {}
+      try {
+        const perfil = await getUserProfile();
+        if (perfil) {
+          const nombre = [perfil.nombre, perfil.apellido].filter(Boolean).join(" ") || perfil.email;
+          document.getElementById("wiz-nav-nombre").textContent = nombre;
+        }
+      } catch (_) {}
+    })();
+  </script>
 </body>
 </html>
 

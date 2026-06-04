@@ -33,6 +33,22 @@
       transition: background var(--t-fast);
     }
     .header-btn:hover { background: rgba(255,255,255,0.26); }
+    .header-nav { display: flex; align-items: center; gap: 6px; margin-right: 4px; }
+    .header-nav a {
+      color: rgba(255,255,255,0.8); font-size: 13px; font-weight: 500;
+      text-decoration: none; padding: 5px 10px; border-radius: 6px;
+      transition: background var(--t-fast); white-space: nowrap;
+    }
+    .header-nav a:hover { background: rgba(255,255,255,0.14); color: white; }
+    .btn-continuar {
+      background: var(--c-blue-500, #2563eb); color: white; border: none;
+      padding: 11px 20px; border-radius: var(--r-md); font-size: 14px; font-weight: 600;
+      font-family: inherit; cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+      transition: background var(--t-fast); box-shadow: var(--shadow-sm); flex-shrink: 0;
+    }
+    .btn-continuar:hover { background: var(--c-blue-700); }
+    .welcome-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
     /* ── Layout principal ────────────────────────────────────── */
     .dash-main { max-width: 1000px; margin: 0 auto; padding: 36px 24px; }
@@ -214,6 +230,7 @@
   <!-- Header -->
   <header class="dash-header">
     <img src="img/LogoECM.png" alt="CEECM">
+    <nav class="header-nav" id="headerNav"></nav>
     <div class="header-right">
       <div class="header-avatar" id="headerAvatar"></div>
       <span class="header-nombre" id="headerNombre"></span>
@@ -318,9 +335,16 @@
 
       if (_perfil.rol === "super_admin") {
         document.getElementById("btnNuevoCurso").style.display = "none";
+        document.getElementById("headerNav").innerHTML = `
+          <a href="superadmin.html">🛡️ Super Admin</a>
+          <a href="admin.html">👥 Usuarios</a>
+          <a href="index.html?new=1">📋 Nueva planeación</a>`;
         await renderSuperAdmin();
       } else if (_perfil.rol === "admin") {
         document.getElementById("btnNuevoCurso").style.display = "none";
+        document.getElementById("headerNav").innerHTML = `
+          <a href="admin.html">👥 Mis usuarios</a>
+          <a href="index.html?new=1">📋 Nueva planeación</a>`;
         await renderAdmin();
       } else {
         await renderUser();
@@ -330,6 +354,15 @@
     // ── Vista: Usuario ────────────────────────────────────────────────────────
     async function renderUser() {
       document.getElementById("subtituloWelcome").textContent = "Gestiona tus cursos en elaboración.";
+
+      // Envolver el botón de nuevo curso en un contenedor de acciones
+      const btnNuevo = document.getElementById("btnNuevoCurso");
+      const welcomeDiv = btnNuevo.parentElement;
+      const wrapper = document.createElement("div");
+      wrapper.className = "welcome-actions";
+      welcomeDiv.replaceChild(wrapper, btnNuevo);
+      wrapper.appendChild(btnNuevo);
+
       const dash = document.getElementById("contenidoDash");
       dash.innerHTML = `
         <div class="dash-section">
@@ -373,6 +406,25 @@
             <a href="index.html?new=1" class="btn-nuevo">+ Crear primer curso</a>
           </div>`;
         return;
+      }
+
+      // Botón "Continuar" para el curso más reciente en progreso
+      const wrapper = document.querySelector(".welcome-actions");
+      if (wrapper) {
+        const ultimo = data.find(p => p.status !== "completa");
+        const btnContinuar = wrapper.querySelector(".btn-continuar");
+        if (btnContinuar) btnContinuar.remove();
+        if (ultimo) {
+          const btn = document.createElement("button");
+          btn.className = "btn-continuar";
+          btn.title = ultimo.nombre_curso || "Sin título";
+          const label = ultimo.nombre_curso
+            ? `Continuar: ${ultimo.nombre_curso.length > 28 ? ultimo.nombre_curso.slice(0, 28) + "…" : ultimo.nombre_curso}`
+            : "Continuar último curso";
+          btn.textContent = label + " →";
+          btn.addEventListener("click", () => abrirPlaneacion(ultimo.id));
+          wrapper.insertBefore(btn, wrapper.firstChild);
+        }
       }
 
       lista.innerHTML = data.map(p => {
