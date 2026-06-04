@@ -5,7 +5,7 @@ pyotp
 python-docx
 python-pptx
 openai
-# supabase
-# python-jose[cryptography]
-# stripe
-# httpx
+supabase
+python-jose[cryptography]
+stripe
+httpx

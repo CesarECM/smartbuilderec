@@ -1,8 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse#, JSONResponse
-#from starlette.middleware.base import BaseHTTPMiddleware
-#from starlette.requests import Request
+from fastapi.responses import StreamingResponse, JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -20,8 +19,8 @@ import io
 import subprocess
 import base64
 from concurrent.futures import ThreadPoolExecutor, as_completed
-#import sys
-#sys.path.insert(0, str(Path(__file__).resolve().parent))
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -43,54 +42,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Paths que no requieren JWT (exactos)
+# Paths que no requieren JWT
+_PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe"}
 
+def _es_publico(method: str, path: str) -> bool:
+    if path in _PATHS_PUBLICOS:
+        return True
+    if method == "GET" and path == "/checkout/verify":
+        return True
+    return False
 
-# _PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe"}
+class JWTAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS" or _es_publico(request.method, request.url.path):
+            return await call_next(request)
+        auth = request.headers.get("Authorization", "")
+        if not auth.startswith("Bearer "):
+            return JSONResponse({"detail": "Autenticación requerida."}, status_code=401)
+        token = auth.removeprefix("Bearer ").strip()
+        secret = os.getenv("SUPABASE_JWT_SECRET")
+        if not secret:
+            return JSONResponse({"detail": "JWT secret no configurado."}, status_code=500)
+        try:
+            from jose import jwt as jose_jwt
+            payload = jose_jwt.decode(token, secret, algorithms=["HS256"], audience="authenticated")
+            request.state.user = payload
+        except Exception:
+            return JSONResponse({"detail": "Token inválido o expirado. Vuelve a iniciar sesión."}, status_code=401)
+        return await call_next(request)
 
-# def _es_publico(method: str, path: str) -> bool:
-#     if path in _PATHS_PUBLICOS:
-#         return True
-#     # Catálogo de cursos y detalle: solo lectura pública
-#     if method == "GET" and (path == "/cursos" or path.startswith("/cursos/")):
-#         return True
-#     # Verificar pago post-Stripe
-#     if method == "GET" and path == "/checkout/verify":
-#         return True
-#     return False
-
-# class JWTAuthMiddleware(BaseHTTPMiddleware):
-#     async def dispatch(self, request: Request, call_next):
-#         if request.method == "OPTIONS" or _es_publico(request.method, request.url.path):
-#             return await call_next(request)
-#         auth = request.headers.get("Authorization", "")
-#         if not auth.startswith("Bearer "):
-#             return JSONResponse({"detail": "Autenticación requerida."}, status_code=401)
-#         token = auth.removeprefix("Bearer ").strip()
-#         secret = os.getenv("SUPABASE_JWT_SECRET")
-#         if not secret:
-#             return JSONResponse({"detail": "JWT secret no configurado."}, status_code=500)
-#         try:
-#             from jose import jwt as jose_jwt
-#             payload = jose_jwt.decode(token, secret, algorithms=["HS256"], audience="authenticated")
-#             request.state.user = payload
-#         except Exception:
-#             return JSONResponse({"detail": "Token inválido o expirado. Vuelve a iniciar sesión."}, status_code=401)
-#         return await call_next(request)
-
-# app.add_middleware(JWTAuthMiddleware)
+app.add_middleware(JWTAuthMiddleware)
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 
-# from routers import cursos as cursos_router
-# from routers import stripe_router
-# from routers import planeaciones as planeaciones_router
-# from routers import inscripciones as inscripciones_router
+from routers import stripe_router
 
-# app.include_router(cursos_router.router,       prefix="/cursos",       tags=["cursos"])
-# app.include_router(stripe_router.router,       tags=["stripe"])
-# app.include_router(planeaciones_router.router, prefix="/planeaciones", tags=["planeaciones"])
-# app.include_router(inscripciones_router.router, prefix="/inscripciones", tags=["inscripciones"])
+app.include_router(stripe_router.router, tags=["stripe"])
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
@@ -1120,13 +1107,13 @@ def generar_lista_asistencia(data: "PlaneacionRequest") -> bytes:
 def home():
     return {"message": "SmartBuilder EC — API funcionando correctamente"}
 
-# @app.get("/perfil")
-# def get_perfil(request: Request):
-#     from database import get_supabase
-#     user_id = request.state.user.get("sub")
-#     sb = get_supabase()
-#     res = sb.table("profiles").select("id, nombre, apellido, rol, created_at").eq("id", user_id).single().execute()
-#     return res.data or {}
+@app.get("/perfil")
+def get_perfil(request: Request):
+    from database import get_supabase
+    user_id = request.state.user.get("sub")
+    sb = get_supabase()
+    res = sb.table("profiles").select("id, nombre, apellido, rol, credits, activo").eq("id", user_id).single().execute()
+    return res.data or {}
 
 
 @app.post("/validate-token")
@@ -1136,6 +1123,58 @@ def validate_token(data: TokenRequest):
     if totp.verify(data.token):
         return {"status": "valid"}
     return {"status": "invalid"}
+
+
+class CreateUserRequest(BaseModel):
+    email: str
+    nombre: str
+    apellido: str
+    admin_id: str
+
+
+@app.post("/admin/create-user", status_code=201)
+def admin_create_user(data: CreateUserRequest, request: Request):
+    from database import get_supabase
+
+    caller_id = request.state.user.get("sub")
+    sb = get_supabase()
+
+    # Verificar que el caller es admin o super_admin y que data.admin_id coincide
+    caller_res = sb.table("profiles").select("rol, id").eq("id", caller_id).single().execute()
+    caller = caller_res.data or {}
+    if caller.get("rol") not in ("admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Solo admins pueden crear usuarios.")
+    if caller.get("rol") == "admin" and caller.get("id") != data.admin_id:
+        raise HTTPException(status_code=403, detail="No puedes crear usuarios para otro admin.")
+
+    try:
+        result = sb.auth.admin.create_user({
+            "email": data.email,
+            "email_confirm": True,
+            "user_metadata": {
+                "nombre": data.nombre,
+                "apellido": data.apellido,
+                "admin_id": data.admin_id,
+            },
+        })
+        user_id = result.user.id
+
+        # El trigger handle_new_user crea el perfil; aseguramos admin_id y rol
+        sb.table("profiles").update({
+            "nombre": data.nombre,
+            "apellido": data.apellido,
+            "admin_id": data.admin_id,
+            "rol": "user",
+            "activo": True,
+        }).eq("id", user_id).execute()
+
+        return {"id": user_id, "email": data.email}
+
+    except Exception as e:
+        err = str(e)
+        if "already been registered" in err or "already exists" in err:
+            raise HTTPException(status_code=409, detail="El correo ya está registrado.")
+        raise HTTPException(status_code=500, detail=f"Error al crear usuario: {err}")
 
 
 @app.post("/evaluate")

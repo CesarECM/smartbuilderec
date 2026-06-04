@@ -180,7 +180,13 @@ function _cmDetectTitle(msg) {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const response = await fetch(url, { ...opciones, signal: controller.signal });
+        // Inyectar JWT automáticamente en todas las llamadas al backend
+        let headers = { ...(opciones.headers || {}) };
+        if (url.startsWith(BACKEND_URL) && typeof getAuthHeaders === "function") {
+          const authHeaders = await getAuthHeaders();
+          headers = { ...authHeaders, ...headers };
+        }
+        const response = await fetch(url, { ...opciones, headers, signal: controller.signal });
         clearTimeout(id);
         return response;
       } catch (err) {
@@ -362,10 +368,9 @@ function _cmDetectTitle(msg) {
         }, 800);
 
         try {
-        // const authHeaders = typeof getAuthHeaders === "function" ? await getAuthHeaders() : { "Content-Type": "application/json" };
         const response = await fetchConTimeout(`${BACKEND_URL}/generate-doc/planeacion`, {
             method: "POST",
-            headers:{ "Content-Type": "application/json" },// authHeaders,
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         }, 90000);
         if (!response.ok) {
