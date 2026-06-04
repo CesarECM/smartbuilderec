@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
+from typing import Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 from pathlib import Path
@@ -1129,7 +1130,7 @@ class CreateUserRequest(BaseModel):
     email: str
     nombre: str
     apellido: str
-    admin_id: str
+    admin_id: Optional[str] = None
 
 
 @app.post("/admin/create-user", status_code=201)
@@ -1139,11 +1140,11 @@ def admin_create_user(data: CreateUserRequest, request: Request):
     caller_id = request.state.user.get("sub")
     sb = get_supabase()
 
-    # Verificar que el caller es admin o super_admin y que data.admin_id coincide
     caller_res = sb.table("profiles").select("rol, id").eq("id", caller_id).single().execute()
     caller = caller_res.data or {}
     if caller.get("rol") not in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="Solo admins pueden crear usuarios.")
+    # Admin solo puede crear usuarios para sí mismo
     if caller.get("rol") == "admin" and caller.get("id") != data.admin_id:
         raise HTTPException(status_code=403, detail="No puedes crear usuarios para otro admin.")
 
