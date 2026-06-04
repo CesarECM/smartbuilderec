@@ -152,6 +152,38 @@
       font-size: 13px; color: #92400e; margin-bottom: 16px;
       display: flex; align-items: center; gap: 8px;
     }
+
+    /* ── Formulario crear usuario ────────────────────────────── */
+    .crear-form {
+      background: var(--c-surface); border: 1.5px solid var(--c-blue-200, #bfdbfe);
+      border-radius: var(--r-lg); padding: 20px;
+      margin-bottom: 16px; display: none;
+    }
+    .crear-form.visible { display: block; }
+    .crear-form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 12px;
+    }
+    .crear-form-field { display: flex; flex-direction: column; gap: 4px; }
+    .crear-form-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .crear-form-field input {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .crear-form-field input:focus { outline: none; border-color: var(--c-blue-600); }
+    .crear-form-field.full { grid-column: 1 / -1; }
+    .crear-form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .btn-secondary {
+      background: var(--c-surface-2); color: var(--c-text-2);
+      border: 1px solid var(--c-border-s); padding: 8px 16px;
+      border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+    }
+    .crear-form-msg { font-size: 12px; margin-top: 8px; }
+    .crear-form-msg.error { color: var(--c-danger); }
+    .crear-form-msg.ok    { color: #059669; }
+    @media (max-width: 600px) { .crear-form-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -188,10 +220,39 @@
     <div class="panel-section">
       <div class="section-header">
         <h2>Mis usuarios</h2>
-        <button class="btn-primary" id="btnGenerarCodigo">
-          🔑 Generar código de acceso
-        </button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" id="btnCrearUsuario" onclick="toggleCrearForm()">
+            ➕ Crear usuario
+          </button>
+          <button class="btn-primary" id="btnGenerarCodigo" style="background:var(--c-blue-500,#3b82f6)">
+            🔑 Generar código
+          </button>
+        </div>
       </div>
+
+      <!-- Formulario de creación directa -->
+      <div class="crear-form" id="crearForm">
+        <div class="crear-form-grid">
+          <div class="crear-form-field">
+            <label for="cfNombre">Nombre</label>
+            <input type="text" id="cfNombre" placeholder="Juan" autocomplete="given-name">
+          </div>
+          <div class="crear-form-field">
+            <label for="cfApellido">Apellido</label>
+            <input type="text" id="cfApellido" placeholder="Pérez" autocomplete="family-name">
+          </div>
+          <div class="crear-form-field full">
+            <label for="cfEmail">Correo electrónico</label>
+            <input type="email" id="cfEmail" placeholder="correo@empresa.com" autocomplete="email">
+          </div>
+        </div>
+        <div class="crear-form-actions">
+          <button class="btn-secondary" onclick="toggleCrearForm()">Cancelar</button>
+          <button class="btn-primary" id="btnEnviarCrear" onclick="crearUsuario()">Crear y enviar invitación</button>
+        </div>
+        <p class="crear-form-msg" id="crearMsg"></p>
+      </div>
+
       <div id="listaUsuarios"><p class="loading-txt">Cargando usuarios...</p></div>
     </div>
 
@@ -340,6 +401,67 @@
       btn.className     = `btn-sm ${nuevoEstado ? "" : "success"}`;
       btn.onclick       = () => toggleUsuario(userId, nuevoEstado);
       btn.disabled      = false;
+    }
+
+    // ── Crear usuario directo ─────────────────────────────────
+    function toggleCrearForm() {
+      const form = document.getElementById("crearForm");
+      const visible = form.classList.toggle("visible");
+      if (visible) {
+        document.getElementById("cfNombre").focus();
+      } else {
+        document.getElementById("cfNombre").value = "";
+        document.getElementById("cfApellido").value = "";
+        document.getElementById("cfEmail").value = "";
+        document.getElementById("crearMsg").textContent = "";
+      }
+    }
+
+    async function crearUsuario() {
+      const nombre   = document.getElementById("cfNombre").value.trim();
+      const apellido = document.getElementById("cfApellido").value.trim();
+      const email    = document.getElementById("cfEmail").value.trim();
+      const msg      = document.getElementById("crearMsg");
+      const btn      = document.getElementById("btnEnviarCrear");
+
+      msg.textContent = "";
+      if (!nombre || !apellido || !email) {
+        msg.textContent = "Completa todos los campos.";
+        msg.className = "crear-form-msg error";
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = "Ingresa un correo válido.";
+        msg.className = "crear-form-msg error";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Creando...";
+
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/admin/create-user`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, apellido, email, admin_id: _perfil.id }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al crear usuario.");
+
+        msg.textContent = `✓ Usuario creado. Se envió un correo a ${email} para configurar su contraseña.`;
+        msg.className = "crear-form-msg ok";
+        document.getElementById("cfNombre").value = "";
+        document.getElementById("cfApellido").value = "";
+        document.getElementById("cfEmail").value = "";
+        await Promise.all([cargarUsuarios(), cargarStats()]);
+      } catch (e) {
+        msg.textContent = e.message;
+        msg.className = "crear-form-msg error";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Crear y enviar invitación";
+      }
     }
 
     async function eliminarUsuario(userId, nombre) {
