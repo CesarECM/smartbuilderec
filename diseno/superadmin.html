@@ -442,7 +442,10 @@
 
       async function guardar() {
         const nuevos = parseInt(input.value, 10);
-        if (isNaN(nuevos) || nuevos < 0) { alert("Ingresa un número válido."); return; }
+        if (isNaN(nuevos) || nuevos < 0 || nuevos > 9999) {
+          alert("Ingresa un número entre 0 y 9999.");
+          return;
+        }
 
         btnGuardar.disabled = true;
         const { error } = await _supabase
@@ -478,11 +481,15 @@
     // ── Buscar usuario para promover ───────────────────────────
     async function buscarUsuario() {
       const email    = document.getElementById("buscarEmail").value.trim().toLowerCase();
-      const creditos = parseInt(document.getElementById("creditosAsignar").value, 10) || 0;
+      const creditos = parseInt(document.getElementById("creditosAsignar").value, 10);
       const res      = document.getElementById("resultadoBusqueda");
       const btn      = document.getElementById("btnBuscar");
 
       if (!email) { mostrarToast("Ingresa un correo electrónico"); return; }
+      if (isNaN(creditos) || creditos < 0 || creditos > 9999) {
+        mostrarToast("Los créditos deben ser un número entre 0 y 9999");
+        return;
+      }
 
       btn.disabled = true;
       btn.textContent = "Buscando...";
