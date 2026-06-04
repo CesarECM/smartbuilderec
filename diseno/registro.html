@@ -8,8 +8,8 @@
   <style>
     body { background: var(--c-bg); }
     .login-container {
-      max-width: 440px;
-      margin: 40px auto;
+      max-width: 480px;
+      margin: 36px auto;
       background: var(--c-surface);
       padding: 40px;
       border-radius: var(--r-xl);
@@ -55,17 +55,61 @@
     }
     .login-row { display: flex; gap: 10px; }
     .login-row .login-field { flex: 1; }
-    /* Descripción de tab */
-    .tab-desc {
-      font-size: 13px; color: var(--c-text-3); margin-bottom: 16px;
-      padding: 10px 12px; background: var(--c-surface-2);
-      border-radius: var(--r-sm); border-left: 3px solid var(--c-blue-600);
-    }
     /* Código input destacado */
     .codigo-input {
       font-size: 20px !important; font-weight: 700 !important;
       letter-spacing: 4px !important; text-align: center !important;
       text-transform: uppercase !important;
+    }
+    /* Tab-desc */
+    .tab-desc {
+      font-size: 13px; color: var(--c-text-3); margin-bottom: 16px;
+      padding: 10px 12px; background: var(--c-surface-2);
+      border-radius: var(--r-sm); border-left: 3px solid var(--c-blue-600);
+    }
+    /* ── Tarjetas de plan ──────────────────────────────────── */
+    .plan-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .plan-card {
+      border: 2px solid var(--c-border-s); border-radius: var(--r-lg);
+      padding: 16px 14px; cursor: pointer; transition: all var(--t-fast);
+      background: var(--c-surface-2); position: relative;
+    }
+    .plan-card:hover { border-color: var(--c-blue-600); }
+    .plan-card.selected {
+      border-color: var(--c-blue-600);
+      background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(31,59,109,0.1);
+    }
+    .plan-card.selected .plan-check { display: block; }
+    .plan-check {
+      display: none; position: absolute; top: 10px; right: 10px;
+      width: 20px; height: 20px; background: var(--c-blue-600);
+      border-radius: 50%; color: white; font-size: 11px;
+      line-height: 20px; text-align: center;
+    }
+    .plan-icon { font-size: 28px; margin-bottom: 6px; }
+    .plan-name { font-size: 13px; font-weight: 700; color: var(--c-text); margin-bottom: 2px; }
+    .plan-price {
+      font-size: 18px; font-weight: 800; color: var(--c-blue-600);
+      margin-bottom: 2px;
+    }
+    .plan-price span { font-size: 12px; font-weight: 500; color: var(--c-text-3); }
+    .plan-features { list-style: none; padding: 0; margin: 8px 0 0; }
+    .plan-features li {
+      font-size: 11.5px; color: var(--c-text-2); padding: 2px 0;
+    }
+    .plan-features li::before { content: "✓ "; color: #059669; font-weight: 700; }
+    /* Formulario de registro */
+    .reg-form { display: none; }
+    .reg-form.visible { display: block; }
+    .plan-selected-label {
+      font-size: 12px; font-weight: 600; color: var(--c-blue-600);
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      padding: 6px 12px; border-radius: var(--r-sm);
+      margin-bottom: 14px; text-align: center;
     }
     /* Botón principal */
     .login-btn {
@@ -87,12 +131,12 @@
     .login-footer { text-align: center; margin-top: 18px; font-size: 13px; color: var(--c-text-3); }
     .login-footer a { color: var(--c-blue-600); font-weight: 600; text-decoration: none; }
     .login-footer a:hover { text-decoration: underline; }
-    /* Nota de Stripe */
-    .stripe-nota {
-      font-size: 12px; color: var(--c-text-3); text-align: center;
-      margin-top: 8px; padding: 6px; background: #fffbeb;
-      border-radius: var(--r-sm); border: 1px solid #fde68a;
+    /* Stripe badge */
+    .stripe-badge {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 11px; color: var(--c-text-3); margin-top: 10px;
     }
+    .stripe-badge svg { width: 36px; }
   </style>
 </head>
 <body>
@@ -100,49 +144,82 @@
     <img src="img/LogoECM.png" alt="Logo CEECM" class="login-logo">
     <h2>Crear cuenta</h2>
 
-    <!-- Selector de método de registro -->
+    <!-- Tabs -->
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tabBtnNormal">Registro libre</button>
+      <button class="auth-tab active" id="tabBtnPago">Acceso directo</button>
       <button class="auth-tab" id="tabBtnCodigo">Tengo un código</button>
     </div>
 
-    <!-- ── Tab: Registro estándar ─────────────────────────────────────────── -->
-    <div id="tabNormal">
-      <p class="tab-desc">
-        Crea tu cuenta. El acceso completo se activa mediante suscripción.
-      </p>
+    <!-- ── Tab: Pago directo ──────────────────────────────────────────────── -->
+    <div id="tabPago">
 
-      <div class="login-row">
-        <div class="login-field">
-          <label for="nombre">Nombre</label>
-          <input type="text" id="nombre" placeholder="Juan" autocomplete="given-name">
+      <!-- Selección de plan -->
+      <div id="seccionPlanes">
+        <p class="tab-desc">Elige el plan que mejor se adapta a tus necesidades.</p>
+
+        <div class="plan-grid">
+          <!-- Plan Instructor -->
+          <div class="plan-card" id="planInstructor" onclick="seleccionarPlan('instructor')">
+            <span class="plan-check">✓</span>
+            <div class="plan-icon">🎓</div>
+            <div class="plan-name">Instructor</div>
+            <div class="plan-price">$1,800 <span>MXN único</span></div>
+            <ul class="plan-features">
+              <li>Wizard EC0217 completo</li>
+              <li>Generación IA ilimitada</li>
+              <li>Descarga de expediente</li>
+              <li>Acceso permanente</li>
+            </ul>
+          </div>
+
+          <!-- Plan Admin -->
+          <div class="plan-card" id="planAdmin" onclick="seleccionarPlan('admin')">
+            <span class="plan-check">✓</span>
+            <div class="plan-icon">🏢</div>
+            <div class="plan-name">Gestión de equipo</div>
+            <div class="plan-price">$1,000 <span>MXN/mes</span></div>
+            <ul class="plan-features">
+              <li>2 instructores incluidos</li>
+              <li>Instructor extra: $500</li>
+              <li>Panel de administración</li>
+              <li>Códigos de acceso</li>
+            </ul>
+          </div>
         </div>
+      </div>
+
+      <!-- Formulario (aparece al seleccionar plan) -->
+      <div class="reg-form" id="regForm">
+        <div class="plan-selected-label" id="planLabel">Plan seleccionado</div>
+
+        <div class="login-row">
+          <div class="login-field">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" placeholder="Juan" autocomplete="given-name">
+          </div>
+          <div class="login-field">
+            <label for="apellido">Apellido</label>
+            <input type="text" id="apellido" placeholder="Pérez" autocomplete="family-name">
+          </div>
+        </div>
+
         <div class="login-field">
-          <label for="apellido">Apellido</label>
-          <input type="text" id="apellido" placeholder="Pérez" autocomplete="family-name">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" placeholder="correo@ejemplo.com" autocomplete="email">
+        </div>
+
+        <button class="login-btn" id="btnPagar">Continuar al pago →</button>
+
+        <div class="stripe-badge">
+          <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.45 9.75c0-.69.57-1.05 1.5-1.05 1.34 0 3.03.41 4.37 1.13V6.14C9.93 5.52 8.53 5.25 7.12 5.25 3.8 5.25 1.5 6.97 1.5 9.95c0 4.65 6.4 3.9 6.4 5.9 0 .82-.71 1.09-1.7 1.09-1.47 0-3.35-.61-4.83-1.43v3.64c1.64.71 3.3 1.02 4.83 1.02 3.42 0 5.77-1.68 5.77-4.7-.01-5.02-6.52-4.12-6.52-5.72zm13.2-6.56l-3.32.7v2.7l-1.5.32v2.87h1.5V14c0 2.7 1.38 3.65 4.18 3.65.77 0 1.6-.1 2.24-.28v-2.97c-.42.1-.86.18-1.3.18-1.1 0-1.5-.36-1.5-1.46V9.78h2.8V6.91h-2.8V3.19zm5.66 3.72h3.44v10.56h-3.44V6.91zm1.72-4.6c-1.1 0-1.98.88-1.98 2a1.99 1.99 0 003.97 0c0-1.12-.88-2-1.99-2zm9.8 4.35c-.8 0-1.77.36-2.48 1.15V6.91h-3.44v10.56h3.44v-5.64c0-1.3.72-1.82 1.64-1.82.93 0 1.44.52 1.44 1.82v5.64h3.44v-6.44c0-2.75-1.54-4.37-4.04-4.37zm12.4-.1c-1.5 0-2.63.57-3.4 1.46V3.35H41.4v14.12h2.97v-1.35c.78.93 1.9 1.5 3.37 1.5 2.9 0 5.2-2.36 5.2-5.54.01-3.16-2.28-5.52-5.18-5.52zm-.77 8.15c-1.44 0-2.56-1.14-2.56-2.63s1.12-2.63 2.56-2.63 2.56 1.14 2.56 2.63-1.12 2.63-2.56 2.63z" fill="#6772E5"/>
+          </svg>
+          Pago seguro procesado por Stripe
         </div>
       </div>
-
-      <div class="login-field">
-        <label for="email">Correo electrónico</label>
-        <input type="email" id="email" placeholder="correo@ejemplo.com" autocomplete="email">
-      </div>
-
-      <div class="login-field">
-        <label for="password">Contraseña</label>
-        <input type="password" id="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
-      </div>
-
-      <div class="login-field">
-        <label for="password2">Confirmar contraseña</label>
-        <input type="password" id="password2" placeholder="Repite tu contraseña" autocomplete="new-password">
-      </div>
-
-      <button class="login-btn" id="btnRegistro">Crear cuenta</button>
-      <p class="stripe-nota">La integración de pagos está disponible próximamente.</p>
     </div>
 
-    <!-- ── Tab: Registro con código de acceso ────────────────────────────── -->
+    <!-- ── Tab: Código de acceso ──────────────────────────────────────────── -->
     <div id="tabCodigo" style="display:none">
       <p class="tab-desc">
         Tu administrador te generó un código de acceso. Ingrésalo aquí para activar tu cuenta.
@@ -194,80 +271,90 @@
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script>
+    const BACKEND_URL = "https://smartbuilderec.onrender.com";
     const msg = document.getElementById("msg");
+    let planSeleccionado = null;
 
     function setMsg(text, type) {
       msg.textContent = text;
-      msg.className = "login-msg " + type;
-    }
-
-    function validarCampos(nombre, apellido, email, password, password2) {
-      if (!nombre || !apellido || !email || !password) return "Completa todos los campos.";
-      if (!/\S+@\S+\.\S+/.test(email))                return "Ingresa un correo válido.";
-      if (password.length < 8)                         return "La contraseña debe tener al menos 8 caracteres.";
-      if (password !== password2)                      return "Las contraseñas no coinciden.";
-      return null;
+      msg.className = "login-msg " + (type || "");
     }
 
     // ── Tabs ──────────────────────────────────────────────────────────────────
-    document.getElementById("tabBtnNormal").addEventListener("click", () => {
-      document.getElementById("tabBtnNormal").classList.add("active");
+    document.getElementById("tabBtnPago").addEventListener("click", () => {
+      document.getElementById("tabBtnPago").classList.add("active");
       document.getElementById("tabBtnCodigo").classList.remove("active");
-      document.getElementById("tabNormal").style.display = "";
+      document.getElementById("tabPago").style.display = "";
       document.getElementById("tabCodigo").style.display = "none";
       setMsg("", "");
     });
 
     document.getElementById("tabBtnCodigo").addEventListener("click", () => {
       document.getElementById("tabBtnCodigo").classList.add("active");
-      document.getElementById("tabBtnNormal").classList.remove("active");
+      document.getElementById("tabBtnPago").classList.remove("active");
       document.getElementById("tabCodigo").style.display = "";
-      document.getElementById("tabNormal").style.display = "none";
+      document.getElementById("tabPago").style.display = "none";
       setMsg("", "");
     });
 
-    // Formato automático del código: insertar guion en posición 4
+    // ── Selección de plan ─────────────────────────────────────────────────────
+    function seleccionarPlan(plan) {
+      planSeleccionado = plan;
+
+      document.getElementById("planInstructor").classList.toggle("selected", plan === "instructor");
+      document.getElementById("planAdmin").classList.toggle("selected", plan === "admin");
+
+      const label = plan === "instructor"
+        ? "Plan Instructor — $1,800 MXN pago único"
+        : "Plan Gestión de equipo — $1,000 MXN/mes";
+      document.getElementById("planLabel").textContent = label;
+
+      const form = document.getElementById("regForm");
+      form.classList.add("visible");
+      form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    // ── Checkout ──────────────────────────────────────────────────────────────
+    document.getElementById("btnPagar").addEventListener("click", async () => {
+      if (!planSeleccionado) { setMsg("Selecciona un plan.", "error"); return; }
+
+      const nombre    = document.getElementById("nombre").value.trim();
+      const apellido  = document.getElementById("apellido").value.trim();
+      const email     = document.getElementById("email").value.trim();
+      const btn       = document.getElementById("btnPagar");
+
+      if (!nombre || !apellido || !email) { setMsg("Completa todos los campos.", "error"); return; }
+      if (!/\S+@\S+\.\S+/.test(email))   { setMsg("Ingresa un correo válido.", "error"); return; }
+
+      btn.disabled = true;
+      btn.textContent = "Redirigiendo a Stripe...";
+      setMsg("", "");
+
+      const base = window.location.origin;
+      const success_url = `${base}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
+      const cancel_url  = `${base}/registro.html`;
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/checkout/session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, nombre, apellido, plan: planSeleccionado, success_url, cancel_url }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al crear la sesión.");
+        window.location.href = data.checkout_url;
+      } catch (e) {
+        setMsg(e.message || "Error al conectar con el servidor.", "error");
+        btn.disabled = false;
+        btn.textContent = "Continuar al pago →";
+      }
+    });
+
+    // ── Código de formato automático ──────────────────────────────────────────
     document.getElementById("codigoAcceso").addEventListener("input", function () {
       let v = this.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
       if (v.length > 4) v = v.slice(0, 4) + "-" + v.slice(4, 8);
       this.value = v;
-    });
-
-    // ── Registro estándar ─────────────────────────────────────────────────────
-    document.getElementById("btnRegistro").addEventListener("click", async () => {
-      const nombre    = document.getElementById("nombre").value.trim();
-      const apellido  = document.getElementById("apellido").value.trim();
-      const email     = document.getElementById("email").value.trim();
-      const password  = document.getElementById("password").value;
-      const password2 = document.getElementById("password2").value;
-      const btn       = document.getElementById("btnRegistro");
-
-      const err = validarCampos(nombre, apellido, email, password, password2);
-      if (err) { setMsg(err, "error"); return; }
-
-      btn.disabled = true;
-      btn.textContent = "Creando cuenta...";
-      setMsg("", "");
-
-      try {
-        const { data } = await registro(email, password, nombre, apellido);
-        if (data?.session) {
-          setMsg("¡Cuenta creada! Redirigiendo...", "ok");
-          setTimeout(() => { window.location.href = "dashboard.html"; }, 800);
-        } else {
-          setMsg("Cuenta creada. Revisa tu correo para confirmarla.", "ok");
-          btn.textContent = "Cuenta creada ✓";
-        }
-      } catch (e) {
-        const t = e.message || "";
-        if (t.includes("already registered") || t.includes("already been registered")) {
-          setMsg("Este correo ya está registrado. ¿Quieres iniciar sesión?", "error");
-        } else {
-          setMsg("Error al crear la cuenta. Intenta de nuevo.", "error");
-        }
-        btn.disabled = false;
-        btn.textContent = "Crear cuenta";
-      }
     });
 
     // ── Registro con código ───────────────────────────────────────────────────
@@ -281,9 +368,10 @@
       const btn       = document.getElementById("btnRegistroCodigo");
 
       if (!codigo || codigo.length < 9) { setMsg("Ingresa un código válido (formato XXXX-XXXX).", "error"); return; }
-
-      const err = validarCampos(nombre, apellido, email, password, password2);
-      if (err) { setMsg(err, "error"); return; }
+      if (!nombre || !apellido || !email || !password) { setMsg("Completa todos los campos.", "error"); return; }
+      if (!/\S+@\S+\.\S+/.test(email))   { setMsg("Ingresa un correo válido.", "error"); return; }
+      if (password.length < 8)           { setMsg("La contraseña debe tener al menos 8 caracteres.", "error"); return; }
+      if (password !== password2)        { setMsg("Las contraseñas no coinciden.", "error"); return; }
 
       btn.disabled = true;
       btn.textContent = "Verificando código...";

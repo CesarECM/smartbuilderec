@@ -412,6 +412,19 @@
       }).join("");
     }
 
+    async function abrirPortalFacturacion() {
+      try {
+        const BACKEND_URL = "https://smartbuilderec.onrender.com";
+        const headers = typeof getAuthHeaders === "function" ? await getAuthHeaders() : { "Content-Type": "application/json" };
+        const res  = await fetch(`${BACKEND_URL}/billing/portal`, { method: "POST", headers });
+        const data = await res.json();
+        if (data.portal_url) window.location.href = data.portal_url;
+        else alert("No se pudo abrir el portal de facturación.");
+      } catch (e) {
+        alert("Error al conectar con el servidor.");
+      }
+    }
+
     async function abrirPlaneacion(id) {
       const { data: p, error } = await _supabase
         .from("planeaciones")
@@ -574,6 +587,12 @@
               <div class="panel-card-title">Nueva planeación</div>
               <div class="panel-card-desc">Crear un expediente didáctico EC0217.01 con IA.</div>
             </a>
+            ${_perfil.stripe_customer_id ? `
+            <div class="panel-card" style="cursor:pointer" onclick="abrirPortalFacturacion()">
+              <div class="panel-card-icon">💳</div>
+              <div class="panel-card-title">Mi suscripción</div>
+              <div class="panel-card-desc">Administrar plan, método de pago y facturación.</div>
+            </div>` : ""}
           </div>
         </div>`;
     }

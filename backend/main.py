@@ -43,7 +43,7 @@ app.add_middleware(
 )
 
 # Paths que no requieren JWT
-_PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe"}
+_PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session"}
 
 def _es_publico(method: str, path: str) -> bool:
     if path in _PATHS_PUBLICOS:

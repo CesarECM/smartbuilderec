@@ -1,113 +1,123 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pago exitoso — CEECM</title>
+  <title>Pago exitoso — SmartBuilderEC</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    .success-container {
-      max-width: 480px;
-      margin: 100px auto;
-      background: var(--c-surface);
-      padding: 48px 40px;
-      border-radius: var(--r-xl);
-      box-shadow: var(--shadow-lg);
-      border: 1px solid var(--c-border);
-      text-align: center;
+    body { background: var(--c-bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .success-card {
+      max-width: 460px; width: 100%; margin: 24px;
+      background: var(--c-surface); padding: 48px 40px;
+      border-radius: var(--r-xl); box-shadow: var(--shadow-lg);
+      border: 1px solid var(--c-border); text-align: center;
     }
-    .success-icon { font-size: 64px; margin-bottom: 20px; }
-    .success-container h2 { font-size: 24px; font-weight: 700; color: var(--c-text); margin-bottom: 10px; }
-    .success-container p { color: var(--c-text-2); margin-bottom: 8px; line-height: 1.6; }
-    .curso-nombre { font-size: 18px; font-weight: 700; color: var(--c-blue-600); margin: 16px 0; }
-    .success-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 28px; }
-    .btn-primary {
-      background: var(--c-blue-600); color: white; border: none; padding: 13px;
-      font-size: 15px; font-weight: 600; font-family: inherit;
-      border-radius: var(--r-md); cursor: pointer; text-decoration: none;
-      transition: background var(--t-fast);
+    .state-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px; font-size: 36px;
     }
-    .btn-primary:hover { background: var(--c-blue-700); }
-    .btn-secondary {
-      background: var(--c-surface-2); color: var(--c-text); border: 1px solid var(--c-border-s);
-      padding: 13px; font-size: 15px; font-weight: 600; font-family: inherit;
-      border-radius: var(--r-md); cursor: pointer; text-decoration: none;
-      transition: background var(--t-fast);
+    .icon-ok    { background: #d1fae5; }
+    .icon-wait  { background: #fef3c7; }
+    .icon-error { background: #fee2e2; }
+    .success-card h1 { font-size: 24px; font-weight: 800; color: var(--c-text); margin-bottom: 12px; }
+    .success-card p  { font-size: 14px; color: var(--c-text-2); margin-bottom: 8px; line-height: 1.6; }
+    .steps-box {
+      background: var(--c-surface-2); border-radius: var(--r-md);
+      padding: 16px 20px; margin: 20px 0; text-align: left;
     }
-    .btn-secondary:hover { background: var(--c-surface); }
-    .loading { color: var(--c-text-3); font-size: 16px; }
+    .steps-box strong { font-size: 13px; color: var(--c-text); display: block; margin-bottom: 8px; }
+    .steps-box ol { margin: 0; padding-left: 20px; }
+    .steps-box li { font-size: 13px; color: var(--c-text-2); padding: 3px 0; }
+    .email-hl { font-weight: 700; color: var(--c-blue-600); }
+    .btn-main {
+      display: inline-block; background: var(--c-blue-600); color: white;
+      padding: 12px 28px; border-radius: var(--r-md); font-size: 15px;
+      font-weight: 600; text-decoration: none; margin-top: 8px;
+      transition: all var(--t-fast); box-shadow: 0 2px 10px rgba(31,59,109,0.22);
+    }
+    .btn-main:hover { background: var(--c-blue-700); transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-block; background: var(--c-surface-2); color: var(--c-text-2);
+      padding: 12px 20px; border-radius: var(--r-md); font-size: 14px;
+      font-weight: 600; text-decoration: none; margin-top: 8px; margin-left: 8px;
+      border: 1px solid var(--c-border-s);
+    }
   </style>
 </head>
 <body>
-  <div class="success-container">
-    <div id="contenido">
-      <p class="loading">Verificando pago...</p>
+  <div class="success-card">
+
+    <!-- Verificando -->
+    <div id="stateLoading">
+      <div class="state-icon icon-wait">⏳</div>
+      <h1>Verificando pago…</h1>
+      <p>Por favor espera un momento.</p>
     </div>
+
+    <!-- Éxito -->
+    <div id="stateSuccess" style="display:none">
+      <div class="state-icon icon-ok">✅</div>
+      <h1>¡Pago exitoso!</h1>
+      <p>Tu cuenta está siendo creada. Recibirás un correo en<br>
+         <span class="email-hl" id="emailUsuario">tu dirección de email</span><br>
+         con el enlace para configurar tu contraseña.</p>
+      <div class="steps-box">
+        <strong>¿Qué sigue?</strong>
+        <ol>
+          <li>Revisa tu bandeja de entrada (y spam).</li>
+          <li>Haz clic en el enlace para establecer tu contraseña.</li>
+          <li>Inicia sesión y comienza a crear tu planeación EC0217.</li>
+        </ol>
+      </div>
+      <a href="login.html" class="btn-main">Ir a iniciar sesión</a>
+    </div>
+
+    <!-- Error / pendiente -->
+    <div id="stateError" style="display:none">
+      <div class="state-icon icon-error">❌</div>
+      <h1>Algo salió mal</h1>
+      <p id="errorMsg">No pudimos verificar tu pago. Si realizaste el pago correctamente,
+         recibirás tu cuenta por correo en unos minutos.</p>
+      <a href="login.html" class="btn-main">Ir a iniciar sesión</a>
+      <a href="registro.html" class="btn-ghost">Volver</a>
+    </div>
+
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js"></script>
   <script>
-    const BACKEND_URL = "https://ceecmweb.onrender.com";
+    const BACKEND_URL = "https://smartbuilderec.onrender.com";
+
+    function show(state) {
+      ["stateLoading", "stateSuccess", "stateError"].forEach(id => {
+        document.getElementById(id).style.display = id === state ? "" : "none";
+      });
+    }
 
     async function verificar() {
-      const params = new URLSearchParams(window.location.search);
-      const sessionId = params.get("session_id");
-      const contenido = document.getElementById("contenido");
-
-      if (!sessionId) {
-        contenido.innerHTML = `
-          <div class="success-icon">❌</div>
-          <h2>Sesión no encontrada</h2>
-          <p>No se pudo verificar tu pago.</p>
-          <div class="success-btns">
-            <a href="catalogo.html" class="btn-primary">Ver cursos</a>
-          </div>
-        `;
-        return;
-      }
+      const sessionId = new URLSearchParams(window.location.search).get("session_id");
+      if (!sessionId) { show("stateError"); return; }
 
       try {
-        const res = await fetch(`${BACKEND_URL}/checkout/verify?session_id=${sessionId}`);
+        const res  = await fetch(`${BACKEND_URL}/checkout/verify?session_id=${encodeURIComponent(sessionId)}`);
+        if (!res.ok) throw new Error("not_found");
         const data = await res.json();
 
-        if (data.status === "paid") {
-          const cursoNombre = data.curso?.titulo || "el curso";
-          contenido.innerHTML = `
-            <div class="success-icon">✅</div>
-            <h2>¡Pago exitoso!</h2>
-            <p>Te has inscrito correctamente en:</p>
-            <div class="curso-nombre">${cursoNombre}</div>
-            <p>Revisa tu correo para los detalles de acceso.</p>
-            <div class="success-btns">
-              <a href="dashboard.html" class="btn-primary">Ir a mi cuenta</a>
-              <a href="catalogo.html" class="btn-secondary">Ver más cursos</a>
-            </div>
-          `;
+        if (data.status === "paid" || data.status === "complete") {
+          if (data.email) document.getElementById("emailUsuario").textContent = data.email;
+          show("stateSuccess");
         } else {
-          contenido.innerHTML = `
-            <div class="success-icon">⏳</div>
-            <h2>Pago pendiente</h2>
-            <p>Tu pago está siendo procesado. En unos momentos recibirás confirmación por correo.</p>
-            <div class="success-btns">
-              <a href="dashboard.html" class="btn-primary">Ir a mi cuenta</a>
-            </div>
-          `;
+          document.getElementById("errorMsg").textContent =
+            "Tu pago está siendo procesado. Recibirás un correo de confirmación en breve.";
+          show("stateError");
         }
       } catch (_) {
-        contenido.innerHTML = `
-          <div class="success-icon">✅</div>
-          <h2>¡Gracias por tu compra!</h2>
-          <p>Tu inscripción fue procesada. Recibirás un correo de confirmación.</p>
-          <div class="success-btns">
-            <a href="dashboard.html" class="btn-primary">Ir a mi cuenta</a>
-            <a href="catalogo.html" class="btn-secondary">Ver más cursos</a>
-          </div>
-        `;
+        show("stateError");
       }
     }
 
     verificar();
   </script>
 </body>
-</html> -->
+</html>
