@@ -1184,6 +1184,17 @@ def admin_create_user(data: CreateUserRequest, request: Request):
 
     except Exception as e:
         err = str(e)
+        # Registrar intento fallido en audit_logs para trazabilidad
+        try:
+            sb.table("audit_logs").insert({
+                "actor_id":    caller_id,
+                "actor_email": (sb.table("profiles").select("email").eq("id", caller_id).single().execute().data or {}).get("email", ""),
+                "action":      "user_creation_failed",
+                "target_email": data.email,
+                "details":     {"error": err[:300]},
+            }).execute()
+        except Exception:
+            pass
         if "already been registered" in err or "already exists" in err:
             raise HTTPException(status_code=409, detail="El correo ya está registrado.")
         raise HTTPException(status_code=500, detail=f"Error al crear usuario: {err}")

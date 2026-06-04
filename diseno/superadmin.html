@@ -368,9 +368,11 @@
       const visible = panel.classList.toggle("visible");
       if (visible && focusId) document.getElementById(focusId)?.focus();
       if (!visible) {
-        // reset forms
         panel.querySelectorAll("input, select").forEach(el => { if (el.type !== "number") el.value = ""; });
-        panel.querySelectorAll(".crear-msg, .resultado-busqueda").forEach(el => { el.textContent = ""; el.style.display = "none"; });
+        // .crear-msg: limpiar texto pero NO ocultar (no tienen display:none por defecto)
+        panel.querySelectorAll(".crear-msg").forEach(el => { el.textContent = ""; el.className = "crear-msg"; el.style.display = ""; });
+        // .resultado-busqueda: sí ocultar porque tienen fondo/borde visibles aunque estén vacíos
+        panel.querySelectorAll(".resultado-busqueda").forEach(el => { el.textContent = ""; el.style.display = "none"; });
       }
     }
 
@@ -703,7 +705,7 @@
       const adminId  = document.getElementById("saAdminId").value;
       const msg      = document.getElementById("crearSAMsg");
       const btn      = document.getElementById("btnCrearSA");
-      msg.textContent="";
+      msg.textContent=""; msg.style.display="";
       if (!nombre||!apellido||!email) { msg.textContent="Completa todos los campos."; msg.className="crear-msg error"; return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent="Ingresa un correo válido."; msg.className="crear-msg error"; return; }
       btn.disabled=true; btn.textContent="Creando...";
@@ -877,12 +879,13 @@
 
     // ── Audit log ─────────────────────────────────────────────────
     const AUDIT_LABELS={
-      user_created:    {label:"Usuario creado",     cls:"audit-created"},
-      user_deleted:    {label:"Usuario eliminado",  cls:"audit-deleted"},
-      user_activated:  {label:"Usuario activado",   cls:"audit-activated"},
-      user_deactivated:{label:"Usuario desactivado",cls:"audit-deactivated"},
-      credits_updated: {label:"Créditos editados",  cls:"audit-credits"},
-      role_changed:    {label:"Rol cambiado",        cls:"audit-role"},
+      user_created:         {label:"Usuario creado",        cls:"audit-created"},
+      user_deleted:         {label:"Usuario eliminado",     cls:"audit-deleted"},
+      user_activated:       {label:"Usuario activado",      cls:"audit-activated"},
+      user_deactivated:     {label:"Usuario desactivado",   cls:"audit-deactivated"},
+      credits_updated:      {label:"Créditos editados",     cls:"audit-credits"},
+      role_changed:         {label:"Rol cambiado",          cls:"audit-role"},
+      user_creation_failed: {label:"Error al crear usuario",cls:"audit-deleted"},
     };
 
     function formatAuditDate(iso) {
