@@ -8,7 +8,7 @@
   <style>
     body { background: var(--c-bg); }
 
-    /* ── Header ─────────────────────────────────────────────── */
+    /* ── Header ──────────────────────────────────────────────── */
     .dash-header {
       background: var(--c-blue-700); padding: 0 28px;
       display: flex; align-items: center; justify-content: space-between;
@@ -17,173 +17,118 @@
     }
     .header-left { display: flex; align-items: center; gap: 14px; }
     .dash-header img { max-height: 34px; }
-    .btn-back {
-      color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600;
-      text-decoration: none; display: flex; align-items: center; gap: 4px;
-      transition: color var(--t-fast);
-    }
+    .btn-back { color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600; text-decoration: none; transition: color var(--t-fast); }
     .btn-back:hover { color: white; }
     .header-title { color: white; font-size: 15px; font-weight: 700; }
     .header-right { display: flex; align-items: center; gap: 10px; }
     .header-nombre { color: rgba(255,255,255,0.85); font-size: 13px; }
-    .header-btn {
-      background: rgba(255,255,255,0.14); color: white; border: none;
-      padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-      font-family: inherit; cursor: pointer; transition: background var(--t-fast);
-    }
+    .header-btn { background: rgba(255,255,255,0.14); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background var(--t-fast); }
     .header-btn:hover { background: rgba(255,255,255,0.26); }
 
-    /* ── Layout ─────────────────────────────────────────────── */
+    /* ── Tab bar ─────────────────────────────────────────────── */
+    .tab-bar { background: var(--c-surface); border-bottom: 2px solid var(--c-border); display: flex; padding: 0 20px; position: sticky; top: 56px; z-index: 90; overflow-x: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .tab-btn { background: none; border: none; border-bottom: 3px solid transparent; padding: 14px 22px; font-size: 13px; font-weight: 600; color: var(--c-text-3); cursor: pointer; font-family: inherit; transition: all 0.15s; margin-bottom: -2px; white-space: nowrap; display: flex; align-items: center; gap: 7px; }
+    .tab-btn:hover { color: var(--c-text); background: var(--c-surface-2); }
+    .tab-btn.active { color: var(--c-blue-600); border-bottom-color: var(--c-blue-600); }
+
+    /* ── Layout ──────────────────────────────────────────────── */
     .panel-main { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+    .tab-panel  { display: none; }
+    .tab-panel.active { display: block; }
 
     /* ── Stats ───────────────────────────────────────────────── */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; margin-bottom: 32px; }
-    .stat-card {
-      background: var(--c-surface); border: 1px solid var(--c-border);
-      border-radius: var(--r-lg); padding: 16px;
-    }
-    .stat-num   { font-size: 26px; font-weight: 800; color: var(--c-blue-600); line-height: 1; }
-    .stat-label { font-size: 11px; color: var(--c-text-3); margin-top: 5px; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px,1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); padding: 20px 18px; display: flex; align-items: center; gap: 14px; }
+    .stat-icon { font-size: 22px; width: 44px; height: 44px; border-radius: var(--r-lg); background: var(--c-surface-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-num  { font-size: 26px; font-weight: 800; color: var(--c-blue-600); line-height: 1; }
+    .stat-label{ font-size: 12px; color: var(--c-text-3); margin-top: 4px; }
 
-    /* ── Sección ─────────────────────────────────────────────── */
-    .panel-section { margin-bottom: 36px; }
-    .section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--c-border);
-    }
+    /* ── Credits alert ───────────────────────────────────────── */
+    .credits-alert { background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--r-md); padding: 12px 16px; font-size: 13px; color: #92400e; display: none; align-items: center; gap: 8px; margin-bottom: 0; }
+
+    /* ── Section header ──────────────────────────────────────── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--c-border); gap: 12px; flex-wrap: wrap; }
     .section-header h2 { font-size: 16px; font-weight: 700; color: var(--c-text); margin: 0; }
+    .section-header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-    /* ── Botones ─────────────────────────────────────────────── */
-    .btn-primary {
-      background: var(--c-blue-600); color: white; border: none;
-      padding: 9px 18px; border-radius: var(--r-md); font-size: 13px;
-      font-weight: 600; font-family: inherit; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: background var(--t-fast);
-    }
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn-primary { background: var(--c-blue-600); color: white; border: none; padding: 9px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background var(--t-fast); }
     .btn-primary:hover:not(:disabled) { background: var(--c-blue-700); }
     .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
-    .btn-sm {
-      background: var(--c-surface-2); color: var(--c-text-2);
-      border: 1px solid var(--c-border-s); padding: 5px 11px;
-      border-radius: var(--r-sm); font-size: 11px; font-weight: 600;
-      font-family: inherit; cursor: pointer; transition: all var(--t-fast);
-    }
-    .btn-sm:hover { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
-    .btn-sm.danger:hover { background: #dc2626; color: white; border-color: #dc2626; }
-    .btn-sm.success { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
-    .btn-sm.success:hover { background: #059669; color: white; border-color: #059669; }
+    .btn-primary.teal { background: #0891b2; }
+    .btn-primary.teal:hover:not(:disabled) { background: #0e7490; }
+    .btn-sm { background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-border-s); padding: 5px 11px; border-radius: var(--r-sm); font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all var(--t-fast); white-space: nowrap; }
+    .btn-sm:hover          { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+    .btn-sm.danger         { color: #991b1b; border-color: #fca5a5; background: #fef2f2; }
+    .btn-sm.danger:hover   { background: #dc2626; color: white; border-color: #dc2626; }
+    .btn-sm.success        { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+    .btn-sm.success:hover  { background: #059669; color: white; border-color: #059669; }
+    .btn-secondary { background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-border-s); padding: 8px 16px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
 
-    /* ── Tarjeta de usuario ──────────────────────────────────── */
-    .user-card {
-      background: var(--c-surface); border: 1px solid var(--c-border);
-      border-radius: var(--r-lg); padding: 14px 18px;
-      display: flex; align-items: center; gap: 14px;
-      margin-bottom: 8px; transition: box-shadow var(--t-fast);
-    }
-    .user-card:hover { box-shadow: var(--shadow-sm); }
-    .user-avatar {
-      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
-      background: var(--c-blue-100); color: var(--c-blue-700);
-      font-size: 13px; font-weight: 800;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .user-info { flex: 1; min-width: 0; }
-    .user-nombre { font-size: 14px; font-weight: 600; color: var(--c-text); }
-    .user-email  { font-size: 12px; color: var(--c-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .user-meta   { font-size: 11px; color: var(--c-text-4); margin-top: 2px; }
-    .user-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+    /* ── Search ──────────────────────────────────────────────── */
+    .search-input { border: 1.5px solid var(--c-border); border-radius: var(--r-md); padding: 7px 12px; font-size: 13px; font-family: inherit; outline: none; background: var(--c-surface); width: 200px; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--c-blue-600); }
 
-    .status-badge {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
-    }
+    /* ── Create user panel ───────────────────────────────────── */
+    .crear-panel { background: var(--c-surface); border: 1.5px solid var(--c-blue-200, #bfdbfe); border-radius: var(--r-xl); padding: 20px 22px; margin-bottom: 20px; display: none; }
+    .crear-panel.visible { display: block; }
+    .crear-panel > p { font-size: 13px; color: var(--c-text-2); margin-bottom: 14px; }
+    .crear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .crear-field { display: flex; flex-direction: column; gap: 4px; }
+    .crear-field.full { grid-column: 1 / -1; }
+    .crear-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .crear-field input { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 8px 10px; font-size: 13px; font-family: inherit; background: var(--c-surface); transition: border-color 0.2s; }
+    .crear-field input:focus { outline: none; border-color: var(--c-blue-600); }
+    .crear-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .crear-msg { font-size: 12px; margin-top: 8px; }
+    .crear-msg.error { color: var(--c-danger); }
+    .crear-msg.ok    { color: #059669; }
+
+    /* ── User table ──────────────────────────────────────────── */
+    .table-wrap { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); overflow: hidden; overflow-x: auto; }
+    .users-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .users-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-3); border-bottom: 2px solid var(--c-border); background: var(--c-surface-2); white-space: nowrap; }
+    .users-table td { padding: 13px 14px; border-bottom: 1px solid var(--c-border); vertical-align: middle; color: var(--c-text-2); }
+    .users-table tr:last-child td { border-bottom: none; }
+    .users-table tr:hover td { background: rgba(0,0,0,0.018); }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--c-blue-100); color: var(--c-blue-700); font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .status-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
     .badge-activo   { background: #d1fae5; color: #065f46; }
     .badge-inactivo { background: #fee2e2; color: #991b1b; }
 
-    /* ── Tarjeta de código ───────────────────────────────────── */
-    .code-card {
-      background: var(--c-surface); border: 1px solid var(--c-border);
-      border-radius: var(--r-lg); padding: 14px 18px;
-      display: flex; align-items: center; gap: 14px;
-      margin-bottom: 8px; transition: box-shadow var(--t-fast);
-    }
+    /* ── Code cards ──────────────────────────────────────────── */
+    .code-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .code-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); padding: 16px 18px; transition: box-shadow var(--t-fast); }
     .code-card:hover { box-shadow: var(--shadow-sm); }
-    .code-text {
-      font-family: 'Courier New', monospace; font-size: 17px; font-weight: 700;
-      color: var(--c-blue-700); letter-spacing: 2px; flex-shrink: 0;
-      background: var(--c-blue-50); padding: 4px 10px; border-radius: var(--r-sm);
-    }
-    .code-info { flex: 1; min-width: 0; }
-    .code-meta { font-size: 11px; color: var(--c-text-3); }
-    .code-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
+    .code-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .code-text { font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700; color: var(--c-blue-700); letter-spacing: 3px; background: var(--c-blue-50); padding: 5px 12px; border-radius: var(--r-sm); }
+    .code-meta { font-size: 11px; color: var(--c-text-3); margin-bottom: 12px; line-height: 1.6; }
+    .code-actions { display: flex; gap: 6px; }
     .badge-disponible { background: #dbeafe; color: #1e40af; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
     .badge-usado      { background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
     .badge-expirado   { background: #fee2e2; color: #991b1b; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
 
-    /* ── Toast de copiado ────────────────────────────────────── */
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: #1e293b; color: white; padding: 10px 20px;
-      border-radius: var(--r-md); font-size: 13px; font-weight: 600;
-      box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none;
-      transition: opacity 0.2s; z-index: 9999;
-    }
+    /* ── Empty state ─────────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 40px 20px; background: var(--c-surface); border: 2px dashed var(--c-border); border-radius: var(--r-xl); }
+    .empty-state-icon { font-size: 38px; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 15px; font-weight: 700; color: var(--c-text); margin-bottom: 6px; }
+    .empty-state p  { font-size: 13px; color: var(--c-text-3); margin-bottom: 18px; }
+
+    /* ── Misc ────────────────────────────────────────────────── */
+    .count-tag   { font-size: 12px; color: var(--c-text-3); }
+    .empty-txt   { color: var(--c-text-3); font-size: 13px; padding: 24px; text-align: center; }
+    .loading-txt { color: var(--c-text-3); font-size: 14px; padding: 24px; text-align: center; }
+    .error-txt   { color: var(--c-danger); font-size: 13px; padding: 12px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 9999; }
     .toast.visible { opacity: 1; }
 
-    /* ── Estado vacío ────────────────────────────────────────── */
-    .empty-state {
-      text-align: center; padding: 36px 20px;
-      background: var(--c-surface); border: 2px dashed var(--c-border);
-      border-radius: var(--r-xl);
+    @media (max-width: 600px) {
+      .tab-btn { padding: 11px 14px; font-size: 12px; }
+      .panel-main { padding: 20px 16px; }
+      .crear-grid { grid-template-columns: 1fr; }
+      .search-input { width: 140px; }
+      .code-grid { grid-template-columns: 1fr; }
     }
-    .empty-state-icon { font-size: 36px; margin-bottom: 12px; }
-    .empty-state h3   { font-size: 15px; font-weight: 700; color: var(--c-text); margin-bottom: 6px; }
-    .empty-state p    { font-size: 13px; color: var(--c-text-3); margin-bottom: 16px; }
-
-    .loading-txt { color: var(--c-text-3); padding: 16px 0; font-size: 14px; }
-    .error-txt   { color: var(--c-danger); font-size: 13px; padding: 10px 0; }
-
-    /* ── Credits alert ───────────────────────────────────────── */
-    .credits-alert {
-      background: #fffbeb; border: 1px solid #fde68a;
-      border-radius: var(--r-md); padding: 10px 14px;
-      font-size: 13px; color: #92400e; margin-bottom: 16px;
-      display: flex; align-items: center; gap: 8px;
-    }
-
-    /* ── Formulario crear usuario ────────────────────────────── */
-    .crear-form {
-      background: var(--c-surface); border: 1.5px solid var(--c-blue-200, #bfdbfe);
-      border-radius: var(--r-lg); padding: 20px;
-      margin-bottom: 16px; display: none;
-    }
-    .crear-form.visible { display: block; }
-    .crear-form-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-      margin-bottom: 12px;
-    }
-    .crear-form-field { display: flex; flex-direction: column; gap: 4px; }
-    .crear-form-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
-    .crear-form-field input {
-      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
-      padding: 8px 10px; font-size: 13px; font-family: inherit;
-      transition: border-color 0.2s;
-    }
-    .crear-form-field input:focus { outline: none; border-color: var(--c-blue-600); }
-    .crear-form-field.full { grid-column: 1 / -1; }
-    .crear-form-actions { display: flex; gap: 8px; justify-content: flex-end; }
-    .btn-secondary {
-      background: var(--c-surface-2); color: var(--c-text-2);
-      border: 1px solid var(--c-border-s); padding: 8px 16px;
-      border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
-      font-family: inherit; cursor: pointer;
-    }
-    .crear-form-msg { font-size: 12px; margin-top: 8px; }
-    .crear-form-msg.error { color: var(--c-danger); }
-    .crear-form-msg.ok    { color: #059669; }
-    @media (max-width: 600px) { .crear-form-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -201,125 +146,127 @@
     </div>
   </header>
 
-  <!-- Contenido principal -->
+  <!-- Tab bar -->
+  <nav class="tab-bar">
+    <button class="tab-btn active" id="tab-resumen"  onclick="showTab('resumen')">📊 Resumen</button>
+    <button class="tab-btn"        id="tab-usuarios" onclick="showTab('usuarios')">👥 Usuarios</button>
+    <button class="tab-btn"        id="tab-codigos"  onclick="showTab('codigos')">🔑 Códigos de acceso</button>
+  </nav>
+
   <main class="panel-main">
 
-    <!-- Stats -->
-    <div class="stats-row" id="statsRow">
-      <div class="stat-card"><div class="stat-num" id="statUsuarios">—</div><div class="stat-label">Usuarios registrados</div></div>
-      <div class="stat-card"><div class="stat-num" id="statCreditos">—</div><div class="stat-label">Créditos disponibles</div></div>
-      <div class="stat-card"><div class="stat-num" id="statCodigosActivos">—</div><div class="stat-label">Códigos sin usar</div></div>
+    <!-- ══ Resumen ════════════════════════════════════════════════ -->
+    <div id="panel-resumen" class="tab-panel active">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div><div class="stat-num" id="statUsuarios">—</div><div class="stat-label">Usuarios registrados</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🪙</div>
+          <div><div class="stat-num" id="statCreditos">—</div><div class="stat-label">Créditos disponibles</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔑</div>
+          <div><div class="stat-num" id="statCodigosActivos">—</div><div class="stat-label">Códigos sin usar</div></div>
+        </div>
+      </div>
+      <div class="credits-alert" id="creditAlert">
+        ⚠️ Te quedan pocos créditos. Contacta al administrador de la plataforma para recargar.
+      </div>
     </div>
 
-    <!-- Alerta de créditos bajos -->
-    <div class="credits-alert" id="creditAlert" style="display:none">
-      ⚠️ Te quedan pocos créditos. Contacta al administrador de la plataforma para recargar.
-    </div>
-
-    <!-- ── Sección: Usuarios ────────────────────────────────── -->
-    <div class="panel-section">
+    <!-- ══ Usuarios ═══════════════════════════════════════════════ -->
+    <div id="panel-usuarios" class="tab-panel">
       <div class="section-header">
-        <h2>Mis usuarios</h2>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-primary" id="btnCrearUsuario" onclick="toggleCrearForm()">
-            ➕ Crear usuario
-          </button>
-          <button class="btn-primary" id="btnGenerarCodigo" style="background:var(--c-blue-500,#3b82f6)">
-            🔑 Generar código
-          </button>
+        <h2>Mis usuarios <span class="count-tag" id="countUsuarios"></span></h2>
+        <div class="section-header-right">
+          <input type="text" id="searchUsuarios" class="search-input" placeholder="🔍 Buscar..." oninput="filtrarUsuarios(this.value)">
+          <button class="btn-primary" onclick="toggleCrearPanel()">➕ Crear usuario</button>
         </div>
       </div>
 
-      <!-- Formulario de creación directa -->
-      <div class="crear-form" id="crearForm">
-        <div class="crear-form-grid">
-          <div class="crear-form-field">
-            <label for="cfNombre">Nombre</label>
-            <input type="text" id="cfNombre" placeholder="Juan" autocomplete="given-name">
-          </div>
-          <div class="crear-form-field">
-            <label for="cfApellido">Apellido</label>
-            <input type="text" id="cfApellido" placeholder="Pérez" autocomplete="family-name">
-          </div>
-          <div class="crear-form-field full">
-            <label for="cfEmail">Correo electrónico</label>
-            <input type="email" id="cfEmail" placeholder="correo@empresa.com" autocomplete="email">
-          </div>
+      <div class="crear-panel" id="crearPanel">
+        <p>El usuario recibirá un correo para configurar su contraseña.</p>
+        <div class="crear-grid">
+          <div class="crear-field"><label>Nombre</label><input type="text" id="cfNombre" placeholder="Juan" autocomplete="given-name"></div>
+          <div class="crear-field"><label>Apellido</label><input type="text" id="cfApellido" placeholder="Pérez" autocomplete="family-name"></div>
+          <div class="crear-field full"><label>Correo electrónico</label><input type="email" id="cfEmail" placeholder="correo@empresa.com" autocomplete="email"></div>
         </div>
-        <div class="crear-form-actions">
-          <button class="btn-secondary" onclick="toggleCrearForm()">Cancelar</button>
+        <div class="crear-actions">
+          <button class="btn-secondary" onclick="toggleCrearPanel()">Cancelar</button>
           <button class="btn-primary" id="btnEnviarCrear" onclick="crearUsuario()">Crear y enviar invitación</button>
         </div>
-        <p class="crear-form-msg" id="crearMsg"></p>
+        <p class="crear-msg" id="crearMsg"></p>
       </div>
 
       <div id="listaUsuarios"><p class="loading-txt">Cargando usuarios...</p></div>
     </div>
 
-    <!-- ── Sección: Códigos de acceso ──────────────────────── -->
-    <div class="panel-section">
+    <!-- ══ Códigos ════════════════════════════════════════════════ -->
+    <div id="panel-codigos" class="tab-panel">
       <div class="section-header">
         <h2>Códigos de acceso</h2>
-        <span style="font-size:12px;color:var(--c-text-3)">Los códigos no usados expiran en 30 días</span>
+        <div class="section-header-right">
+          <span style="font-size:12px;color:var(--c-text-3)">Expiran en 30 días</span>
+          <button class="btn-primary teal" id="btnGenerarCodigo">🔑 Generar código</button>
+        </div>
       </div>
       <div id="listaCodigos"><p class="loading-txt">Cargando códigos...</p></div>
     </div>
 
   </main>
 
-  <!-- Toast de copiado -->
-  <div class="toast" id="toast">✓ Copiado al portapapeles</div>
+  <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script>
     const BACKEND_URL = "https://smartbuilderec.onrender.com";
-    let _perfil = null;
+    let _perfil        = null;
+    let _todosUsuarios = [];
 
-    // ── Inicialización ────────────────────────────────────────
+    // ── Tabs ──────────────────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("panel-" + name).classList.add("active");
+      document.getElementById("tab-"   + name).classList.add("active");
+    }
+
+    // ── Inicialización ────────────────────────────────────────────
     async function init() {
       const session = await authGuard(["admin", "super_admin"]);
       if (!session) return;
-
       _perfil = await getUserProfile();
       if (!_perfil) { window.location.href = "login.html"; return; }
-
-      const nombre = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
-      document.getElementById("headerNombre").textContent = nombre;
-
+      document.getElementById("headerNombre").textContent =
+        [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
       await Promise.all([cargarStats(), cargarUsuarios(), cargarCodigos()]);
     }
 
-    // ── Stats ─────────────────────────────────────────────────
+    // ── Stats ─────────────────────────────────────────────────────
     async function cargarStats() {
-      const { data: usuarios } = await _supabase
-        .from("profiles").select("id").eq("admin_id", _perfil.id);
-      const { data: codigos } = await _supabase
-        .from("access_codes")
-        .select("id").eq("admin_id", _perfil.id).is("used_at", null)
-        .gt("expires_at", new Date().toISOString());
-
-      const totalUsuarios    = usuarios?.length ?? 0;
-      const codigosActivos   = codigos?.length  ?? 0;
-      const creditosDisponibles = _perfil.credits;
+      const [resUsr, resCod] = await Promise.all([
+        _supabase.from("profiles").select("id").eq("admin_id", _perfil.id),
+        _supabase.from("access_codes").select("id").eq("admin_id", _perfil.id)
+          .is("used_at", null).gt("expires_at", new Date().toISOString()),
+      ]);
+      const totalUsuarios = resUsr.data?.length ?? 0;
+      const codigosActivos = resCod.data?.length ?? 0;
+      const creditos = _perfil.credits;
 
       document.getElementById("statUsuarios").textContent      = totalUsuarios;
-      document.getElementById("statCreditos").textContent      = creditosDisponibles;
+      document.getElementById("statCreditos").textContent      = creditos;
       document.getElementById("statCodigosActivos").textContent = codigosActivos;
 
-      if (creditosDisponibles <= 2) {
-        document.getElementById("creditAlert").style.display = "flex";
-      }
-      if (creditosDisponibles === 0) {
-        document.getElementById("btnGenerarCodigo").disabled = false; // código no consume crédito al generarse
-      }
+      if (creditos <= 2) document.getElementById("creditAlert").style.display = "flex";
     }
 
-    // ── Usuarios ──────────────────────────────────────────────
+    // ── Usuarios ──────────────────────────────────────────────────
     async function cargarUsuarios() {
       const lista = document.getElementById("listaUsuarios");
-
       const { data: usuarios, error } = await _supabase
         .from("profiles")
         .select("id, nombre, apellido, email, activo, created_at")
@@ -333,87 +280,108 @@
           <div class="empty-state">
             <div class="empty-state-icon">👤</div>
             <h3>Aún no tienes usuarios registrados</h3>
-            <p>Genera un código de acceso y compártelo con tu usuario para que se registre.</p>
-            <button class="btn-primary" onclick="generarCodigo()">🔑 Generar primer código</button>
+            <p>Crea un usuario directamente o genera un código de acceso y compártelo.</p>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+              <button class="btn-primary" onclick="toggleCrearPanel()">➕ Crear usuario</button>
+              <button class="btn-primary teal" onclick="showTab('codigos')">🔑 Ir a Códigos</button>
+            </div>
           </div>`;
+        _todosUsuarios = [];
+        document.getElementById("countUsuarios").textContent = "";
         return;
       }
 
-      // Contar planeaciones por usuario
       const ids = usuarios.map(u => u.id);
       const { data: planeaciones } = await _supabase
-        .from("planeaciones").select("user_id").in("user_id", ids);
+        .from("planeaciones").select("user_id, status").in("user_id", ids);
+      const planCount = {}; const planCompletas = {};
+      planeaciones?.forEach(p => {
+        planCount[p.user_id] = (planCount[p.user_id] || 0) + 1;
+        if (p.status === "completa") planCompletas[p.user_id] = (planCompletas[p.user_id] || 0) + 1;
+      });
 
-      const cuentaPlan = {};
-      planeaciones?.forEach(p => { cuentaPlan[p.user_id] = (cuentaPlan[p.user_id] || 0) + 1; });
+      _todosUsuarios = usuarios.map(u => ({ ...u, planCount: planCount[u.id] || 0 }));
+      renderTablaUsuarios(_todosUsuarios);
+    }
 
-      lista.innerHTML = usuarios.map(u => {
-        const iniciales = ((u.nombre?.[0] || "") + (u.apellido?.[0] || "")).toUpperCase() || "U";
-        const nombre    = [u.nombre, u.apellido].filter(Boolean).join(" ") || "(Sin nombre)";
-        const nPlan     = cuentaPlan[u.id] || 0;
-        const fechaReg  = new Date(u.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
-        return `
-          <div class="user-card" id="ucard-${u.id}">
-            <div class="user-avatar">${iniciales}</div>
-            <div class="user-info">
-              <div class="user-nombre">${nombre}</div>
-              <div class="user-email">${u.email}</div>
-              <div class="user-meta">${nPlan} planeación${nPlan !== 1 ? "es" : ""} · Registrado el ${fechaReg}</div>
-            </div>
-            <span class="status-badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}" id="badge-${u.id}">
-              ${u.activo ? "Activo" : "Inactivo"}
-            </span>
-            <div class="user-actions">
-              <button class="btn-sm ${u.activo ? '' : 'success'}" id="btnToggle-${u.id}"
-                onclick="toggleUsuario('${u.id}', ${u.activo})">
-                ${u.activo ? "Desactivar" : "Activar"}
-              </button>
-              <button class="btn-sm danger" id="btnDel-${u.id}"
-                onclick="eliminarUsuario('${u.id}', '${(nombre).replace(/'/g,"\\'")}')">
-                Eliminar
-              </button>
-            </div>
-          </div>`;
-      }).join("");
+    function filtrarUsuarios(q) {
+      if (!q.trim()) { renderTablaUsuarios(_todosUsuarios); return; }
+      const lq = q.toLowerCase();
+      renderTablaUsuarios(_todosUsuarios.filter(u =>
+        ([u.nombre, u.apellido].filter(Boolean).join(" ")).toLowerCase().includes(lq) ||
+        u.email.toLowerCase().includes(lq)
+      ));
+    }
+
+    function renderTablaUsuarios(usuarios) {
+      const ct = document.getElementById("countUsuarios");
+      if (ct) ct.textContent = `(${usuarios.length})`;
+      const lista = document.getElementById("listaUsuarios");
+      if (!usuarios.length) { lista.innerHTML = '<p class="empty-txt">No hay usuarios que coincidan con la búsqueda.</p>'; return; }
+
+      lista.innerHTML = `
+        <div class="table-wrap">
+          <table class="users-table">
+            <thead>
+              <tr><th>Usuario</th><th>Email</th><th>Planeaciones</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+              ${usuarios.map(u => {
+                const ini    = ((u.nombre?.[0]||"")+(u.apellido?.[0]||"")).toUpperCase()||"U";
+                const nombre = [u.nombre, u.apellido].filter(Boolean).join(" ") || "(Sin nombre)";
+                const fecha  = new Date(u.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+                return `
+                  <tr id="ucard-${u.id}">
+                    <td>
+                      <div style="display:flex;align-items:center;gap:10px">
+                        <div class="user-avatar">${ini}</div>
+                        <span style="font-weight:600;color:var(--c-text)">${nombre}</span>
+                      </div>
+                    </td>
+                    <td style="color:var(--c-text-3)">${u.email}</td>
+                    <td style="text-align:center;font-weight:700">${u.planCount}</td>
+                    <td><span class="status-badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}" id="badge-${u.id}">${u.activo ? "Activo" : "Inactivo"}</span></td>
+                    <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
+                    <td>
+                      <div style="display:flex;gap:6px">
+                        <button class="btn-sm ${u.activo ? '' : 'success'}" id="btnToggle-${u.id}"
+                          onclick="toggleUsuario('${u.id}', ${u.activo})">${u.activo ? "Desactivar" : "Activar"}</button>
+                        <button class="btn-sm danger" id="btnDel-${u.id}"
+                          onclick="eliminarUsuario('${u.id}', '${nombre.replace(/'/g,"\\'")}')">Eliminar</button>
+                      </div>
+                    </td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`;
     }
 
     async function toggleUsuario(userId, estaActivo) {
       const btn   = document.getElementById("btnToggle-" + userId);
       const badge = document.getElementById("badge-" + userId);
       btn.disabled = true;
-
-      const nuevoEstado = !estaActivo;
-      const { error } = await _supabase
-        .from("profiles")
-        .update({ activo: nuevoEstado })
-        .eq("id", userId)
-        .eq("admin_id", _perfil.id);
-
-      if (error) {
-        alert("Error al actualizar el usuario. Verifica los permisos en Supabase.");
-        btn.disabled = false;
-        return;
-      }
-
-      badge.textContent = nuevoEstado ? "Activo" : "Inactivo";
-      badge.className   = `status-badge ${nuevoEstado ? "badge-activo" : "badge-inactivo"}`;
-      btn.textContent   = nuevoEstado ? "Desactivar" : "Activar";
-      btn.className     = `btn-sm ${nuevoEstado ? "" : "success"}`;
-      btn.onclick       = () => toggleUsuario(userId, nuevoEstado);
+      const nuevo = !estaActivo;
+      const { error } = await _supabase.from("profiles")
+        .update({ activo: nuevo }).eq("id", userId).eq("admin_id", _perfil.id);
+      if (error) { alert("Error al actualizar el usuario."); btn.disabled = false; return; }
+      badge.textContent = nuevo ? "Activo" : "Inactivo";
+      badge.className   = `status-badge ${nuevo ? "badge-activo" : "badge-inactivo"}`;
+      btn.textContent   = nuevo ? "Desactivar" : "Activar";
+      btn.className     = `btn-sm ${nuevo ? "" : "success"}`;
+      btn.onclick       = () => toggleUsuario(userId, nuevo);
       btn.disabled      = false;
     }
 
-    // ── Crear usuario directo ─────────────────────────────────
-    function toggleCrearForm() {
-      const form = document.getElementById("crearForm");
-      const visible = form.classList.toggle("visible");
-      if (visible) {
-        document.getElementById("cfNombre").focus();
-      } else {
-        document.getElementById("cfNombre").value = "";
-        document.getElementById("cfApellido").value = "";
-        document.getElementById("cfEmail").value = "";
-        document.getElementById("crearMsg").textContent = "";
+    // ── Crear usuario ─────────────────────────────────────────────
+    function toggleCrearPanel() {
+      const panel = document.getElementById("crearPanel");
+      const visible = panel.classList.toggle("visible");
+      if (visible) { document.getElementById("cfNombre").focus(); }
+      else {
+        ["cfNombre","cfApellido","cfEmail"].forEach(id => document.getElementById(id).value = "");
+        const msg = document.getElementById("crearMsg");
+        msg.textContent = ""; msg.className = "crear-msg";
       }
     }
 
@@ -423,22 +391,10 @@
       const email    = document.getElementById("cfEmail").value.trim();
       const msg      = document.getElementById("crearMsg");
       const btn      = document.getElementById("btnEnviarCrear");
-
       msg.textContent = "";
-      if (!nombre || !apellido || !email) {
-        msg.textContent = "Completa todos los campos.";
-        msg.className = "crear-form-msg error";
-        return;
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        msg.textContent = "Ingresa un correo válido.";
-        msg.className = "crear-form-msg error";
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = "Creando...";
-
+      if (!nombre || !apellido || !email) { msg.textContent = "Completa todos los campos."; msg.className = "crear-msg error"; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = "Ingresa un correo válido."; msg.className = "crear-msg error"; return; }
+      btn.disabled = true; btn.textContent = "Creando...";
       try {
         const headers = await getAuthHeaders();
         const res = await fetch(`${BACKEND_URL}/admin/create-user`, {
@@ -448,112 +404,83 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Error al crear usuario.");
-
-        msg.textContent = `✓ Usuario creado. Se envió un correo a ${email} para configurar su contraseña.`;
-        msg.className = "crear-form-msg ok";
-        document.getElementById("cfNombre").value = "";
-        document.getElementById("cfApellido").value = "";
-        document.getElementById("cfEmail").value = "";
+        msg.textContent = `✓ Usuario creado. Se envió invitación a ${email}.`;
+        msg.className = "crear-msg ok";
+        ["cfNombre","cfApellido","cfEmail"].forEach(id => document.getElementById(id).value = "");
         await Promise.all([cargarUsuarios(), cargarStats()]);
-      } catch (e) {
-        msg.textContent = e.message;
-        msg.className = "crear-form-msg error";
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Crear y enviar invitación";
-      }
+      } catch(e) { msg.textContent = e.message; msg.className = "crear-msg error"; }
+      finally { btn.disabled = false; btn.textContent = "Crear y enviar invitación"; }
     }
 
     async function eliminarUsuario(userId, nombre) {
       if (!confirm(`¿Eliminar a ${nombre}? Se restaurará 1 crédito a tu cuenta. Esta acción no se puede deshacer.`)) return;
-
       const btn = document.getElementById("btnDel-" + userId);
-      btn.disabled = true;
-      btn.textContent = "...";
-
+      btn.disabled = true; btn.textContent = "...";
       try {
         const headers = await getAuthHeaders();
-        const res = await fetch(`${BACKEND_URL}/admin/users/${userId}`, {
-          method: "DELETE",
-          headers,
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.detail || "Error al eliminar.");
-        }
-        const card = document.getElementById("ucard-" + userId);
-        card.style.transition = "opacity 0.3s, transform 0.3s";
-        card.style.opacity = "0";
-        card.style.transform = "translateX(16px)";
-        setTimeout(() => { card.remove(); cargarStats(); }, 320);
-        const t = document.getElementById("toast");
-        t.textContent = "✓ Usuario eliminado. Crédito restaurado.";
-        t.classList.add("visible");
-        setTimeout(() => t.classList.remove("visible"), 2500);
-      } catch (e) {
-        alert(e.message);
-        btn.disabled = false;
-        btn.textContent = "Eliminar";
-      }
+        const res = await fetch(`${BACKEND_URL}/admin/users/${userId}`, { method: "DELETE", headers });
+        if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.detail || "Error al eliminar."); }
+        const row = document.getElementById("ucard-" + userId);
+        row.style.transition = "opacity 0.3s, transform 0.3s";
+        row.style.opacity = "0"; row.style.transform = "translateX(16px)";
+        setTimeout(() => { row.remove(); cargarStats(); }, 320);
+        mostrarToast("Usuario eliminado. Crédito restaurado.");
+      } catch(e) { alert(e.message); btn.disabled = false; btn.textContent = "Eliminar"; }
     }
 
-    // ── Códigos de acceso ─────────────────────────────────────
+    // ── Códigos de acceso ─────────────────────────────────────────
     async function cargarCodigos() {
       const lista = document.getElementById("listaCodigos");
-
       const { data: codigos, error } = await _supabase
         .from("access_codes")
-        .select("id, code, used_at, expires_at, created_at, used_by")
+        .select("id, code, used_at, expires_at, created_at")
         .eq("admin_id", _perfil.id)
         .order("created_at", { ascending: false });
 
       if (error) { lista.innerHTML = '<p class="error-txt">Error al cargar códigos.</p>'; return; }
-
       if (!codigos?.length) {
-        lista.innerHTML = '<p class="loading-txt">Aún no has generado ningún código.</p>';
+        lista.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔑</div>
+            <h3>Aún no has generado ningún código</h3>
+            <p>Los códigos permiten que tus usuarios se registren sin pago.</p>
+            <button class="btn-primary teal" onclick="generarCodigo()">🔑 Generar primer código</button>
+          </div>`;
         return;
       }
 
       const ahora = new Date();
-      lista.innerHTML = codigos.map(c => {
-        const expirado    = new Date(c.expires_at) < ahora;
-        const usado       = !!c.used_at;
-        const disponible  = !usado && !expirado;
-
-        let estadoBadge, estadoTexto;
-        if (usado)      { estadoBadge = "badge-usado";      estadoTexto = "Usado"; }
-        else if (expirado) { estadoBadge = "badge-expirado"; estadoTexto = "Expirado"; }
-        else            { estadoBadge = "badge-disponible";  estadoTexto = "Disponible"; }
-
-        const fechaExp  = new Date(c.expires_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
-        const fechaCrea = new Date(c.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
-
+      lista.innerHTML = `<div class="code-grid">${codigos.map(c => {
+        const expirado   = new Date(c.expires_at) < ahora;
+        const usado      = !!c.used_at;
+        const disponible = !usado && !expirado;
+        const badgeCls   = usado ? "badge-usado" : expirado ? "badge-expirado" : "badge-disponible";
+        const badgeTxt   = usado ? "Usado" : expirado ? "Expirado" : "Disponible";
+        const fechaExp   = new Date(c.expires_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+        const fechaCrea  = new Date(c.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
         return `
           <div class="code-card" id="ccard-${c.id}">
-            <span class="code-text">${c.code}</span>
-            <div class="code-info">
-              <div><span class="${estadoBadge}">${estadoTexto}</span></div>
-              <div class="code-meta">
-                Creado: ${fechaCrea} · Expira: ${fechaExp}
-                ${usado ? " · Canjeado" : ""}
-              </div>
+            <div class="code-card-top">
+              <span class="code-text">${c.code}</span>
+              <span class="${badgeCls}">${badgeTxt}</span>
+            </div>
+            <div class="code-meta">
+              Creado: ${fechaCrea}<br>
+              Expira: ${fechaExp}${usado ? " · Canjeado" : ""}
             </div>
             <div class="code-actions">
               <button class="btn-sm" onclick="copiarCodigo('${c.code}')">Copiar</button>
               ${disponible ? `<button class="btn-sm danger" onclick="eliminarCodigo('${c.id}', this)">Eliminar</button>` : ""}
             </div>
           </div>`;
-      }).join("");
+      }).join("")}</div>`;
     }
 
-    // ── Generar código ────────────────────────────────────────
+    // ── Generar código ────────────────────────────────────────────
     function generarCodigoAleatorio() {
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       let code = "";
-      for (let i = 0; i < 8; i++) {
-        if (i === 4) code += "-";
-        code += chars[Math.floor(Math.random() * chars.length)];
-      }
+      for (let i = 0; i < 8; i++) { if (i === 4) code += "-"; code += chars[Math.floor(Math.random() * chars.length)]; }
       return code;
     }
 
@@ -561,46 +488,30 @@
 
     async function generarCodigo() {
       const btn = document.getElementById("btnGenerarCodigo");
-      btn.disabled = true;
-      btn.textContent = "Generando...";
+      btn.disabled = true; btn.textContent = "Generando...";
 
-      // Verificar créditos frescos antes de generar
-      const { data: perfil } = await _supabase
-        .from("profiles").select("credits").eq("id", _perfil.id).single();
+      const { data: perfil } = await _supabase.from("profiles").select("credits").eq("id", _perfil.id).single();
       if (!perfil || perfil.credits <= 0) {
-        btn.disabled = false;
-        btn.textContent = "🔑 Generar código";
+        btn.disabled = false; btn.textContent = "🔑 Generar código";
         alert("No tienes créditos disponibles. Contacta al administrador de la plataforma para recargar.");
         return;
       }
 
-      // Intentar hasta encontrar un código único
       let code, intentos = 0;
       while (intentos < 10) {
         code = generarCodigoAleatorio();
         const { data } = await _supabase.from("access_codes").select("id").eq("code", code).single();
-        if (!data) break; // código único
+        if (!data) break;
         intentos++;
       }
 
       const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await _supabase
-        .from("access_codes")
-        .insert({ code, admin_id: _perfil.id, expires_at: expires })
-        .select()
-        .single();
+      const { data, error } = await _supabase.from("access_codes")
+        .insert({ code, admin_id: _perfil.id, expires_at: expires }).select().single();
 
-      btn.disabled = false;
-      btn.textContent = "🔑 Generar código";
-
-      if (error) {
-        alert("Error al generar código: " + error.message);
-        return;
-      }
-
-      // Actualizar lista y copiar código al portapapeles
-      await cargarCodigos();
-      await cargarStats();
+      btn.disabled = false; btn.textContent = "🔑 Generar código";
+      if (error) { alert("Error al generar código: " + error.message); return; }
+      await Promise.all([cargarCodigos(), cargarStats()]);
       copiarCodigo(data.code);
     }
 
@@ -608,25 +519,26 @@
       if (!confirm("¿Eliminar este código?")) return;
       btn.disabled = true;
       const { error } = await _supabase.from("access_codes").delete().eq("id", codeId);
-      if (!error) {
-        document.getElementById("ccard-" + codeId)?.remove();
-        await cargarStats();
-      } else {
-        btn.disabled = false;
-      }
+      if (!error) { document.getElementById("ccard-" + codeId)?.remove(); await cargarStats(); }
+      else { btn.disabled = false; }
     }
 
-    // ── Copiar al portapapeles ────────────────────────────────
+    // ── Copiar código ─────────────────────────────────────────────
     function copiarCodigo(code) {
       navigator.clipboard.writeText(code).catch(() => {
         const t = document.createElement("textarea");
         t.value = code; document.body.appendChild(t); t.select();
         document.execCommand("copy"); t.remove();
       });
-      const toast = document.getElementById("toast");
-      toast.textContent = `✓ Código ${code} copiado`;
-      toast.classList.add("visible");
-      setTimeout(() => toast.classList.remove("visible"), 2500);
+      mostrarToast(`Código ${code} copiado`);
+    }
+
+    // ── Toast ──────────────────────────────────────────────────────
+    function mostrarToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = "✓ " + msg;
+      t.classList.add("visible");
+      setTimeout(() => t.classList.remove("visible"), 2500);
     }
 
     init();
