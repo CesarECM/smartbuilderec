@@ -1195,23 +1195,39 @@ def admin_delete_user(user_id: str, request: Request):
     caller_id = request.state.user.get("sub")
     sb = get_supabase()
 
-    caller_res = sb.table("profiles").select("rol, id").eq("id", caller_id).single().execute()
+    caller_res = sb.table("profiles").select("rol, id, email").eq("id", caller_id).single().execute()
     caller = caller_res.data or {}
     if caller.get("rol") not in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="Sin permisos para eliminar usuarios.")
 
+    # Obtener email del target ANTES de eliminar (para el audit log)
+    target_res = sb.table("profiles").select("admin_id, rol, email").eq("id", user_id).single().execute()
+    target = target_res.data or {}
+
     # Admin solo puede eliminar sus propios usuarios
     if caller.get("rol") == "admin":
-        user_res = sb.table("profiles").select("admin_id, rol").eq("id", user_id).single().execute()
-        user_data = user_res.data or {}
-        if user_data.get("admin_id") != caller_id:
+        if target.get("admin_id") != caller_id:
             raise HTTPException(status_code=403, detail="No puedes eliminar usuarios de otro admin.")
-        if user_data.get("rol") != "user":
+        if target.get("rol") != "user":
             raise HTTPException(status_code=403, detail="Solo puedes eliminar usuarios regulares.")
 
     try:
         # Eliminar de auth.users → CASCADE a profiles → trigger fn_restore_admin_credit
         sb.auth.admin.delete_user(user_id)
+
+        # Audit log explícito: el trigger no puede obtener actor_id desde service_role
+        try:
+            sb.table("audit_logs").insert({
+                "actor_id":    caller_id,
+                "actor_email": caller.get("email", ""),
+                "action":      "user_deleted",
+                "target_id":   user_id,
+                "target_email": target.get("email", ""),
+                "details":     {}
+            }).execute()
+        except Exception:
+            pass  # No bloquear el delete si el audit falla
+
         return {"deleted": user_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {str(e)}")

@@ -194,6 +194,37 @@
     .loading-txt { color: var(--c-text-3); font-size: 14px; padding: 16px 0; }
     .error-txt   { color: var(--c-danger); font-size: 13px; padding: 10px 0; }
 
+    /* ── Audit log ───────────────────────────────────────────── */
+    .audit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .audit-table th {
+      text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700;
+      color: var(--c-text-3); text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--c-border); background: var(--c-surface);
+    }
+    .audit-table td {
+      padding: 10px 12px; border-bottom: 1px solid var(--c-border);
+      vertical-align: middle; color: var(--c-text-2);
+    }
+    .audit-table tr:last-child td { border-bottom: none; }
+    .audit-table tr:hover td { background: var(--c-surface-2); }
+    .audit-action {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .audit-created    { background: #dbeafe; color: #1e40af; }
+    .audit-deleted    { background: #fee2e2; color: #991b1b; }
+    .audit-activated  { background: #d1fae5; color: #065f46; }
+    .audit-deactivated{ background: #fef3c7; color: #92400e; }
+    .audit-credits    { background: #ede9fe; color: #5b21b6; }
+    .audit-role       { background: #fce7f3; color: #9d174d; }
+    .audit-email-chip {
+      font-size: 11px; color: var(--c-text-3); font-family: monospace;
+      background: var(--c-surface-2); padding: 1px 6px;
+      border-radius: 4px; max-width: 180px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block;
+    }
+
     /* ── Toast ───────────────────────────────────────────────── */
     .toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -276,6 +307,17 @@
       </div>
       <div class="collapsible-body" id="seccionUsuarios">
         <div id="listaUsuariosTodos"><p class="loading-txt">Haz clic en el encabezado para cargar.</p></div>
+      </div>
+    </div>
+
+    <!-- ── Sección: Historial de actividad ───────────────────── -->
+    <div class="panel-section">
+      <div class="section-header collapsible-header" id="headerAudit" onclick="toggleAudit()">
+        <h2>Historial de actividad</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="collapsible-body" id="seccionAudit">
+        <div id="auditContent"><p class="loading-txt">Haz clic en el encabezado para cargar.</p></div>
       </div>
     </div>
 
@@ -648,6 +690,92 @@
       t.textContent = "✓ " + msg;
       t.classList.add("visible");
       setTimeout(() => t.classList.remove("visible"), 2500);
+    }
+
+    // ── Historial de actividad (audit log) ───────────────────
+    let _auditCargado = false;
+
+    function toggleAudit() {
+      const body   = document.getElementById("seccionAudit");
+      const header = document.getElementById("headerAudit");
+      const abierto = body.classList.toggle("open");
+      header.classList.toggle("open", abierto);
+      if (abierto && !_auditCargado) {
+        _auditCargado = true;
+        cargarAuditLog();
+      }
+    }
+
+    const AUDIT_LABELS = {
+      user_created:    { label: "Usuario creado",      cls: "audit-created"     },
+      user_deleted:    { label: "Usuario eliminado",   cls: "audit-deleted"     },
+      user_activated:  { label: "Usuario activado",    cls: "audit-activated"   },
+      user_deactivated:{ label: "Usuario desactivado", cls: "audit-deactivated" },
+      credits_updated: { label: "Créditos editados",   cls: "audit-credits"     },
+      role_changed:    { label: "Rol cambiado",        cls: "audit-role"        },
+    };
+
+    function formatAuditDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" })
+        + " " + d.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+    }
+
+    function formatAuditDetails(action, details) {
+      if (!details || !Object.keys(details).length) return "—";
+      if (action === "credits_updated")
+        return `${details.old_credits} → ${details.new_credits}`;
+      if (action === "role_changed")
+        return `${details.old_rol} → ${details.new_rol}`;
+      if (action === "user_created" && details.rol)
+        return `rol: ${details.rol}`;
+      return "—";
+    }
+
+    async function cargarAuditLog() {
+      const cont = document.getElementById("auditContent");
+      cont.innerHTML = '<p class="loading-txt">Cargando historial...</p>';
+
+      const { data, error } = await _supabase
+        .from("audit_logs")
+        .select("id, created_at, actor_email, action, target_email, details")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) {
+        cont.innerHTML = `<p class="error-txt">Error al cargar el historial: ${error.message}</p>`;
+        return;
+      }
+      if (!data?.length) {
+        cont.innerHTML = '<p class="empty-txt">No hay eventos registrados aún.</p>';
+        return;
+      }
+
+      cont.innerHTML = `
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Actor</th>
+              <th>Acción</th>
+              <th>Usuario afectado</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(e => {
+              const meta = AUDIT_LABELS[e.action] || { label: e.action, cls: "" };
+              return `
+                <tr>
+                  <td style="white-space:nowrap;font-size:12px">${formatAuditDate(e.created_at)}</td>
+                  <td><span class="audit-email-chip">${e.actor_email || "sistema"}</span></td>
+                  <td><span class="audit-action ${meta.cls}">${meta.label}</span></td>
+                  <td><span class="audit-email-chip">${e.target_email || "—"}</span></td>
+                  <td style="font-size:12px;color:var(--c-text-3)">${formatAuditDetails(e.action, e.details)}</td>
+                </tr>`;
+            }).join("")}
+          </tbody>
+        </table>`;
     }
 
     init();
