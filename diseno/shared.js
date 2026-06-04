@@ -202,11 +202,7 @@ function _cmDetectTitle(msg) {
     //     return null;
     //   }
     //   return session;
-    function authGuard() {
-    if (sessionStorage.getItem("loggedIn") !== "true") {
-        window.location.href = "ingresoToken.html";
-    }
-    }
+    function authGuard() {}
     // ─── Migración única: mueve datos ec0217_* de sessionStorage a localStorage ──
     // Corre solo una vez al cargar la página; copia datos existentes sin borrarlos.
     (function migrarALocalStorage() {

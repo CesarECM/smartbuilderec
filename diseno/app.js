@@ -23,10 +23,6 @@ function abrirGrupoActivo() {
   }
 }
 
-// Asegurarse de que el usuario esté autenticado antes de permitir acceso
-if (sessionStorage.getItem('loggedIn') !== 'true') {
-  window.location.href = 'ingresoToken.html';
-}
 // (async () => {
 //   const session = await getSession();
 //   if (!session) window.location.href = "login.html";

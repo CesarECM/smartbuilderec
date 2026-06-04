@@ -1,7 +1,3 @@
-// Guard de autenticación
-if (sessionStorage.getItem('loggedIn') !== 'true') {
-window.location.href = 'ingresoToken.html';
-}
 // ─── Cargar datos previos si existen ─────────────────────────────────────────
 const guardado = sessionStorage.getItem('ec0217_datos');
 if (guardado) {
