@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin — SmartBuilderEC</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--c-bg); }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    .dash-header {
+      background: #3b0764; padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; height: 56px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(59,7,100,0.35);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .dash-header img { max-height: 34px; }
+    .btn-back {
+      color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600;
+      text-decoration: none; display: flex; align-items: center; gap: 4px;
+      transition: color var(--t-fast);
+    }
+    .btn-back:hover { color: white; }
+    .header-title {
+      color: white; font-size: 15px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .header-title .sa-badge {
+      background: rgba(255,255,255,0.18); font-size: 10px; font-weight: 700;
+      text-transform: uppercase; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px;
+    }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-nombre { color: rgba(255,255,255,0.8); font-size: 13px; }
+    .header-btn {
+      background: rgba(255,255,255,0.14); color: white; border: none;
+      padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background var(--t-fast);
+    }
+    .header-btn:hover { background: rgba(255,255,255,0.26); }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .panel-main { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── Stats ───────────────────────────────────────────────── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(155px,1fr));
+      gap: 12px; margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-lg); padding: 18px 16px;
+    }
+    .stat-card.purple { border-left: 3px solid #7c3aed; }
+    .stat-num   { font-size: 28px; font-weight: 800; color: var(--c-blue-600); line-height: 1; }
+    .stat-card.purple .stat-num { color: #7c3aed; }
+    .stat-label { font-size: 11px; color: var(--c-text-3); margin-top: 6px; }
+
+    /* ── Sección ─────────────────────────────────────────────── */
+    .panel-section { margin-bottom: 36px; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--c-border);
+    }
+    .section-header h2 { font-size: 16px; font-weight: 700; color: var(--c-text); margin: 0; }
+
+    /* ── Botones ─────────────────────────────────────────────── */
+    .btn-primary {
+      background: #7c3aed; color: white; border: none;
+      padding: 9px 18px; border-radius: var(--r-md); font-size: 13px;
+      font-weight: 600; font-family: inherit; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background var(--t-fast);
+    }
+    .btn-primary:hover:not(:disabled) { background: #6d28d9; }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-sm {
+      background: var(--c-surface-2); color: var(--c-text-2);
+      border: 1px solid var(--c-border-s); padding: 5px 11px;
+      border-radius: var(--r-sm); font-size: 11px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: all var(--t-fast);
+      white-space: nowrap;
+    }
+    .btn-sm:hover            { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+    .btn-sm.danger:hover     { background: #dc2626; color: white; border-color: #dc2626; }
+    .btn-sm.success          { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+    .btn-sm.success:hover    { background: #059669; color: white; border-color: #059669; }
+    .btn-sm.purple           { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+    .btn-sm.purple:hover     { background: #7c3aed; color: white; border-color: #7c3aed; }
+
+    /* ── Tarjeta de admin ────────────────────────────────────── */
+    .admin-card {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-lg); padding: 16px 20px; margin-bottom: 10px;
+      transition: box-shadow var(--t-fast);
+    }
+    .admin-card:hover { box-shadow: var(--shadow-sm); }
+    .admin-card-top { display: flex; align-items: flex-start; gap: 14px; }
+    .admin-avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: #ede9fe; color: #5b21b6;
+      font-size: 14px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .admin-info { flex: 1; min-width: 0; }
+    .admin-nombre { font-size: 14px; font-weight: 700; color: var(--c-text); }
+    .admin-email  { font-size: 12px; color: var(--c-text-3); }
+    .admin-meta   { font-size: 11px; color: var(--c-text-4); margin-top: 3px; }
+    .admin-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; flex-wrap: wrap; }
+
+    /* Credits editor */
+    .credits-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 12px; padding-top: 12px;
+      border-top: 1px solid var(--c-border);
+    }
+    .credits-label { font-size: 12px; color: var(--c-text-3); flex-shrink: 0; }
+    .credits-display {
+      font-size: 20px; font-weight: 800; color: var(--c-blue-600);
+      min-width: 36px;
+    }
+    .credits-input {
+      width: 70px; padding: 5px 8px; font-size: 15px; font-weight: 700;
+      border: 1.5px solid var(--c-blue-600); border-radius: var(--r-sm);
+      font-family: inherit; text-align: center; outline: none;
+      color: var(--c-blue-600); background: var(--c-surface);
+      box-shadow: 0 0 0 3px rgba(31,59,109,0.1);
+    }
+    .credits-hint { font-size: 11px; color: var(--c-text-4); margin-left: 4px; }
+    .credits-usados {
+      font-size: 11px; color: var(--c-text-3); background: var(--c-surface-2);
+      padding: 3px 8px; border-radius: var(--r-sm);
+    }
+
+    /* Status badges */
+    .status-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+    }
+    .badge-activo   { background: #d1fae5; color: #065f46; }
+    .badge-inactivo { background: #fee2e2; color: #991b1b; }
+    .badge-admin    { background: #fef3c7; color: #92400e; }
+    .badge-user     { background: #dbeafe; color: #1e40af; }
+
+    /* ── Formulario de promoción ─────────────────────────────── */
+    .promover-box {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-xl); padding: 24px;
+    }
+    .promover-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+    .promover-field { display: flex; flex-direction: column; gap: 5px; }
+    .promover-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .promover-input {
+      padding: 9px 13px; border: 1.5px solid var(--c-border-s); border-radius: var(--r-md);
+      font-size: 14px; font-family: inherit; outline: none; background: var(--c-surface-2);
+      color: var(--c-text); transition: border-color var(--t-fast); min-width: 220px;
+    }
+    .promover-input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
+    .promover-input.num { min-width: 80px; text-align: center; font-weight: 700; }
+
+    .resultado-busqueda {
+      border-radius: var(--r-md); padding: 12px 16px;
+      font-size: 13px; background: var(--c-surface-2); border: 1px solid var(--c-border);
+    }
+    .resultado-busqueda.ok     { border-color: #6ee7b7; background: #f0fdf4; }
+    .resultado-busqueda.error  { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
+    .resultado-busqueda.warn   { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+
+    /* ── Tabla de usuarios ───────────────────────────────────── */
+    .users-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .users-table th {
+      text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      color: var(--c-text-3); padding: 8px 12px; border-bottom: 2px solid var(--c-border);
+    }
+    .users-table td {
+      padding: 10px 12px; border-bottom: 1px solid var(--c-border);
+      color: var(--c-text-2); vertical-align: middle;
+    }
+    .users-table tr:hover td { background: var(--c-surface-2); }
+    .users-table td:first-child { font-weight: 600; color: var(--c-text); }
+
+    /* ── Colapsable ──────────────────────────────────────────── */
+    .collapsible-header {
+      cursor: pointer; user-select: none;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .collapsible-header .arrow { transition: transform 0.2s; font-size: 12px; }
+    .collapsible-header.open .arrow { transform: rotate(90deg); }
+    .collapsible-body { display: none; margin-top: 14px; }
+    .collapsible-body.open { display: block; }
+
+    .empty-txt   { color: var(--c-text-3); font-size: 13px; padding: 14px 0; }
+    .loading-txt { color: var(--c-text-3); font-size: 14px; padding: 16px 0; }
+    .error-txt   { color: var(--c-danger); font-size: 13px; padding: 10px 0; }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 10px 20px;
+      border-radius: var(--r-md); font-size: 13px; font-weight: 600;
+      box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none;
+      transition: opacity 0.2s; z-index: 9999;
+    }
+    .toast.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="dash-header">
+    <div class="header-left">
+      <img src="img/LogoECM.png" alt="CEECM">
+      <a href="dashboard.html" class="btn-back">← Dashboard</a>
+      <div class="header-title">
+        Panel de Control
+        <span class="sa-badge">Super Admin</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="header-nombre" id="headerNombre"></span>
+      <button class="header-btn" onclick="logout()">Salir</button>
+    </div>
+  </header>
+
+  <main class="panel-main">
+
+    <!-- Stats globales -->
+    <div class="stats-row">
+      <div class="stat-card purple"><div class="stat-num" id="statAdmins">—</div><div class="stat-label">Admins activos</div></div>
+      <div class="stat-card"><div class="stat-num" id="statUsuarios">—</div><div class="stat-label">Usuarios totales</div></div>
+      <div class="stat-card"><div class="stat-num" id="statPlaneaciones">—</div><div class="stat-label">Planeaciones creadas</div></div>
+      <div class="stat-card"><div class="stat-num" id="statCreditos">—</div><div class="stat-label">Créditos distribuidos</div></div>
+    </div>
+
+    <!-- ── Sección: Administradores ───────────────────────────── -->
+    <div class="panel-section">
+      <div class="section-header">
+        <h2>Administradores</h2>
+        <span style="font-size:12px;color:var(--c-text-3)">Edita los créditos directamente en cada tarjeta</span>
+      </div>
+      <div id="listaAdmins"><p class="loading-txt">Cargando administradores...</p></div>
+    </div>
+
+    <!-- ── Sección: Promover usuario ──────────────────────────── -->
+    <div class="panel-section">
+      <div class="section-header">
+        <h2>Promover usuario a Admin</h2>
+      </div>
+      <div class="promover-box">
+        <p style="font-size:13px;color:var(--c-text-2);margin-bottom:16px;">
+          El usuario debe estar registrado en la plataforma. Busca por su correo y asígnale créditos.
+        </p>
+        <div class="promover-form">
+          <div class="promover-field" style="flex:1;min-width:200px">
+            <label for="buscarEmail">Correo del usuario</label>
+            <input type="email" id="buscarEmail" class="promover-input" placeholder="usuario@ejemplo.com">
+          </div>
+          <div class="promover-field">
+            <label for="creditosAsignar">Créditos iniciales</label>
+            <input type="number" id="creditosAsignar" class="promover-input num" min="0" max="9999" value="10">
+          </div>
+          <button class="btn-primary" id="btnBuscar" onclick="buscarUsuario()">
+            Buscar usuario
+          </button>
+        </div>
+        <div id="resultadoBusqueda" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- ── Sección: Todos los usuarios ───────────────────────── -->
+    <div class="panel-section">
+      <div class="section-header collapsible-header" id="headerUsuarios" onclick="toggleSeccion('seccionUsuarios', 'headerUsuarios')">
+        <h2>Todos los usuarios</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="collapsible-body" id="seccionUsuarios">
+        <div id="listaUsuariosTodos"><p class="loading-txt">Haz clic en el encabezado para cargar.</p></div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    let _perfil = null;
+    let _usuariosCargados = false;
+
+    // ── Inicialización ─────────────────────────────────────────
+    async function init() {
+      const session = await authGuard(["super_admin"]);
+      if (!session) return;
+
+      _perfil = await getUserProfile();
+      if (!_perfil) { window.location.href = "login.html"; return; }
+
+      const nombre = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
+      document.getElementById("headerNombre").textContent = nombre;
+
+      await Promise.all([cargarStats(), cargarAdmins()]);
+    }
+
+    // ── Stats globales ─────────────────────────────────────────
+    async function cargarStats() {
+      const [rAdmins, rUsuarios, rPlan, rCreditos] = await Promise.all([
+        _supabase.from("profiles").select("id", { count: "exact", head: true }).eq("rol", "admin"),
+        _supabase.from("profiles").select("id", { count: "exact", head: true }).eq("rol", "user"),
+        _supabase.from("planeaciones").select("id", { count: "exact", head: true }),
+        _supabase.from("profiles").select("credits").eq("rol", "admin"),
+      ]);
+
+      const totalCreditos = (rCreditos.data || []).reduce((sum, a) => sum + (a.credits || 0), 0);
+      const totalAdmins   = rAdmins.data?.length     || rAdmins.count     || 0;
+      const totalUsuarios = rUsuarios.data?.length   || rUsuarios.count   || 0;
+      const totalPlan     = rPlan.data?.length       || rPlan.count       || 0;
+
+      document.getElementById("statAdmins").textContent      = rAdmins.count      ?? "—";
+      document.getElementById("statUsuarios").textContent    = rUsuarios.count    ?? "—";
+      document.getElementById("statPlaneaciones").textContent = rPlan.count       ?? "—";
+      document.getElementById("statCreditos").textContent    = totalCreditos;
+    }
+
+    // ── Lista de admins ────────────────────────────────────────
+    async function cargarAdmins() {
+      const lista = document.getElementById("listaAdmins");
+
+      const { data: admins, error } = await _supabase
+        .from("profiles")
+        .select("id, nombre, apellido, email, credits, activo, created_at")
+        .eq("rol", "admin")
+        .order("created_at", { ascending: false });
+
+      if (error) { lista.innerHTML = '<p class="error-txt">Error al cargar administradores.</p>'; return; }
+
+      if (!admins?.length) {
+        lista.innerHTML = '<p class="empty-txt">No hay administradores registrados aún. Usa "Promover usuario a Admin" para crear el primero.</p>';
+        return;
+      }
+
+      // Usuarios por admin
+      const ids = admins.map(a => a.id);
+      const { data: usuarios } = await _supabase
+        .from("profiles").select("admin_id").eq("rol", "user").in("admin_id", ids);
+
+      const cuentaUsuarios = {};
+      usuarios?.forEach(u => { cuentaUsuarios[u.admin_id] = (cuentaUsuarios[u.admin_id] || 0) + 1; });
+
+      lista.innerHTML = admins.map(a => {
+        const iniciales  = ((a.nombre?.[0] || "") + (a.apellido?.[0] || "")).toUpperCase() || "A";
+        const nombre     = [a.nombre, a.apellido].filter(Boolean).join(" ") || "(Sin nombre)";
+        const nUsuarios  = cuentaUsuarios[a.id] || 0;
+        const creditosUsados = nUsuarios;
+        const fechaReg   = new Date(a.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+
+        return `
+          <div class="admin-card" id="acard-${a.id}">
+            <div class="admin-card-top">
+              <div class="admin-avatar">${iniciales}</div>
+              <div class="admin-info">
+                <div class="admin-nombre">${nombre}</div>
+                <div class="admin-email">${a.email}</div>
+                <div class="admin-meta">${nUsuarios} usuario${nUsuarios !== 1 ? "s" : ""} · Desde ${fechaReg}</div>
+              </div>
+              <div class="admin-actions">
+                <span class="status-badge ${a.activo ? 'badge-activo' : 'badge-inactivo'}" id="abadge-${a.id}">
+                  ${a.activo ? "Activo" : "Inactivo"}
+                </span>
+                <button class="btn-sm ${a.activo ? '' : 'success'}" id="abtnToggle-${a.id}"
+                  onclick="toggleAdmin('${a.id}', ${a.activo})">
+                  ${a.activo ? "Desactivar" : "Activar"}
+                </button>
+              </div>
+            </div>
+
+            <div class="credits-row">
+              <span class="credits-label">Créditos disponibles:</span>
+              <span class="credits-display" id="creditDisplay-${a.id}">${a.credits}</span>
+              <span class="credits-hint">
+                <button class="btn-sm purple" onclick="editarCreditos('${a.id}', ${a.credits})">Editar</button>
+              </span>
+              <span class="credits-usados">${creditosUsados} usados de ${a.credits + creditosUsados} totales</span>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    // ── Toggle activo/inactivo de admin ────────────────────────
+    async function toggleAdmin(adminId, estaActivo) {
+      const btn   = document.getElementById("abtnToggle-" + adminId);
+      const badge = document.getElementById("abadge-" + adminId);
+      btn.disabled = true;
+      const nuevoEstado = !estaActivo;
+
+      const { error } = await _supabase
+        .from("profiles").update({ activo: nuevoEstado }).eq("id", adminId);
+
+      if (error) { alert("Error: " + error.message); btn.disabled = false; return; }
+
+      badge.textContent = nuevoEstado ? "Activo" : "Inactivo";
+      badge.className   = `status-badge ${nuevoEstado ? "badge-activo" : "badge-inactivo"}`;
+      btn.textContent   = nuevoEstado ? "Desactivar" : "Activar";
+      btn.className     = `btn-sm ${nuevoEstado ? "" : "success"}`;
+      btn.onclick       = () => toggleAdmin(adminId, nuevoEstado);
+      btn.disabled      = false;
+      mostrarToast(nuevoEstado ? "Admin activado" : "Admin desactivado");
+    }
+
+    // ── Editar créditos inline ─────────────────────────────────
+    function editarCreditos(adminId, creditosActuales) {
+      const display = document.getElementById("creditDisplay-" + adminId);
+      if (display.tagName === "INPUT") return; // ya está editando
+
+      const input = document.createElement("input");
+      input.type      = "number";
+      input.min       = "0";
+      input.max       = "9999";
+      input.value     = creditosActuales;
+      input.className = "credits-input";
+
+      const btnGuardar  = document.createElement("button");
+      btnGuardar.textContent = "Guardar";
+      btnGuardar.className   = "btn-sm";
+      btnGuardar.style.background = "#059669";
+      btnGuardar.style.color      = "white";
+      btnGuardar.style.borderColor = "#059669";
+
+      const btnCancelar  = document.createElement("button");
+      btnCancelar.textContent = "Cancelar";
+      btnCancelar.className   = "btn-sm";
+
+      display.replaceWith(input);
+
+      const editBtnWrap = input.nextElementSibling;
+      editBtnWrap?.insertAdjacentElement("afterend", btnCancelar);
+      editBtnWrap?.insertAdjacentElement("afterend", btnGuardar);
+
+      input.focus(); input.select();
+
+      async function guardar() {
+        const nuevos = parseInt(input.value, 10);
+        if (isNaN(nuevos) || nuevos < 0) { alert("Ingresa un número válido."); return; }
+
+        btnGuardar.disabled = true;
+        const { error } = await _supabase
+          .from("profiles").update({ credits: nuevos }).eq("id", adminId);
+
+        if (error) { alert("Error: " + error.message); btnGuardar.disabled = false; return; }
+
+        const span = document.createElement("span");
+        span.className = "credits-display";
+        span.id        = "creditDisplay-" + adminId;
+        span.textContent = nuevos;
+        input.replaceWith(span);
+        btnGuardar.remove(); btnCancelar.remove();
+        mostrarToast("Créditos actualizados a " + nuevos);
+        await cargarStats();
+      }
+
+      btnGuardar.onclick  = guardar;
+      btnCancelar.onclick = () => {
+        const span = document.createElement("span");
+        span.className = "credits-display";
+        span.id        = "creditDisplay-" + adminId;
+        span.textContent = creditosActuales;
+        input.replaceWith(span);
+        btnGuardar.remove(); btnCancelar.remove();
+      };
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter")  { e.preventDefault(); guardar(); }
+        if (e.key === "Escape") { e.preventDefault(); btnCancelar.onclick(); }
+      });
+    }
+
+    // ── Buscar usuario para promover ───────────────────────────
+    async function buscarUsuario() {
+      const email    = document.getElementById("buscarEmail").value.trim().toLowerCase();
+      const creditos = parseInt(document.getElementById("creditosAsignar").value, 10) || 0;
+      const res      = document.getElementById("resultadoBusqueda");
+      const btn      = document.getElementById("btnBuscar");
+
+      if (!email) { mostrarToast("Ingresa un correo electrónico"); return; }
+
+      btn.disabled = true;
+      btn.textContent = "Buscando...";
+      res.style.display = "none";
+
+      const { data: usuario, error } = await _supabase
+        .from("profiles")
+        .select("id, nombre, apellido, email, rol")
+        .eq("email", email)
+        .single();
+
+      btn.disabled = false;
+      btn.textContent = "Buscar usuario";
+      res.style.display = "block";
+
+      if (error || !usuario) {
+        res.className = "resultado-busqueda error";
+        res.innerHTML = `No se encontró ningún usuario con el correo <strong>${email}</strong>.<br>
+          Asegúrate de que el usuario ya se haya registrado en la plataforma.`;
+        return;
+      }
+
+      if (usuario.rol === "admin") {
+        res.className = "resultado-busqueda warn";
+        res.innerHTML = `<strong>${usuario.nombre || usuario.email}</strong> ya es administrador.`;
+        return;
+      }
+
+      if (usuario.rol === "super_admin") {
+        res.className = "resultado-busqueda warn";
+        res.innerHTML = `<strong>${usuario.nombre || usuario.email}</strong> es Super Admin.`;
+        return;
+      }
+
+      const nombre = [usuario.nombre, usuario.apellido].filter(Boolean).join(" ") || usuario.email;
+      res.className = "resultado-busqueda ok";
+      res.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <strong>${nombre}</strong> · ${usuario.email}
+            <span class="status-badge badge-user" style="margin-left:8px">Usuario</span>
+          </div>
+          <button class="btn-primary" onclick="promoverAAdmin('${usuario.id}', '${nombre.replace(/'/g,"\\'")}', ${creditos})">
+            Promover a Admin con ${creditos} créditos
+          </button>
+        </div>`;
+    }
+
+    async function promoverAAdmin(userId, nombre, creditos) {
+      const btn = document.querySelector("#resultadoBusqueda .btn-primary");
+      if (btn) btn.disabled = true;
+
+      const { error } = await _supabase
+        .from("profiles")
+        .update({ rol: "admin", credits: creditos, admin_id: null })
+        .eq("id", userId);
+
+      if (error) {
+        alert("Error al promover: " + error.message);
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      document.getElementById("resultadoBusqueda").className = "resultado-busqueda ok";
+      document.getElementById("resultadoBusqueda").innerHTML =
+        `✓ <strong>${nombre}</strong> ahora es administrador con ${creditos} créditos.`;
+      document.getElementById("buscarEmail").value = "";
+
+      mostrarToast("Admin creado correctamente");
+      await Promise.all([cargarStats(), cargarAdmins()]);
+    }
+
+    // ── Todos los usuarios (collapsible) ───────────────────────
+    function toggleSeccion(bodyId, headerId) {
+      const body   = document.getElementById(bodyId);
+      const header = document.getElementById(headerId);
+      const abierto = body.classList.toggle("open");
+      header.classList.toggle("open", abierto);
+
+      if (abierto && !_usuariosCargados) {
+        _usuariosCargados = true;
+        cargarTodosUsuarios();
+      }
+    }
+
+    async function cargarTodosUsuarios() {
+      const lista = document.getElementById("listaUsuariosTodos");
+      lista.innerHTML = '<p class="loading-txt">Cargando...</p>';
+
+      const { data: usuarios, error } = await _supabase
+        .from("profiles")
+        .select("id, nombre, apellido, email, activo, created_at, admin_id, profiles!admin_id(nombre, apellido, email)")
+        .eq("rol", "user")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error) {
+        // Fallback sin join
+        const { data: usuariosSimple } = await _supabase
+          .from("profiles")
+          .select("id, nombre, apellido, email, activo, created_at, admin_id")
+          .eq("rol", "user")
+          .order("created_at", { ascending: false })
+          .limit(200);
+
+        if (!usuariosSimple?.length) { lista.innerHTML = '<p class="empty-txt">No hay usuarios registrados.</p>'; return; }
+        renderTablaUsuarios(lista, usuariosSimple.map(u => ({ ...u, adminNombre: u.admin_id ? u.admin_id.substring(0,8) + "..." : "Directo (Stripe)" })));
+        return;
+      }
+
+      if (!usuarios?.length) { lista.innerHTML = '<p class="empty-txt">No hay usuarios registrados.</p>'; return; }
+
+      const data = usuarios.map(u => {
+        const admin = u["profiles"] || null;
+        const adminNombre = admin ? [admin.nombre, admin.apellido].filter(Boolean).join(" ") || admin.email : "Directo (Stripe)";
+        return { ...u, adminNombre };
+      });
+      renderTablaUsuarios(lista, data);
+    }
+
+    function renderTablaUsuarios(lista, usuarios) {
+      lista.innerHTML = `
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Admin</th>
+              <th>Estado</th>
+              <th>Registrado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${usuarios.map(u => {
+              const nombre = [u.nombre, u.apellido].filter(Boolean).join(" ") || "(Sin nombre)";
+              const fecha  = new Date(u.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+              return `
+                <tr>
+                  <td>${nombre}</td>
+                  <td style="color:var(--c-text-3)">${u.email}</td>
+                  <td style="color:var(--c-text-3)">${u.adminNombre}</td>
+                  <td><span class="status-badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}">${u.activo ? "Activo" : "Inactivo"}</span></td>
+                  <td style="color:var(--c-text-4)">${fecha}</td>
+                </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+        <p style="font-size:11px;color:var(--c-text-4);margin-top:10px;text-align:right">
+          Mostrando ${usuarios.length} usuario${usuarios.length !== 1 ? "s" : ""}
+        </p>`;
+    }
+
+    // ── Toast ──────────────────────────────────────────────────
+    function mostrarToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = "✓ " + msg;
+      t.classList.add("visible");
+      setTimeout(() => t.classList.remove("visible"), 2500);
+    }
+
+    init();
+  </script>
+</body>
+</html>
