@@ -139,6 +139,7 @@ def _handle_checkout_completed(session: dict):
     rol = "admin" if plan == "admin" else "user"
     credits_iniciales = CREDITS_ADMIN_MENSUAL if rol == "admin" else 0
 
+    frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
     sb = get_supabase()
     try:
         result = sb.auth.admin.create_user({
@@ -147,6 +148,7 @@ def _handle_checkout_completed(session: dict):
             "user_metadata": {"nombre": nombre, "apellido": apellido},
         })
         user_id = result.user.id
+
         sb.table("profiles").update({
             "nombre": nombre,
             "apellido": apellido,
@@ -156,6 +158,17 @@ def _handle_checkout_completed(session: dict):
             "stripe_customer_id": stripe_customer_id,
             "stripe_subscription_id": stripe_subscription_id or None,
         }).eq("id", user_id).execute()
+
+        # Enviar email de configuración de contraseña
+        try:
+            sb.auth.admin.generate_link({
+                "type": "recovery",
+                "email": email,
+                "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
+            })
+        except Exception as mail_err:
+            print(f"⚠️ generate_link error: {mail_err}")
+
     except Exception as e:
         err = str(e)
         if "already been registered" in err or "already exists" in err:

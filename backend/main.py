@@ -1168,6 +1168,17 @@ def admin_create_user(data: CreateUserRequest, request: Request):
             "activo": True,
         }).eq("id", user_id).execute()
 
+        # Enviar email de configuración de contraseña
+        frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+        try:
+            sb.auth.admin.generate_link({
+                "type": "recovery",
+                "email": data.email,
+                "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
+            })
+        except Exception:
+            pass
+
         return {"id": user_id, "email": data.email}
 
     except Exception as e:
