@@ -172,19 +172,6 @@
             </ul>
           </div>
 
-          <!-- Plan Admin -->
-          <div class="plan-card" id="planAdmin" onclick="seleccionarPlan('admin')">
-            <span class="plan-check">✓</span>
-            <div class="plan-icon">🏢</div>
-            <div class="plan-name">Gestión de equipo</div>
-            <div class="plan-price">$1,000 <span>MXN/mes</span></div>
-            <ul class="plan-features">
-              <li>2 instructores incluidos</li>
-              <li>Instructor extra: $500</li>
-              <li>Panel de administración</li>
-              <li>Códigos de acceso</li>
-            </ul>
-          </div>
         </div>
       </div>
 
@@ -302,11 +289,8 @@
       planSeleccionado = plan;
 
       document.getElementById("planInstructor").classList.toggle("selected", plan === "instructor");
-      document.getElementById("planAdmin").classList.toggle("selected", plan === "admin");
 
-      const label = plan === "instructor"
-        ? "Plan Instructor — $1,800 MXN pago único"
-        : "Plan Gestión de equipo — $1,000 MXN/mes";
+      const label = "Plan Instructor — $1,800 MXN pago único";
       document.getElementById("planLabel").textContent = label;
 
       const form = document.getElementById("regForm");
