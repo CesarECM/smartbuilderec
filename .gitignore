@@ -34,3 +34,4 @@ build/
 # Archivos raros o temporales
 *.docx
 *.pptx
+.vercel
