@@ -213,6 +213,7 @@
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script>
+    const BACKEND_URL = "https://smartbuilderec.onrender.com";
     let _perfil = null;
 
     // ── Inicialización ────────────────────────────────────────
@@ -306,6 +307,10 @@
                 onclick="toggleUsuario('${u.id}', ${u.activo})">
                 ${u.activo ? "Desactivar" : "Activar"}
               </button>
+              <button class="btn-sm danger" id="btnDel-${u.id}"
+                onclick="eliminarUsuario('${u.id}', '${(nombre).replace(/'/g,"\\'")}')">
+                Eliminar
+              </button>
             </div>
           </div>`;
       }).join("");
@@ -335,6 +340,39 @@
       btn.className     = `btn-sm ${nuevoEstado ? "" : "success"}`;
       btn.onclick       = () => toggleUsuario(userId, nuevoEstado);
       btn.disabled      = false;
+    }
+
+    async function eliminarUsuario(userId, nombre) {
+      if (!confirm(`¿Eliminar a ${nombre}? Se restaurará 1 crédito a tu cuenta. Esta acción no se puede deshacer.`)) return;
+
+      const btn = document.getElementById("btnDel-" + userId);
+      btn.disabled = true;
+      btn.textContent = "...";
+
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/admin/users/${userId}`, {
+          method: "DELETE",
+          headers,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "Error al eliminar.");
+        }
+        const card = document.getElementById("ucard-" + userId);
+        card.style.transition = "opacity 0.3s, transform 0.3s";
+        card.style.opacity = "0";
+        card.style.transform = "translateX(16px)";
+        setTimeout(() => { card.remove(); cargarStats(); }, 320);
+        const t = document.getElementById("toast");
+        t.textContent = "✓ Usuario eliminado. Crédito restaurado.";
+        t.classList.add("visible");
+        setTimeout(() => t.classList.remove("visible"), 2500);
+      } catch (e) {
+        alert(e.message);
+        btn.disabled = false;
+        btn.textContent = "Eliminar";
+      }
     }
 
     // ── Códigos de acceso ─────────────────────────────────────

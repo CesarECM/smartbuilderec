@@ -1188,6 +1188,35 @@ def admin_create_user(data: CreateUserRequest, request: Request):
         raise HTTPException(status_code=500, detail=f"Error al crear usuario: {err}")
 
 
+@app.delete("/admin/users/{user_id}", status_code=200)
+def admin_delete_user(user_id: str, request: Request):
+    from database import get_supabase
+
+    caller_id = request.state.user.get("sub")
+    sb = get_supabase()
+
+    caller_res = sb.table("profiles").select("rol, id").eq("id", caller_id).single().execute()
+    caller = caller_res.data or {}
+    if caller.get("rol") not in ("admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Sin permisos para eliminar usuarios.")
+
+    # Admin solo puede eliminar sus propios usuarios
+    if caller.get("rol") == "admin":
+        user_res = sb.table("profiles").select("admin_id, rol").eq("id", user_id).single().execute()
+        user_data = user_res.data or {}
+        if user_data.get("admin_id") != caller_id:
+            raise HTTPException(status_code=403, detail="No puedes eliminar usuarios de otro admin.")
+        if user_data.get("rol") != "user":
+            raise HTTPException(status_code=403, detail="Solo puedes eliminar usuarios regulares.")
+
+    try:
+        # Eliminar de auth.users → CASCADE a profiles → trigger fn_restore_admin_credit
+        sb.auth.admin.delete_user(user_id)
+        return {"deleted": user_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {str(e)}")
+
+
 @app.post("/evaluate")
 def evaluate(data: EvaluationRequest):
     try:
