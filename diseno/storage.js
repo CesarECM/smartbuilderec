@@ -108,6 +108,15 @@
           .eq("user_id", session.user.id);
         if (error) console.warn("[storage] Error al actualizar:", error.message);
       } else {
+        // Verificar límite antes de crear (seguridad server-side)
+        const { count: totalCursos } = await _supabase
+          .from("planeaciones")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", session.user.id);
+        if (totalCursos >= 3) {
+          console.warn("[storage] Límite de 3 cursos alcanzado.");
+          return;
+        }
         // Crear nueva planeación y guardar su ID
         const { data, error } = await _supabase
           .from("planeaciones")
@@ -163,11 +172,13 @@
   }
 
   // ── Limpiar estado del wizard (nuevo curso, logout, import) ───────────────
-  // Cancela cualquier sync pendiente y elimina el ID de planeación activa.
-  // Los datos ec0217_* en localStorage los limpia quien llame (shared.js / auth.js).
   function limpiar() {
     clearTimeout(_syncTimer);
     _origRemoveItem("sbe_planeacion_id");
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("ec0217_")) _origRemoveItem(k);
+    }
   }
 
   // ── API pública ───────────────────────────────────────────────────────────

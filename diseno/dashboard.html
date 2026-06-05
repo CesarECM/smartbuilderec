@@ -245,9 +245,9 @@
         <h1 id="tituloWelcome">Cargando...</h1>
         <p id="subtituloWelcome"></p>
       </div>
-      <a href="index.html?new=1" class="btn-nuevo" id="btnNuevoCurso">
+      <button class="btn-nuevo" id="btnNuevoCurso" onclick="crearNuevoCurso()">
         + Nuevo curso
-      </a>
+      </button>
     </div>
 
     <div id="contenidoDash">
@@ -403,9 +403,29 @@
             <div class="empty-state-icon">📋</div>
             <h3>Aún no tienes cursos</h3>
             <p>Crea tu primer expediente didáctico EC0217.01 con asistencia de IA.</p>
-            <a href="index.html?new=1" class="btn-nuevo">+ Crear primer curso</a>
+            <button class="btn-nuevo" onclick="crearNuevoCurso()">+ Crear primer curso</button>
           </div>`;
         return;
+      }
+
+      // Actualizar estado del botón según el límite
+      const btnNuevo = document.getElementById("btnNuevoCurso");
+      if (btnNuevo) {
+        const total = data.length;
+        const MAX   = 3;
+        if (total >= MAX) {
+          btnNuevo.disabled    = true;
+          btnNuevo.textContent = `Límite alcanzado (${total}/${MAX})`;
+          btnNuevo.title       = "Elimina un curso para poder crear otro.";
+          btnNuevo.style.opacity = "0.5";
+          btnNuevo.style.cursor  = "not-allowed";
+        } else {
+          btnNuevo.disabled    = false;
+          btnNuevo.textContent = `+ Nuevo curso (${total}/${MAX})`;
+          btnNuevo.title       = "";
+          btnNuevo.style.opacity = "";
+          btnNuevo.style.cursor  = "";
+        }
       }
 
       // Botón "Continuar" para el curso más reciente en progreso
@@ -562,6 +582,16 @@
       if (!file) return;
 
       try {
+        // Verificar límite antes de importar
+        const { count } = await _supabase
+          .from("planeaciones")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", _perfil.id);
+        if (count >= 3) {
+          alert("Has alcanzado el límite de 3 cursos. Elimina uno para poder importar.");
+          return;
+        }
+
         if (!file.name.endsWith(".json")) throw new Error("Solo se aceptan archivos .json");
         const text = await file.text();
         const json = JSON.parse(text);
@@ -702,6 +732,28 @@
             </a>
           </div>
         </div>`;
+    }
+
+    // ── Crear nuevo curso (con límite de 3 para rol user) ────────────────────
+    async function crearNuevoCurso() {
+      if (_perfil.rol !== "user") {
+        _limpiarLocalStorage();
+        window.location.href = "index.html?new=1";
+        return;
+      }
+      const { count } = await _supabase
+        .from("planeaciones")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", _perfil.id);
+      if (count >= 3) return; // el botón ya está deshabilitado, seguridad adicional
+      _limpiarLocalStorage();
+      window.location.href = "index.html?new=1";
+    }
+
+    function _limpiarLocalStorage() {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("ec0217_") || k.startsWith("sbe_"))
+        .forEach(k => localStorage.removeItem(k));
     }
 
     init();
