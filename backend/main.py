@@ -29,8 +29,11 @@ load_dotenv()
 
 app = FastAPI()
 
-# Paths que no requieren JWT
+import base64 as _b64
+import json as _json
+
 _PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session"}
+_jwks_cache: dict = {}
 
 def _es_publico(method: str, path: str) -> bool:
     if path in _PATHS_PUBLICOS:
@@ -38,6 +41,22 @@ def _es_publico(method: str, path: str) -> bool:
     if method == "GET" and path == "/checkout/verify":
         return True
     return False
+
+async def _get_public_key(supabase_url: str, kid: str):
+    """Obtiene y cachea la clave pública del JWKS de Supabase."""
+    global _jwks_cache
+    if kid in _jwks_cache:
+        return _jwks_cache[kid]
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            res = await client.get(f"{supabase_url}/auth/v1/.well-known/jwks.json")
+            if res.status_code == 200:
+                for k in res.json().get("keys", []):
+                    _jwks_cache[k["kid"]] = k
+    except Exception:
+        pass
+    return _jwks_cache.get(kid)
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -47,26 +66,33 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         if not auth.startswith("Bearer "):
             return JSONResponse({"detail": "Autenticación requerida."}, status_code=401)
         token = auth.removeprefix("Bearer ").strip()
-        secret = os.getenv("SUPABASE_JWT_SECRET")
-        if not secret:
-            return JSONResponse({"detail": "JWT secret no configurado."}, status_code=500)
         try:
-            import base64 as _b64, json as _json
-            from jose import jwt as jose_jwt
+            from jose import jwt as jose_jwt, jwk as jose_jwk
 
-            # Leer el algoritmo directamente del header del token en lugar de asumir HS256,
-            # ya que versiones recientes de Supabase pueden usar HS256, HS384 u otros.
-            try:
-                raw_header = token.split('.')[0]
-                raw_header += '=' * (-len(raw_header) % 4)
-                jwt_alg = _json.loads(_b64.urlsafe_b64decode(raw_header)).get('alg', 'HS256')
-            except Exception:
-                jwt_alg = 'HS256'
+            # Leer alg y kid del header del token
+            raw_hdr = token.split('.')[0]
+            raw_hdr += '=' * (-len(raw_hdr) % 4)
+            header = _json.loads(_b64.urlsafe_b64decode(raw_hdr))
+            alg = header.get('alg', 'HS256')
+            kid = header.get('kid', '')
 
-            payload = jose_jwt.decode(
-                token, secret, algorithms=[jwt_alg],
-                options={"verify_aud": False}
-            )
+            if alg.startswith('ES') or alg.startswith('RS') or alg.startswith('PS'):
+                # Asimétrico (ES256, RS256…): verificar con clave pública desde JWKS
+                supabase_url = os.getenv("SUPABASE_URL", "")
+                if not supabase_url:
+                    return JSONResponse({"detail": "SUPABASE_URL no configurado."}, status_code=500)
+                key_data = await _get_public_key(supabase_url, kid)
+                if not key_data:
+                    return JSONResponse({"detail": f"Clave pública no encontrada (kid={kid})."}, status_code=401)
+                public_key = jose_jwk.construct(key_data, algorithm=alg)
+                payload = jose_jwt.decode(token, public_key, algorithms=[alg], options={"verify_aud": False})
+            else:
+                # Simétrico (HS256…): verificar con SUPABASE_JWT_SECRET
+                secret = os.getenv("SUPABASE_JWT_SECRET")
+                if not secret:
+                    return JSONResponse({"detail": "JWT secret no configurado."}, status_code=500)
+                payload = jose_jwt.decode(token, secret, algorithms=[alg], options={"verify_aud": False})
+
             request.state.user = payload
         except Exception as e:
             return JSONResponse({"detail": f"Token inválido o expirado: {str(e)}"}, status_code=401)
