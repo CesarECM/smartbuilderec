@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartBuilderEC — Genera tu expediente EC0217.01 completo</title>
+  <meta name="description" content="La herramienta que todo instructor necesita para cumplir con la norma EC0217.01 del CONOCER. Genera los 10 documentos de tu expediente didáctico en minutos con inteligencia artificial.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { background: #f8fafc; font-family: inherit; margin: 0; padding: 0; }
+
+    /* ── Navbar ──────────────────────────────────────────────────── */
+    .lp-nav {
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: 0 32px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .lp-nav-logo { display: flex; align-items: center; gap: 10px; }
+    .lp-nav-logo img { max-height: 36px; }
+    .lp-nav-logo span { font-size: 15px; font-weight: 800; color: var(--c-blue-600); letter-spacing: -0.3px; }
+    .lp-nav-login { color: var(--c-blue-600); font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1.5px solid var(--c-blue-600); border-radius: var(--r-md); transition: all 0.15s; }
+    .lp-nav-login:hover { background: var(--c-blue-600); color: white; }
+
+    /* ── Hero ────────────────────────────────────────────────────── */
+    .lp-hero {
+      background: linear-gradient(135deg, #1f3b6d 0%, #2d5294 60%, #1a3a6e 100%);
+      padding: 80px 24px 72px;
+      text-align: center; color: white;
+    }
+    .lp-hero-eyebrow {
+      display: inline-block; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.92);
+      font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+      padding: 5px 14px; border-radius: 20px; margin-bottom: 20px;
+    }
+    .lp-hero h1 {
+      font-size: clamp(26px, 5vw, 44px); font-weight: 900; line-height: 1.15;
+      margin: 0 0 16px; max-width: 680px; margin-left: auto; margin-right: auto;
+    }
+    .lp-hero h1 span { color: #93c5fd; }
+    .lp-hero p {
+      font-size: 17px; color: rgba(255,255,255,0.82); max-width: 520px;
+      margin: 0 auto 36px; line-height: 1.65;
+    }
+    .lp-cta-btn {
+      display: inline-block; background: #f59e0b; color: #1a1a1a;
+      font-size: 16px; font-weight: 800; padding: 15px 36px;
+      border-radius: var(--r-lg); text-decoration: none;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.45);
+      transition: all 0.15s;
+    }
+    .lp-cta-btn:hover { background: #fbbf24; transform: translateY(-2px); box-shadow: 0 6px 28px rgba(245,158,11,0.55); }
+    .lp-hero-trust {
+      margin-top: 22px; font-size: 13px; color: rgba(255,255,255,0.55);
+      display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap;
+    }
+    .lp-hero-trust span { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Social proof ────────────────────────────────────────────── */
+    .lp-social {
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: 18px 24px; text-align: center;
+      font-size: 13px; color: #6b7280;
+    }
+    .lp-social strong { color: #1f3b6d; }
+
+    /* ── Beneficios ──────────────────────────────────────────────── */
+    .lp-section { padding: 64px 24px; }
+    .lp-section-inner { max-width: 1000px; margin: 0 auto; }
+    .lp-section-title {
+      text-align: center; font-size: 28px; font-weight: 800;
+      color: #1e293b; margin-bottom: 10px;
+    }
+    .lp-section-sub {
+      text-align: center; font-size: 15px; color: #6b7280;
+      margin-bottom: 48px; max-width: 520px; margin-left: auto; margin-right: auto;
+    }
+    .lp-benefits {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;
+    }
+    .lp-benefit {
+      background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+      padding: 28px 24px; transition: box-shadow 0.15s;
+    }
+    .lp-benefit:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .lp-benefit-icon { font-size: 32px; margin-bottom: 14px; }
+    .lp-benefit h3 { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 8px; }
+    .lp-benefit p { font-size: 14px; color: #6b7280; line-height: 1.6; margin: 0; }
+
+    /* ── Documentos generados ────────────────────────────────────── */
+    .lp-docs { background: white; }
+    .lp-docs-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+    }
+    .lp-doc-item {
+      border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 13px; color: #374151; font-weight: 500;
+    }
+    .lp-doc-item .doc-icon { font-size: 22px; flex-shrink: 0; }
+
+    /* ── Norma EC0217 ────────────────────────────────────────────── */
+    .lp-norma {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 1px solid #bfdbfe; border-radius: 16px;
+      padding: 36px 32px; margin-bottom: 32px;
+      display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    }
+    .lp-norma-icon { font-size: 48px; flex-shrink: 0; }
+    .lp-norma h3 { font-size: 18px; font-weight: 800; color: #1e40af; margin: 0 0 6px; }
+    .lp-norma p { font-size: 14px; color: #3730a3; margin: 0; line-height: 1.6; }
+
+    /* ── Precio y CTA principal ──────────────────────────────────── */
+    .lp-pricing { background: #f8fafc; }
+    .lp-price-card {
+      max-width: 520px; margin: 0 auto;
+      background: white; border: 2px solid #1f3b6d;
+      border-radius: 24px; padding: 40px 36px;
+      box-shadow: 0 8px 32px rgba(31,59,109,0.14);
+      text-align: center;
+    }
+    .lp-price-badge {
+      display: inline-block; background: #fef9c3; color: #713f12;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; padding: 4px 14px; border-radius: 20px; margin-bottom: 16px;
+    }
+    .lp-price-title { font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+    .lp-price-amount {
+      font-size: 52px; font-weight: 900; color: #1f3b6d;
+      line-height: 1; margin-bottom: 4px;
+    }
+    .lp-price-amount sup { font-size: 22px; vertical-align: top; margin-top: 10px; display: inline-block; }
+    .lp-price-period { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
+    .lp-price-features {
+      text-align: left; list-style: none; padding: 0;
+      margin: 0 0 28px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .lp-price-features li {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; color: #374151;
+    }
+    .lp-price-features li::before {
+      content: "✓"; width: 20px; height: 20px; background: #dcfce7;
+      color: #16a34a; border-radius: 50%; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .lp-divider { border: none; border-top: 1px solid #f1f5f9; margin: 24px 0; }
+
+    /* Formulario de checkout */
+    .lp-form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .lp-form-row input { flex: 1; }
+    .lp-form input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #e2e8f0;
+      border-radius: var(--r-md); font-size: 14px; font-family: inherit;
+      outline: none; background: #f8fafc; color: #1e293b;
+      transition: border-color 0.15s; margin-bottom: 12px;
+    }
+    .lp-form input:focus { border-color: #1f3b6d; box-shadow: 0 0 0 3px rgba(31,59,109,0.10); background: white; }
+    .lp-pay-btn {
+      width: 100%; background: #f59e0b; color: #1a1a1a; border: none;
+      padding: 14px; font-size: 16px; font-weight: 800; font-family: inherit;
+      border-radius: var(--r-lg); cursor: pointer;
+      box-shadow: 0 4px 16px rgba(245,158,11,0.4);
+      transition: all 0.15s;
+    }
+    .lp-pay-btn:hover:not(:disabled) { background: #fbbf24; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(245,158,11,0.5); }
+    .lp-pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .lp-form-msg { font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
+    .lp-form-msg.error { color: #dc2626; }
+    .stripe-trust {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 12px; color: #9ca3af; margin-top: 14px;
+    }
+    .stripe-trust svg { width: 38px; }
+
+    /* ── FAQ ────────────────────────────────────────────────────── */
+    .lp-faq { background: white; }
+    .lp-faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .lp-faq-item { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 22px; }
+    .lp-faq-item h4 { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 6px; }
+    .lp-faq-item p  { font-size: 13px; color: #6b7280; margin: 0; line-height: 1.6; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    .lp-footer {
+      background: #1e293b; color: #94a3b8; text-align: center;
+      padding: 28px 24px; font-size: 13px;
+    }
+    .lp-footer a { color: #cbd5e1; text-decoration: none; }
+    .lp-footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .lp-nav { padding: 0 16px; }
+      .lp-hero { padding: 52px 20px 48px; }
+      .lp-faq-grid { grid-template-columns: 1fr; }
+      .lp-price-card { padding: 28px 20px; }
+      .lp-form-row { flex-direction: column; gap: 0; }
+      .lp-norma { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="lp-nav">
+    <div class="lp-nav-logo">
+      <img src="img/LogoECM.png" alt="SmartBuilderEC">
+      <span>SmartBuilderEC</span>
+    </div>
+    <a href="login.html" class="lp-nav-login">Iniciar sesión</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="lp-hero">
+    <div class="lp-hero-eyebrow">Herramienta para instructores certificados</div>
+    <h1>Crea tu expediente <span>EC0217.01</span> completo en minutos</h1>
+    <p>El asistente inteligente que guía a instructores de capacitación empresarial para cumplir con la norma del CONOCER, paso a paso.</p>
+    <a href="#comprar" class="lp-cta-btn">Obtener acceso — $1,799 MXN</a>
+    <div class="lp-hero-trust">
+      <span>✓ Pago único, sin mensualidades</span>
+      <span>✓ Acceso permanente</span>
+      <span>✓ 10 documentos listos para descarga</span>
+    </div>
+  </section>
+
+  <!-- Norma EC0217 -->
+  <section class="lp-section lp-docs">
+    <div class="lp-section-inner">
+      <div class="lp-norma">
+        <div class="lp-norma-icon">📋</div>
+        <div>
+          <h3>Cumple con la norma EC0217.01 del CONOCER</h3>
+          <p>SmartBuilderEC está diseñado específicamente para cumplir con todos los requisitos de la norma técnica de competencia laboral EC0217.01 emitida por el Consejo Nacional de Normalización y Certificación de Competencias Laborales (CONOCER) de México.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beneficios -->
+  <section class="lp-section" style="background:white;padding-top:52px">
+    <div class="lp-section-inner">
+      <h2 class="lp-section-title">Todo lo que necesitas para tu expediente</h2>
+      <p class="lp-section-sub">Un wizard de 16 pasos que te guía desde la planeación hasta la evaluación sumativa</p>
+
+      <div class="lp-benefits">
+        <div class="lp-benefit">
+          <div class="lp-benefit-icon">🤖</div>
+          <h3>Generación con IA</h3>
+          <p>Cada sección del expediente puede generarse automáticamente con inteligencia artificial contextualizada a tu curso específico.</p>
+        </div>
+        <div class="lp-benefit">
+          <div class="lp-benefit-icon">⚡</div>
+          <h3>De horas a minutos</h3>
+          <p>Lo que antes tomaba días de trabajo, ahora lo completas en una sesión. Enfócate en impartir el curso, no en el papeleo.</p>
+        </div>
+        <div class="lp-benefit">
+          <div class="lp-benefit-icon">📦</div>
+          <h3>10 documentos listos</h3>
+          <p>Descarga un ZIP con todos los documentos en Word y PowerPoint, listos para presentar ante el evaluador del CONOCER.</p>
+        </div>
+        <div class="lp-benefit">
+          <div class="lp-benefit-icon">🧭</div>
+          <h3>Wizard paso a paso</h3>
+          <p>16 etapas bien estructuradas: planeación, encuadre, técnicas didácticas, evaluaciones diagnóstica, formativa y sumativa.</p>
+        </div>
+        <div class="lp-benefit">
+          <div class="lp-benefit-icon">✏️</div>
+          <h3>Edita a tu medida</h3>
+          <p>La IA es solo el punto de partida. Edita cada campo libremente para personalizar el expediente a tu contexto real.</p>
+        </div>
+        <div class="lp-benefit">
+          <div class="lp-benefit-icon">☁️</div>
+          <h3>Guardado automático</h3>
+          <p>Tu avance se sincroniza automáticamente. Trabaja desde cualquier dispositivo y continúa donde lo dejaste.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Documentos que genera -->
+  <section class="lp-section lp-docs">
+    <div class="lp-section-inner">
+      <h2 class="lp-section-title">Los 10 documentos que obtienes</h2>
+      <p class="lp-section-sub">Tu expediente completo en formatos Word y PowerPoint, listos para imprimir y presentar</p>
+
+      <div class="lp-docs-grid">
+        <div class="lp-doc-item"><span class="doc-icon">📄</span>Documento de Planeación EC0217</div>
+        <div class="lp-doc-item"><span class="doc-icon">📝</span>Evaluación Diagnóstica</div>
+        <div class="lp-doc-item"><span class="doc-icon">📊</span>Evaluación Formativa (Cotejo)</div>
+        <div class="lp-doc-item"><span class="doc-icon">👁️</span>Evaluación Formativa (Guía)</div>
+        <div class="lp-doc-item"><span class="doc-icon">📋</span>Evaluación Sumativa</div>
+        <div class="lp-doc-item"><span class="doc-icon">🌟</span>Evaluación de Reacción</div>
+        <div class="lp-doc-item"><span class="doc-icon">✍️</span>Lista de Asistencia</div>
+        <div class="lp-doc-item"><span class="doc-icon">🤝</span>Contrato de Aprendizaje</div>
+        <div class="lp-doc-item"><span class="doc-icon">📦</span>Lista de Requerimientos</div>
+        <div class="lp-doc-item"><span class="doc-icon">🖥️</span>Presentación PowerPoint</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Precio y formulario de compra -->
+  <section class="lp-section lp-pricing" id="comprar">
+    <div class="lp-section-inner">
+      <h2 class="lp-section-title">Obtén acceso completo hoy</h2>
+      <p class="lp-section-sub">Un solo pago, sin sorpresas. Acceso permanente a la plataforma.</p>
+
+      <div class="lp-price-card">
+        <div class="lp-price-badge">Pago único — sin suscripción</div>
+        <div class="lp-price-title">Acceso completo SmartBuilderEC</div>
+        <div class="lp-price-amount"><sup>$</sup>1,799</div>
+        <div class="lp-price-period">MXN · un solo pago · acceso permanente</div>
+
+        <ul class="lp-price-features">
+          <li>Wizard EC0217.01 completo (16 pasos)</li>
+          <li>Generación con IA en cada sección</li>
+          <li>Descarga de los 10 documentos en Word/PPT</li>
+          <li>Sincronización automática en la nube</li>
+          <li>Múltiples planeaciones guardadas</li>
+          <li>Actualizaciones incluidas sin costo adicional</li>
+        </ul>
+
+        <hr class="lp-divider">
+
+        <div class="lp-form" id="checkoutForm">
+          <div class="lp-form-row">
+            <input type="text" id="nombre" placeholder="Nombre" autocomplete="given-name" required>
+            <input type="text" id="apellido" placeholder="Apellido" autocomplete="family-name" required>
+          </div>
+          <input type="email" id="email" placeholder="Tu correo electrónico" autocomplete="email" required>
+          <button class="lp-pay-btn" id="btnPagar">Pagar con tarjeta →</button>
+          <p class="lp-form-msg" id="formMsg"></p>
+        </div>
+
+        <div class="stripe-trust">
+          <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.45 9.75c0-.69.57-1.05 1.5-1.05 1.34 0 3.03.41 4.37 1.13V6.14C9.93 5.52 8.53 5.25 7.12 5.25 3.8 5.25 1.5 6.97 1.5 9.95c0 4.65 6.4 3.9 6.4 5.9 0 .82-.71 1.09-1.7 1.09-1.47 0-3.35-.61-4.83-1.43v3.64c1.64.71 3.3 1.02 4.83 1.02 3.42 0 5.77-1.68 5.77-4.7-.01-5.02-6.52-4.12-6.52-5.72zm13.2-6.56l-3.32.7v2.7l-1.5.32v2.87h1.5V14c0 2.7 1.38 3.65 4.18 3.65.77 0 1.6-.1 2.24-.28v-2.97c-.42.1-.86.18-1.3.18-1.1 0-1.5-.36-1.5-1.46V9.78h2.8V6.91h-2.8V3.19zm5.66 3.72h3.44v10.56h-3.44V6.91zm1.72-4.6c-1.1 0-1.98.88-1.98 2a1.99 1.99 0 003.97 0c0-1.12-.88-2-1.99-2zm9.8 4.35c-.8 0-1.77.36-2.48 1.15V6.91h-3.44v10.56h3.44v-5.64c0-1.3.72-1.82 1.64-1.82.93 0 1.44.52 1.44 1.82v5.64h3.44v-6.44c0-2.75-1.54-4.37-4.04-4.37zm12.4-.1c-1.5 0-2.63.57-3.4 1.46V3.35H41.4v14.12h2.97v-1.35c.78.93 1.9 1.5 3.37 1.5 2.9 0 5.2-2.36 5.2-5.54.01-3.16-2.28-5.52-5.18-5.52zm-.77 8.15c-1.44 0-2.56-1.14-2.56-2.63s1.12-2.63 2.56-2.63 2.56 1.14 2.56 2.63-1.12 2.63-2.56 2.63z" fill="#6772E5"/>
+          </svg>
+          Pago 100% seguro procesado por Stripe
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="lp-section lp-faq">
+    <div class="lp-section-inner">
+      <h2 class="lp-section-title">Preguntas frecuentes</h2>
+      <div class="lp-faq-grid">
+        <div class="lp-faq-item">
+          <h4>¿Es un pago único o una suscripción?</h4>
+          <p>Pago único de $1,799 MXN. No hay mensualidades ni cargos recurrentes. El acceso es permanente.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>¿Cuántas planeaciones puedo crear?</h4>
+          <p>Ilimitadas. Puedes crear y guardar tantos expedientes como cursos tengas, todos sincronizados en la nube.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>¿Los documentos cumplen con el CONOCER?</h4>
+          <p>Sí. SmartBuilderEC está diseñado específicamente para cumplir con todos los requerimientos de la norma EC0217.01.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>¿Qué necesito para usarlo?</h4>
+          <p>Solo un navegador web moderno (Chrome, Firefox, Edge). No se necesita instalación ni software adicional.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>¿Cómo recibo mis credenciales de acceso?</h4>
+          <p>Inmediatamente después del pago recibirás un correo con el enlace para configurar tu contraseña y acceder a la plataforma.</p>
+        </div>
+        <div class="lp-faq-item">
+          <h4>¿Puedo editar el contenido generado por IA?</h4>
+          <p>Por supuesto. La IA genera un borrador como punto de partida. Puedes editar cada campo libremente para personalizarlo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="lp-footer">
+    <p>© 2025 SmartBuilderEC · Plataforma para instructores de capacitación empresarial</p>
+    <p style="margin-top:6px">
+      <a href="login.html">Iniciar sesión</a> ·
+      <a href="registro.html">Activar código</a>
+    </p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+    const BACKEND_URL = "https://smartbuilderec.onrender.com";
+    const formMsg = document.getElementById("formMsg");
+
+    function setMsg(text, type) {
+      formMsg.textContent = text;
+      formMsg.className = "lp-form-msg " + (type || "");
+    }
+
+    document.getElementById("btnPagar").addEventListener("click", async () => {
+      const nombre   = document.getElementById("nombre").value.trim();
+      const apellido = document.getElementById("apellido").value.trim();
+      const email    = document.getElementById("email").value.trim();
+      const btn      = document.getElementById("btnPagar");
+
+      if (!nombre || !apellido) { setMsg("Ingresa tu nombre y apellido.", "error"); return; }
+      if (!email || !/\S+@\S+\.\S+/.test(email)) { setMsg("Ingresa un correo electrónico válido.", "error"); return; }
+
+      btn.disabled = true;
+      btn.textContent = "Redirigiendo al pago...";
+      setMsg("", "");
+
+      const base = window.location.origin;
+      const success_url = `${base}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
+      const cancel_url  = `${base}/pago.html`;
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/checkout/session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, nombre, apellido, success_url, cancel_url }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al crear la sesión de pago.");
+        window.location.href = data.checkout_url;
+      } catch (e) {
+        setMsg(e.message || "Error al conectar con el servidor. Intenta de nuevo.", "error");
+        btn.disabled = false;
+        btn.textContent = "Pagar con tarjeta →";
+      }
+    });
+
+    // Smooth scroll para el CTA del hero
+    document.querySelector('a[href="#comprar"]')?.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("comprar")?.scrollIntoView({ behavior: "smooth" });
+    });
+  </script>
+</body>
+</html>

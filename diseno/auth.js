@@ -14,13 +14,13 @@ async function getUser() {
   return user;
 }
 
-// Perfil completo desde la tabla profiles (con rol, credits, admin_id)
+// Perfil completo desde la tabla profiles (con rol, credits, admin_id, vigencia_hasta)
 async function getUserProfile() {
   const { data: { user } } = await _supabase.auth.getUser();
   if (!user) return null;
   const { data } = await _supabase
     .from("profiles")
-    .select("id, nombre, apellido, email, rol, credits, admin_id, activo")
+    .select("id, nombre, apellido, email, rol, credits, admin_id, activo, vigencia_hasta")
     .eq("id", user.id)
     .single();
   return data;
@@ -119,17 +119,39 @@ async function getAuthHeaders() {
   return headers;
 }
 
-// Guard de autenticación y rol.
-// rolesPermitidos vacío = solo verifica que haya sesión activa.
-// Ejemplo: await authGuard(['admin', 'super_admin'])
+// Guard de autenticación, rol y vigencia.
+// rolesPermitidos vacío = solo verifica sesión activa.
 async function authGuard(rolesPermitidos = []) {
   const session = await getSession();
   if (!session) {
     window.location.href = "login.html";
     return null;
   }
+
+  const profile = await getUserProfile();
+  if (!profile) {
+    window.location.href = "login.html";
+    return null;
+  }
+
+  // Cuenta desactivada
+  if (profile.activo === false) {
+    await _supabase.auth.signOut();
+    window.location.href = "login.html?razon=inactivo";
+    return null;
+  }
+
+  // Vigencia expirada (solo aplica a admins con fecha asignada)
+  if (profile.rol === "admin" && profile.vigencia_hasta) {
+    const vence = new Date(profile.vigencia_hasta);
+    if (vence < new Date()) {
+      await _supabase.auth.signOut();
+      window.location.href = "login.html?razon=vigencia_expirada";
+      return null;
+    }
+  }
+
   if (rolesPermitidos.length > 0) {
-    const profile = await getUserProfile();
     const rol = profile?.rol || "user";
     if (!rolesPermitidos.includes(rol)) {
       window.location.href = "dashboard.html";
@@ -139,15 +161,23 @@ async function authGuard(rolesPermitidos = []) {
   return session;
 }
 
+// Devuelve los días restantes de vigencia (null si no aplica)
+function diasRestantesVigencia(profile) {
+  if (!profile?.vigencia_hasta) return null;
+  const delta = new Date(profile.vigencia_hasta) - new Date();
+  return Math.ceil(delta / (1000 * 60 * 60 * 24));
+}
+
 // ── Exportar al scope global ──────────────────────────────────────────────────
-window.getSession         = getSession;
-window.getUser            = getUser;
-window.getUserProfile     = getUserProfile;
-window.login              = login;
-window.loginWithGoogle    = loginWithGoogle;
-window.loginWithMagicLink = loginWithMagicLink;
-window.registro           = registro;
-window.registroConCodigo  = registroConCodigo;
-window.logout             = logout;
-window.getAuthHeaders     = getAuthHeaders;
-window.authGuard          = authGuard;
+window.getSession               = getSession;
+window.getUser                  = getUser;
+window.getUserProfile           = getUserProfile;
+window.login                    = login;
+window.loginWithGoogle          = loginWithGoogle;
+window.loginWithMagicLink       = loginWithMagicLink;
+window.registro                 = registro;
+window.registroConCodigo        = registroConCodigo;
+window.logout                   = logout;
+window.getAuthHeaders           = getAuthHeaders;
+window.authGuard                = authGuard;
+window.diasRestantesVigencia    = diasRestantesVigencia;

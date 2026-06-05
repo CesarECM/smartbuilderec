@@ -32,13 +32,11 @@ app = FastAPI()
 import base64 as _b64
 import json as _json
 
-_PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session"}
+_PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session", "/checkout/verify"}
 _jwks_cache: dict = {}
 
 def _es_publico(method: str, path: str) -> bool:
     if path in _PATHS_PUBLICOS:
-        return True
-    if method == "GET" and path == "/checkout/verify":
         return True
     return False
 
@@ -119,8 +117,12 @@ app.add_middleware(
 # ─── Routers ──────────────────────────────────────────────────────────────────
 
 from routers import stripe_router
+from routers import admin_router
+from routers import email_router
 
 app.include_router(stripe_router.router, tags=["stripe"])
+app.include_router(admin_router.router, tags=["admin"])
+app.include_router(email_router.router, tags=["email"])
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")

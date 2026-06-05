@@ -2,12 +2,11 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from database import get_supabase
+from services.email_service import send_template
 import stripe
 import os
 
 router = APIRouter()
-
-CREDITS_ADMIN_MENSUAL = 2
 
 
 def _stripe():
@@ -15,39 +14,28 @@ def _stripe():
     return stripe
 
 
-# ─── Checkout ─────────────────────────────────────────────────────────────────
+# ─── Checkout (solo plan instructor) ──────────────────────────────────────────
 
 class CheckoutRequest(BaseModel):
     email: str
     nombre: str
     apellido: str
-    plan: str          # "instructor" | "admin"
     success_url: str
     cancel_url: str
 
 
 @router.post("/checkout/session")
 def crear_checkout(data: CheckoutRequest):
-    plan = data.plan.lower()
-    if plan == "instructor":
-        price_id = os.getenv("STRIPE_PRICE_INSTRUCTOR")
-        mode = "payment"
-        if not price_id:
-            raise HTTPException(status_code=500, detail="STRIPE_PRICE_INSTRUCTOR no configurado.")
-    elif plan == "admin":
-        price_id = os.getenv("STRIPE_PRICE_ADMIN")
-        mode = "subscription"
-        if not price_id:
-            raise HTTPException(status_code=500, detail="STRIPE_PRICE_ADMIN no configurado.")
-    else:
-        raise HTTPException(status_code=400, detail="Plan no válido. Usa 'instructor' o 'admin'.")
+    price_id = os.getenv("STRIPE_PRICE_INSTRUCTOR")
+    if not price_id:
+        raise HTTPException(status_code=500, detail="STRIPE_PRICE_INSTRUCTOR no configurado.")
 
     sc = _stripe()
     try:
         session = sc.checkout.Session.create(
             customer_email=data.email,
             payment_method_types=["card"],
-            mode=mode,
+            mode="payment",
             line_items=[{"price": price_id, "quantity": 1}],
             success_url=data.success_url,
             cancel_url=data.cancel_url,
@@ -55,7 +43,6 @@ def crear_checkout(data: CheckoutRequest):
                 "email": data.email,
                 "nombre": data.nombre,
                 "apellido": data.apellido,
-                "plan": plan,
             },
         )
         return {"checkout_url": session.url, "session_id": session.id}
@@ -71,7 +58,6 @@ def verificar_checkout(session_id: str):
         return {
             "status": session.get("payment_status") or session.get("status"),
             "email": (session.get("customer_details") or {}).get("email", ""),
-            "plan": (session.get("metadata") or {}).get("plan", "instructor"),
         }
     except Exception:
         raise HTTPException(status_code=404, detail="Sesión no encontrada.")
@@ -114,10 +100,6 @@ async def stripe_webhook(request: Request):
 
     if etype == "checkout.session.completed":
         _handle_checkout_completed(event["data"]["object"])
-
-    elif etype == "invoice.paid":
-        _handle_invoice_paid(event["data"]["object"])
-
     elif etype in ("customer.subscription.deleted", "customer.subscription.paused"):
         _handle_subscription_ended(event["data"]["object"])
 
@@ -129,18 +111,14 @@ def _handle_checkout_completed(session: dict):
     email    = meta.get("email") or (session.get("customer_details") or {}).get("email", "")
     nombre   = meta.get("nombre", "")
     apellido = meta.get("apellido", "")
-    plan     = meta.get("plan", "instructor")
 
     if not email:
         return
 
-    stripe_customer_id     = session.get("customer") or ""
-    stripe_subscription_id = session.get("subscription") or ""
-    rol = "admin" if plan == "admin" else "user"
-    credits_iniciales = CREDITS_ADMIN_MENSUAL if rol == "admin" else 0
-
+    stripe_customer_id = session.get("customer") or ""
     frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
     sb = get_supabase()
+
     try:
         result = sb.auth.admin.create_user({
             "email": email,
@@ -152,57 +130,34 @@ def _handle_checkout_completed(session: dict):
         sb.table("profiles").update({
             "nombre": nombre,
             "apellido": apellido,
-            "rol": rol,
+            "rol": "user",
             "activo": True,
-            "credits": credits_iniciales,
+            "admin_id": None,
             "stripe_customer_id": stripe_customer_id,
-            "stripe_subscription_id": stripe_subscription_id or None,
         }).eq("id", user_id).execute()
 
-        # Enviar email de configuración de contraseña
-        try:
-            sb.auth.admin.generate_link({
-                "type": "recovery",
-                "email": email,
-                "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
-            })
-        except Exception as mail_err:
-            print(f"⚠️ generate_link error: {mail_err}")
+        # Monto del pago (en centavos → pesos)
+        monto_centavos = session.get("amount_total") or 179900
+        monto_str = f"${monto_centavos // 100:,.0f} MXN"
+
+        send_template("bienvenida_user_stripe", email, {
+            "nombre": nombre or email,
+            "email": email,
+            "monto": monto_str,
+        })
 
     except Exception as e:
         err = str(e)
         if "already been registered" in err or "already exists" in err:
-            # El usuario ya existe — actualizar stripe info
             try:
                 sb.table("profiles").update({
                     "stripe_customer_id": stripe_customer_id,
-                    "stripe_subscription_id": stripe_subscription_id or None,
                     "activo": True,
                 }).eq("email", email).execute()
             except Exception:
                 pass
         else:
-            print(f"⚠️ checkout_completed create_user error: {err}")
-
-
-def _handle_invoice_paid(invoice: dict):
-    # Solo renovaciones mensuales (no la factura inicial de creación)
-    if invoice.get("billing_reason") != "subscription_cycle":
-        return
-
-    stripe_customer_id = invoice.get("customer", "")
-    if not stripe_customer_id:
-        return
-
-    sb = get_supabase()
-    try:
-        res = sb.table("profiles").select("id, credits, rol").eq("stripe_customer_id", stripe_customer_id).single().execute()
-        perfil = res.data or {}
-        if perfil.get("rol") == "admin":
-            nuevos = (perfil.get("credits") or 0) + CREDITS_ADMIN_MENSUAL
-            sb.table("profiles").update({"credits": nuevos}).eq("id", perfil["id"]).execute()
-    except Exception as e:
-        print(f"⚠️ invoice.paid error: {e}")
+            print(f"⚠️ checkout_completed error: {err}")
 
 
 def _handle_subscription_ended(subscription: dict):

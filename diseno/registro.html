@@ -3,44 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear cuenta — SmartBuilderEC</title>
+  <title>Activar cuenta — SmartBuilderEC</title>
   <link rel="stylesheet" href="styles.css">
   <style>
     body { background: var(--c-bg); }
     .login-container {
-      max-width: 480px;
-      margin: 36px auto;
+      max-width: 440px;
+      margin: 48px auto;
       background: var(--c-surface);
       padding: 40px;
       border-radius: var(--r-xl);
       box-shadow: var(--shadow-lg);
       border: 1px solid var(--c-border);
     }
-    .login-logo { display: block; margin: 0 auto 18px; max-width: 90px; }
+    .login-logo { display: block; margin: 0 auto 18px; max-width: 82px; }
     .login-container h2 {
-      color: var(--c-text); font-size: 21px; font-weight: 700;
-      text-align: center; margin-bottom: 18px;
+      color: var(--c-text); font-size: 20px; font-weight: 700;
+      text-align: center; margin-bottom: 6px;
     }
-    /* Tabs */
-    .auth-tabs {
-      display: flex; gap: 4px; background: var(--c-surface-2);
-      border-radius: var(--r-md); padding: 4px; margin-bottom: 20px;
+    .login-container .subtitle {
+      font-size: 13px; color: var(--c-text-3); text-align: center; margin-bottom: 22px;
     }
-    .auth-tab {
-      flex: 1; padding: 8px; border: none; border-radius: calc(var(--r-md) - 2px);
-      background: transparent; color: var(--c-text-2); font-size: 13px;
-      font-weight: 600; font-family: inherit; cursor: pointer;
-      transition: all var(--t-fast);
+    .tab-desc {
+      font-size: 13px; color: var(--c-text-3); margin-bottom: 18px;
+      padding: 10px 13px; background: var(--c-surface-2);
+      border-radius: var(--r-sm); border-left: 3px solid var(--c-blue-600);
+      line-height: 1.5;
     }
-    .auth-tab.active {
-      background: var(--c-surface); color: var(--c-blue-600);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-    }
-    /* Campos */
     .login-field { margin-bottom: 14px; }
     .login-field label {
-      display: block; font-size: 13px; font-weight: 600;
-      color: var(--c-text-2); margin-bottom: 5px;
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--c-text-2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.03em;
     }
     .login-field input {
       width: 100%; box-sizing: border-box; padding: 10px 13px;
@@ -51,71 +44,19 @@
     }
     .login-field input:focus {
       border-color: var(--c-blue-600);
-      box-shadow: 0 0 0 3px rgba(31,59,109,0.12);
+      box-shadow: 0 0 0 3px rgba(31,59,109,0.10);
     }
     .login-row { display: flex; gap: 10px; }
     .login-row .login-field { flex: 1; }
-    /* Código input destacado */
     .codigo-input {
-      font-size: 20px !important; font-weight: 700 !important;
-      letter-spacing: 4px !important; text-align: center !important;
+      font-size: 22px !important; font-weight: 800 !important;
+      letter-spacing: 6px !important; text-align: center !important;
       text-transform: uppercase !important;
     }
-    /* Tab-desc */
-    .tab-desc {
-      font-size: 13px; color: var(--c-text-3); margin-bottom: 16px;
-      padding: 10px 12px; background: var(--c-surface-2);
-      border-radius: var(--r-sm); border-left: 3px solid var(--c-blue-600);
-    }
-    /* ── Tarjetas de plan ──────────────────────────────────── */
-    .plan-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-      margin-bottom: 20px;
-    }
-    .plan-card {
-      border: 2px solid var(--c-border-s); border-radius: var(--r-lg);
-      padding: 16px 14px; cursor: pointer; transition: all var(--t-fast);
-      background: var(--c-surface-2); position: relative;
-    }
-    .plan-card:hover { border-color: var(--c-blue-600); }
-    .plan-card.selected {
-      border-color: var(--c-blue-600);
-      background: #eff6ff;
-      box-shadow: 0 0 0 3px rgba(31,59,109,0.1);
-    }
-    .plan-card.selected .plan-check { display: block; }
-    .plan-check {
-      display: none; position: absolute; top: 10px; right: 10px;
-      width: 20px; height: 20px; background: var(--c-blue-600);
-      border-radius: 50%; color: white; font-size: 11px;
-      line-height: 20px; text-align: center;
-    }
-    .plan-icon { font-size: 28px; margin-bottom: 6px; }
-    .plan-name { font-size: 13px; font-weight: 700; color: var(--c-text); margin-bottom: 2px; }
-    .plan-price {
-      font-size: 18px; font-weight: 800; color: var(--c-blue-600);
-      margin-bottom: 2px;
-    }
-    .plan-price span { font-size: 12px; font-weight: 500; color: var(--c-text-3); }
-    .plan-features { list-style: none; padding: 0; margin: 8px 0 0; }
-    .plan-features li {
-      font-size: 11.5px; color: var(--c-text-2); padding: 2px 0;
-    }
-    .plan-features li::before { content: "✓ "; color: #059669; font-weight: 700; }
-    /* Formulario de registro */
-    .reg-form { display: none; }
-    .reg-form.visible { display: block; }
-    .plan-selected-label {
-      font-size: 12px; font-weight: 600; color: var(--c-blue-600);
-      background: #eff6ff; border: 1px solid #bfdbfe;
-      padding: 6px 12px; border-radius: var(--r-sm);
-      margin-bottom: 14px; text-align: center;
-    }
-    /* Botón principal */
     .login-btn {
       width: 100%; background: var(--c-blue-600); color: white; border: none;
       padding: 12px; font-size: 15px; font-weight: 600; font-family: inherit;
-      border-radius: var(--r-md); cursor: pointer; margin-top: 4px;
+      border-radius: var(--r-md); cursor: pointer; margin-top: 6px;
       transition: all var(--t-fast); box-shadow: 0 2px 10px rgba(31,59,109,0.22);
     }
     .login-btn:hover:not(:disabled) {
@@ -123,233 +64,103 @@
       box-shadow: 0 4px 16px rgba(31,59,109,0.34);
     }
     .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    /* Mensaje */
     .login-msg { text-align: center; font-size: 13px; min-height: 18px; margin-top: 12px; }
     .login-msg.error { color: #c0392b; }
     .login-msg.ok    { color: #27ae60; }
-    /* Footer */
-    .login-footer { text-align: center; margin-top: 18px; font-size: 13px; color: var(--c-text-3); }
+    .login-footer { text-align: center; margin-top: 22px; font-size: 13px; color: var(--c-text-3); }
     .login-footer a { color: var(--c-blue-600); font-weight: 600; text-decoration: none; }
     .login-footer a:hover { text-decoration: underline; }
-    /* Stripe badge */
-    .stripe-badge {
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      font-size: 11px; color: var(--c-text-3); margin-top: 10px;
+    .divider { border: none; border-top: 1px solid var(--c-border); margin: 20px 0; }
+    .link-pago {
+      display: block; text-align: center; font-size: 13px; color: var(--c-text-3);
+      margin-top: 14px;
     }
-    .stripe-badge svg { width: 36px; }
+    .link-pago a { color: var(--c-blue-600); font-weight: 600; text-decoration: none; }
+    .link-pago a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="login-container">
     <img src="img/LogoECM.png" alt="Logo CEECM" class="login-logo">
-    <h2>Crear cuenta</h2>
+    <h2>Activar cuenta</h2>
+    <p class="subtitle">Ingresa el código que te proporcionó tu administrador</p>
 
-    <!-- Tabs -->
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tabBtnPago">Acceso directo</button>
-      <button class="auth-tab" id="tabBtnCodigo">Tengo un código</button>
+    <p class="tab-desc">
+      Tu administrador generó un código de acceso personalizado para ti. Ingrésalo aquí junto con tus datos para activar tu cuenta.
+    </p>
+
+    <div class="login-field">
+      <label for="codigoAcceso">Código de acceso</label>
+      <input type="text" id="codigoAcceso" placeholder="XXXX-XXXX"
+             class="codigo-input" maxlength="9" autocomplete="off">
     </div>
 
-    <!-- ── Tab: Pago directo ──────────────────────────────────────────────── -->
-    <div id="tabPago">
-
-      <!-- Selección de plan -->
-      <div id="seccionPlanes">
-        <p class="tab-desc">Elige el plan que mejor se adapta a tus necesidades.</p>
-
-        <div class="plan-grid">
-          <!-- Plan Instructor -->
-          <div class="plan-card" id="planInstructor" onclick="seleccionarPlan('instructor')">
-            <span class="plan-check">✓</span>
-            <div class="plan-icon">🎓</div>
-            <div class="plan-name">Instructor</div>
-            <div class="plan-price">$1,800 <span>MXN único</span></div>
-            <ul class="plan-features">
-              <li>Wizard EC0217 completo</li>
-              <li>Generación IA ilimitada</li>
-              <li>Descarga de expediente</li>
-              <li>Acceso permanente</li>
-            </ul>
-          </div>
-
-        </div>
+    <div class="login-row">
+      <div class="login-field">
+        <label for="cNombre">Nombre</label>
+        <input type="text" id="cNombre" placeholder="Juan" autocomplete="given-name">
       </div>
-
-      <!-- Formulario (aparece al seleccionar plan) -->
-      <div class="reg-form" id="regForm">
-        <div class="plan-selected-label" id="planLabel">Plan seleccionado</div>
-
-        <div class="login-row">
-          <div class="login-field">
-            <label for="nombre">Nombre</label>
-            <input type="text" id="nombre" placeholder="Juan" autocomplete="given-name">
-          </div>
-          <div class="login-field">
-            <label for="apellido">Apellido</label>
-            <input type="text" id="apellido" placeholder="Pérez" autocomplete="family-name">
-          </div>
-        </div>
-
-        <div class="login-field">
-          <label for="email">Correo electrónico</label>
-          <input type="email" id="email" placeholder="correo@ejemplo.com" autocomplete="email">
-        </div>
-
-        <button class="login-btn" id="btnPagar">Continuar al pago →</button>
-
-        <div class="stripe-badge">
-          <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5.45 9.75c0-.69.57-1.05 1.5-1.05 1.34 0 3.03.41 4.37 1.13V6.14C9.93 5.52 8.53 5.25 7.12 5.25 3.8 5.25 1.5 6.97 1.5 9.95c0 4.65 6.4 3.9 6.4 5.9 0 .82-.71 1.09-1.7 1.09-1.47 0-3.35-.61-4.83-1.43v3.64c1.64.71 3.3 1.02 4.83 1.02 3.42 0 5.77-1.68 5.77-4.7-.01-5.02-6.52-4.12-6.52-5.72zm13.2-6.56l-3.32.7v2.7l-1.5.32v2.87h1.5V14c0 2.7 1.38 3.65 4.18 3.65.77 0 1.6-.1 2.24-.28v-2.97c-.42.1-.86.18-1.3.18-1.1 0-1.5-.36-1.5-1.46V9.78h2.8V6.91h-2.8V3.19zm5.66 3.72h3.44v10.56h-3.44V6.91zm1.72-4.6c-1.1 0-1.98.88-1.98 2a1.99 1.99 0 003.97 0c0-1.12-.88-2-1.99-2zm9.8 4.35c-.8 0-1.77.36-2.48 1.15V6.91h-3.44v10.56h3.44v-5.64c0-1.3.72-1.82 1.64-1.82.93 0 1.44.52 1.44 1.82v5.64h3.44v-6.44c0-2.75-1.54-4.37-4.04-4.37zm12.4-.1c-1.5 0-2.63.57-3.4 1.46V3.35H41.4v14.12h2.97v-1.35c.78.93 1.9 1.5 3.37 1.5 2.9 0 5.2-2.36 5.2-5.54.01-3.16-2.28-5.52-5.18-5.52zm-.77 8.15c-1.44 0-2.56-1.14-2.56-2.63s1.12-2.63 2.56-2.63 2.56 1.14 2.56 2.63-1.12 2.63-2.56 2.63z" fill="#6772E5"/>
-          </svg>
-          Pago seguro procesado por Stripe
-        </div>
+      <div class="login-field">
+        <label for="cApellido">Apellido</label>
+        <input type="text" id="cApellido" placeholder="Pérez" autocomplete="family-name">
       </div>
     </div>
 
-    <!-- ── Tab: Código de acceso ──────────────────────────────────────────── -->
-    <div id="tabCodigo" style="display:none">
-      <p class="tab-desc">
-        Tu administrador te generó un código de acceso. Ingrésalo aquí para activar tu cuenta.
-      </p>
-
-      <div class="login-field">
-        <label for="codigoAcceso">Código de acceso</label>
-        <input type="text" id="codigoAcceso" placeholder="XXXX-XXXX"
-               class="codigo-input" maxlength="9" autocomplete="off">
-      </div>
-
-      <div class="login-row">
-        <div class="login-field">
-          <label for="cNombre">Nombre</label>
-          <input type="text" id="cNombre" placeholder="Juan" autocomplete="given-name">
-        </div>
-        <div class="login-field">
-          <label for="cApellido">Apellido</label>
-          <input type="text" id="cApellido" placeholder="Pérez" autocomplete="family-name">
-        </div>
-      </div>
-
-      <div class="login-field">
-        <label for="cEmail">Correo electrónico</label>
-        <input type="email" id="cEmail" placeholder="correo@ejemplo.com" autocomplete="email">
-      </div>
-
-      <div class="login-field">
-        <label for="cPassword">Contraseña</label>
-        <input type="password" id="cPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
-      </div>
-
-      <div class="login-field">
-        <label for="cPassword2">Confirmar contraseña</label>
-        <input type="password" id="cPassword2" placeholder="Repite tu contraseña" autocomplete="new-password">
-      </div>
-
-      <button class="login-btn" id="btnRegistroCodigo">Activar cuenta con código</button>
+    <div class="login-field">
+      <label for="cEmail">Correo electrónico</label>
+      <input type="email" id="cEmail" placeholder="correo@empresa.com" autocomplete="email">
     </div>
+
+    <div class="login-field">
+      <label for="cPassword">Contraseña</label>
+      <input type="password" id="cPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+    </div>
+
+    <div class="login-field">
+      <label for="cPassword2">Confirmar contraseña</label>
+      <input type="password" id="cPassword2" placeholder="Repite tu contraseña" autocomplete="new-password">
+    </div>
+
+    <button class="login-btn" id="btnActivar">Activar mi cuenta</button>
 
     <p class="login-msg" id="msg"></p>
+
+    <hr class="divider">
 
     <div class="login-footer">
       ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
     </div>
+    <p class="link-pago">
+      ¿No tienes código? <a href="pago.html">Adquiere tu acceso aquí</a>
+    </p>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script>
-    const BACKEND_URL = "https://smartbuilderec.onrender.com";
     const msg = document.getElementById("msg");
-    let planSeleccionado = null;
 
     function setMsg(text, type) {
       msg.textContent = text;
       msg.className = "login-msg " + (type || "");
     }
 
-    // ── Tabs ──────────────────────────────────────────────────────────────────
-    document.getElementById("tabBtnPago").addEventListener("click", () => {
-      document.getElementById("tabBtnPago").classList.add("active");
-      document.getElementById("tabBtnCodigo").classList.remove("active");
-      document.getElementById("tabPago").style.display = "";
-      document.getElementById("tabCodigo").style.display = "none";
-      setMsg("", "");
-    });
-
-    document.getElementById("tabBtnCodigo").addEventListener("click", () => {
-      document.getElementById("tabBtnCodigo").classList.add("active");
-      document.getElementById("tabBtnPago").classList.remove("active");
-      document.getElementById("tabCodigo").style.display = "";
-      document.getElementById("tabPago").style.display = "none";
-      setMsg("", "");
-    });
-
-    // ── Selección de plan ─────────────────────────────────────────────────────
-    function seleccionarPlan(plan) {
-      planSeleccionado = plan;
-
-      document.getElementById("planInstructor").classList.toggle("selected", plan === "instructor");
-
-      const label = "Plan Instructor — $1,800 MXN pago único";
-      document.getElementById("planLabel").textContent = label;
-
-      const form = document.getElementById("regForm");
-      form.classList.add("visible");
-      form.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-
-    // ── Checkout ──────────────────────────────────────────────────────────────
-    document.getElementById("btnPagar").addEventListener("click", async () => {
-      if (!planSeleccionado) { setMsg("Selecciona un plan.", "error"); return; }
-
-      const nombre    = document.getElementById("nombre").value.trim();
-      const apellido  = document.getElementById("apellido").value.trim();
-      const email     = document.getElementById("email").value.trim();
-      const btn       = document.getElementById("btnPagar");
-
-      if (!nombre || !apellido || !email) { setMsg("Completa todos los campos.", "error"); return; }
-      if (!/\S+@\S+\.\S+/.test(email))   { setMsg("Ingresa un correo válido.", "error"); return; }
-
-      btn.disabled = true;
-      btn.textContent = "Redirigiendo a Stripe...";
-      setMsg("", "");
-
-      const base = window.location.origin;
-      const success_url = `${base}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
-      const cancel_url  = `${base}/registro.html`;
-
-      try {
-        const res = await fetch(`${BACKEND_URL}/checkout/session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, nombre, apellido, plan: planSeleccionado, success_url, cancel_url }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Error al crear la sesión.");
-        window.location.href = data.checkout_url;
-      } catch (e) {
-        setMsg(e.message || "Error al conectar con el servidor.", "error");
-        btn.disabled = false;
-        btn.textContent = "Continuar al pago →";
-      }
-    });
-
-    // ── Código de formato automático ──────────────────────────────────────────
+    // Formato automático XXXX-XXXX
     document.getElementById("codigoAcceso").addEventListener("input", function () {
       let v = this.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
       if (v.length > 4) v = v.slice(0, 4) + "-" + v.slice(4, 8);
       this.value = v;
     });
 
-    // ── Registro con código ───────────────────────────────────────────────────
-    document.getElementById("btnRegistroCodigo").addEventListener("click", async () => {
-      const codigo    = document.getElementById("codigoAcceso").value.trim();
-      const nombre    = document.getElementById("cNombre").value.trim();
-      const apellido  = document.getElementById("cApellido").value.trim();
-      const email     = document.getElementById("cEmail").value.trim();
+    document.getElementById("btnActivar").addEventListener("click", async () => {
+      const codigo   = document.getElementById("codigoAcceso").value.trim();
+      const nombre   = document.getElementById("cNombre").value.trim();
+      const apellido = document.getElementById("cApellido").value.trim();
+      const email    = document.getElementById("cEmail").value.trim();
       const password  = document.getElementById("cPassword").value;
       const password2 = document.getElementById("cPassword2").value;
-      const btn       = document.getElementById("btnRegistroCodigo");
+      const btn       = document.getElementById("btnActivar");
 
       if (!codigo || codigo.length < 9) { setMsg("Ingresa un código válido (formato XXXX-XXXX).", "error"); return; }
       if (!nombre || !apellido || !email || !password) { setMsg("Completa todos los campos.", "error"); return; }
@@ -364,25 +175,25 @@
       try {
         const { data } = await registroConCodigo(email, password, nombre, apellido, codigo);
         if (data?.session) {
-          setMsg("¡Cuenta activada! Redirigiendo...", "ok");
-          setTimeout(() => { window.location.href = "dashboard.html"; }, 800);
+          setMsg("¡Cuenta activada con éxito! Redirigiendo...", "ok");
+          setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
         } else {
           setMsg("Cuenta creada. Revisa tu correo para confirmarla antes de iniciar sesión.", "ok");
           btn.textContent = "Cuenta activada ✓";
         }
       } catch (e) {
         const t = e.message || "";
-        if (t.includes("Código inválido") || t.includes("inválido")) {
+        if (t.includes("Código inválido") || t.includes("inválido") || t.includes("expirado")) {
           setMsg(t, "error");
         } else if (t.includes("INSUFFICIENT_CREDITS")) {
           setMsg("El administrador no tiene créditos disponibles. Contáctalo.", "error");
         } else if (t.includes("already registered")) {
-          setMsg("Este correo ya está registrado.", "error");
+          setMsg("Este correo ya está registrado. ¿Ya tienes cuenta?", "error");
         } else {
           setMsg("Error al activar la cuenta: " + t, "error");
         }
         btn.disabled = false;
-        btn.textContent = "Activar cuenta con código";
+        btn.textContent = "Activar mi cuenta";
       }
     });
   </script>

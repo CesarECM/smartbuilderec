@@ -169,12 +169,94 @@
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 9999; }
     .toast.visible { opacity: 1; }
 
+    /* ── Semáforo de vigencia ────────────────────────────────── */
+    .semaforo-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-verde    { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+    .dot-amarillo { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+    .dot-rojo     { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+    .vigencia-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600; padding: 3px 10px;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .vb-verde    { background: #dcfce7; color: #15803d; }
+    .vb-amarillo { background: #fef9c3; color: #92400e; }
+    .vb-rojo     { background: #fee2e2; color: #991b1b; }
+    .semaforo-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .semaforo-stat { border-radius: var(--r-xl); padding: 18px 16px; text-align: center; }
+    .semaforo-stat.verde    { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .semaforo-stat.amarillo { background: #fffbeb; border: 1px solid #fde68a; }
+    .semaforo-stat.rojo     { background: #fff1f2; border: 1px solid #fecdd3; }
+    .semaforo-stat .sem-num { font-size: 30px; font-weight: 900; line-height: 1; }
+    .semaforo-stat.verde    .sem-num { color: #15803d; }
+    .semaforo-stat.amarillo .sem-num { color: #92400e; }
+    .semaforo-stat.rojo     .sem-num { color: #991b1b; }
+    .semaforo-stat .sem-lbl { font-size: 12px; color: var(--c-text-3); margin-top: 4px; }
+
+    /* ── Modal renovar admin ─────────────────────────────────── */
+    .renovar-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .renovar-field { display: flex; flex-direction: column; gap: 4px; }
+    .renovar-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .renovar-input { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 9px 10px; font-size: 14px; font-family: inherit; background: var(--c-surface); outline: none; transition: border-color 0.2s; }
+    .renovar-input:focus { border-color: #7c3aed; }
+
+    /* ── Crear admin form ────────────────────────────────────── */
+    .crear-admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .crear-admin-field { display: flex; flex-direction: column; gap: 4px; }
+    .crear-admin-field.full { grid-column: 1 / -1; }
+    .crear-admin-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .crear-admin-field input { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 8px 10px; font-size: 13px; font-family: inherit; background: var(--c-surface); outline: none; transition: border-color 0.2s; }
+    .crear-admin-field input:focus { border-color: #7c3aed; }
+
+    /* ── Editor de plantillas ────────────────────────────────── */
+    .tpl-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .tpl-card {
+      background: var(--c-surface); border: 1.5px solid var(--c-border);
+      border-radius: var(--r-lg); padding: 18px 20px; cursor: pointer;
+      transition: all var(--t-fast); position: relative;
+    }
+    .tpl-card:hover { border-color: #7c3aed; box-shadow: 0 2px 12px rgba(124,58,237,0.1); }
+    .tpl-card.active { border-color: #7c3aed; background: #faf5ff; }
+    .tpl-slug { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #7c3aed; margin-bottom: 4px; }
+    .tpl-nombre { font-size: 13px; font-weight: 700; color: var(--c-text); margin-bottom: 2px; }
+    .tpl-updated { font-size: 11px; color: var(--c-text-4); }
+    .tpl-editor { background: var(--c-surface); border: 1.5px solid #c4b5fd; border-radius: var(--r-xl); padding: 24px 26px; display: none; }
+    .tpl-editor.visible { display: block; }
+    .tpl-editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 10px; flex-wrap: wrap; }
+    .tpl-editor-title { font-size: 15px; font-weight: 700; color: var(--c-text); }
+    .tpl-editor-actions { display: flex; gap: 8px; }
+    .tpl-field { margin-bottom: 14px; }
+    .tpl-field label { display: block; font-size: 12px; font-weight: 600; color: var(--c-text-2); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 5px; }
+    .tpl-field input, .tpl-field textarea {
+      width: 100%; box-sizing: border-box; padding: 9px 12px;
+      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
+      font-size: 13px; font-family: monospace; background: var(--c-surface-2);
+      color: var(--c-text); outline: none; transition: border-color 0.2s; resize: vertical;
+    }
+    .tpl-field input { font-family: inherit; }
+    .tpl-field input:focus, .tpl-field textarea:focus { border-color: #7c3aed; }
+    .tpl-vars { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .tpl-var-chip {
+      background: #ede9fe; color: #5b21b6; font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px; cursor: pointer; font-family: monospace;
+      border: none; transition: background var(--t-fast);
+    }
+    .tpl-var-chip:hover { background: #7c3aed; color: white; }
+    .tpl-preview {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-md);
+      min-height: 200px; overflow: auto; background: white; padding: 0;
+    }
+    .tpl-preview iframe { width: 100%; min-height: 300px; border: none; display: block; }
+
     @media (max-width: 640px) {
       .tab-btn { padding: 11px 13px; font-size: 12px; }
       .panel-main { padding: 20px 16px; }
       .stats-row { grid-template-columns: 1fr 1fr; }
       .crear-grid { grid-template-columns: 1fr; }
       .search-input { width: 140px; }
+      .semaforo-stats { grid-template-columns: 1fr; }
+      .renovar-form { grid-template-columns: 1fr; }
+      .crear-admin-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -197,11 +279,13 @@
 
   <!-- Tab bar -->
   <nav class="tab-bar">
-    <button class="tab-btn active" id="tab-resumen"   onclick="showTab('resumen')">📊 Resumen</button>
-    <button class="tab-btn"        id="tab-admins"    onclick="showTab('admins')">👑 Admins</button>
-    <button class="tab-btn"        id="tab-usuarios"  onclick="showTab('usuarios')">👥 Usuarios</button>
-    <button class="tab-btn"        id="tab-cursos"    onclick="showTab('cursos')">📚 Cursos</button>
-    <button class="tab-btn"        id="tab-historial" onclick="showTab('historial')">📋 Historial</button>
+    <button class="tab-btn active" id="tab-resumen"    onclick="showTab('resumen')">📊 Resumen</button>
+    <button class="tab-btn"        id="tab-admins"     onclick="showTab('admins')">👑 Admins</button>
+    <button class="tab-btn"        id="tab-vigencia"   onclick="showTab('vigencia')">🚦 Vigencia</button>
+    <button class="tab-btn"        id="tab-usuarios"   onclick="showTab('usuarios')">👥 Usuarios</button>
+    <button class="tab-btn"        id="tab-cursos"     onclick="showTab('cursos')">📚 Cursos</button>
+    <button class="tab-btn"        id="tab-historial"  onclick="showTab('historial')">📋 Historial</button>
+    <button class="tab-btn"        id="tab-plantillas" onclick="showTab('plantillas')">✉️ Plantillas</button>
   </nav>
 
   <main class="panel-main">
@@ -232,7 +316,10 @@
     <div id="panel-admins" class="tab-panel">
       <div class="section-header">
         <h2>Administradores</h2>
-        <button class="btn-primary" onclick="togglePanel('promoverPanel', 'buscarEmail')">➕ Promover a Admin</button>
+        <div class="section-header-actions">
+          <button class="btn-sm purple" onclick="abrirModalCrearAdmin()">✨ Nuevo admin</button>
+          <button class="btn-primary" onclick="togglePanel('promoverPanel', 'buscarEmail')">⬆️ Promover existente</button>
+        </div>
       </div>
 
       <div class="panel-colapsable" id="promoverPanel">
@@ -312,6 +399,84 @@
       <div id="auditContent"><p class="loading-txt">Cargando historial...</p></div>
     </div>
 
+    <!-- ══ Vigencia (semáforo) ════════════════════════════════════ -->
+    <div id="panel-vigencia" class="tab-panel">
+      <div class="section-header">
+        <h2>Control de vigencias</h2>
+        <div class="section-header-actions">
+          <button class="btn-sm" onclick="cargarVigencia()">↺ Actualizar</button>
+          <button class="btn-primary" id="btnCheckVigencias" onclick="enviarAlertasVigencia()">📧 Enviar alertas</button>
+        </div>
+      </div>
+
+      <!-- Semáforo resumen -->
+      <div class="semaforo-stats" id="semaforoStats">
+        <div class="semaforo-stat rojo">
+          <div class="sem-num" id="semRojo">—</div>
+          <div class="sem-lbl">Expirados / Inactivos</div>
+        </div>
+        <div class="semaforo-stat amarillo">
+          <div class="sem-num" id="semAmarillo">—</div>
+          <div class="sem-lbl">Por vencer (&lt;15 días)</div>
+        </div>
+        <div class="semaforo-stat verde">
+          <div class="sem-num" id="semVerde">—</div>
+          <div class="sem-lbl">Activos y vigentes</div>
+        </div>
+      </div>
+
+      <div id="vigenciaContent"><p class="loading-txt">Cargando...</p></div>
+    </div>
+
+    <!-- ══ Plantillas de Email ════════════════════════════════════ -->
+    <div id="panel-plantillas" class="tab-panel">
+      <div class="section-header">
+        <h2>Plantillas de email</h2>
+        <p style="font-size:13px;color:var(--c-text-3);margin:0">
+          Edita el asunto y el cuerpo HTML de cada email. Usa <code style="background:var(--c-surface-2);padding:1px 5px;border-radius:3px">{{variable}}</code> para insertar datos dinámicos.
+        </p>
+      </div>
+
+      <!-- Lista de templates -->
+      <div class="tpl-list" id="tplList"><p class="loading-txt">Cargando plantillas...</p></div>
+
+      <!-- Editor inline -->
+      <div class="tpl-editor" id="tplEditor">
+        <div class="tpl-editor-header">
+          <div class="tpl-editor-title" id="tplEditorTitle">Editando plantilla</div>
+          <div class="tpl-editor-actions">
+            <button class="btn-sm" id="btnTplTest" onclick="testearTemplate()">Enviar prueba</button>
+            <button class="btn-primary" id="btnTplSave" onclick="guardarTemplate()">Guardar cambios</button>
+          </div>
+        </div>
+
+        <div class="tpl-field">
+          <label>Asunto del email</label>
+          <input type="text" id="tplSubject" placeholder="Asunto del correo">
+        </div>
+
+        <div class="tpl-field">
+          <label>Variables disponibles <span style="font-weight:400;color:var(--c-text-4)">(clic para insertar)</span></label>
+          <div class="tpl-vars" id="tplVarsChips"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+          <div class="tpl-field" style="margin:0">
+            <label>Cuerpo HTML</label>
+            <textarea id="tplBodyHtml" rows="18" placeholder="HTML del email..." oninput="actualizarPreview()"></textarea>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--c-text-2);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:5px">Vista previa</label>
+            <div class="tpl-preview">
+              <iframe id="tplPreviewFrame" title="Vista previa del email"></iframe>
+            </div>
+          </div>
+        </div>
+
+        <p class="crear-msg" id="tplMsg" style="margin-top:10px"></p>
+      </div>
+    </div>
+
   </main>
 
   <!-- Modal genérico (detalle admin) -->
@@ -319,6 +484,66 @@
     <div class="sa-modal-box">
       <button class="sa-modal-close" onclick="cerrarModalDetalle()">✕</button>
       <div id="modalDetalleBody"></div>
+    </div>
+  </div>
+
+  <!-- Modal renovar admin -->
+  <div class="sa-modal-overlay" id="modalRenovar" onclick="cerrarModalRenovar(event)">
+    <div class="sa-modal-box narrow">
+      <button class="sa-modal-close" onclick="cerrarModalRenovar()">✕</button>
+      <div class="sa-modal-title">Renovar acceso de admin</div>
+      <div class="sa-modal-subtitle" id="renovarNombre"></div>
+      <div class="renovar-form">
+        <div class="renovar-field">
+          <label>Créditos</label>
+          <input type="number" id="renovarCreditos" class="renovar-input" min="0" max="9999" placeholder="Ej. 10">
+        </div>
+        <div class="renovar-field">
+          <label>Vigencia hasta</label>
+          <input type="date" id="renovarVigencia" class="renovar-input">
+        </div>
+      </div>
+      <p class="crear-msg" id="renovarMsg"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn-secondary" onclick="cerrarModalRenovar()">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarRenovar" onclick="confirmarRenovar()">Guardar renovación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal crear nuevo admin -->
+  <div class="sa-modal-overlay" id="modalCrearAdmin" onclick="cerrarModalCrearAdmin(event)">
+    <div class="sa-modal-box">
+      <button class="sa-modal-close" onclick="cerrarModalCrearAdmin()">✕</button>
+      <div class="sa-modal-title">Crear nuevo administrador</div>
+      <div class="sa-modal-subtitle">Se creará la cuenta y se enviará un correo de bienvenida con el enlace de acceso.</div>
+      <div class="crear-admin-grid">
+        <div class="crear-admin-field">
+          <label>Nombre</label>
+          <input type="text" id="caEmail_nombre" placeholder="Juan" autocomplete="off">
+        </div>
+        <div class="crear-admin-field">
+          <label>Apellido</label>
+          <input type="text" id="caEmail_apellido" placeholder="Pérez" autocomplete="off">
+        </div>
+        <div class="crear-admin-field full">
+          <label>Correo electrónico</label>
+          <input type="email" id="caEmail_email" placeholder="admin@empresa.com" autocomplete="off">
+        </div>
+        <div class="crear-admin-field">
+          <label>Créditos iniciales</label>
+          <input type="number" id="caEmail_creditos" value="10" min="0" max="9999">
+        </div>
+        <div class="crear-admin-field">
+          <label>Vigencia hasta</label>
+          <input type="date" id="caEmail_vigencia">
+        </div>
+      </div>
+      <p class="crear-msg" id="crearAdminMsg"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+        <button class="btn-secondary" onclick="cerrarModalCrearAdmin()">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarCrearAdmin" onclick="confirmarCrearAdmin()">Crear y enviar email</button>
+      </div>
     </div>
   </div>
 
@@ -350,7 +575,9 @@
     let _admins        = [];
     let _todosUsuarios = [];
     let _reasignarUserId = null;
-    let _tabsLoaded = { resumen: true, admins: true, usuarios: false, cursos: false, historial: false };
+    let _tabsLoaded = { resumen: true, admins: true, vigencia: false, usuarios: false, cursos: false, historial: false, plantillas: false };
+    let _renovarAdminId = null;
+    let _tplSlugActivo  = null;
 
     // ── Tabs ──────────────────────────────────────────────────────
     function showTab(name) {
@@ -361,6 +588,8 @@
       if (name === "usuarios"  && !_tabsLoaded.usuarios)  { _tabsLoaded.usuarios  = true; cargarTodosUsuarios(); }
       if (name === "cursos"    && !_tabsLoaded.cursos)    { _tabsLoaded.cursos    = true; cargarCursos(); }
       if (name === "historial" && !_tabsLoaded.historial) { _tabsLoaded.historial = true; cargarAuditLog(); }
+      if (name === "vigencia"  && !_tabsLoaded.vigencia)  { _tabsLoaded.vigencia  = true; cargarVigencia(); }
+      if (name === "plantillas"&& !_tabsLoaded.plantillas){ _tabsLoaded.plantillas= true; cargarPlantillas(); }
     }
 
     function togglePanel(panelId, focusId) {
@@ -406,7 +635,7 @@
     async function cargarAdmins() {
       const lista = document.getElementById("listaAdmins");
       const { data: admins, error } = await _supabase
-        .from("profiles").select("id, nombre, apellido, email, credits, activo, created_at")
+        .from("profiles").select("id, nombre, apellido, email, credits, activo, created_at, vigencia_hasta")
         .eq("rol", "admin").order("created_at", { ascending: false });
       if (error) { lista.innerHTML = '<p class="error-txt">Error al cargar administradores.</p>'; return; }
       if (!admins?.length) {
@@ -429,7 +658,7 @@
           <table class="admin-table">
             <thead><tr>
               <th>Administrador</th><th>Usuarios</th>
-              <th>Créditos</th><th>Estado</th><th>Acciones</th>
+              <th>Créditos</th><th>Vigencia</th><th>Estado</th><th>Acciones</th>
             </tr></thead>
             <tbody>
               ${admins.map(a => {
@@ -458,10 +687,12 @@
                     </div>
                     <div class="credits-used">${nUsr} usados · ${a.credits+nUsr} totales</div>
                   </td>
+                  <td>${renderVigenciaBadge(a.vigencia_hasta, a.activo)}</td>
                   <td><span class="status-badge ${a.activo?'badge-activo':'badge-inactivo'}" id="abadge-${a.id}">${a.activo?"Activo":"Inactivo"}</span></td>
                   <td>
                     <div style="display:flex;gap:6px;flex-wrap:wrap">
                       <button class="btn-sm" onclick="verDetalleAdmin('${a.id}')">Ver detalle</button>
+                      <button class="btn-sm purple" onclick="abrirModalRenovar('${a.id}','${nom.replace(/'/g,"\\'")}',${a.credits},'${a.vigencia_hasta||""}')">Renovar</button>
                       <button class="btn-sm ${a.activo?'':'success'}" id="abtnToggle-${a.id}" onclick="toggleAdmin('${a.id}',${a.activo})">${a.activo?"Desactivar":"Activar"}</button>
                       <button class="btn-sm danger" onclick="eliminarAdmin('${a.id}','${nom.replace(/'/g,"\\'")}',${nUsr})">Eliminar</button>
                     </div>
@@ -930,6 +1161,383 @@
       t.textContent="✓ "+msg;
       t.classList.add("visible");
       setTimeout(()=>t.classList.remove("visible"),2500);
+    }
+
+    // ── Helpers de vigencia ────────────────────────────────────────
+    function _diasVigencia(vigencia_hasta) {
+      if (!vigencia_hasta) return null;
+      const delta = new Date(vigencia_hasta) - new Date();
+      return Math.ceil(delta / (1000 * 60 * 60 * 24));
+    }
+
+    function _claseVigencia(vigencia_hasta, activo) {
+      if (!activo) return "rojo";
+      if (!vigencia_hasta) return "verde";
+      const dias = _diasVigencia(vigencia_hasta);
+      if (dias < 0)  return "rojo";
+      if (dias <= 15) return "amarillo";
+      return "verde";
+    }
+
+    function renderVigenciaBadge(vigencia_hasta, activo) {
+      const clase = _claseVigencia(vigencia_hasta, activo);
+      if (!vigencia_hasta) return '<span style="color:var(--c-text-4);font-size:12px">—</span>';
+      const dias  = _diasVigencia(vigencia_hasta);
+      const fecha = new Date(vigencia_hasta).toLocaleDateString("es-MX", {day:"2-digit",month:"short",year:"numeric"});
+      const dot   = clase === "rojo" ? "dot-rojo" : clase === "amarillo" ? "dot-amarillo" : "dot-verde";
+      const vb    = clase === "rojo" ? "vb-rojo"  : clase === "amarillo" ? "vb-amarillo"  : "vb-verde";
+      const label = dias < 0 ? "Expirada" : dias === 0 ? "Hoy" : `${dias}d`;
+      return `<div style="display:flex;flex-direction:column;gap:3px">
+        <span class="vigencia-badge ${vb}">
+          <span class="semaforo-dot ${dot}"></span>
+          ${label}
+        </span>
+        <span style="font-size:11px;color:var(--c-text-4)">${fecha}</span>
+      </div>`;
+    }
+
+    // ── Panel de vigencia (semáforo) ──────────────────────────────
+    async function cargarVigencia() {
+      const cont = document.getElementById("vigenciaContent");
+      cont.innerHTML = '<p class="loading-txt">Cargando...</p>';
+
+      const { data: admins, error } = await _supabase
+        .from("profiles")
+        .select("id, nombre, apellido, email, credits, activo, vigencia_hasta, created_at")
+        .eq("rol", "admin")
+        .order("vigencia_hasta", { ascending: true, nullsFirst: false });
+
+      if (error) { cont.innerHTML = `<p class="error-txt">Error: ${error.message}</p>`; return; }
+      if (!admins?.length) { cont.innerHTML = '<p class="empty-txt">No hay admins registrados.</p>'; return; }
+
+      const rojos     = admins.filter(a => _claseVigencia(a.vigencia_hasta, a.activo) === "rojo");
+      const amarillos = admins.filter(a => _claseVigencia(a.vigencia_hasta, a.activo) === "amarillo");
+      const verdes    = admins.filter(a => _claseVigencia(a.vigencia_hasta, a.activo) === "verde");
+
+      document.getElementById("semRojo").textContent     = rojos.length;
+      document.getElementById("semAmarillo").textContent = amarillos.length;
+      document.getElementById("semVerde").textContent    = verdes.length;
+
+      const ordenados = [...rojos, ...amarillos, ...verdes];
+
+      cont.innerHTML = `<div class="table-wrap"><table class="admin-table">
+        <thead><tr>
+          <th>Administrador</th><th>Créditos</th><th>Vigencia</th><th>Estado</th><th>Acciones</th>
+        </tr></thead>
+        <tbody>${ordenados.map(a => {
+          const nom = [a.nombre, a.apellido].filter(Boolean).join(" ") || "(Sin nombre)";
+          const ini = ((a.nombre?.[0]||"")+(a.apellido?.[0]||"")).toUpperCase() || "A";
+          const credLow = (a.credits || 0) <= 3;
+          return `<tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="admin-avatar">${ini}</div>
+                <div>
+                  <div class="admin-nombre">${nom}</div>
+                  <div class="admin-email">${a.email}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="credits-display" style="${credLow?'color:#dc2626':''}">${a.credits ?? 0}</span>
+              ${credLow ? '<span style="font-size:11px;color:#dc2626;display:block">⚠️ Bajos</span>' : ''}
+            </td>
+            <td>${renderVigenciaBadge(a.vigencia_hasta, a.activo)}</td>
+            <td><span class="status-badge ${a.activo?'badge-activo':'badge-inactivo'}">${a.activo?"Activo":"Inactivo"}</span></td>
+            <td>
+              <button class="btn-sm purple" onclick="abrirModalRenovar('${a.id}','${nom.replace(/'/g,"\\'")}',${a.credits ?? 0},'${a.vigencia_hasta||""}')">
+                Renovar
+              </button>
+            </td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>`;
+    }
+
+    async function enviarAlertasVigencia() {
+      const btn = document.getElementById("btnCheckVigencias");
+      btn.disabled = true;
+      btn.textContent = "Procesando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/admin/check-vigencias`, { method: "POST", headers });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al procesar.");
+        mostrarToast(`Procesados ${data.procesados} admins, ${data.enviados.length} emails enviados`);
+        await cargarVigencia();
+      } catch(e) {
+        alert("Error: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📧 Enviar alertas";
+      }
+    }
+
+    // ── Modal renovar admin ───────────────────────────────────────
+    function abrirModalRenovar(adminId, nombre, creditos, vigenciaActual) {
+      _renovarAdminId = adminId;
+      document.getElementById("renovarNombre").textContent = nombre;
+      document.getElementById("renovarCreditos").value = creditos;
+
+      // Pre-rellenar la fecha de vigencia actual
+      if (vigenciaActual) {
+        const d = new Date(vigenciaActual);
+        const yyyy = d.getFullYear();
+        const mm   = String(d.getMonth()+1).padStart(2,"0");
+        const dd   = String(d.getDate()).padStart(2,"0");
+        document.getElementById("renovarVigencia").value = `${yyyy}-${mm}-${dd}`;
+      } else {
+        document.getElementById("renovarVigencia").value = "";
+      }
+      document.getElementById("renovarMsg").textContent = "";
+      document.getElementById("renovarMsg").className = "crear-msg";
+      document.getElementById("modalRenovar").classList.add("open");
+    }
+
+    async function confirmarRenovar() {
+      const creditos  = parseInt(document.getElementById("renovarCreditos").value, 10);
+      const vigencia  = document.getElementById("renovarVigencia").value;
+      const msg       = document.getElementById("renovarMsg");
+      const btn       = document.getElementById("btnConfirmarRenovar");
+
+      if (!vigencia) { msg.textContent = "Selecciona una fecha de vigencia."; msg.className = "crear-msg error"; return; }
+      if (isNaN(creditos) || creditos < 0) { msg.textContent = "Ingresa créditos válidos."; msg.className = "crear-msg error"; return; }
+
+      btn.disabled = true;
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/admin/renew-admin`, {
+          method: "PATCH",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ admin_id: _renovarAdminId, credits: creditos, vigencia_hasta: vigencia }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al renovar.");
+        cerrarModalRenovar();
+        mostrarToast("Admin renovado correctamente");
+        await Promise.all([cargarAdmins(), cargarVigencia()]);
+        _tabsLoaded.vigencia = true;
+      } catch(e) {
+        msg.textContent = e.message;
+        msg.className = "crear-msg error";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function cerrarModalRenovar(e) {
+      if (!e || e.target === document.getElementById("modalRenovar")) {
+        document.getElementById("modalRenovar").classList.remove("open");
+        _renovarAdminId = null;
+      }
+    }
+
+    // ── Modal crear nuevo admin ───────────────────────────────────
+    function abrirModalCrearAdmin() {
+      // Limpiar campos
+      ["caEmail_nombre","caEmail_apellido","caEmail_email","caEmail_vigencia"].forEach(id=>{
+        document.getElementById(id).value="";
+      });
+      document.getElementById("caEmail_creditos").value = "10";
+      document.getElementById("crearAdminMsg").textContent = "";
+      document.getElementById("crearAdminMsg").className = "crear-msg";
+      document.getElementById("modalCrearAdmin").classList.add("open");
+      document.getElementById("caEmail_nombre").focus();
+    }
+
+    async function confirmarCrearAdmin() {
+      const nombre   = document.getElementById("caEmail_nombre").value.trim();
+      const apellido = document.getElementById("caEmail_apellido").value.trim();
+      const email    = document.getElementById("caEmail_email").value.trim();
+      const creditos = parseInt(document.getElementById("caEmail_creditos").value, 10);
+      const vigencia = document.getElementById("caEmail_vigencia").value;
+      const msg      = document.getElementById("crearAdminMsg");
+      const btn      = document.getElementById("btnConfirmarCrearAdmin");
+
+      if (!nombre||!apellido)           { msg.textContent="Ingresa nombre y apellido."; msg.className="crear-msg error"; return; }
+      if (!email||!/\S+@\S+\.\S+/.test(email)) { msg.textContent="Correo inválido."; msg.className="crear-msg error"; return; }
+      if (!vigencia)                    { msg.textContent="Selecciona la fecha de vigencia."; msg.className="crear-msg error"; return; }
+      if (isNaN(creditos)||creditos<0)  { msg.textContent="Créditos inválidos."; msg.className="crear-msg error"; return; }
+
+      btn.disabled = true;
+      btn.textContent = "Creando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/admin/create-admin`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, apellido, email, credits: creditos, vigencia_hasta: vigencia }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al crear admin.");
+        msg.textContent = `✓ Admin creado. Se envió email de bienvenida a ${email}.`;
+        msg.className = "crear-msg ok";
+        await Promise.all([cargarAdmins(), cargarStats()]);
+        _tabsLoaded.vigencia = false;
+      } catch(e) {
+        msg.textContent = e.message;
+        msg.className = "crear-msg error";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Crear y enviar email";
+      }
+    }
+
+    function cerrarModalCrearAdmin(e) {
+      if (!e || e.target === document.getElementById("modalCrearAdmin")) {
+        document.getElementById("modalCrearAdmin").classList.remove("open");
+      }
+    }
+
+    // ── Plantillas de email ───────────────────────────────────────
+    const TEMPLATE_VARS = {
+      bienvenida_admin:          ["nombre","email","creditos","vigencia_hasta","link_acceso"],
+      bienvenida_user_codigo:    ["nombre","email","nombre_admin"],
+      bienvenida_user_stripe:    ["nombre","email","monto"],
+      vigencia_admin_por_vencer: ["nombre","email","vigencia_hasta","dias_restantes"],
+      vigencia_admin_expirada:   ["nombre","email","vigencia_hasta"],
+      reset_password:            ["nombre","email","link_reset"],
+    };
+
+    async function cargarPlantillas() {
+      const list = document.getElementById("tplList");
+      list.innerHTML = '<p class="loading-txt">Cargando plantillas...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/email/templates`, { headers });
+        if (!res.ok) throw new Error("Error al cargar plantillas.");
+        const templates = await res.json();
+        if (!templates.length) { list.innerHTML = '<p class="empty-txt">No hay plantillas configuradas.</p>'; return; }
+        list.innerHTML = templates.map(t => {
+          const fecha = t.updated_at ? new Date(t.updated_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+          return `<div class="tpl-card" id="tpl-card-${t.slug}" onclick="editarTemplate('${t.slug}')">
+            <div class="tpl-slug">${t.slug}</div>
+            <div class="tpl-nombre">${t.nombre}</div>
+            <div class="tpl-updated">Actualizado: ${fecha}</div>
+          </div>`;
+        }).join("");
+      } catch(e) {
+        list.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
+    async function editarTemplate(slug) {
+      // Marcar card activa
+      document.querySelectorAll(".tpl-card").forEach(c => c.classList.remove("active"));
+      document.getElementById(`tpl-card-${slug}`)?.classList.add("active");
+
+      _tplSlugActivo = slug;
+      const editor = document.getElementById("tplEditor");
+      editor.classList.add("visible");
+      editor.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+      document.getElementById("tplBodyHtml").value = "";
+      document.getElementById("tplSubject").value  = "";
+      document.getElementById("tplMsg").textContent = "";
+      document.getElementById("tplEditorTitle").textContent = `Editando: ${slug}`;
+
+      // Variables chips
+      const vars = TEMPLATE_VARS[slug] || [];
+      const chipsHtml = vars.map(v =>
+        `<button class="tpl-var-chip" onclick="insertarVariable('${v}')" type="button">{{${v}}}</button>`
+      ).join("");
+      document.getElementById("tplVarsChips").innerHTML = chipsHtml || '<span style="color:var(--c-text-4);font-size:12px">Sin variables</span>';
+
+      // Cargar datos del template
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/email/templates/${slug}`, { headers });
+        if (!res.ok) throw new Error("No se pudo cargar el template.");
+        const data = await res.json();
+        document.getElementById("tplSubject").value  = data.subject  || "";
+        document.getElementById("tplBodyHtml").value = data.body_html || "";
+        actualizarPreview();
+      } catch(e) {
+        document.getElementById("tplMsg").textContent = "Error: " + e.message;
+        document.getElementById("tplMsg").className = "crear-msg error";
+      }
+    }
+
+    function insertarVariable(varName) {
+      const textarea = document.getElementById("tplBodyHtml");
+      const pos = textarea.selectionStart;
+      const val = textarea.value;
+      textarea.value = val.slice(0, pos) + `{{${varName}}}` + val.slice(textarea.selectionEnd);
+      textarea.selectionStart = textarea.selectionEnd = pos + varName.length + 4;
+      textarea.focus();
+      actualizarPreview();
+    }
+
+    function actualizarPreview() {
+      const html = document.getElementById("tplBodyHtml").value;
+      const frame = document.getElementById("tplPreviewFrame");
+      try {
+        const doc = frame.contentDocument || frame.contentWindow?.document;
+        if (doc) { doc.open(); doc.write(html); doc.close(); }
+      } catch(e) {}
+    }
+
+    async function guardarTemplate() {
+      if (!_tplSlugActivo) return;
+      const subject  = document.getElementById("tplSubject").value.trim();
+      const bodyHtml = document.getElementById("tplBodyHtml").value;
+      const msg      = document.getElementById("tplMsg");
+      const btn      = document.getElementById("btnTplSave");
+
+      if (!subject)  { msg.textContent="El asunto no puede estar vacío."; msg.className="crear-msg error"; return; }
+      if (!bodyHtml) { msg.textContent="El cuerpo HTML no puede estar vacío."; msg.className="crear-msg error"; return; }
+
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/email/templates/${_tplSlugActivo}`, {
+          method: "PUT",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ subject, body_html: bodyHtml }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al guardar.");
+        msg.textContent = "✓ Plantilla guardada correctamente.";
+        msg.className = "crear-msg ok";
+        mostrarToast("Plantilla guardada");
+        _tabsLoaded.plantillas = false;
+        await cargarPlantillas();
+        _tabsLoaded.plantillas = true;
+        document.getElementById(`tpl-card-${_tplSlugActivo}`)?.classList.add("active");
+      } catch(e) {
+        msg.textContent = e.message;
+        msg.className = "crear-msg error";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Guardar cambios";
+      }
+    }
+
+    async function testearTemplate() {
+      if (!_tplSlugActivo) return;
+      const to = prompt("¿A qué correo quieres enviar la prueba?", _perfil?.email || "");
+      if (!to || !/\S+@\S+\.\S+/.test(to)) return;
+
+      const btn = document.getElementById("btnTplTest");
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/email/test`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ slug: _tplSlugActivo, to }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Error al enviar.");
+        mostrarToast(`Email de prueba enviado a ${to}`);
+      } catch(e) {
+        alert("Error: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Enviar prueba";
+      }
     }
 
     init();
