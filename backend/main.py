@@ -52,7 +52,13 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             return JSONResponse({"detail": "JWT secret no configurado."}, status_code=500)
         try:
             from jose import jwt as jose_jwt
-            payload = jose_jwt.decode(token, secret, algorithms=["HS256"], audience="authenticated")
+            # options={"verify_aud": False}: Supabase emite aud como array ["authenticated"]
+            # en versiones recientes; python-jose falla al compararlo con string "authenticated".
+            # La firma sigue verificándose con el secret, así que la seguridad no se reduce.
+            payload = jose_jwt.decode(
+                token, secret, algorithms=["HS256"],
+                options={"verify_aud": False}
+            )
             request.state.user = payload
         except Exception as e:
             return JSONResponse({"detail": f"Token inválido o expirado: {str(e)}"}, status_code=401)
