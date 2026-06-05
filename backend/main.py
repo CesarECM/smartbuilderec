@@ -29,20 +29,6 @@ load_dotenv()
 
 app = FastAPI()
 
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-        "https://ceecm-web.vercel.app",
-        "https://smartbuilderec.vercel.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Paths que no requieren JWT
 _PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session"}
 
@@ -68,11 +54,27 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             from jose import jwt as jose_jwt
             payload = jose_jwt.decode(token, secret, algorithms=["HS256"], audience="authenticated")
             request.state.user = payload
-        except Exception:
-            return JSONResponse({"detail": "Token inválido o expirado. Vuelve a iniciar sesión."}, status_code=401)
+        except Exception as e:
+            return JSONResponse({"detail": f"Token inválido o expirado: {str(e)}"}, status_code=401)
         return await call_next(request)
 
+# IMPORTANTE: JWTAuthMiddleware primero (inner), CORSMiddleware después (outer).
+# En Starlette los middlewares se aplican LIFO: el último en add_middleware
+# es el más externo y procesa requests primero / responses último.
+# CORSMiddleware debe ser outer para añadir headers CORS incluso en respuestas 401/500.
 app.add_middleware(JWTAuthMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "https://ceecm-web.vercel.app",
+        "https://smartbuilderec.vercel.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 
