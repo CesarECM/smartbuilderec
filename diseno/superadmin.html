@@ -673,6 +673,48 @@
     </div>
   </div>
 
+  <!-- Modal editar FAQ -->
+  <div class="sa-modal-overlay" id="modalEditarFaq" onclick="cerrarModalEditarFaq(event)">
+    <div class="sa-modal-box">
+      <button class="sa-modal-close" onclick="cerrarModalEditarFaq()">✕</button>
+      <div class="sa-modal-title">Editar FAQ</div>
+      <div class="sa-modal-subtitle">Los embeddings se regenerarán automáticamente al guardar.</div>
+      <div class="tpl-field" style="margin-bottom:12px">
+        <label>Pregunta</label>
+        <input type="text" id="editFaqPregunta" placeholder="¿Cómo...?" style="width:100%;box-sizing:border-box">
+      </div>
+      <div class="tpl-field" style="margin-bottom:12px">
+        <label>Respuesta</label>
+        <textarea id="editFaqRespuesta" rows="6" placeholder="Respuesta clara y directa..." style="width:100%;box-sizing:border-box"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="tpl-field" style="margin:0">
+          <label>Categoría</label>
+          <input type="text" id="editFaqCategoria" placeholder="general" style="width:100%;box-sizing:border-box">
+        </div>
+        <div class="tpl-field" style="margin:0">
+          <label>Contexto de página</label>
+          <select id="editFaqContexto" class="sa-select">
+            <option value="general">general (todas las páginas)</option>
+            <option value="ventas">ventas (landing)</option>
+            <option value="checkout">checkout (pago)</option>
+            <option value="onboarding">onboarding (registro)</option>
+            <option value="acceso">acceso (login)</option>
+            <option value="wizard_ec0217">wizard_ec0217 (wizard)</option>
+            <option value="navegacion">navegacion (dashboard)</option>
+            <option value="admin">admin (panel admin)</option>
+            <option value="superadmin">superadmin</option>
+          </select>
+        </div>
+      </div>
+      <p class="crear-msg" id="editFaqMsg"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+        <button class="btn-secondary" onclick="cerrarModalEditarFaq()">Cancelar</button>
+        <button class="btn-primary" id="btnGuardarEdicionFaq" onclick="guardarEdicionFaq()">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -687,6 +729,8 @@
     let _tabsLoaded = { resumen: true, admins: true, vigencia: false, usuarios: false, cursos: false, historial: false, plantillas: false, soporte: false };
     let _renovarAdminId = null;
     let _tplSlugActivo  = null;
+    let _editFaqId      = null;
+    let _faqsData       = {};
 
     // ── Tabs ──────────────────────────────────────────────────────
     function showTab(name) {
@@ -1663,6 +1707,9 @@
         const headers = await getAuthHeaders();
         const res = await fetch(`${BACKEND_URL}/soporte/faqs`, { headers });
         const faqs = await res.json();
+        // Almacenar datos para edición
+        _faqsData = {};
+        faqs.forEach(f => { _faqsData[f.id] = f; });
         if (!faqs.length) { el.innerHTML = '<p class="empty-txt">No hay FAQs. Crea la primera con el botón de arriba.</p>'; return; }
         el.innerHTML = `<div class="table-wrap"><table class="admin-table">
           <thead><tr><th>Pregunta</th><th>Contexto</th><th>Categoría</th><th>Fecha</th><th></th></tr></thead>
@@ -1676,12 +1723,69 @@
               <td><span class="status-badge badge-user">${f.contexto}</span></td>
               <td style="color:var(--c-text-3);font-size:12px">${f.categoria||"—"}</td>
               <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
-              <td><button class="btn-sm danger" onclick="eliminarFaq('${f.id}')">Eliminar</button></td>
+              <td>
+                <div style="display:flex;gap:5px">
+                  <button class="btn-sm purple" onclick="abrirEditarFaq('${f.id}')">Editar</button>
+                  <button class="btn-sm danger"  onclick="eliminarFaq('${f.id}')">Eliminar</button>
+                </div>
+              </td>
             </tr>`;
           }).join("")}</tbody>
         </table></div>`;
       } catch(e) {
         el.innerHTML = `<p class="error-txt">Error al cargar FAQs: ${e.message}</p>`;
+      }
+    }
+
+    function abrirEditarFaq(id) {
+      const f = _faqsData[id];
+      if (!f) return;
+      _editFaqId = id;
+      document.getElementById("editFaqPregunta").value  = f.pregunta;
+      document.getElementById("editFaqRespuesta").value = f.respuesta;
+      document.getElementById("editFaqCategoria").value = f.categoria || "general";
+      document.getElementById("editFaqContexto").value  = f.contexto  || "general";
+      document.getElementById("editFaqMsg").textContent = "";
+      document.getElementById("editFaqMsg").className   = "crear-msg";
+      document.getElementById("modalEditarFaq").classList.add("open");
+      document.getElementById("editFaqPregunta").focus();
+    }
+
+    async function guardarEdicionFaq() {
+      const pregunta  = document.getElementById("editFaqPregunta").value.trim();
+      const respuesta = document.getElementById("editFaqRespuesta").value.trim();
+      const categoria = document.getElementById("editFaqCategoria").value.trim() || "general";
+      const contexto  = document.getElementById("editFaqContexto").value;
+      const msg       = document.getElementById("editFaqMsg");
+      const btn       = document.getElementById("btnGuardarEdicionFaq");
+
+      msg.textContent = ""; msg.className = "crear-msg";
+      if (!pregunta)  { msg.textContent = "La pregunta no puede estar vacía.";  msg.className = "crear-msg error"; return; }
+      if (!respuesta) { msg.textContent = "La respuesta no puede estar vacía."; msg.className = "crear-msg error"; return; }
+
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/faqs/${_editFaqId}`, {
+          method: "PATCH",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ pregunta, respuesta, categoria, contexto }),
+        });
+        if (!res.ok) { const d = await res.json().catch(()=>{}); throw new Error(d?.detail || "Error al guardar."); }
+        cerrarModalEditarFaq();
+        mostrarToast("FAQ actualizada correctamente");
+        await cargarFaqs();
+      } catch(e) {
+        msg.textContent = e.message; msg.className = "crear-msg error";
+      } finally {
+        btn.disabled = false; btn.textContent = "Guardar cambios";
+      }
+    }
+
+    function cerrarModalEditarFaq(e) {
+      if (!e || e.target === document.getElementById("modalEditarFaq")) {
+        document.getElementById("modalEditarFaq").classList.remove("open");
+        _editFaqId = null;
       }
     }
 

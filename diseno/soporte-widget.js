@@ -5,6 +5,35 @@
 (function () {
   'use strict';
 
+  // ── Markdown → HTML (solo para mensajes del asistente) ──────────────────────
+  function md(raw) {
+    if (!raw) return '';
+    let s = raw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    // Bold **texto**
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    // Código inline `texto`
+    s = s.replace(/`([^`\n]+)`/g, '<code class="sbe-code">$1</code>');
+    // Listas: procesar línea por línea
+    const lines = s.split('\n');
+    let html = '';
+    let inList = false;
+    lines.forEach((line, i) => {
+      if (/^[-•]\s/.test(line) || /^\d+\.\s/.test(line)) {
+        if (!inList) { html += '<ul class="sbe-list">'; inList = true; }
+        html += '<li>' + line.replace(/^[-•]\s+/, '').replace(/^\d+\.\s+/, '') + '</li>';
+      } else {
+        if (inList) { html += '</ul>'; inList = false; }
+        if (i > 0) html += '<br>';
+        html += line;
+      }
+    });
+    if (inList) html += '</ul>';
+    return html;
+  }
+
   const BACKEND = 'https://smartbuilderec.onrender.com';
   const SESSION_KEY = 'sbe_soporte_sesion_v1';
   const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 h
@@ -172,12 +201,16 @@
 
   // ── Mensajes ──────────────────────────────────────────────────────────────────
   function _addMsg(role, text) {
-    const log   = document.getElementById('sbe-chat-messages');
-    const wrap  = document.createElement('div');
-    const bub   = document.createElement('div');
+    const log  = document.getElementById('sbe-chat-messages');
+    const wrap = document.createElement('div');
+    const bub  = document.createElement('div');
     wrap.className = `sbe-msg sbe-msg--${role}`;
     bub.className  = 'sbe-bubble';
-    bub.textContent = text;
+    if (role === 'assistant') {
+      bub.innerHTML = md(text);
+    } else {
+      bub.textContent = text;
+    }
     wrap.appendChild(bub);
     log.appendChild(wrap);
     log.scrollTop = log.scrollHeight;
@@ -255,7 +288,7 @@
         const { done, value } = await reader.read();
         if (done) break;
         full += dec.decode(value, { stream: true });
-        bub.textContent = full;
+        bub.innerHTML = md(full);
         document.getElementById('sbe-chat-messages').scrollTop =
           document.getElementById('sbe-chat-messages').scrollHeight;
       }

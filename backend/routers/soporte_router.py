@@ -41,6 +41,12 @@ class FAQCreate(BaseModel):
     categoria: str = "general"
     contexto: str = "general"
 
+class FAQUpdate(BaseModel):
+    pregunta: str
+    respuesta: str
+    categoria: str = "general"
+    contexto: str = "general"
+
 class RecursoCreate(BaseModel):
     titulo: str
     tipo: str = "articulo"
@@ -209,6 +215,22 @@ def crear_faq(payload: FAQCreate, request: Request):
         "embedding":  embedding,
         "activo":     True,
     }).execute()
+    return res.data[0]
+
+
+@router.patch("/soporte/faqs/{faq_id}")
+def actualizar_faq(faq_id: str, payload: FAQUpdate, request: Request):
+    _require_superadmin(request)
+    sb = get_supabase()
+    texto = f"{payload.pregunta} {payload.respuesta}"
+    embedding = generate_embedding(texto)
+    res = sb.table("knowledge_faqs").update({
+        "pregunta":  payload.pregunta,
+        "respuesta": payload.respuesta,
+        "categoria": payload.categoria,
+        "contexto":  payload.contexto,
+        "embedding": embedding,
+    }).eq("id", faq_id).execute()
     return res.data[0]
 
 
