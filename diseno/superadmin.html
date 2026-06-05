@@ -286,6 +286,7 @@
     <button class="tab-btn"        id="tab-cursos"     onclick="showTab('cursos')">📚 Cursos</button>
     <button class="tab-btn"        id="tab-historial"  onclick="showTab('historial')">📋 Historial</button>
     <button class="tab-btn"        id="tab-plantillas" onclick="showTab('plantillas')">✉️ Plantillas</button>
+    <button class="tab-btn"        id="tab-soporte"    onclick="showTab('soporte')">🤖 Soporte KB</button>
   </nav>
 
   <main class="panel-main">
@@ -477,6 +478,114 @@
       </div>
     </div>
 
+    <!-- ══ Soporte KB ════════════════════════════════════════════ -->
+    <div id="panel-soporte" class="tab-panel">
+
+      <!-- FAQs -->
+      <div class="section-header">
+        <h2>Base de Conocimiento — FAQs</h2>
+        <button class="btn-primary" onclick="togglePanel('panelNuevaFaq','faqPregunta')">+ Nueva FAQ</button>
+      </div>
+
+      <div class="panel-colapsable" id="panelNuevaFaq">
+        <p>Cada FAQ genera un embedding automáticamente. El contexto determina en qué páginas se usa preferentemente.</p>
+        <div class="crear-grid">
+          <div class="crear-field full">
+            <label>Pregunta</label>
+            <input type="text" id="faqPregunta" placeholder="¿Cómo cancelo mi suscripción?" autocomplete="off">
+          </div>
+          <div class="crear-field full">
+            <label>Respuesta</label>
+            <textarea id="faqRespuesta" rows="4" placeholder="Explicación clara y directa..."
+              style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);width:100%;box-sizing:border-box;resize:vertical;outline:none"
+              onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='var(--c-border)'"></textarea>
+          </div>
+          <div class="crear-field">
+            <label>Categoría</label>
+            <input type="text" id="faqCategoria" placeholder="general" autocomplete="off">
+          </div>
+          <div class="crear-field">
+            <label>Contexto de página</label>
+            <select id="faqContexto" class="sa-select">
+              <option value="general">general (todas las páginas)</option>
+              <option value="ventas">ventas (landing)</option>
+              <option value="checkout">checkout (pago)</option>
+              <option value="onboarding">onboarding (registro)</option>
+              <option value="acceso">acceso (login)</option>
+              <option value="wizard_ec0217">wizard_ec0217 (wizard)</option>
+              <option value="navegacion">navegacion (dashboard)</option>
+              <option value="admin">admin (panel admin)</option>
+              <option value="superadmin">superadmin (superadmin)</option>
+            </select>
+          </div>
+        </div>
+        <div class="crear-actions">
+          <button class="btn-secondary" onclick="togglePanel('panelNuevaFaq')">Cancelar</button>
+          <button class="btn-primary" id="btnGuardarFaq" onclick="guardarFaq()">Guardar FAQ</button>
+        </div>
+        <p class="crear-msg" id="faqMsg"></p>
+      </div>
+
+      <div id="listaFaqs" style="margin-top:12px"><p class="loading-txt">Las FAQs aparecerán aquí.</p></div>
+
+      <!-- Recursos -->
+      <div class="section-header panel-section-gap">
+        <h2>Base de Conocimiento — Recursos</h2>
+        <button class="btn-primary" onclick="togglePanel('panelNuevoRecurso','recursoTitulo')">+ Nuevo recurso</button>
+      </div>
+
+      <div class="panel-colapsable" id="panelNuevoRecurso">
+        <p>Los recursos largos se fragmentan automáticamente (chunking) para una búsqueda más precisa.</p>
+        <div class="crear-grid">
+          <div class="crear-field full">
+            <label>Título</label>
+            <input type="text" id="recursoTitulo" placeholder="Guía completa del wizard EC0217.01" autocomplete="off">
+          </div>
+          <div class="crear-field">
+            <label>Tipo</label>
+            <select id="recursoTipo" class="sa-select">
+              <option value="articulo">Artículo</option>
+              <option value="tutorial">Tutorial</option>
+              <option value="video">Video</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </div>
+          <div class="crear-field">
+            <label>Contexto de página</label>
+            <select id="recursoContexto" class="sa-select">
+              <option value="general">general (todas las páginas)</option>
+              <option value="ventas">ventas (landing)</option>
+              <option value="checkout">checkout (pago)</option>
+              <option value="onboarding">onboarding (registro)</option>
+              <option value="acceso">acceso (login)</option>
+              <option value="wizard_ec0217">wizard_ec0217 (wizard)</option>
+              <option value="navegacion">navegacion (dashboard)</option>
+              <option value="admin">admin (panel admin)</option>
+              <option value="superadmin">superadmin (superadmin)</option>
+            </select>
+          </div>
+          <div class="crear-field full">
+            <label>URL del recurso <span style="font-weight:400;color:var(--c-text-4)">(opcional)</span></label>
+            <input type="url" id="recursoUrl" placeholder="https://..." autocomplete="off">
+          </div>
+          <div class="crear-field full">
+            <label>Contenido (texto para indexar)</label>
+            <textarea id="recursoContenido" rows="6" placeholder="Pega aquí el texto completo del recurso..."
+              style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);width:100%;box-sizing:border-box;resize:vertical;outline:none"
+              onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='var(--c-border)'"></textarea>
+          </div>
+        </div>
+        <div class="crear-actions">
+          <button class="btn-secondary" onclick="togglePanel('panelNuevoRecurso')">Cancelar</button>
+          <button class="btn-primary" id="btnGuardarRecurso" onclick="guardarRecurso()">Guardar recurso</button>
+        </div>
+        <p class="crear-msg" id="recursoMsg"></p>
+      </div>
+
+      <div id="listaRecursos" style="margin-top:12px"><p class="loading-txt">Los recursos aparecerán aquí.</p></div>
+
+    </div>
+
   </main>
 
   <!-- Modal genérico (detalle admin) -->
@@ -575,7 +684,7 @@
     let _admins        = [];
     let _todosUsuarios = [];
     let _reasignarUserId = null;
-    let _tabsLoaded = { resumen: true, admins: true, vigencia: false, usuarios: false, cursos: false, historial: false, plantillas: false };
+    let _tabsLoaded = { resumen: true, admins: true, vigencia: false, usuarios: false, cursos: false, historial: false, plantillas: false, soporte: false };
     let _renovarAdminId = null;
     let _tplSlugActivo  = null;
 
@@ -590,6 +699,7 @@
       if (name === "historial" && !_tabsLoaded.historial) { _tabsLoaded.historial = true; cargarAuditLog(); }
       if (name === "vigencia"  && !_tabsLoaded.vigencia)  { _tabsLoaded.vigencia  = true; cargarVigencia(); }
       if (name === "plantillas"&& !_tabsLoaded.plantillas){ _tabsLoaded.plantillas= true; cargarPlantillas(); }
+      if (name === "soporte"   && !_tabsLoaded.soporte)   { _tabsLoaded.soporte   = true; cargarKB(); }
     }
 
     function togglePanel(panelId, focusId) {
@@ -1540,7 +1650,166 @@
       }
     }
 
+    // ── Soporte KB ────────────────────────────────────────────────
+    async function cargarKB() {
+      await Promise.all([cargarFaqs(), cargarRecursos()]);
+    }
+
+    // FAQs
+    async function cargarFaqs() {
+      const el = document.getElementById("listaFaqs");
+      el.innerHTML = '<p class="loading-txt">Cargando FAQs...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/faqs`, { headers });
+        const faqs = await res.json();
+        if (!faqs.length) { el.innerHTML = '<p class="empty-txt">No hay FAQs. Crea la primera con el botón de arriba.</p>'; return; }
+        el.innerHTML = `<div class="table-wrap"><table class="admin-table">
+          <thead><tr><th>Pregunta</th><th>Contexto</th><th>Categoría</th><th>Fecha</th><th></th></tr></thead>
+          <tbody>${faqs.map(f => {
+            const fecha = new Date(f.created_at).toLocaleDateString("es-MX", {day:"2-digit",month:"short",year:"numeric"});
+            return `<tr id="faq-row-${f.id}">
+              <td style="font-weight:600;color:var(--c-text);max-width:280px">
+                <div style="font-size:13px">${f.pregunta}</div>
+                <div style="font-size:11px;color:var(--c-text-3);margin-top:3px;white-space:pre-wrap">${f.respuesta.slice(0,120)}${f.respuesta.length>120?"…":""}</div>
+              </td>
+              <td><span class="status-badge badge-user">${f.contexto}</span></td>
+              <td style="color:var(--c-text-3);font-size:12px">${f.categoria||"—"}</td>
+              <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
+              <td><button class="btn-sm danger" onclick="eliminarFaq('${f.id}')">Eliminar</button></td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>`;
+      } catch(e) {
+        el.innerHTML = `<p class="error-txt">Error al cargar FAQs: ${e.message}</p>`;
+      }
+    }
+
+    async function guardarFaq() {
+      const pregunta  = document.getElementById("faqPregunta").value.trim();
+      const respuesta = document.getElementById("faqRespuesta").value.trim();
+      const categoria = document.getElementById("faqCategoria").value.trim() || "general";
+      const contexto  = document.getElementById("faqContexto").value;
+      const msg       = document.getElementById("faqMsg");
+      const btn       = document.getElementById("btnGuardarFaq");
+
+      msg.textContent = ""; msg.className = "crear-msg";
+      if (!pregunta)  { msg.textContent = "La pregunta no puede estar vacía.";  msg.className = "crear-msg error"; return; }
+      if (!respuesta) { msg.textContent = "La respuesta no puede estar vacía."; msg.className = "crear-msg error"; return; }
+
+      btn.disabled = true; btn.textContent = "Guardando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/faqs`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ pregunta, respuesta, categoria, contexto }),
+        });
+        if (!res.ok) { const d = await res.json().catch(()=>{}); throw new Error(d?.detail || "Error al guardar."); }
+        msg.textContent = "✓ FAQ guardada y embeddings generados."; msg.className = "crear-msg ok";
+        document.getElementById("faqPregunta").value  = "";
+        document.getElementById("faqRespuesta").value = "";
+        document.getElementById("faqCategoria").value = "";
+        mostrarToast("FAQ creada correctamente");
+        await cargarFaqs();
+      } catch(e) {
+        msg.textContent = e.message; msg.className = "crear-msg error";
+      } finally {
+        btn.disabled = false; btn.textContent = "Guardar FAQ";
+      }
+    }
+
+    async function eliminarFaq(faqId) {
+      if (!confirm("¿Eliminar esta FAQ? Se desactivará del knowledge base.")) return;
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/faqs/${faqId}`, { method: "DELETE", headers });
+        if (!res.ok) throw new Error("Error al eliminar.");
+        document.getElementById(`faq-row-${faqId}`)?.remove();
+        mostrarToast("FAQ eliminada");
+      } catch(e) { alert(e.message); }
+    }
+
+    // Recursos
+    async function cargarRecursos() {
+      const el = document.getElementById("listaRecursos");
+      el.innerHTML = '<p class="loading-txt">Cargando recursos...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/recursos`, { headers });
+        if (!res.ok) throw new Error("Error al cargar.");
+        const recursos = await res.json();
+        if (!recursos.length) { el.innerHTML = '<p class="empty-txt">No hay recursos. Crea el primero con el botón de arriba.</p>'; return; }
+        el.innerHTML = `<div class="table-wrap"><table class="admin-table">
+          <thead><tr><th>Título</th><th>Tipo</th><th>Contexto</th><th>Fecha</th><th></th></tr></thead>
+          <tbody>${recursos.map(r => {
+            const fecha = new Date(r.created_at).toLocaleDateString("es-MX", {day:"2-digit",month:"short",year:"numeric"});
+            return `<tr id="rec-row-${r.id}">
+              <td style="font-weight:600;color:var(--c-text)">${r.titulo}
+                ${r.url ? `<a href="${r.url}" target="_blank" style="font-size:11px;color:var(--c-blue-600);margin-left:6px">↗ link</a>` : ""}
+              </td>
+              <td><span class="status-badge badge-borrador">${r.tipo}</span></td>
+              <td><span class="status-badge badge-user">${r.contexto}</span></td>
+              <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
+              <td><button class="btn-sm danger" onclick="eliminarRecurso('${r.id}')">Eliminar</button></td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>`;
+      } catch(e) {
+        el.innerHTML = `<p class="error-txt">Error al cargar recursos: ${e.message}</p>`;
+      }
+    }
+
+    async function guardarRecurso() {
+      const titulo    = document.getElementById("recursoTitulo").value.trim();
+      const tipo      = document.getElementById("recursoTipo").value;
+      const contexto  = document.getElementById("recursoContexto").value;
+      const url       = document.getElementById("recursoUrl").value.trim();
+      const contenido = document.getElementById("recursoContenido").value.trim();
+      const msg       = document.getElementById("recursoMsg");
+      const btn       = document.getElementById("btnGuardarRecurso");
+
+      msg.textContent = ""; msg.className = "crear-msg";
+      if (!titulo) { msg.textContent = "El título no puede estar vacío."; msg.className = "crear-msg error"; return; }
+
+      btn.disabled = true; btn.textContent = "Indexando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/recursos`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ titulo, tipo, contenido, url, contexto }),
+        });
+        if (!res.ok) { const d = await res.json().catch(()=>{}); throw new Error(d?.detail || "Error al guardar."); }
+        const data = await res.json();
+        const chunks = data.chunks_generados || 0;
+        msg.textContent = `✓ Recurso guardado${chunks > 0 ? ` con ${chunks} fragmento${chunks!==1?"s":""} indexados` : ""}.`;
+        msg.className = "crear-msg ok";
+        document.getElementById("recursoTitulo").value   = "";
+        document.getElementById("recursoUrl").value      = "";
+        document.getElementById("recursoContenido").value = "";
+        mostrarToast("Recurso creado correctamente");
+        await cargarRecursos();
+      } catch(e) {
+        msg.textContent = e.message; msg.className = "crear-msg error";
+      } finally {
+        btn.disabled = false; btn.textContent = "Guardar recurso";
+      }
+    }
+
+    async function eliminarRecurso(recursoId) {
+      if (!confirm("¿Eliminar este recurso? También se eliminarán sus fragmentos indexados.")) return;
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/recursos/${recursoId}`, { method: "DELETE", headers });
+        if (!res.ok) throw new Error("Error al eliminar.");
+        document.getElementById(`rec-row-${recursoId}`)?.remove();
+        mostrarToast("Recurso eliminado");
+      } catch(e) { alert(e.message); }
+    }
+
     init();
   </script>
+<script src="soporte-widget.js"></script>
 </body>
 </html>

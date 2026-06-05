@@ -38,6 +38,9 @@ _jwks_cache: dict = {}
 def _es_publico(method: str, path: str) -> bool:
     if path in _PATHS_PUBLICOS:
         return True
+    # Los endpoints de soporte manejan su propia autorizacion internamente
+    if path.startswith("/soporte/"):
+        return True
     return False
 
 async def _get_public_key(supabase_url: str, kid: str):
@@ -121,10 +124,12 @@ app.add_middleware(
 from routers import stripe_router
 from routers import admin_router
 from routers import email_router
+from routers import soporte_router
 
-app.include_router(stripe_router.router, tags=["stripe"])
-app.include_router(admin_router.router, tags=["admin"])
-app.include_router(email_router.router, tags=["email"])
+app.include_router(stripe_router.router,  tags=["stripe"])
+app.include_router(admin_router.router,   tags=["admin"])
+app.include_router(email_router.router,   tags=["email"])
+app.include_router(soporte_router.router, tags=["soporte"])
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")

@@ -5,6 +5,7 @@ pyotp
 python-docx
 python-pptx
 openai
+anthropic
 supabase
 python-jose[cryptography]
 stripe
