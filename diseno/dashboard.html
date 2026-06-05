@@ -752,8 +752,9 @@
 
     function _limpiarLocalStorage() {
       Object.keys(localStorage)
-        .filter(k => k.startsWith("ec0217_") || k.startsWith("sbe_"))
+        .filter(k => k.startsWith("ec0217_"))
         .forEach(k => localStorage.removeItem(k));
+      localStorage.removeItem("sbe_planeacion_id");
     }
 
     init();
