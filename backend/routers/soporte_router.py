@@ -203,6 +203,8 @@ async def crear_ticket(payload: TicketRequest):
     ticket = res.data[0]
     sb.table("soporte_sesiones").update({"ticket_id": ticket["id"]}).eq("id", payload.sesion_id).execute()
     asyncio.create_task(_notificar_admin_ticket_async(sb, ticket))
+    if payload.user_email:
+        asyncio.create_task(_confirmar_ticket_usuario_async(ticket))
     return {"ticket_id": ticket["id"], "numero": ticket["numero"]}
 
 
@@ -278,6 +280,25 @@ async def actualizar_ticket(ticket_id: str, payload: TicketUpdate, request: Requ
 
 # ── Emails background ─────────────────────────────────────────────────────────
 
+async def _confirmar_ticket_usuario_async(ticket: dict):
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, _confirmar_ticket_usuario_sync, ticket)
+
+def _confirmar_ticket_usuario_sync(ticket: dict):
+    try:
+        from services.email_service import send_template
+        email = ticket.get("user_email", "")
+        if not email:
+            return
+        send_template("ticket_soporte_creado", email, {
+            "nombre": ticket.get("user_nombre") or email,
+            "email": email,
+            "asunto_ticket": ticket.get("asunto", ""),
+            "numero_ticket": str(ticket.get("numero", "")),
+        })
+    except Exception as e:
+        print(f"[soporte] Error confirmando ticket al usuario: {e}")
+
 async def _notificar_admin_ticket_async(sb, ticket: dict):
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _notificar_admin_ticket_sync, sb, ticket)
@@ -309,28 +330,25 @@ def _notificar_admin_ticket_sync(sb, ticket: dict):
 
 
 async def _email_resolucion_async(ticket: dict, resolucion: str):
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _email_resolucion_sync, ticket, resolucion)
 
 def _email_resolucion_sync(ticket: dict, resolucion: str):
     try:
-        from services.email_service import send_email
-        frontend_url = os.getenv("FRONTEND_URL", "https://www.smartbuilderec.com")
-        n = ticket.get("numero", "?")
-        nombre = ticket.get("user_nombre") or "Usuario"
-        email  = ticket.get("user_email", "")
+        from services.email_service import send_template
+        email = ticket.get("user_email", "")
         if not email:
             return
-        html = f"""<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-<h2 style="color:#1F3B6D">Tu ticket #{n} fue respondido</h2>
-<p>Hola {nombre},</p>
-<p><strong>Tu consulta:</strong> {ticket.get("asunto","")}</p>
-<div style="background:#f0f4fb;border-radius:8px;padding:16px;margin:16px 0"><strong>Respuesta:</strong><br><br>{resolucion}</div>
-<p style="margin-top:20px"><a href="{frontend_url}" style="background:#1F3B6D;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Ir a SmartBuilderEC</a></p>
-</div>"""
-        send_email(email, f"Tu consulta fue respondida — Ticket #{n}", html)
+        send_template("ticket_soporte_resuelto", email, {
+            "nombre": ticket.get("user_nombre") or email,
+            "email": email,
+            "asunto_ticket": ticket.get("asunto", ""),
+            "numero_ticket": str(ticket.get("numero", "")),
+            "resolucion": resolucion,
+        })
     except Exception as e:
         print(f"[soporte] Error enviando resolución: {e}")
+
 
 
 # ── Feedback loop — Capa 3 ────────────────────────────────────────────────────

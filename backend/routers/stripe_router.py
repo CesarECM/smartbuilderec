@@ -170,6 +170,12 @@ def _handle_subscription_ended(subscription: dict):
         return
     sb = get_supabase()
     try:
+        user_res = sb.table("profiles").select("nombre, email").eq("stripe_customer_id", stripe_customer_id).single().execute()
         sb.table("profiles").update({"activo": False}).eq("stripe_customer_id", stripe_customer_id).execute()
+        if user_res.data and user_res.data.get("email"):
+            send_template("suscripcion_cancelada", user_res.data["email"], {
+                "nombre": user_res.data.get("nombre") or user_res.data["email"],
+                "email": user_res.data["email"],
+            })
     except Exception as e:
         print(f"⚠️ subscription_ended error: {e}")

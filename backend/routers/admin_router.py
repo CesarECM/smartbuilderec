@@ -120,21 +120,48 @@ def renew_admin(data: RenewAdminRequest, request: Request):
     if not res.data:
         raise HTTPException(status_code=404, detail="Admin no encontrado.")
 
+    # Notificar al admin que su cuenta fue renovada
+    try:
+        admin_res = sb.table("profiles").select("nombre, email, credits").eq("id", data.admin_id).single().execute()
+        admin = admin_res.data or {}
+        if admin.get("email"):
+            vigencia_str = ""
+            if data.vigencia_hasta:
+                try:
+                    from datetime import datetime as _dt
+                    _v = _dt.fromisoformat(data.vigencia_hasta.replace("Z", "+00:00"))
+                    vigencia_str = _v.strftime("%d/%m/%Y")
+                except Exception:
+                    vigencia_str = data.vigencia_hasta
+            send_template("renovacion_admin", admin["email"], {
+                "nombre": admin.get("nombre") or admin["email"],
+                "email": admin["email"],
+                "creditos": str(admin.get("credits", data.credits or 0)),
+                "vigencia_hasta": vigencia_str,
+            })
+    except Exception:
+        pass
+
     return {"updated": data.admin_id, **updates}
+
+
+# ─── Cron automático de vigencias (protegido por CRON_SECRET, sin JWT) ───────
+
+@router.post("/admin/cron/vigencias", status_code=200)
+def cron_vigencias(request: Request):
+    cron_secret = request.headers.get("x-cron-secret", "")
+    if not cron_secret or cron_secret != os.getenv("CRON_SECRET", ""):
+        raise HTTPException(status_code=403, detail="Cron secret inválido.")
+    return _procesar_vigencias(get_supabase())
 
 
 # ─── Enviar alertas de vigencia manualmente (trigger desde superadmin) ─────────
 
-@router.post("/admin/check-vigencias", status_code=200)
-def check_vigencias(request: Request):
-    caller_id = request.state.user.get("sub")
-    sb = get_supabase()
-    _require_super_admin(caller_id, sb)
-
+def _procesar_vigencias(sb) -> dict:
     now = datetime.now(timezone.utc)
     res = sb.table("profiles").select(
         "id, nombre, email, vigencia_hasta, activo"
-    ).eq("rol", "admin").eq("activo", True).execute()
+    ).eq("rol", "admin").execute()
 
     admins = res.data or []
     enviados = []
@@ -150,8 +177,7 @@ def check_vigencias(request: Request):
         delta = vigencia - now
         dias = delta.days
 
-        # Vencida
-        if dias < 0 and admin["activo"]:
+        if dias < 0 and admin.get("activo"):
             sb.table("profiles").update({"activo": False}).eq("id", admin["id"]).execute()
             send_template("vigencia_admin_expirada", admin["email"], {
                 "nombre": admin["nombre"] or admin["email"],
@@ -159,8 +185,6 @@ def check_vigencias(request: Request):
                 "vigencia_hasta": vigencia.strftime("%d/%m/%Y"),
             })
             enviados.append({"email": admin["email"], "tipo": "expirada"})
-
-        # Por vencer en <= 7 días
         elif 0 <= dias <= 7:
             send_template("vigencia_admin_por_vencer", admin["email"], {
                 "nombre": admin["nombre"] or admin["email"],
@@ -171,3 +195,11 @@ def check_vigencias(request: Request):
             enviados.append({"email": admin["email"], "tipo": "por_vencer", "dias": dias})
 
     return {"procesados": len(admins), "enviados": enviados}
+
+
+@router.post("/admin/check-vigencias", status_code=200)
+def check_vigencias(request: Request):
+    caller_id = request.state.user.get("sub")
+    sb = get_supabase()
+    _require_super_admin(caller_id, sb)
+    return _procesar_vigencias(sb)

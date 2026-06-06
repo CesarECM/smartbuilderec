@@ -40,8 +40,10 @@ _jwks_cache: dict = {}
 _SOPORTE_PUBLICOS = {
     ("POST", "/soporte/sesiones/init"),
     ("POST", "/soporte/chat"),
-    ("POST", "/soporte/tickets"),           # crear ticket desde el widget
-    ("POST", "/soporte/cron/analizar-patrones"),  # protegido por CRON_SECRET propio
+    ("POST", "/soporte/tickets"),
+    ("POST", "/soporte/cron/analizar-patrones"),
+    ("POST", "/admin/cron/vigencias"),      # protegido por CRON_SECRET
+    ("POST", "/auth/reset-password"),       # protegido a nivel de lógica (no JWT)
 }
 
 def _es_publico(method: str, path: str) -> bool:
@@ -1293,7 +1295,7 @@ def admin_create_user(data: CreateUserRequest, request: Request):
     caller_id = request.state.user.get("sub")
     sb = get_supabase()
 
-    caller_res = sb.table("profiles").select("rol, id").eq("id", caller_id).single().execute()
+    caller_res = sb.table("profiles").select("rol, id, nombre").eq("id", caller_id).single().execute()
     caller = caller_res.data or {}
     if caller.get("rol") not in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="Solo admins pueden crear usuarios.")
@@ -1330,6 +1332,35 @@ def admin_create_user(data: CreateUserRequest, request: Request):
                 "email": data.email,
                 "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
             })
+        except Exception:
+            pass
+
+        # Bienvenida al nuevo usuario
+        try:
+            from services.email_service import send_template as _send_tpl
+            admin_nombre = caller.get("nombre") or "Tu administrador"
+            if data.admin_id and caller.get("rol") == "super_admin":
+                _ar = sb.table("profiles").select("nombre").eq("id", data.admin_id).single().execute()
+                admin_nombre = (_ar.data or {}).get("nombre") or admin_nombre
+            _send_tpl("bienvenida_user_codigo", data.email, {
+                "nombre": data.nombre,
+                "email": data.email,
+                "nombre_admin": admin_nombre,
+            })
+        except Exception:
+            pass
+
+        # Alerta de créditos bajos cuando el admin llega a 1 crédito restante
+        try:
+            if data.admin_id:
+                from services.email_service import send_template as _send_tpl
+                _cr = sb.table("profiles").select("nombre, email, credits").eq("id", data.admin_id).single().execute()
+                if _cr.data and _cr.data.get("credits") == 1 and _cr.data.get("email"):
+                    _send_tpl("creditos_bajos_admin", _cr.data["email"], {
+                        "nombre": _cr.data.get("nombre") or _cr.data["email"],
+                        "email": _cr.data["email"],
+                        "creditos_restantes": "1",
+                    })
         except Exception:
             pass
 

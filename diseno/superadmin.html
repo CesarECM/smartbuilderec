@@ -1939,6 +1939,11 @@
       vigencia_admin_por_vencer: ["nombre","email","vigencia_hasta","dias_restantes"],
       vigencia_admin_expirada:   ["nombre","email","vigencia_hasta"],
       reset_password:            ["nombre","email","link_reset"],
+      renovacion_admin:          ["nombre","email","creditos","vigencia_hasta"],
+      creditos_bajos_admin:      ["nombre","email","creditos_restantes"],
+      suscripcion_cancelada:     ["nombre","email"],
+      ticket_soporte_creado:     ["nombre","email","asunto_ticket","numero_ticket"],
+      ticket_soporte_resuelto:   ["nombre","email","asunto_ticket","numero_ticket","resolucion"],
     };
 
     async function cargarPlantillas() {
