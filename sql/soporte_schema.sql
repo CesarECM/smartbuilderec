@@ -170,3 +170,6 @@ CREATE INDEX IF NOT EXISTS idx_tickets_estado
 
 CREATE INDEX IF NOT EXISTS idx_sesiones_updated
   ON soporte_sesiones (updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_sugerencias_estado
+  ON soporte_sugerencias (estado);
