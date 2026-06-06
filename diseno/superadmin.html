@@ -711,6 +711,9 @@
         <button class="sp-tab-btn" id="sptab-kb" onclick="showSoporteTab('kb')">
           📚 Base de conocimientos <span class="sp-badge-gray" id="spBadgeKB"></span>
         </button>
+        <button class="sp-tab-btn" id="sptab-bajo-rendimiento" onclick="showSoporteTab('bajo-rendimiento')">
+          📉 Bajo rendimiento <span class="sp-badge" id="spBadgeBR" style="display:none"></span>
+        </button>
       </div>
 
       <!-- ── Sub-panel: Tickets ────────────────────────────────── -->
@@ -895,6 +898,22 @@
             <div id="listaRecursos"></div>
           </div>
         </div>
+      </div>
+
+      <!-- ── Sub-panel: FAQs de bajo rendimiento ───────────────── -->
+      <div id="sppanel-bajo-rendimiento" class="sp-panel">
+        <div class="section-header">
+          <h2>FAQs de bajo rendimiento</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn-sm" onclick="cargarBajoRendimiento()">↺ Actualizar</button>
+            <button class="btn-primary" id="btnAnalizarLote" onclick="analizarLoteBR()">🤖 Analizar todo con IA</button>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--c-text-3);margin:-8px 0 20px">
+          FAQs con más de 14 días y al menos 20 exposiciones que no reciben valoraciones positivas.
+          La IA analiza cada una y genera sugerencias de mejora en la pestaña <strong>Sugerencias IA</strong>.
+        </p>
+        <div id="listaBR"><p class="loading-txt">Cargando...</p></div>
       </div>
 
     </div>
@@ -2271,16 +2290,17 @@
     }
 
     // ── Soporte — inner tabs ──────────────────────────────────────
-    const _spLoaded = { tickets: false, sugerencias: false, kb: false };
+    const _spLoaded = { tickets: false, sugerencias: false, kb: false, brFaqs: false };
 
     function showSoporteTab(name) {
       document.querySelectorAll(".sp-panel").forEach(p => p.classList.remove("active"));
       document.querySelectorAll(".sp-tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("sppanel-" + name).classList.add("active");
       document.getElementById("sptab-"   + name).classList.add("active");
-      if (name === "tickets"    && !_spLoaded.tickets)    { _spLoaded.tickets    = true; cargarTicketsSA(); }
-      if (name === "sugerencias"&& !_spLoaded.sugerencias){ _spLoaded.sugerencias= true; cargarSugerencias("pendiente"); }
-      if (name === "kb"         && !_spLoaded.kb)         { _spLoaded.kb         = true; cargarFaqs(); cargarRecursos(); }
+      if (name === "tickets"          && !_spLoaded.tickets)    { _spLoaded.tickets    = true; cargarTicketsSA(); }
+      if (name === "sugerencias"      && !_spLoaded.sugerencias){ _spLoaded.sugerencias= true; cargarSugerencias("pendiente"); }
+      if (name === "kb"               && !_spLoaded.kb)         { _spLoaded.kb         = true; cargarFaqs(); cargarRecursos(); }
+      if (name === "bajo-rendimiento" && !_spLoaded.brFaqs)     { _spLoaded.brFaqs     = true; cargarBajoRendimiento(); }
     }
 
     async function cargarKB() {
@@ -2490,16 +2510,23 @@
         return;
       }
       el.innerHTML = `<div class="table-wrap"><table class="admin-table">
-        <thead><tr><th>Pregunta</th><th>Contexto</th><th>Categoría</th><th>Fecha</th><th></th></tr></thead>
+        <thead><tr><th>Pregunta</th><th>Contexto</th><th>Categoría</th><th style="text-align:center">👍</th><th style="text-align:center">👎</th><th style="text-align:center">Exp.</th><th>Fecha</th><th></th></tr></thead>
         <tbody>${filtered.map(f => {
           const fecha = new Date(f.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
+          const util  = f.votos_util || 0;
+          const neg   = f.votos_negativo || 0;
+          const exp   = f.exposiciones || 0;
+          const esMalo = exp >= 20 && (neg > util || (util === 0 && exp >= 50) || (util === 0 && neg >= 3));
           return `<tr id="faq-row-${f.id}">
-            <td style="font-weight:600;color:var(--c-text);max-width:280px">
+            <td style="font-weight:600;color:var(--c-text);max-width:260px">
               <div style="font-size:13px">${(f.pregunta||"").replace(/</g,"&lt;")}</div>
-              <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${(f.respuesta||"").slice(0,120).replace(/</g,"&lt;")}${(f.respuesta||"").length>120?"…":""}</div>
+              <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${(f.respuesta||"").slice(0,110).replace(/</g,"&lt;")}${(f.respuesta||"").length>110?"…":""}</div>
             </td>
             <td><span class="status-badge badge-user">${f.contexto}</span></td>
             <td style="color:var(--c-text-3);font-size:12px">${f.categoria||"—"}</td>
+            <td style="text-align:center;font-size:12px;color:${util>0?'#059669':'var(--c-text-4)'};">${util}</td>
+            <td style="text-align:center;font-size:12px;color:${neg>0?'#dc2626':'var(--c-text-4)'};">${neg}</td>
+            <td style="text-align:center;font-size:12px;color:var(--c-text-3)">${esMalo?`<span style="color:#d97706;font-weight:700">${exp}</span>`:exp}</td>
             <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
             <td><div style="display:flex;gap:5px">
               <button class="btn-sm purple" onclick="abrirEditarFaq('${f.id}')">Editar</button>
@@ -2566,6 +2593,118 @@
       } catch(e) {
         const el2 = document.getElementById("listaFaqs");
         if (el2) el2.innerHTML = `<p class="error-txt">Error al cargar FAQs: ${e.message}</p>`;
+      }
+    }
+
+    // ── FAQs de bajo rendimiento ──────────────────────────────────
+    async function cargarBajoRendimiento() {
+      const el = document.getElementById("listaBR");
+      if (el) el.innerHTML = '<p class="loading-txt">Analizando métricas...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/faqs/bajo-rendimiento`, { headers });
+        if (!res.ok) throw new Error(await res.text());
+        const faqs = await res.json();
+
+        const badge = document.getElementById("spBadgeBR");
+        if (badge) {
+          badge.textContent = faqs.length || "";
+          badge.style.display = faqs.length ? "inline" : "none";
+        }
+
+        if (!faqs.length) {
+          el.innerHTML = _spEmpty("✅", "Todo en orden", "No hay FAQs de bajo rendimiento en este momento. Las FAQs nuevas están en período de gracia (14 días y 20 exposiciones mínimo).");
+          return;
+        }
+
+        el.innerHTML = `<div class="table-wrap"><table class="admin-table">
+          <thead><tr>
+            <th>Pregunta</th><th>Contexto</th>
+            <th style="text-align:center">👍</th>
+            <th style="text-align:center">👎</th>
+            <th style="text-align:center">Exp.</th>
+            <th style="text-align:center">Score</th>
+            <th></th>
+          </tr></thead>
+          <tbody>${faqs.map(f => {
+            const util  = f.votos_util || 0;
+            const neg   = f.votos_negativo || 0;
+            const exp   = f.exposiciones || 0;
+            const score = f.score_neto ?? (util - neg);
+            const ratio = f.ratio_negativo ?? 0;
+            const scoreColor = score < 0 ? '#dc2626' : score === 0 ? '#d97706' : '#059669';
+            return `<tr>
+              <td style="max-width:280px">
+                <div style="font-size:13px;font-weight:600;color:var(--c-text)">${(f.pregunta||"").replace(/</g,"&lt;")}</div>
+                <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${(f.respuesta||"").slice(0,100).replace(/</g,"&lt;")}…</div>
+              </td>
+              <td><span class="status-badge badge-user">${f.contexto}</span></td>
+              <td style="text-align:center;font-size:13px;color:${util>0?'#059669':'var(--c-text-4)'}">${util}</td>
+              <td style="text-align:center;font-size:13px;color:${neg>0?'#dc2626':'var(--c-text-4)'}">${neg}</td>
+              <td style="text-align:center;font-size:13px;color:var(--c-text-3)">${exp}</td>
+              <td style="text-align:center">
+                <span style="font-weight:700;font-size:13px;color:${scoreColor}">${score > 0 ? '+' : ''}${score}</span>
+                ${ratio > 0 ? `<div style="font-size:10px;color:#dc2626">${Math.round(ratio*100)}% neg</div>` : ''}
+              </td>
+              <td>
+                <div style="display:flex;gap:5px;flex-wrap:wrap">
+                  <button class="btn-sm purple" onclick="analizarFaqCalidadSingle('${f.id}', this)" title="Claude Haiku analiza esta FAQ y genera una sugerencia de mejora">🤖 Analizar</button>
+                  <button class="btn-sm danger"  onclick="eliminarFaq('${f.id}')">Eliminar</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>`;
+      } catch(e) {
+        if (el) el.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
+    async function analizarFaqCalidadSingle(faqId, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = "Analizando..."; }
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/cron/analizar-calidad-faqs`, {
+          method: "POST",
+          headers: { ...headers, "x-faq-id-hint": faqId },
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const d = await res.json();
+        if (d.sugerencias_guardadas > 0) {
+          mostrarToast("Sugerencia generada — revísala en la pestaña Sugerencias IA");
+          _spLoaded.sugerencias = false;
+        } else {
+          mostrarToast("Esta FAQ no requiere cambios por ahora");
+        }
+      } catch(e) {
+        mostrarToast(`Error: ${e.message}`, "error");
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "🤖 Analizar"; }
+      }
+    }
+
+    async function analizarLoteBR() {
+      const btn = document.getElementById("btnAnalizarLote");
+      if (btn) { btn.disabled = true; btn.textContent = "Analizando..."; }
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/cron/analizar-calidad-faqs`, {
+          method: "POST", headers,
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const d = await res.json();
+        if (d.sugerencias_guardadas > 0) {
+          mostrarToast(`${d.sugerencias_guardadas} sugerencia(s) generada(s) — ve a Sugerencias IA`);
+          _spLoaded.sugerencias = false;
+        } else if (d.motivo === "sin_candidatas") {
+          mostrarToast("No hay FAQs candidatas en este momento");
+        } else {
+          mostrarToast("Análisis completo — no se requieren cambios");
+        }
+      } catch(e) {
+        mostrarToast(`Error: ${e.message}`, "error");
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "🤖 Analizar todo con IA"; }
       }
     }
 

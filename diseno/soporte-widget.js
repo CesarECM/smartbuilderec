@@ -419,7 +419,7 @@
     const idsJson = JSON.stringify(faqIds);
     row.innerHTML = `<span>¿Fue útil?</span>
       <button class="sbe-vote-btn" onclick="window._sbVote(this,${idsJson},true)">👍</button>
-      <button class="sbe-vote-btn" onclick="window._sbVote(this,[],false)">👎</button>`;
+      <button class="sbe-vote-btn" onclick="window._sbVote(this,${idsJson},false)">👎</button>`;
     bub.appendChild(row);
     document.getElementById('sbe-chat-messages').scrollTop =
       document.getElementById('sbe-chat-messages').scrollHeight;
@@ -429,9 +429,10 @@
     const row = btn.closest('.sbe-vote');
     if (!row) return;
     row.innerHTML = `<span class="sbe-vote-thanks">${util ? '¡Gracias! 👍' : 'Gracias por el feedback.'}</span>`;
-    if (util && faqIds.length) {
+    if (faqIds.length) {
+      const endpoint = util ? 'votos' : 'votos-negativos';
       try {
-        await fetch(`${BACKEND}/soporte/faqs/votos`, {
+        await fetch(`${BACKEND}/soporte/faqs/${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: faqIds }),
