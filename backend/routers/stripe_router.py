@@ -135,46 +135,63 @@ def repair_checkout(request: Request, session_id: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Sesión no encontrada: {e}")
 
-    # Usar .get() en todo — los objetos Stripe no soportan el operador `in` como dict
-    pstatus = session.get("payment_status") or ""
-    if pstatus != "paid":
-        raise HTTPException(status_code=400, detail=f"El pago no está confirmado (status: {pstatus}).")
-
-    meta     = session.get("metadata") or {}
-    cd       = session.get("customer_details") or {}
-    email    = str(meta.get("email") or cd.get("email") or "")
-    nombre   = str(meta.get("nombre") or "")
-    apellido = str(meta.get("apellido") or "")
-    customer = session.get("customer") or ""
-    if customer and not isinstance(customer, str):
-        customer = getattr(customer, "id", "")
-    amount   = session.get("amount_total") or 179900
-
-    if not email:
+    data = _extract_session_data(session)
+    if not data["email"]:
         raise HTTPException(status_code=400, detail="No se encontró email en la sesión de Stripe.")
+    if data["pstatus"] != "paid":
+        raise HTTPException(status_code=400, detail=f"El pago no está confirmado (status: {data['pstatus']}).")
 
-    session_plain = {
-        "metadata":         {"email": email, "nombre": nombre, "apellido": apellido},
-        "customer_details": {"email": email},
-        "customer":         customer or "",
-        "amount_total":     amount,
+    _handle_checkout_completed(data)
+    print(f"[repair-checkout] Cuenta activada para {data['email']} — session {session_id}")
+    return {"ok": True, "email": data["email"], "session_id": session_id}
+
+
+def _extract_session_data(session) -> dict:
+    """Convierte un objeto Session de Stripe (cualquier versión SDK) a dict plano.
+    SDK >=8: objetos tipados sin .get() → usar getattr.
+    SDK <8:  StripeObject dict-like → getattr también funciona."""
+    meta = getattr(session, "metadata", None) or {}
+    if not isinstance(meta, dict):
+        meta = {}
+
+    cd       = getattr(session, "customer_details", None)
+    cd_email = getattr(cd, "email", None) if cd else None
+
+    email    = meta.get("email") or cd_email or ""
+    nombre   = meta.get("nombre") or ""
+    apellido = meta.get("apellido") or ""
+
+    customer = getattr(session, "customer", None) or ""
+    if customer and not isinstance(customer, str):
+        customer = getattr(customer, "id", "") or ""
+
+    return {
+        "email":    str(email),
+        "nombre":   str(nombre),
+        "apellido": str(apellido),
+        "customer": str(customer),
+        "amount":   getattr(session, "amount_total", None) or 179900,
+        "pstatus":  getattr(session, "payment_status", None) or "",
     }
-    _handle_checkout_completed(session_plain)
-    print(f"[repair-checkout] Cuenta activada para {email} — session {session_id}")
-    return {"ok": True, "email": email, "session_id": session_id}
 
 
-def _handle_checkout_completed(session: dict):
-    meta = session.get("metadata") or {}
-    email    = meta.get("email") or (session.get("customer_details") or {}).get("email", "")
-    nombre   = meta.get("nombre", "")
-    apellido = meta.get("apellido", "")
+def _handle_checkout_completed(session):
+    # Acepta tanto objeto Stripe como dict plano (desde repair-checkout)
+    if isinstance(session, dict) and "email" in session:
+        data = session  # ya es dict plano de _extract_session_data
+    else:
+        data = _extract_session_data(session)
+
+    email    = data["email"]
+    nombre   = data["nombre"]
+    apellido = data["apellido"]
+    stripe_customer_id = data["customer"]
+    monto_centavos     = data["amount"]
 
     if not email:
+        print("[checkout] Sin email — no se puede crear usuario")
         return
 
-    stripe_customer_id = session.get("customer") or ""
-    frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
     vigencia_hasta = (datetime.now(timezone.utc) + timedelta(days=90)).strftime("%Y-%m-%d")
     sb = get_supabase()
 
@@ -187,24 +204,22 @@ def _handle_checkout_completed(session: dict):
         user_id = result.user.id
 
         sb.table("profiles").update({
-            "nombre": nombre,
-            "apellido": apellido,
-            "rol": "user",
-            "activo": True,
-            "admin_id": None,
+            "nombre":             nombre,
+            "apellido":           apellido,
+            "rol":                "user",
+            "activo":             True,
+            "admin_id":           None,
             "stripe_customer_id": stripe_customer_id,
-            "vigencia_hasta": vigencia_hasta,
+            "vigencia_hasta":     vigencia_hasta,
         }).eq("id", user_id).execute()
 
-        # Monto del pago (en centavos → pesos)
-        monto_centavos = session.get("amount_total") or 179900
         monto_str = f"${monto_centavos // 100:,.0f} MXN"
-
         send_template("bienvenida_user_stripe", email, {
             "nombre": nombre or email,
-            "email": email,
-            "monto": monto_str,
+            "email":  email,
+            "monto":  monto_str,
         })
+        print(f"[checkout] Usuario creado: {email}")
 
     except Exception as e:
         err = str(e)
@@ -212,9 +227,10 @@ def _handle_checkout_completed(session: dict):
             try:
                 sb.table("profiles").update({
                     "stripe_customer_id": stripe_customer_id,
-                    "activo": True,
-                    "vigencia_hasta": vigencia_hasta,
+                    "activo":             True,
+                    "vigencia_hasta":     vigencia_hasta,
                 }).eq("email", email).execute()
+                print(f"[checkout] Usuario existente reactivado: {email}")
             except Exception:
                 pass
         else:
