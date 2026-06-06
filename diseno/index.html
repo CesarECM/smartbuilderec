@@ -2151,6 +2151,16 @@
         // Prerellenar campos visibles del paso 1 inmediatamente
         prerellenarPaso1(jsonObj.datos || {});
 
+        // Persistir en Supabase antes de recargar: el _cache (in-memory) se destruye
+        // en el reload, así que hay que guardarlo ahora para que init() lo recupere.
+        status.style.color = "#1F3B6D";
+        status.textContent = "⏳ Guardando en servidor...";
+        try {
+          if (typeof storageSync !== "undefined" && storageSync.syncNow) {
+            await storageSync.syncNow();
+          }
+        } catch (_) { /* no bloquear el reload si falla el sync */ }
+
         status.style.color = "#2e7d32";
         status.textContent = `✅ "${nombreCurso}" importado. Recargando...`;
         setTimeout(() => window.location.reload(), 1200);
