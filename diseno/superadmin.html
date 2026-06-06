@@ -250,6 +250,43 @@
     }
     .tpl-preview iframe { width: 100%; min-height: 300px; border: none; display: block; }
 
+    /* ── Soporte — inner tabs ────────────────────────────────────── */
+    .sp-tab-bar { display:flex; border-bottom:2px solid var(--c-border); margin-bottom:24px; overflow-x:auto; gap:0; }
+    .sp-tab-btn { background:none; border:none; border-bottom:3px solid transparent; padding:12px 20px; font-size:13px; font-weight:600; color:var(--c-text-3); cursor:pointer; font-family:inherit; transition:all 0.15s; margin-bottom:-2px; white-space:nowrap; display:flex; align-items:center; gap:7px; }
+    .sp-tab-btn:hover { color:var(--c-text); background:var(--c-surface-2); border-radius:6px 6px 0 0; }
+    .sp-tab-btn.active { color:#7c3aed; border-bottom-color:#7c3aed; }
+    .sp-panel { display:none; }
+    .sp-panel.active { display:block; }
+    .sp-badge { background:#dc2626; color:#fff; border-radius:9999px; font-size:10px; font-weight:700; padding:1px 7px; }
+    .sp-badge:empty { display:none; }
+    .sp-badge-gray { background:#6b7280; color:#fff; border-radius:9999px; font-size:10px; font-weight:700; padding:1px 7px; }
+    .sp-badge-gray:empty { display:none; }
+
+    /* ── Ticket modal (soporte) ──────────────────────────────────── */
+    .badge-nuevo       { background:#fee2e2; color:#991b1b; }
+    .badge-en_revision { background:#fef9c3; color:#92400e; }
+    .badge-resuelto    { background:#d1fae5; color:#065f46; }
+    .tk-modal-overlay  { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+    .tk-modal-overlay.open { display:flex; }
+    .tk-modal-box { background:var(--c-surface); border-radius:var(--r-xl); box-shadow:0 24px 64px rgba(0,0,0,0.22); width:100%; max-width:680px; padding:28px 32px; position:relative; margin:auto; }
+    .tk-modal-close { position:absolute; top:14px; right:14px; background:var(--c-surface-2); border:none; width:28px; height:28px; border-radius:50%; font-size:13px; cursor:pointer; color:var(--c-text-3); }
+    .tk-label  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--c-text-3); margin-bottom:6px; display:block; }
+    .tk-textarea { width:100%; box-sizing:border-box; border:1.5px solid var(--c-border); border-radius:var(--r-sm); padding:9px 12px; font-size:13px; font-family:inherit; background:var(--c-surface); resize:vertical; outline:none; transition:border-color 0.15s; }
+    .tk-textarea:focus { border-color:#7c3aed; }
+    .chat-transcript { max-height:300px; overflow-y:auto; padding:14px; background:#f8fafc; border-radius:8px; border:1px solid var(--c-border); display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+    .ct-msg { display:flex; max-width:90%; }
+    .ct-msg--user      { align-self:flex-end; }
+    .ct-msg--assistant { align-self:flex-start; }
+    .ct-bubble { padding:8px 12px; border-radius:12px; font-size:12.5px; line-height:1.5; white-space:pre-wrap; }
+    .ct-msg--user .ct-bubble      { background:#1F3B6D; color:#fff; border-bottom-right-radius:3px; }
+    .ct-msg--assistant .ct-bubble { background:#fff; color:#1a1a1a; border:1px solid var(--c-border); border-bottom-left-radius:3px; }
+    .ct-role-label { font-size:10px; font-weight:700; text-transform:uppercase; color:var(--c-text-3); margin-bottom:2px; }
+    .kb-section { border:1px solid var(--c-border); border-radius:var(--r-xl); overflow:hidden; margin-bottom:20px; }
+    .kb-section-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--c-surface-2); cursor:pointer; user-select:none; }
+    .kb-section-hdr:hover { background:var(--c-border); }
+    .kb-section-body { padding:16px 18px; border-top:1px solid var(--c-border); display:none; }
+    .kb-section-body.open { display:block; }
+
     @media (max-width: 640px) {
       .tab-btn { padding: 11px 13px; font-size: 12px; }
       .panel-main { padding: 20px 16px; }
@@ -480,128 +517,205 @@
       </div>
     </div>
 
-    <!-- ══ Soporte KB ════════════════════════════════════════════ -->
+    <!-- ══ Soporte ══════════════════════════════════════════════════ -->
     <div id="panel-soporte" class="tab-panel">
 
-      <!-- FAQs -->
-      <div class="section-header">
-        <h2>Base de Conocimiento — FAQs</h2>
-        <button class="btn-primary" onclick="togglePanel('panelNuevaFaq','faqPregunta')">+ Nueva FAQ</button>
+      <!-- Inner tab bar -->
+      <div class="sp-tab-bar">
+        <button class="sp-tab-btn active" id="sptab-tickets" onclick="showSoporteTab('tickets')">
+          🎫 Tickets <span class="sp-badge" id="spBadgeTickets"></span>
+        </button>
+        <button class="sp-tab-btn" id="sptab-sugerencias" onclick="showSoporteTab('sugerencias')">
+          💡 Sugerencias IA <span class="sp-badge" id="spBadgeSug"></span>
+        </button>
+        <button class="sp-tab-btn" id="sptab-kb" onclick="showSoporteTab('kb')">
+          📚 Base de conocimientos <span class="sp-badge-gray" id="spBadgeKB"></span>
+        </button>
       </div>
 
-      <div class="panel-colapsable" id="panelNuevaFaq">
-        <p>Cada FAQ genera un embedding automáticamente. El contexto determina en qué páginas se usa preferentemente.</p>
-        <div class="crear-grid">
-          <div class="crear-field full">
-            <label>Pregunta</label>
-            <input type="text" id="faqPregunta" placeholder="¿Cómo cancelo mi suscripción?" autocomplete="off">
+      <!-- ── Sub-panel: Tickets ────────────────────────────────── -->
+      <div id="sppanel-tickets" class="sp-panel active">
+        <div class="section-header">
+          <h2>Tickets de soporte</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="spTicketSearch" class="search-input" placeholder="🔍 Buscar asunto o email..." oninput="filtrarTicketsSA(this.value)">
+            <select id="spTicketEstado" class="search-input" style="width:140px" onchange="cargarTicketsSA()">
+              <option value="">Todos</option>
+              <option value="nuevo">Nuevos</option>
+              <option value="en_revision">En revisión</option>
+              <option value="resuelto">Resueltos</option>
+            </select>
+            <button class="btn-sm" onclick="cargarTicketsSA()">↺ Actualizar</button>
           </div>
-          <div class="crear-field full">
-            <label>Respuesta</label>
-            <textarea id="faqRespuesta" rows="4" placeholder="Explicación clara y directa..."
-              style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);width:100%;box-sizing:border-box;resize:vertical;outline:none"
-              onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='var(--c-border)'"></textarea>
+        </div>
+        <div id="listaTicketsSA"><p class="loading-txt">Cargando tickets...</p></div>
+      </div>
+
+      <!-- ── Sub-panel: Sugerencias ────────────────────────────── -->
+      <div id="sppanel-sugerencias" class="sp-panel">
+        <div class="section-header">
+          <h2>Sugerencias de la IA</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="spSugEstado" class="search-input" style="width:140px" onchange="cargarSugerencias(this.value)">
+              <option value="pendiente">Pendientes</option>
+              <option value="aprobada">Aprobadas</option>
+              <option value="rechazada">Rechazadas</option>
+            </select>
+            <select id="spSugTipo" class="search-input" style="width:155px" onchange="filtrarSugerenciasTipo()">
+              <option value="">Todos los tipos</option>
+              <option value="nueva_faq">Nueva FAQ</option>
+              <option value="editar_faq">Editar FAQ</option>
+              <option value="eliminar_faq">Eliminar FAQ</option>
+              <option value="unir_faqs">Unir FAQs</option>
+            </select>
+            <button class="btn-sm" onclick="cargarSugerencias(document.getElementById('spSugEstado').value||'pendiente')">↺ Actualizar</button>
           </div>
-          <div class="crear-field">
-            <label>Categoría</label>
-            <input type="text" id="faqCategoria" placeholder="general" autocomplete="off">
-          </div>
-          <div class="crear-field">
-            <label>Contexto de página</label>
-            <select id="faqContexto" class="sa-select">
-              <option value="general">general (todas las páginas)</option>
+        </div>
+        <p style="font-size:12px;color:var(--c-text-3);margin:-8px 0 16px">Generadas automáticamente al resolver tickets. Aprueba para aplicar cambios al knowledge base.</p>
+        <div id="listaSugerencias"><p class="empty-txt">Las sugerencias aparecerán aquí cuando se resuelvan tickets.</p></div>
+      </div>
+
+      <!-- ── Sub-panel: Base de conocimientos ─────────────────── -->
+      <div id="sppanel-kb" class="sp-panel">
+        <!-- Toolbar global -->
+        <div class="section-header">
+          <h2>Base de conocimientos</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="kbSearch" class="search-input" placeholder="🔍 Buscar..." oninput="filtrarKB()">
+            <select id="kbCtxFilter" class="search-input" style="width:170px" onchange="filtrarKB()">
+              <option value="">Todos los contextos</option>
+              <option value="general">general</option>
               <option value="ventas">ventas (landing)</option>
               <option value="checkout">checkout (pago)</option>
               <option value="onboarding">onboarding (registro)</option>
               <option value="acceso">acceso (login)</option>
               <option value="wizard_ec0217">wizard_ec0217 (wizard)</option>
               <option value="navegacion">navegacion (dashboard)</option>
-              <option value="admin">admin (panel admin)</option>
-              <option value="superadmin">superadmin (superadmin)</option>
+              <option value="admin">admin</option>
+              <option value="superadmin">superadmin</option>
             </select>
           </div>
         </div>
-        <div class="crear-actions">
-          <button class="btn-secondary" onclick="togglePanel('panelNuevaFaq')">Cancelar</button>
-          <button class="btn-primary" id="btnGuardarFaq" onclick="guardarFaq()">Guardar FAQ</button>
+
+        <!-- FAQs collapsible -->
+        <div class="kb-section">
+          <div class="kb-section-hdr" onclick="toggleKBSection('kb-faqs-body')">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:14px;font-weight:700;color:var(--c-text)">FAQs</span>
+              <span class="count-tag" id="countFaqs"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="event.stopPropagation();togglePanel('panelNuevaFaq','faqPregunta')">+ Nueva FAQ</button>
+              <span id="arrowFaqs" style="font-size:12px;color:var(--c-text-3);transition:transform 0.2s">▾</span>
+            </div>
+          </div>
+          <div class="kb-section-body open" id="kb-faqs-body">
+            <div class="panel-colapsable" id="panelNuevaFaq" style="margin-bottom:12px">
+              <p>Cada FAQ genera un embedding automáticamente. El contexto determina en qué páginas se usa preferentemente.</p>
+              <div class="crear-grid">
+                <div class="crear-field full">
+                  <label>Pregunta</label>
+                  <input type="text" id="faqPregunta" placeholder="¿Cómo cancelo mi suscripción?" autocomplete="off">
+                </div>
+                <div class="crear-field full">
+                  <label>Respuesta</label>
+                  <textarea id="faqRespuesta" rows="4" placeholder="Explicación clara y directa..."
+                    style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);width:100%;box-sizing:border-box;resize:vertical;outline:none"
+                    onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='var(--c-border)'"></textarea>
+                </div>
+                <div class="crear-field">
+                  <label>Categoría</label>
+                  <input type="text" id="faqCategoria" placeholder="general" autocomplete="off">
+                </div>
+                <div class="crear-field">
+                  <label>Contexto de página</label>
+                  <select id="faqContexto" class="sa-select">
+                    <option value="general">general (todas las páginas)</option>
+                    <option value="ventas">ventas (landing)</option>
+                    <option value="checkout">checkout (pago)</option>
+                    <option value="onboarding">onboarding (registro)</option>
+                    <option value="acceso">acceso (login)</option>
+                    <option value="wizard_ec0217">wizard_ec0217 (wizard)</option>
+                    <option value="navegacion">navegacion (dashboard)</option>
+                    <option value="admin">admin (panel admin)</option>
+                    <option value="superadmin">superadmin (superadmin)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="crear-actions">
+                <button class="btn-secondary" onclick="togglePanel('panelNuevaFaq')">Cancelar</button>
+                <button class="btn-primary" id="btnGuardarFaq" onclick="guardarFaq()">Guardar FAQ</button>
+              </div>
+              <p class="crear-msg" id="faqMsg"></p>
+            </div>
+            <div id="listaFaqs"></div>
+          </div>
         </div>
-        <p class="crear-msg" id="faqMsg"></p>
+
+        <!-- Recursos collapsible -->
+        <div class="kb-section">
+          <div class="kb-section-hdr" onclick="toggleKBSection('kb-rec-body')">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:14px;font-weight:700;color:var(--c-text)">Recursos</span>
+              <span class="count-tag" id="countRecursos"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn-primary" style="font-size:12px;padding:6px 14px" onclick="event.stopPropagation();togglePanel('panelNuevoRecurso','recursoTitulo')">+ Nuevo recurso</button>
+              <span id="arrowRecursos" style="font-size:12px;color:var(--c-text-3);transition:transform 0.2s">▾</span>
+            </div>
+          </div>
+          <div class="kb-section-body open" id="kb-rec-body">
+            <div class="panel-colapsable" id="panelNuevoRecurso" style="margin-bottom:12px">
+              <p>Los recursos largos se fragmentan automáticamente (chunking) para una búsqueda más precisa.</p>
+              <div class="crear-grid">
+                <div class="crear-field full">
+                  <label>Título</label>
+                  <input type="text" id="recursoTitulo" placeholder="Guía completa del wizard EC0217.01" autocomplete="off">
+                </div>
+                <div class="crear-field">
+                  <label>Tipo</label>
+                  <select id="recursoTipo" class="sa-select">
+                    <option value="articulo">Artículo</option>
+                    <option value="tutorial">Tutorial</option>
+                    <option value="video">Video</option>
+                    <option value="pdf">PDF</option>
+                  </select>
+                </div>
+                <div class="crear-field">
+                  <label>Contexto de página</label>
+                  <select id="recursoContexto" class="sa-select">
+                    <option value="general">general (todas las páginas)</option>
+                    <option value="ventas">ventas (landing)</option>
+                    <option value="checkout">checkout (pago)</option>
+                    <option value="onboarding">onboarding (registro)</option>
+                    <option value="acceso">acceso (login)</option>
+                    <option value="wizard_ec0217">wizard_ec0217 (wizard)</option>
+                    <option value="navegacion">navegacion (dashboard)</option>
+                    <option value="admin">admin (panel admin)</option>
+                    <option value="superadmin">superadmin (superadmin)</option>
+                  </select>
+                </div>
+                <div class="crear-field full">
+                  <label>URL del recurso <span style="font-weight:400;color:var(--c-text-4)">(opcional)</span></label>
+                  <input type="url" id="recursoUrl" placeholder="https://..." autocomplete="off">
+                </div>
+                <div class="crear-field full">
+                  <label>Contenido (texto para indexar)</label>
+                  <textarea id="recursoContenido" rows="6" placeholder="Pega aquí el texto completo del recurso..."
+                    style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);width:100%;box-sizing:border-box;resize:vertical;outline:none"
+                    onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='var(--c-border)'"></textarea>
+                </div>
+              </div>
+              <div class="crear-actions">
+                <button class="btn-secondary" onclick="togglePanel('panelNuevoRecurso')">Cancelar</button>
+                <button class="btn-primary" id="btnGuardarRecurso" onclick="guardarRecurso()">Guardar recurso</button>
+              </div>
+              <p class="crear-msg" id="recursoMsg"></p>
+            </div>
+            <div id="listaRecursos"></div>
+          </div>
+        </div>
       </div>
-
-      <div id="listaFaqs" style="margin-top:12px"><p class="loading-txt">Las FAQs aparecerán aquí.</p></div>
-
-      <!-- Recursos -->
-      <div class="section-header panel-section-gap">
-        <h2>Base de Conocimiento — Recursos</h2>
-        <button class="btn-primary" onclick="togglePanel('panelNuevoRecurso','recursoTitulo')">+ Nuevo recurso</button>
-      </div>
-
-      <div class="panel-colapsable" id="panelNuevoRecurso">
-        <p>Los recursos largos se fragmentan automáticamente (chunking) para una búsqueda más precisa.</p>
-        <div class="crear-grid">
-          <div class="crear-field full">
-            <label>Título</label>
-            <input type="text" id="recursoTitulo" placeholder="Guía completa del wizard EC0217.01" autocomplete="off">
-          </div>
-          <div class="crear-field">
-            <label>Tipo</label>
-            <select id="recursoTipo" class="sa-select">
-              <option value="articulo">Artículo</option>
-              <option value="tutorial">Tutorial</option>
-              <option value="video">Video</option>
-              <option value="pdf">PDF</option>
-            </select>
-          </div>
-          <div class="crear-field">
-            <label>Contexto de página</label>
-            <select id="recursoContexto" class="sa-select">
-              <option value="general">general (todas las páginas)</option>
-              <option value="ventas">ventas (landing)</option>
-              <option value="checkout">checkout (pago)</option>
-              <option value="onboarding">onboarding (registro)</option>
-              <option value="acceso">acceso (login)</option>
-              <option value="wizard_ec0217">wizard_ec0217 (wizard)</option>
-              <option value="navegacion">navegacion (dashboard)</option>
-              <option value="admin">admin (panel admin)</option>
-              <option value="superadmin">superadmin (superadmin)</option>
-            </select>
-          </div>
-          <div class="crear-field full">
-            <label>URL del recurso <span style="font-weight:400;color:var(--c-text-4)">(opcional)</span></label>
-            <input type="url" id="recursoUrl" placeholder="https://..." autocomplete="off">
-          </div>
-          <div class="crear-field full">
-            <label>Contenido (texto para indexar)</label>
-            <textarea id="recursoContenido" rows="6" placeholder="Pega aquí el texto completo del recurso..."
-              style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);width:100%;box-sizing:border-box;resize:vertical;outline:none"
-              onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='var(--c-border)'"></textarea>
-          </div>
-        </div>
-        <div class="crear-actions">
-          <button class="btn-secondary" onclick="togglePanel('panelNuevoRecurso')">Cancelar</button>
-          <button class="btn-primary" id="btnGuardarRecurso" onclick="guardarRecurso()">Guardar recurso</button>
-        </div>
-        <p class="crear-msg" id="recursoMsg"></p>
-      </div>
-
-      <div id="listaRecursos" style="margin-top:12px"><p class="loading-txt">Los recursos aparecerán aquí.</p></div>
-
-      <!-- Sugerencias del Feedback Loop -->
-      <div class="section-header panel-section-gap">
-        <div>
-          <h2>Sugerencias de la IA <span class="badge-count" id="sugBadge"></span></h2>
-          <p style="font-size:12px;color:var(--c-text-3);margin:4px 0 0">Generadas automáticamente al resolver tickets. Aprueba para crear FAQs nuevas.</p>
-        </div>
-        <div style="display:flex;gap:8px">
-          <select id="filtroSug" class="search-input" style="width:150px" onchange="cargarSugerencias(this.value)">
-            <option value="pendiente">Pendientes</option>
-            <option value="aprobada">Aprobadas</option>
-            <option value="rechazada">Rechazadas</option>
-          </select>
-          <button class="btn-sm" onclick="cargarSugerencias(document.getElementById('filtroSug').value)">↺ Actualizar</button>
-        </div>
-      </div>
-      <div id="listaSugerencias" style="margin-top:12px"><p class="empty-txt">Las sugerencias aparecerán aquí cuando se resuelvan tickets.</p></div>
 
     </div>
 
@@ -692,6 +806,14 @@
     </div>
   </div>
 
+  <!-- Modal ticket soporte -->
+  <div class="tk-modal-overlay" id="modalTicketSA" onclick="cerrarTicketModalSA(event)">
+    <div class="tk-modal-box">
+      <button class="tk-modal-close" onclick="cerrarTicketModalSA()">✕</button>
+      <div id="tkSABody"></div>
+    </div>
+  </div>
+
   <!-- Modal editar FAQ -->
   <div class="sa-modal-overlay" id="modalEditarFaq" onclick="cerrarModalEditarFaq(event)">
     <div class="sa-modal-box">
@@ -749,7 +871,8 @@
     let _renovarAdminId = null;
     let _tplSlugActivo  = null;
     let _editFaqId      = null;
-    let _faqsData       = {};
+    let _faqsData    = {};
+    let _recursosData = [];
 
     // ── Tabs ──────────────────────────────────────────────────────
     function showTab(name) {
@@ -1713,46 +1836,285 @@
       }
     }
 
+    // ── Soporte — inner tabs ──────────────────────────────────────
+    const _spLoaded = { tickets: false, sugerencias: false, kb: false };
+
+    function showSoporteTab(name) {
+      document.querySelectorAll(".sp-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".sp-tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("sppanel-" + name).classList.add("active");
+      document.getElementById("sptab-"   + name).classList.add("active");
+      if (name === "tickets"    && !_spLoaded.tickets)    { _spLoaded.tickets    = true; cargarTicketsSA(); }
+      if (name === "sugerencias"&& !_spLoaded.sugerencias){ _spLoaded.sugerencias= true; cargarSugerencias("pendiente"); }
+      if (name === "kb"         && !_spLoaded.kb)         { _spLoaded.kb         = true; cargarFaqs(); cargarRecursos(); }
+    }
+
+    async function cargarKB() {
+      // Carga el sub-tab activo por defecto (tickets) y los badges de todos
+      cargarTicketsSA();
+      _spLoaded.tickets = true;
+      // Badges de los otros sub-tabs en paralelo
+      _cargarBadges();
+    }
+
+    async function _cargarBadges() {
+      const headers = await getAuthHeaders();
+      // Badge tickets nuevos
+      fetch(`${BACKEND_URL}/soporte/tickets?estado=nuevo`, { headers })
+        .then(r => r.json()).then(d => {
+          const b = document.getElementById("spBadgeTickets");
+          if (b) b.textContent = d.length || "";
+        }).catch(() => {});
+      // Badge sugerencias pendientes
+      fetch(`${BACKEND_URL}/soporte/sugerencias?estado=pendiente`, { headers })
+        .then(r => r.json()).then(d => {
+          const b = document.getElementById("spBadgeSug");
+          if (b) b.textContent = d.length || "";
+        }).catch(() => {});
+      // Badge total FAQs
+      fetch(`${BACKEND_URL}/soporte/faqs`, { headers })
+        .then(r => r.json()).then(d => {
+          const b = document.getElementById("spBadgeKB");
+          if (b) b.textContent = d.length || "";
+        }).catch(() => {});
+    }
+
+    // ── Tickets (superadmin ve todos) ────────────────────────────
+    let _todosTicketsSA = [];
+
+    async function cargarTicketsSA() {
+      const el = document.getElementById("listaTicketsSA");
+      el.innerHTML = '<p class="loading-txt">Cargando tickets...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const estado = document.getElementById("spTicketEstado")?.value || "";
+        const url = `${BACKEND_URL}/soporte/tickets${estado ? "?estado=" + estado : ""}`;
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error("Error al cargar tickets.");
+        _todosTicketsSA = await res.json();
+        // Actualizar badge
+        const nuevos = _todosTicketsSA.filter(t => t.estado === "nuevo").length;
+        const badge = document.getElementById("spBadgeTickets");
+        if (badge) badge.textContent = nuevos || "";
+        filtrarTicketsSA(document.getElementById("spTicketSearch")?.value || "");
+      } catch(e) {
+        el.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
+    function filtrarTicketsSA(q) {
+      const lq = (q || "").toLowerCase();
+      const lista = lq
+        ? _todosTicketsSA.filter(t =>
+            (t.asunto||"").toLowerCase().includes(lq) ||
+            (t.user_email||"").toLowerCase().includes(lq) ||
+            (t.user_nombre||"").toLowerCase().includes(lq))
+        : _todosTicketsSA;
+      _renderTablaTicketsSA(lista);
+    }
+
+    function _renderTablaTicketsSA(tickets) {
+      const el = document.getElementById("listaTicketsSA");
+      if (!tickets.length) { el.innerHTML = '<p class="empty-txt">No hay tickets con ese filtro.</p>'; return; }
+      const estadoLabel = { nuevo:"Nuevo", en_revision:"En revisión", resuelto:"Resuelto" };
+      el.innerHTML = `<div class="table-wrap"><table class="admin-table">
+        <thead><tr><th>#</th><th>Asunto</th><th>Estado</th><th>Usuario</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>${tickets.map(t => {
+          const fecha = new Date(t.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
+          return `<tr>
+            <td style="font-weight:700;color:var(--c-text-3)">#${t.numero}</td>
+            <td style="font-weight:600;color:var(--c-text);max-width:260px">${(t.asunto||"").replace(/</g,"&lt;")}</td>
+            <td><span class="status-badge badge-${t.estado}">${estadoLabel[t.estado]||t.estado}</span></td>
+            <td style="color:var(--c-text-3);font-size:12px">${t.user_nombre||t.user_email||"Anónimo"}</td>
+            <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
+            <td><button class="btn-sm" onclick="abrirTicketSA('${t.id}')">Ver</button></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>`;
+    }
+
+    async function abrirTicketSA(ticketId) {
+      const body = document.getElementById("tkSABody");
+      body.innerHTML = '<p class="loading-txt" style="padding:16px">Cargando...</p>';
+      document.getElementById("modalTicketSA").classList.add("open");
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/tickets/${ticketId}`, { headers });
+        if (!res.ok) throw new Error("No se pudo cargar el ticket.");
+        const t = await res.json();
+        const estadoLabel = { nuevo:"Nuevo", en_revision:"En revisión", resuelto:"Resuelto" };
+        const transcript = t.transcript || [];
+        const transcriptHtml = transcript.length
+          ? transcript.map(m => `<div class="ct-msg ct-msg--${m.role}">
+              <div>
+                <div class="ct-role-label">${m.role==="user"?"Usuario":"Asistente IA"}</div>
+                <div class="ct-bubble">${(m.content||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").slice(0,600)}</div>
+              </div></div>`).join("")
+          : '<p style="color:var(--c-text-3);font-size:12px;text-align:center;padding:8px">Sin transcripción disponible.</p>';
+
+        const resueltoBadge = t.estado === "resuelto"
+          ? `<div style="background:#d1fae5;border-radius:8px;padding:12px;margin-bottom:14px">
+               <strong>Resolución del agente:</strong><br>${(t.resolucion||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+             </div>` : "";
+
+        body.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:17px;font-weight:700">#${t.numero}</span>
+            <span class="status-badge badge-${t.estado}">${estadoLabel[t.estado]||t.estado}</span>
+            ${t.user_email?`<span style="font-size:12px;color:var(--c-text-3)">${t.user_nombre||""} &lt;${t.user_email}&gt;</span>`:""}
+          </div>
+          <div style="font-size:13px;color:var(--c-text-2);margin-bottom:16px">${(t.asunto||"").replace(/</g,"&lt;")}</div>
+          <label class="tk-label">Conversación con IA</label>
+          <div class="chat-transcript">${transcriptHtml}</div>
+          ${resueltoBadge}
+          ${t.estado !== "resuelto" ? `
+            <label class="tk-label">Resolución</label>
+            <textarea id="tkSAResolucion" class="tk-textarea" rows="4" placeholder="Escribe la respuesta o solución..."></textarea>
+            <div style="margin-top:8px">
+              <label class="tk-label">Notas internas <span style="font-weight:400;text-transform:none">(no se envían al usuario)</span></label>
+              <textarea id="tkSANotas" class="tk-textarea" rows="2" placeholder="Notas para el equipo..."></textarea>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap">
+              ${t.estado==="nuevo"?`<button class="btn-secondary" onclick="cambiarEstadoTicketSA('${t.id}','en_revision')">Marcar en revisión</button>`:""}
+              <button class="btn-primary" onclick="resolverTicketSA('${t.id}')">Resolver ticket</button>
+            </div>
+            <p class="crear-msg" id="tkSAMsg"></p>
+          ` : ""}`;
+      } catch(e) {
+        body.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
+    async function cambiarEstadoTicketSA(ticketId, estado) {
+      const headers = await getAuthHeaders();
+      await fetch(`${BACKEND_URL}/soporte/tickets/${ticketId}`, {
+        method:"PATCH", headers:{...headers,"Content-Type":"application/json"},
+        body: JSON.stringify({ estado })
+      });
+      mostrarToast("Estado actualizado");
+      cerrarTicketModalSA(); cargarTicketsSA();
+    }
+
+    async function resolverTicketSA(ticketId) {
+      const resolucion = document.getElementById("tkSAResolucion")?.value.trim();
+      const notas      = document.getElementById("tkSANotas")?.value.trim();
+      const msg        = document.getElementById("tkSAMsg");
+      if (!resolucion) { if(msg){msg.textContent="Escribe la resolución.";msg.className="crear-msg error";} return; }
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/tickets/${ticketId}`, {
+          method:"PATCH", headers:{...headers,"Content-Type":"application/json"},
+          body: JSON.stringify({ estado:"resuelto", resolucion, notas_internas: notas||"" })
+        });
+        if (!res.ok) { const d=await res.json().catch(()=>{}); throw new Error(d?.detail||"Error."); }
+        mostrarToast("Ticket resuelto. Usuario notificado y feedback loop activado.");
+        cerrarTicketModalSA(); cargarTicketsSA(); _cargarBadges();
+      } catch(e) { if(msg){msg.textContent=e.message;msg.className="crear-msg error";} }
+    }
+
+    function cerrarTicketModalSA(e) {
+      if (!e || e.target === document.getElementById("modalTicketSA"))
+        document.getElementById("modalTicketSA").classList.remove("open");
+    }
+
+    // ── KB collapsible sections ──────────────────────────────────
+    function toggleKBSection(bodyId) {
+      const body = document.getElementById(bodyId);
+      const isOpen = body.classList.toggle("open");
+      const arrow = bodyId === "kb-faqs-body" ? document.getElementById("arrowFaqs") : document.getElementById("arrowRecursos");
+      if (arrow) arrow.style.transform = isOpen ? "" : "rotate(-90deg)";
+    }
+
+    // ── KB global filter ─────────────────────────────────────────
+    function filtrarKB() {
+      const q   = (document.getElementById("kbSearch")?.value || "").toLowerCase();
+      const ctx = document.getElementById("kbCtxFilter")?.value || "";
+      _renderFaqsFiltered(q, ctx);
+      _renderRecursosFiltered(q, ctx);
+    }
+
+    function _renderFaqsFiltered(q, ctx) {
+      const el = document.getElementById("listaFaqs");
+      if (!el) return;
+      const filtered = Object.values(_faqsData).filter(f =>
+        (!ctx || f.contexto === ctx) &&
+        (!q || f.pregunta.toLowerCase().includes(q) || (f.respuesta||"").toLowerCase().includes(q))
+      );
+      const ct = document.getElementById("countFaqs");
+      if (ct) ct.textContent = `${filtered.length} FAQ${filtered.length!==1?"s":""}`;
+      if (!filtered.length) { el.innerHTML = '<p class="empty-txt" style="padding:12px">No hay FAQs con ese filtro.</p>'; return; }
+      el.innerHTML = `<div class="table-wrap"><table class="admin-table">
+        <thead><tr><th>Pregunta</th><th>Contexto</th><th>Categoría</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>${filtered.map(f => {
+          const fecha = new Date(f.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
+          return `<tr id="faq-row-${f.id}">
+            <td style="font-weight:600;color:var(--c-text);max-width:280px">
+              <div style="font-size:13px">${(f.pregunta||"").replace(/</g,"&lt;")}</div>
+              <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${(f.respuesta||"").slice(0,120).replace(/</g,"&lt;")}${(f.respuesta||"").length>120?"…":""}</div>
+            </td>
+            <td><span class="status-badge badge-user">${f.contexto}</span></td>
+            <td style="color:var(--c-text-3);font-size:12px">${f.categoria||"—"}</td>
+            <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
+            <td><div style="display:flex;gap:5px">
+              <button class="btn-sm purple" onclick="abrirEditarFaq('${f.id}')">Editar</button>
+              <button class="btn-sm danger"  onclick="eliminarFaq('${f.id}')">Eliminar</button>
+            </div></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>`;
+    }
+
+    function _renderRecursosFiltered(q, ctx) {
+      if (!_recursosData) return;
+      const el = document.getElementById("listaRecursos");
+      if (!el) return;
+      const filtered = _recursosData.filter(r =>
+        (!ctx || r.contexto === ctx) &&
+        (!q || (r.titulo||"").toLowerCase().includes(q))
+      );
+      const ct = document.getElementById("countRecursos");
+      if (ct) ct.textContent = `${filtered.length} recurso${filtered.length!==1?"s":""}`;
+      if (!filtered.length) { el.innerHTML = '<p class="empty-txt" style="padding:12px">No hay recursos con ese filtro.</p>'; return; }
+      el.innerHTML = `<div class="table-wrap"><table class="admin-table">
+        <thead><tr><th>Título</th><th>Tipo</th><th>Contexto</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>${filtered.map(r => {
+          const fecha = new Date(r.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
+          return `<tr id="rec-row-${r.id}">
+            <td style="font-weight:600;color:var(--c-text)">${(r.titulo||"").replace(/</g,"&lt;")}
+              ${r.url?`<a href="${r.url}" target="_blank" style="font-size:11px;color:var(--c-blue-600);margin-left:6px">↗</a>`:""}
+            </td>
+            <td><span class="status-badge badge-borrador">${r.tipo}</span></td>
+            <td><span class="status-badge badge-user">${r.contexto}</span></td>
+            <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
+            <td><button class="btn-sm danger" onclick="eliminarRecurso('${r.id}')">Eliminar</button></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>`;
+    }
+
     // ── Soporte KB ────────────────────────────────────────────────
     async function cargarKB() {
-      await Promise.all([cargarFaqs(), cargarRecursos(), cargarSugerencias("pendiente")]);
+      // Carga el sub-tab activo por defecto (tickets) y los badges de todos
+      _spLoaded.tickets = true; cargarTicketsSA();
+      _cargarBadges();
     }
 
     // FAQs
     async function cargarFaqs() {
       const el = document.getElementById("listaFaqs");
-      el.innerHTML = '<p class="loading-txt">Cargando FAQs...</p>';
+      if (el) el.innerHTML = '<p class="loading-txt">Cargando FAQs...</p>';
       try {
         const headers = await getAuthHeaders();
         const res = await fetch(`${BACKEND_URL}/soporte/faqs`, { headers });
         const faqs = await res.json();
-        // Almacenar datos para edición
         _faqsData = {};
         faqs.forEach(f => { _faqsData[f.id] = f; });
-        if (!faqs.length) { el.innerHTML = '<p class="empty-txt">No hay FAQs. Crea la primera con el botón de arriba.</p>'; return; }
-        el.innerHTML = `<div class="table-wrap"><table class="admin-table">
-          <thead><tr><th>Pregunta</th><th>Contexto</th><th>Categoría</th><th>Fecha</th><th></th></tr></thead>
-          <tbody>${faqs.map(f => {
-            const fecha = new Date(f.created_at).toLocaleDateString("es-MX", {day:"2-digit",month:"short",year:"numeric"});
-            return `<tr id="faq-row-${f.id}">
-              <td style="font-weight:600;color:var(--c-text);max-width:280px">
-                <div style="font-size:13px">${f.pregunta}</div>
-                <div style="font-size:11px;color:var(--c-text-3);margin-top:3px;white-space:pre-wrap">${f.respuesta.slice(0,120)}${f.respuesta.length>120?"…":""}</div>
-              </td>
-              <td><span class="status-badge badge-user">${f.contexto}</span></td>
-              <td style="color:var(--c-text-3);font-size:12px">${f.categoria||"—"}</td>
-              <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
-              <td>
-                <div style="display:flex;gap:5px">
-                  <button class="btn-sm purple" onclick="abrirEditarFaq('${f.id}')">Editar</button>
-                  <button class="btn-sm danger"  onclick="eliminarFaq('${f.id}')">Eliminar</button>
-                </div>
-              </td>
-            </tr>`;
-          }).join("")}</tbody>
-        </table></div>`;
+        filtrarKB(); // renderiza con filtros activos
+        const b = document.getElementById("spBadgeKB");
+        if (b) b.textContent = faqs.length || "";
       } catch(e) {
-        el.innerHTML = `<p class="error-txt">Error al cargar FAQs: ${e.message}</p>`;
+        const el2 = document.getElementById("listaFaqs");
+        if (el2) el2.innerHTML = `<p class="error-txt">Error al cargar FAQs: ${e.message}</p>`;
       }
     }
 
@@ -1856,30 +2218,16 @@
     // Recursos
     async function cargarRecursos() {
       const el = document.getElementById("listaRecursos");
-      el.innerHTML = '<p class="loading-txt">Cargando recursos...</p>';
+      if (el) el.innerHTML = '<p class="loading-txt">Cargando recursos...</p>';
       try {
         const headers = await getAuthHeaders();
         const res = await fetch(`${BACKEND_URL}/soporte/recursos`, { headers });
         if (!res.ok) throw new Error("Error al cargar.");
-        const recursos = await res.json();
-        if (!recursos.length) { el.innerHTML = '<p class="empty-txt">No hay recursos. Crea el primero con el botón de arriba.</p>'; return; }
-        el.innerHTML = `<div class="table-wrap"><table class="admin-table">
-          <thead><tr><th>Título</th><th>Tipo</th><th>Contexto</th><th>Fecha</th><th></th></tr></thead>
-          <tbody>${recursos.map(r => {
-            const fecha = new Date(r.created_at).toLocaleDateString("es-MX", {day:"2-digit",month:"short",year:"numeric"});
-            return `<tr id="rec-row-${r.id}">
-              <td style="font-weight:600;color:var(--c-text)">${r.titulo}
-                ${r.url ? `<a href="${r.url}" target="_blank" style="font-size:11px;color:var(--c-blue-600);margin-left:6px">↗ link</a>` : ""}
-              </td>
-              <td><span class="status-badge badge-borrador">${r.tipo}</span></td>
-              <td><span class="status-badge badge-user">${r.contexto}</span></td>
-              <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
-              <td><button class="btn-sm danger" onclick="eliminarRecurso('${r.id}')">Eliminar</button></td>
-            </tr>`;
-          }).join("")}</tbody>
-        </table></div>`;
+        _recursosData = await res.json();
+        filtrarKB();
       } catch(e) {
-        el.innerHTML = `<p class="error-txt">Error al cargar recursos: ${e.message}</p>`;
+        const el2 = document.getElementById("listaRecursos");
+        if (el2) el2.innerHTML = `<p class="error-txt">Error al cargar recursos: ${e.message}</p>`;
       }
     }
 
@@ -1932,6 +2280,8 @@
     }
 
     // ── Sugerencias de IA (Feedback Loop) ────────────────────────
+
+    let _allSugerencias = [];
 
     const SUG_META = {
       nueva_faq:    { label: "Nueva FAQ",      color: "#dbeafe", colorTxt: "#1e40af", btnTxt: "Crear FAQ" },
@@ -1996,19 +2346,15 @@
       }
     }
 
-    async function cargarSugerencias(estado = "pendiente") {
-      const el = document.getElementById("listaSugerencias");
-      el.innerHTML = '<p class="loading-txt">Cargando sugerencias...</p>';
-      try {
-        const headers = await getAuthHeaders();
-        const res = await fetch(`${BACKEND_URL}/soporte/sugerencias?estado=${estado}`, { headers });
-        if (!res.ok) throw new Error("Error al cargar.");
-        const sugs = await res.json();
-        const badge = document.getElementById("sugBadge");
-        if (badge && estado === "pendiente") badge.textContent = sugs.length || "";
-        if (!sugs.length) { el.innerHTML = `<p class="empty-txt">No hay sugerencias ${estado==="pendiente"?"pendientes":"con ese estado"}.</p>`; return; }
+    function filtrarSugerenciasTipo() {
+      const tipo = document.getElementById("spSugTipo")?.value || "";
+      _renderSugerencias(tipo ? _allSugerencias.filter(s => s.tipo === tipo) : _allSugerencias);
+    }
 
-        el.innerHTML = sugs.map(s => {
+    function _renderSugerencias(sugs) {
+      const el = document.getElementById("listaSugerencias");
+      if (!sugs.length) { el.innerHTML = '<p class="empty-txt">No hay sugerencias con ese filtro.</p>'; return; }
+      el.innerHTML = sugs.map(s => {
           const prop = s.propuesta || {};
           const tipo = s.tipo || "nueva_faq";
           const meta = SUG_META[tipo] || SUG_META.nueva_faq;
@@ -2034,8 +2380,22 @@
             </div>
           </div>`;
         }).join("");
+    }
+
+    async function cargarSugerencias(estado = "pendiente") {
+      const el = document.getElementById("listaSugerencias");
+      if (el) el.innerHTML = '<p class="loading-txt">Cargando sugerencias...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/sugerencias?estado=${estado}`, { headers });
+        if (!res.ok) throw new Error("Error al cargar.");
+        _allSugerencias = await res.json();
+        const badge = document.getElementById("spBadgeSug");
+        if (badge && estado === "pendiente") badge.textContent = _allSugerencias.length || "";
+        filtrarSugerenciasTipo();
       } catch(e) {
-        el.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+        const el2 = document.getElementById("listaSugerencias");
+        if (el2) el2.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
       }
     }
 
@@ -2056,7 +2416,9 @@
           unir_faqs:    "FAQs unidas: nueva creada, originales desactivadas",
         };
         mostrarToast(accion === "aprobar" ? (msgs[data.tipo] || "Sugerencia aprobada") : "Sugerencia rechazada");
-        await cargarSugerencias(document.getElementById("filtroSug")?.value || "pendiente");
+        const estadoActual = document.getElementById("spSugEstado")?.value || "pendiente";
+        await cargarSugerencias(estadoActual);
+        _cargarBadges();
       } catch(e) { alert(e.message); }
     }
 
