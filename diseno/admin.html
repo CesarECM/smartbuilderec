@@ -272,22 +272,7 @@
           <h2>Mis usuarios</h2>
           <div class="section-header-right">
             <input type="text" id="searchUsuarios" class="search-input" placeholder="🔍 Buscar..." oninput="filtrarUsuarios(this.value)">
-            <button class="btn-primary" onclick="toggleCrearPanel()">➕ Crear usuario</button>
           </div>
-        </div>
-
-        <div class="crear-panel" id="crearPanel">
-          <p>El usuario recibirá un correo para configurar su contraseña.</p>
-          <div class="crear-grid">
-            <div class="crear-field"><label>Nombre</label><input type="text" id="cfNombre" placeholder="Juan" autocomplete="given-name"></div>
-            <div class="crear-field"><label>Apellido</label><input type="text" id="cfApellido" placeholder="Pérez" autocomplete="family-name"></div>
-            <div class="crear-field full"><label>Correo electrónico</label><input type="email" id="cfEmail" placeholder="correo@empresa.com" autocomplete="email"></div>
-          </div>
-          <div class="crear-actions">
-            <button class="btn-secondary" onclick="toggleCrearPanel()">Cancelar</button>
-            <button class="btn-primary" id="btnEnviarCrear" onclick="crearUsuario()">Crear y enviar invitación</button>
-          </div>
-          <p class="crear-msg" id="crearMsg"></p>
         </div>
 
         <div id="listaUsuarios"><p class="loading-txt">Cargando usuarios...</p></div>
@@ -447,11 +432,8 @@
           <div class="empty-state">
             <div class="empty-state-icon">👤</div>
             <h3>Aún no tienes usuarios registrados</h3>
-            <p>Crea un usuario directamente o genera un código de acceso y compártelo.</p>
-            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-              <button class="btn-primary" onclick="toggleCrearPanel()">➕ Crear usuario</button>
-              <button class="btn-primary teal" onclick="showTab('codigos')">🔑 Ir a Códigos</button>
-            </div>
+            <p>Genera un código de acceso y compártelo con tu usuario para que active su cuenta.</p>
+            <button class="btn-primary teal" onclick="showInnerTab('codigos')">🔑 Ir a Códigos de acceso</button>
           </div>`;
         _todosUsuarios = [];
         document.getElementById("countUsuarios").textContent = "";
@@ -546,44 +528,6 @@
     }
 
     // ── Crear usuario ─────────────────────────────────────────────
-    function toggleCrearPanel() {
-      const panel = document.getElementById("crearPanel");
-      const visible = panel.classList.toggle("visible");
-      if (visible) { document.getElementById("cfNombre").focus(); }
-      else {
-        ["cfNombre","cfApellido","cfEmail"].forEach(id => document.getElementById(id).value = "");
-        const msg = document.getElementById("crearMsg");
-        msg.textContent = ""; msg.className = "crear-msg";
-      }
-    }
-
-    async function crearUsuario() {
-      const nombre   = document.getElementById("cfNombre").value.trim();
-      const apellido = document.getElementById("cfApellido").value.trim();
-      const email    = document.getElementById("cfEmail").value.trim();
-      const msg      = document.getElementById("crearMsg");
-      const btn      = document.getElementById("btnEnviarCrear");
-      msg.textContent = "";
-      if (!nombre || !apellido || !email) { msg.textContent = "Completa todos los campos."; msg.className = "crear-msg error"; return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = "Ingresa un correo válido."; msg.className = "crear-msg error"; return; }
-      btn.disabled = true; btn.textContent = "Creando...";
-      try {
-        const headers = await getAuthHeaders();
-        const res = await fetch(`${BACKEND_URL}/admin/create-user`, {
-          method: "POST",
-          headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre, apellido, email, admin_id: _perfil.id }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Error al crear usuario.");
-        msg.textContent = `✓ Usuario creado. Se envió invitación a ${email}.`;
-        msg.className = "crear-msg ok";
-        ["cfNombre","cfApellido","cfEmail"].forEach(id => document.getElementById(id).value = "");
-        await Promise.all([cargarUsuarios(), cargarStats()]);
-      } catch(e) { msg.textContent = e.message; msg.className = "crear-msg error"; }
-      finally { btn.disabled = false; btn.textContent = "Crear y enviar invitación"; }
-    }
-
     async function eliminarUsuario(userId, nombre) {
       if (!confirm(`¿Eliminar a ${nombre}? Se restaurará 1 crédito a tu cuenta. Esta acción no se puede deshacer.`)) return;
       const btn = document.getElementById("btnDel-" + userId);
