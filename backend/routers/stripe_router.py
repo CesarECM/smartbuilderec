@@ -89,15 +89,21 @@ def billing_portal(request: Request):
 async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
-    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+
+    if not webhook_secret:
+        print("[webhook] ERROR: STRIPE_WEBHOOK_SECRET no configurado")
+        return JSONResponse({"detail": "Webhook secret no configurado."}, status_code=500)
 
     sc = _stripe()
     try:
         event = sc.Webhook.construct_event(payload, sig_header, webhook_secret)
-    except Exception:
+    except Exception as e:
+        print(f"[webhook] Firma inválida: {type(e).__name__}: {e}")
         return JSONResponse({"detail": "Firma inválida."}, status_code=400)
 
     etype = event["type"]
+    print(f"[webhook] Evento recibido: {etype}")
 
     if etype == "checkout.session.completed":
         _handle_checkout_completed(event["data"]["object"])
@@ -105,6 +111,35 @@ async def stripe_webhook(request: Request):
         _handle_subscription_ended(event["data"]["object"])
 
     return {"received": True}
+
+
+@router.post("/admin/repair-checkout")
+def repair_checkout(request: Request, session_id: str):
+    """Activa manualmente una cuenta a partir de un Stripe session_id ya pagado.
+    Solo superadmin. Úsalo cuando el webhook falló pero el pago fue exitoso."""
+    from database import get_supabase as _gsb
+    uid = request.state.user.get("sub") if hasattr(request.state, "user") and request.state.user else None
+    if not uid:
+        raise HTTPException(status_code=401, detail="Autenticación requerida.")
+    sb = _gsb()
+    prof = sb.table("profiles").select("rol").eq("id", uid).single().execute()
+    if not prof.data or prof.data.get("rol") != "super_admin":
+        raise HTTPException(status_code=403, detail="Solo superadmin.")
+
+    sc = _stripe()
+    try:
+        session = sc.checkout.Session.retrieve(session_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Sesión no encontrada: {e}")
+
+    pstatus = session.get("payment_status") or ""
+    if pstatus != "paid":
+        raise HTTPException(status_code=400, detail=f"El pago no está confirmado (status: {pstatus}).")
+
+    _handle_checkout_completed(dict(session))
+    email = (session.get("customer_details") or {}).get("email", "")
+    print(f"[repair-checkout] Cuenta activada manualmente para {email} — session {session_id}")
+    return {"ok": True, "email": email, "session_id": session_id}
 
 
 def _handle_checkout_completed(session: dict):
