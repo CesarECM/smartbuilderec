@@ -1311,9 +1311,59 @@ async def health_integraciones(request: Request):
         _chk("docs",          _test_docs),
         _chk("stripe_pagos",  _test_stripe_pagos),
         _chk("tokens_ia",     _test_tokens_ia),
-        _chk("tickets_kb",    lambda: _test_kb_pendientes("soporte_tickets",    "estado", "resuelto",  "ticket",     "sin resolver")),
-        _chk("sugerencias_kb",lambda: _test_kb_pendientes("soporte_sugerencias","estado", "pendiente", "sugerencia", "sin aplicar", invert=True)),
+        _chk("tickets_kb",       lambda: _test_kb_pendientes("soporte_tickets",    "estado", "resuelto",  "ticket",     "sin resolver")),
+        _chk("sugerencias_kb",   lambda: _test_kb_pendientes("soporte_sugerencias","estado", "pendiente", "sugerencia", "sin aplicar", invert=True)),
+        _chk("vigencias_proximas", _test_vigencias_proximas),
+        _chk("admins_sin_creditos", _test_admins_sin_creditos),
+        _chk("usuarios_sin_plan",  _test_usuarios_sin_plan),
     )
+
+def _test_vigencias_proximas():
+    from database import get_supabase as _gsb
+    from datetime import date, timedelta
+    sb = _gsb()
+    hoy    = date.today().isoformat()
+    limite = (date.today() + timedelta(days=7)).isoformat()
+    r = sb.table("profiles").select("id", count="exact", head=True)\
+        .eq("rol", "admin").eq("activo", True)\
+        .gte("vigencia_hasta", hoy).lte("vigencia_hasta", limite).execute()
+    n = r.count or 0
+    if n > 0:
+        return {"status": "warning", "pendientes": n,
+                "message": f"{n} admin{'s' if n != 1 else ''} con vigencia por vencer en ≤7 días"}
+    return {"pendientes": 0}
+
+
+def _test_admins_sin_creditos():
+    from database import get_supabase as _gsb
+    sb = _gsb()
+    r = sb.table("profiles").select("id", count="exact", head=True)\
+        .eq("rol", "admin").eq("activo", True).eq("credits", 0).execute()
+    n = r.count or 0
+    if n > 0:
+        return {"status": "warning", "pendientes": n,
+                "message": f"{n} admin{'s' if n != 1 else ''} con 0 créditos — no pueden registrar usuarios"}
+    return {"pendientes": 0}
+
+
+def _test_usuarios_sin_plan():
+    from database import get_supabase as _gsb
+    from datetime import datetime, timedelta, timezone
+    sb = _gsb()
+    hace_7 = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    usuarios = sb.table("profiles").select("id")\
+        .eq("rol", "user").eq("activo", True).lt("created_at", hace_7).limit(300).execute()
+    ids = [u["id"] for u in (usuarios.data or [])]
+    if not ids:
+        return {"pendientes": 0}
+    con_plan = sb.table("planeaciones").select("user_id").in_("user_id", ids).execute()
+    con_ids  = {p["user_id"] for p in (con_plan.data or [])}
+    n = len([i for i in ids if i not in con_ids])
+    if n > 0:
+        return {"status": "warning", "pendientes": n,
+                "message": f"{n} usuario{'s' if n != 1 else ''} registrado{'s' if n != 1 else ''} hace +7 días sin ninguna planeación"}
+    return {"pendientes": 0}
+
 
 def _test_kb_pendientes(tabla, campo, valor, singular, descripcion, invert=False):
     from database import get_supabase as _gsb

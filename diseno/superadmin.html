@@ -495,6 +495,33 @@
               <span class="integ-badge idle" id="badge-sugerencias_kb">—</span>
             </div>
           </div>
+          <div class="integ-card" id="integ-vigencias_proximas">
+            <span class="led led-gray" id="led-vigencias_proximas"></span>
+            <div class="integ-icon">⏳</div>
+            <div class="integ-body">
+              <div class="integ-name">Vigencias</div>
+              <div class="integ-desc">Admins por vencer ≤7 días</div>
+              <span class="integ-badge idle" id="badge-vigencias_proximas">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-admins_sin_creditos">
+            <span class="led led-gray" id="led-admins_sin_creditos"></span>
+            <div class="integ-icon">🪙</div>
+            <div class="integ-body">
+              <div class="integ-name">Créditos</div>
+              <div class="integ-desc">Admins en 0 créditos</div>
+              <span class="integ-badge idle" id="badge-admins_sin_creditos">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-usuarios_sin_plan">
+            <span class="led led-gray" id="led-usuarios_sin_plan"></span>
+            <div class="integ-icon">👤</div>
+            <div class="integ-body">
+              <div class="integ-name">Sin planeación</div>
+              <div class="integ-desc">Usuarios +7 días inactivos</div>
+              <span class="integ-badge idle" id="badge-usuarios_sin_plan">—</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1103,8 +1130,11 @@
       docs:         { label: "Generador",    extraFn: _ => "DOCX + PPTX" },
       stripe_pagos:    { label: "Último Pago",    extraFn: d => d.monto ? `${d.monto} · ${d.hace}` : (d.ultimo || "OK") },
       tokens_ia:       { label: "Tokens IA",     extraFn: d => d.tokens ? `${d.tokens} tok · ${d.costo}` : "OK" },
-      tickets_kb:      { label: "Tickets",        extraFn: _ => "al día" },
-      sugerencias_kb:  { label: "Sugerencias IA", extraFn: _ => "al día" },
+      tickets_kb:           { label: "Tickets",        extraFn: _ => "al día" },
+      sugerencias_kb:       { label: "Sugerencias IA", extraFn: _ => "al día" },
+      vigencias_proximas:   { label: "Vigencias",      extraFn: _ => "al día" },
+      admins_sin_creditos:  { label: "Créditos",       extraFn: _ => "todos con créditos" },
+      usuarios_sin_plan:    { label: "Sin planeación", extraFn: _ => "todos activos" },
     };
 
     function _classifyError(key, msg) {
