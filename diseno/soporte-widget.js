@@ -270,7 +270,7 @@
         body: JSON.stringify({
           sesion_id: sesionId,
           mensaje:   texto,
-          historial: historial.slice(0, -1),
+          historial: historial.slice(0, -1).slice(-20), // últimos 10 exchanges
           contexto,
           user_info: userInfo,
         }),

@@ -145,7 +145,7 @@ async def soporte_chat(payload: ChatRequest):
 
 
 async def _persist_transcript(sb, sesion_id: str, user_msg: str, assistant_msg: str):
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(
         None, _persist_transcript_sync, sb, sesion_id, user_msg, assistant_msg
     )
@@ -262,7 +262,7 @@ async def actualizar_ticket(ticket_id: str, payload: TicketUpdate, request: Requ
 # ── Emails background ─────────────────────────────────────────────────────────
 
 async def _notificar_admin_ticket_async(sb, ticket: dict):
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _notificar_admin_ticket_sync, sb, ticket)
 
 def _notificar_admin_ticket_sync(sb, ticket: dict):
@@ -319,7 +319,7 @@ def _email_resolucion_sync(ticket: dict, resolucion: str):
 # ── Feedback loop — Capa 3 ────────────────────────────────────────────────────
 
 async def _analizar_resolucion_async(sb, ticket_id: str, ticket: dict, resolucion: str):
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, _analizar_resolucion_sync, sb, ticket_id, ticket, resolucion)
 
 def _analizar_resolucion_sync(sb, ticket_id: str, ticket: dict, resolucion: str):
