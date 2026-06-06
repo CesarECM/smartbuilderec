@@ -35,7 +35,6 @@
   }
 
   const BACKEND = 'https://smartbuilderec.onrender.com';
-  const SESSION_KEY = 'sbe_soporte_sesion_v1';
   const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 h
 
   // ── Detección de contexto por página ────────────────────────────────────────
@@ -59,18 +58,21 @@
   }
 
   // ── Gestión de sesión (localStorage) ────────────────────────────────────────
+  // La clave incluye el contexto para evitar reutilizar sesiones entre páginas distintas
+  const _sessionKey = () => `sbe_soporte_sesion_v1_${contexto}`;
+
   function loadSession() {
     try {
-      const raw = localStorage.getItem(SESSION_KEY);
+      const raw = localStorage.getItem(_sessionKey());
       if (!raw) return null;
       const s = JSON.parse(raw);
-      if (Date.now() - s.ts > SESSION_TTL) { localStorage.removeItem(SESSION_KEY); return null; }
+      if (Date.now() - s.ts > SESSION_TTL) { localStorage.removeItem(_sessionKey()); return null; }
       return s;
     } catch { return null; }
   }
 
   function saveSession(id) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, ts: Date.now() }));
+    localStorage.setItem(_sessionKey(), JSON.stringify({ id, ts: Date.now() }));
   }
 
   async function ensureSession(contexto, paginaOrigen) {
