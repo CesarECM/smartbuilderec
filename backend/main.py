@@ -1323,7 +1323,8 @@ def _test_kb_pendientes(tabla, campo, valor, singular, descripcion, invert=False
     r = q.execute()
     n = r.count or 0
     if n > 0:
-        raise ValueError(f"{n} {singular}{'s' if n != 1 else ''} {descripcion}")
+        msg = f"{n} {singular}{'s' if n != 1 else ''} {descripcion}"
+        return {"status": "warning", "pendientes": n, "message": msg}
     return {"pendientes": 0}
 
     integraciones = dict(checks)

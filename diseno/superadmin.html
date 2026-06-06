@@ -257,16 +257,19 @@
     .integ-meta    { font-size:11px; color:var(--c-text-4); }
     .integ-grid    { display:flex; flex-direction:column; gap:8px; }
     .integ-card    { background:var(--c-surface); border:1.5px solid var(--c-border); border-radius:var(--r-lg); padding:13px 15px; display:flex; align-items:center; gap:11px; transition:border-color 0.3s,background 0.3s; }
-    .integ-card.ok    { border-color:#86efac; background:#f0fdf4; }
-    .integ-card.error { border-color:#fca5a5; background:#fff1f2; }
+    .integ-card.ok      { border-color:#86efac; background:#f0fdf4; }
+    .integ-card.warning { border-color:#fcd34d; background:#fffbeb; }
+    .integ-card.error   { border-color:#fca5a5; background:#fff1f2; }
     .integ-icon    { font-size:22px; flex-shrink:0; }
     .integ-body    { flex:1; min-width:0; }
     .integ-name    { font-size:12.5px; font-weight:700; color:var(--c-text); }
     .integ-desc    { font-size:11px; color:var(--c-text-3); margin-top:1px; }
     .integ-badge   { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap; margin-top:3px; display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
-    .integ-badge.ok    { background:#d1fae5; color:#065f46; }
-    .integ-badge.error { background:#fee2e2; color:#991b1b; }
-    .integ-badge.idle  { background:var(--c-surface-2); color:var(--c-text-4); }
+    .integ-badge.ok      { background:#d1fae5; color:#065f46; }
+    .integ-badge.warning { background:#fef3c7; color:#92400e; }
+    .integ-badge.error   { background:#fee2e2; color:#991b1b; }
+    .integ-badge.idle    { background:var(--c-surface-2); color:var(--c-text-4); }
+    .integ-warn-detail   { margin-top:6px; padding:5px 8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:6px; font-size:10px; color:#92400e; line-height:1.5; }
     /* ── Error detail block ─────────────────────────────────────── */
     .integ-error-detail { margin-top:6px; padding:6px 8px; background:#fff8f8; border:1px solid #fca5a5; border-radius:6px; display:flex; flex-direction:column; gap:5px; }
     .integ-error-tag    { font-size:9px; font-weight:800; letter-spacing:.5px; color:#b91c1c; text-transform:uppercase; }
@@ -1154,6 +1157,7 @@
 
           const meta = _INTEG_META[key] || {};
           card.querySelector(".integ-error-detail")?.remove();
+          card.querySelector(".integ-warn-detail")?.remove();
 
           if (info.status === "ok") {
             led.className   = "led led-green";
@@ -1162,6 +1166,15 @@
                         (meta.extraFn ? " · " + meta.extraFn(info) : "");
             badge.textContent = txt.replace(/^ · /, "");
             badge.className   = "integ-badge ok";
+          } else if (info.status === "warning") {
+            led.className     = "led led-yellow";
+            card.className    = "integ-card warning";
+            badge.textContent = info.pendientes + (info.pendientes === 1 ? " pendiente" : " pendientes");
+            badge.className   = "integ-badge warning";
+            const warnDiv = document.createElement("div");
+            warnDiv.className = "integ-warn-detail";
+            warnDiv.textContent = info.message || "";
+            badge.parentNode.appendChild(warnDiv);
           } else {
             const err = _classifyError(key, info.error);
             led.className  = "led led-red";
@@ -1200,11 +1213,12 @@
           }
         });
 
-        // Errores primero
+        // Orden: rojo → naranja → verde
         const grid = document.querySelector(".integ-grid");
         if (grid) {
+          const _orden = c => c.classList.contains("error") ? 0 : c.classList.contains("warning") ? 1 : 2;
           Array.from(grid.querySelectorAll(".integ-card"))
-            .sort((a, b) => (a.classList.contains("error") ? 0 : 1) - (b.classList.contains("error") ? 0 : 1))
+            .sort((a, b) => _orden(a) - _orden(b))
             .forEach(c => grid.appendChild(c));
         }
 
