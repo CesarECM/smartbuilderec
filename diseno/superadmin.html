@@ -955,6 +955,24 @@
     </div>
   </div>
 
+  <!-- Modal editar vigencia de usuario -->
+  <div class="sa-modal-overlay" id="modalVigenciaUser" onclick="cerrarModalVigenciaUser(event)">
+    <div class="sa-modal-box narrow">
+      <button class="sa-modal-close" onclick="cerrarModalVigenciaUser()">✕</button>
+      <div class="sa-modal-title">Editar vigencia de usuario</div>
+      <div class="sa-modal-subtitle" id="vigenciaUserNombre"></div>
+      <div class="renovar-field" style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;color:var(--c-text-2);display:block;margin-bottom:4px">Vigencia hasta</label>
+        <input type="date" id="inputVigenciaUser" class="renovar-input" style="width:100%;box-sizing:border-box">
+      </div>
+      <p class="crear-msg" id="vigenciaUserMsg"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn-secondary" onclick="cerrarModalVigenciaUser()">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarVigenciaUser" onclick="confirmarVigenciaUser()">Guardar vigencia</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1405,7 +1423,8 @@
             <td><span class="status-badge ${u.activo?'badge-activo':'badge-inactivo'}">${u.activo?"Activo":"Inactivo"}</span></td>
             <td>${renderVigenciaBadge(u.vigencia_hasta, u.activo)}</td>
             <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
-            <td><div style="display:flex;gap:5px">
+            <td><div style="display:flex;gap:5px;flex-wrap:wrap">
+              <button class="btn-sm purple" onclick="abrirEditVigenciaUser('${u.id}','${nombre.replace(/'/g,"\\'")}','${u.vigencia_hasta||""}')">Vigencia</button>
               <button class="btn-sm" onclick="abrirReasignar('${u.id}','${nombre.replace(/'/g,"\\'")}','${u.admin_id||""}')">Reasignar</button>
               <button class="btn-sm" onclick="resetPassword('${u.email}','${nombre.replace(/'/g,"\\'")}')">Reset pass</button>
             </div></td>
@@ -1816,6 +1835,42 @@
       if (!e || e.target === document.getElementById("modalRenovar")) {
         document.getElementById("modalRenovar").classList.remove("open");
         _renovarAdminId = null;
+      }
+    }
+
+    // ── Editar vigencia de usuario (solo superadmin) ─────────────
+    let _editVigenciaUserId = null;
+
+    function abrirEditVigenciaUser(userId, nombre, vigenciaActual) {
+      _editVigenciaUserId = userId;
+      document.getElementById("vigenciaUserNombre").textContent = nombre;
+      document.getElementById("inputVigenciaUser").value = vigenciaActual;
+      const msg = document.getElementById("vigenciaUserMsg");
+      msg.textContent = ""; msg.className = "crear-msg";
+      const btn = document.getElementById("btnConfirmarVigenciaUser");
+      btn.disabled = false; btn.textContent = "Guardar vigencia";
+      document.getElementById("modalVigenciaUser").classList.add("open");
+    }
+
+    async function confirmarVigenciaUser() {
+      const vigencia = document.getElementById("inputVigenciaUser").value;
+      const msg = document.getElementById("vigenciaUserMsg");
+      const btn = document.getElementById("btnConfirmarVigenciaUser");
+      if (!vigencia) { msg.textContent = "Selecciona una fecha."; msg.className = "crear-msg error"; return; }
+      btn.disabled = true; btn.textContent = "Guardando...";
+      const { error } = await _supabase.from("profiles")
+        .update({ vigencia_hasta: vigencia }).eq("id", _editVigenciaUserId);
+      btn.disabled = false; btn.textContent = "Guardar vigencia";
+      if (error) { msg.textContent = "Error: " + error.message; msg.className = "crear-msg error"; return; }
+      cerrarModalVigenciaUser();
+      mostrarToast("Vigencia actualizada correctamente");
+      await cargarTodosUsuarios();
+    }
+
+    function cerrarModalVigenciaUser(e) {
+      if (!e || e.target === document.getElementById("modalVigenciaUser")) {
+        document.getElementById("modalVigenciaUser").classList.remove("open");
+        _editVigenciaUserId = null;
       }
     }
 
