@@ -24,8 +24,34 @@ function abrirGrupoActivo() {
 }
 
 (async () => {
-  if (!await authGuard()) return;  // redirige a login.html si no hay sesión
-  await storageSync.init();         // carga el estado desde Supabase
+  if (!await authGuard()) return;
+  await storageSync.init();
+
+  // Si admin/superadmin está editando la planeación de otro usuario, mostrar banner
+  const adminEditing = localStorage.getItem("sbe_admin_editing");
+  if (adminEditing) {
+    const banner = document.createElement("div");
+    banner.id = "admin-edit-banner";
+    banner.style.cssText = [
+      "position:fixed;top:0;left:0;right:0;z-index:9999",
+      "background:#1e40af;color:white;text-align:center",
+      "padding:9px 48px 9px 16px;font-size:13px;font-weight:600",
+      "box-shadow:0 2px 8px rgba(0,0,0,0.3)"
+    ].join(";");
+    banner.textContent = "✏️ Editando planeación de: " + adminEditing + ". Los cambios se guardan automáticamente.";
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "✕";
+    closeBtn.style.cssText = "position:absolute;right:14px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:white;padding:3px 9px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;";
+    closeBtn.onclick = () => {
+      banner.remove();
+      document.body.style.paddingTop = "";
+    };
+    banner.appendChild(closeBtn);
+    document.body.prepend(banner);
+    document.body.style.paddingTop = "42px";
+  }
+
+  abrirGrupoActivo();
 })();
 
 

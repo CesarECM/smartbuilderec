@@ -1481,7 +1481,7 @@
         misCursosEl.innerHTML='<p class="empty-txt">Aún no tienes planeaciones creadas.<br>Usa el botón "+ Nueva planeación" para comenzar.</p>';
       } else {
         misCursosEl.innerHTML=`<div class="table-wrap"><table class="cursos-table">
-          <thead><tr><th>Curso</th><th>Progreso</th><th>Estado</th><th>Actualizado</th></tr></thead>
+          <thead><tr><th>Curso</th><th>Progreso</th><th>Estado</th><th>Actualizado</th><th>Acciones</th></tr></thead>
           <tbody>${misCursos.map(p=>{
             const pct=Math.round(((p.paso_actual-1)/15)*100);
             const fecha=new Date(p.updated_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
@@ -1497,6 +1497,7 @@
               </td>
               <td><span class="status-badge ${completa?"badge-completa":"badge-borrador"}">${completa?"Completo":"Borrador"}</span></td>
               <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
+              <td><button class="btn-sm" onclick="window.open('index.html?planeacion_id=${p.id}','_blank')">Editar wizard</button></td>
             </tr>`;
           }).join("")}</tbody>
         </table></div>`;
@@ -1548,7 +1549,7 @@
           <div class="curso-group-body">
             <div class="table-wrap" style="border-radius:0;border:none">
               <table class="cursos-table">
-                <thead><tr><th>Usuario</th><th>Curso</th><th>Progreso</th><th>Estado</th><th>Actualizado</th></tr></thead>
+                <thead><tr><th>Usuario</th><th>Curso</th><th>Progreso</th><th>Estado</th><th>Actualizado</th><th>Acciones</th></tr></thead>
                 <tbody>${plans.map(p=>{
                   const u=p["profiles"];
                   const uNom=u?[u.nombre,u.apellido].filter(Boolean).join(" ")||u.email:"—";
@@ -1566,6 +1567,7 @@
                     </td>
                     <td><span class="status-badge ${completa?"badge-completa":"badge-borrador"}">${completa?"Completo":"Borrador"}</span></td>
                     <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
+                    <td><button class="btn-sm" onclick="window.open('index.html?planeacion_id=${p.id}','_blank')">Editar wizard</button></td>
                   </tr>`;
                 }).join("")}</tbody>
               </table>
