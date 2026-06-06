@@ -1166,6 +1166,99 @@ def generar_lista_asistencia(data: "PlaneacionRequest") -> bytes:
 def home():
     return {"message": "SmartBuilder EC — API funcionando correctamente"}
 
+
+@app.get("/health/integraciones")
+async def health_integraciones(request: Request):
+    """Verifica el estado de todas las integraciones externas. Solo superadmin."""
+    import time as _time
+    from datetime import datetime, timezone
+
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="Autenticación requerida.")
+    from database import get_supabase as _get_sb
+    sb = _get_sb()
+    prof = sb.table("profiles").select("rol").eq("id", user.get("sub")).single().execute()
+    if not prof.data or prof.data.get("rol") != "super_admin":
+        raise HTTPException(status_code=403, detail="Solo superadmin.")
+
+    loop = asyncio.get_event_loop()
+
+    async def _chk(key: str, fn):
+        try:
+            t0 = _time.time()
+            extra = await loop.run_in_executor(None, fn)
+            return key, {"status": "ok", "latency_ms": round((_time.time() - t0) * 1000), **(extra or {})}
+        except Exception as e:
+            return key, {"status": "error", "error": str(e)[:150]}
+
+    def _test_claude():
+        import anthropic as _ant
+        key = os.getenv("ANTHROPIC_API_KEY", "")
+        if not key:
+            raise ValueError("ANTHROPIC_API_KEY no configurada")
+        c = _ant.Anthropic(api_key=key)
+        c.messages.create(model="claude-haiku-4-5-20251001", max_tokens=1,
+                          messages=[{"role": "user", "content": "ping"}])
+        return {"note": "Haiku + Sonnet disponibles"}
+
+    def _test_openai():
+        from openai import OpenAI as _OAI
+        key = os.getenv("OPENAI_API_KEY", "")
+        if not key:
+            raise ValueError("OPENAI_API_KEY no configurada")
+        c = _OAI(api_key=key)
+        c.embeddings.create(model="text-embedding-3-small", input="ping")
+        return {"model": "text-embedding-3-small"}
+
+    def _test_supabase():
+        r = sb.table("profiles").select("id", count="exact", head=True).execute()
+        return {"perfiles": r.count}
+
+    def _test_pgvector():
+        zero = [0.0] * 1536
+        sb.rpc("match_knowledge", {
+            "query_embedding": zero,
+            "similarity_threshold": 0.9999,
+            "match_count": 1,
+            "filtro_contexto": None,
+        }).execute()
+        r = sb.table("knowledge_faqs").select("id", count="exact", head=True).eq("activo", True).execute()
+        return {"faqs_activas": r.count}
+
+    def _test_resend():
+        key = os.getenv("RESEND_API_KEY", "")
+        if not key or not key.startswith("re_"):
+            raise ValueError("RESEND_API_KEY no configurada")
+        return {"from": os.getenv("RESEND_FROM_EMAIL", "configurado")}
+
+    def _test_stripe():
+        import stripe as _stripe
+        key = os.getenv("STRIPE_SECRET_KEY", "")
+        if not key or not key.startswith("sk_"):
+            raise ValueError("STRIPE_SECRET_KEY no configurada")
+        _stripe.api_key = key
+        _stripe.Balance.retrieve()
+        return {"mode": "test" if "test" in key else "live"}
+
+    checks = await asyncio.gather(
+        _chk("claude",    _test_claude),
+        _chk("openai",    _test_openai),
+        _chk("supabase",  _test_supabase),
+        _chk("pgvector",  _test_pgvector),
+        _chk("resend",    _test_resend),
+        _chk("stripe",    _test_stripe),
+    )
+
+    integraciones = dict(checks)
+    todas_ok = all(v["status"] == "ok" for v in integraciones.values())
+
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "todas_ok": todas_ok,
+        "integraciones": integraciones,
+    }
+
 @app.get("/perfil")
 def get_perfil(request: Request):
     from database import get_supabase

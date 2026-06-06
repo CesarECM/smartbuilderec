@@ -250,6 +250,34 @@
     }
     .tpl-preview iframe { width: 100%; min-height: 300px; border: none; display: block; }
 
+    /* ── Estado de integraciones ────────────────────────────────── */
+    .integ-section { margin-top: 20px; }
+    .integ-header  { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:12px; flex-wrap:wrap; }
+    .integ-title   { font-size:14px; font-weight:700; color:var(--c-text); display:flex; align-items:center; gap:8px; }
+    .integ-meta    { font-size:11px; color:var(--c-text-4); }
+    .integ-grid    { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+    .integ-card    { background:var(--c-surface); border:1.5px solid var(--c-border); border-radius:var(--r-lg); padding:13px 15px; display:flex; align-items:center; gap:11px; transition:border-color 0.3s,background 0.3s; }
+    .integ-card.ok    { border-color:#86efac; background:#f0fdf4; }
+    .integ-card.error { border-color:#fca5a5; background:#fff1f2; }
+    .integ-icon    { font-size:22px; flex-shrink:0; }
+    .integ-body    { flex:1; min-width:0; }
+    .integ-name    { font-size:12.5px; font-weight:700; color:var(--c-text); }
+    .integ-desc    { font-size:11px; color:var(--c-text-3); margin-top:1px; }
+    .integ-badge   { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap; margin-top:3px; display:inline-block; }
+    .integ-badge.ok    { background:#d1fae5; color:#065f46; }
+    .integ-badge.error { background:#fee2e2; color:#991b1b; }
+    .integ-badge.idle  { background:var(--c-surface-2); color:var(--c-text-4); }
+    /* LED dot */
+    .led { width:11px; height:11px; border-radius:50%; flex-shrink:0; transition:background 0.4s,box-shadow 0.4s; }
+    .led-green  { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); animation:led-pulse 2.4s ease-in-out infinite; }
+    .led-red    { background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.2); }
+    .led-yellow { background:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,.2); }
+    .led-gray   { background:#d1d5db; }
+    @keyframes led-pulse {
+      0%,100% { box-shadow:0 0 0 3px rgba(34,197,94,.2); }
+      50%      { box-shadow:0 0 0 6px rgba(34,197,94,.35); }
+    }
+
     /* ── Soporte — inner tabs ────────────────────────────────────── */
     .sp-tab-bar { display:flex; border-bottom:2px solid var(--c-border); margin-bottom:24px; overflow-x:auto; gap:0; }
     .sp-tab-btn { background:none; border:none; border-bottom:3px solid transparent; padding:12px 20px; font-size:13px; font-weight:600; color:var(--c-text-3); cursor:pointer; font-family:inherit; transition:all 0.15s; margin-bottom:-2px; white-space:nowrap; display:flex; align-items:center; gap:7px; }
@@ -350,6 +378,74 @@
           <div><div class="stat-num" id="statCreditos">—</div><div class="stat-label">Créditos distribuidos</div></div>
         </div>
       </div>
+
+      <!-- Estado de integraciones -->
+      <div class="integ-section">
+        <div class="integ-header">
+          <div class="integ-title">
+            Estado de integraciones
+            <span class="integ-meta" id="integLastCheck"></span>
+          </div>
+          <button class="btn-sm" id="btnVerificar" onclick="verificarIntegraciones()">↺ Verificar</button>
+        </div>
+        <div class="integ-grid">
+          <div class="integ-card" id="integ-claude">
+            <span class="led led-gray" id="led-claude"></span>
+            <div class="integ-icon">🤖</div>
+            <div class="integ-body">
+              <div class="integ-name">Claude AI</div>
+              <div class="integ-desc">Chat · Feedback loop</div>
+              <span class="integ-badge idle" id="badge-claude">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-openai">
+            <span class="led led-gray" id="led-openai"></span>
+            <div class="integ-icon">⚡</div>
+            <div class="integ-body">
+              <div class="integ-name">OpenAI</div>
+              <div class="integ-desc">Embeddings · RAG</div>
+              <span class="integ-badge idle" id="badge-openai">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-supabase">
+            <span class="led led-gray" id="led-supabase"></span>
+            <div class="integ-icon">🗄️</div>
+            <div class="integ-body">
+              <div class="integ-name">Supabase</div>
+              <div class="integ-desc">Base de datos · Auth</div>
+              <span class="integ-badge idle" id="badge-supabase">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-pgvector">
+            <span class="led led-gray" id="led-pgvector"></span>
+            <div class="integ-icon">🔍</div>
+            <div class="integ-body">
+              <div class="integ-name">pgvector / RAG</div>
+              <div class="integ-desc">Búsqueda semántica</div>
+              <span class="integ-badge idle" id="badge-pgvector">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-resend">
+            <span class="led led-gray" id="led-resend"></span>
+            <div class="integ-icon">📧</div>
+            <div class="integ-body">
+              <div class="integ-name">Resend Email</div>
+              <div class="integ-desc">Notificaciones · Alertas</div>
+              <span class="integ-badge idle" id="badge-resend">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-stripe">
+            <span class="led led-gray" id="led-stripe"></span>
+            <div class="integ-icon">💳</div>
+            <div class="integ-body">
+              <div class="integ-name">Stripe</div>
+              <div class="integ-desc">Pagos · Suscripciones</div>
+              <span class="integ-badge idle" id="badge-stripe">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══ Admins ═════════════════════════════════════════════════ -->
@@ -910,6 +1006,79 @@
       document.getElementById("headerNombre").textContent =
         [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
       await Promise.all([cargarStats(), cargarAdmins()]);
+      // Verificar integraciones en segundo plano (no bloquea la UI)
+      setTimeout(verificarIntegraciones, 800);
+    }
+
+    // ── Integraciones ─────────────────────────────────────────────
+    const _INTEG_META = {
+      claude:   { label: "Claude AI",      extraFn: d => d.note || "OK" },
+      openai:   { label: "OpenAI",         extraFn: d => d.model || "OK" },
+      supabase: { label: "Supabase",       extraFn: d => d.perfiles != null ? `${d.perfiles} perfiles` : "OK" },
+      pgvector: { label: "pgvector",       extraFn: d => d.faqs_activas != null ? `${d.faqs_activas} FAQs` : "OK" },
+      resend:   { label: "Resend",         extraFn: d => d.from || "OK" },
+      stripe:   { label: "Stripe",         extraFn: d => d.mode ? d.mode.toUpperCase() : "OK" },
+    };
+
+    async function verificarIntegraciones() {
+      const btn = document.getElementById("btnVerificar");
+      if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
+
+      // Poner todos en estado "verificando"
+      Object.keys(_INTEG_META).forEach(key => {
+        const led   = document.getElementById("led-"   + key);
+        const badge = document.getElementById("badge-" + key);
+        const card  = document.getElementById("integ-" + key);
+        if (led)   { led.className   = "led led-yellow"; }
+        if (badge) { badge.textContent = "…"; badge.className = "integ-badge idle"; }
+        if (card)  { card.className  = "integ-card"; }
+      });
+
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/health/integraciones`, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        Object.entries(data.integraciones).forEach(([key, info]) => {
+          const led   = document.getElementById("led-"   + key);
+          const badge = document.getElementById("badge-" + key);
+          const card  = document.getElementById("integ-" + key);
+          if (!led) return;
+
+          const meta = _INTEG_META[key] || {};
+
+          if (info.status === "ok") {
+            led.className   = "led led-green";
+            card.className  = "integ-card ok";
+            const txt = (info.latency_ms != null ? `${info.latency_ms} ms` : "") +
+                        (meta.extraFn ? " · " + meta.extraFn(info) : "");
+            badge.textContent = txt.replace(/^ · /, "");
+            badge.className   = "integ-badge ok";
+          } else {
+            led.className   = "led led-red";
+            card.className  = "integ-card error";
+            badge.textContent = "Error";
+            badge.className   = "integ-badge error";
+            badge.title       = info.error || "Error desconocido";
+          }
+        });
+
+        const ts = document.getElementById("integLastCheck");
+        if (ts) {
+          const hora = new Date(data.timestamp).toLocaleTimeString("es-MX", {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+          ts.textContent = `· verificado ${hora}`;
+        }
+
+      } catch(e) {
+        Object.keys(_INTEG_META).forEach(key => {
+          const led = document.getElementById("led-" + key);
+          if (led) led.className = "led led-gray";
+        });
+        mostrarToast("Error al verificar integraciones: " + e.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "↺ Verificar"; }
+      }
     }
 
     // ── Stats ─────────────────────────────────────────────────────
