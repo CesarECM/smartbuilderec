@@ -1311,7 +1311,20 @@ async def health_integraciones(request: Request):
         _chk("docs",          _test_docs),
         _chk("stripe_pagos",  _test_stripe_pagos),
         _chk("tokens_ia",     _test_tokens_ia),
+        _chk("tickets_kb",    lambda: _test_kb_pendientes("soporte_tickets",    "estado", "resuelto",  "ticket",     "sin resolver")),
+        _chk("sugerencias_kb",lambda: _test_kb_pendientes("soporte_sugerencias","estado", "pendiente", "sugerencia", "sin aplicar", invert=True)),
     )
+
+def _test_kb_pendientes(tabla, campo, valor, singular, descripcion, invert=False):
+    from database import get_supabase as _gsb
+    sb = _gsb()
+    q = sb.table(tabla).select("id", count="exact", head=True)
+    q = q.eq(campo, valor) if invert else q.neq(campo, valor)
+    r = q.execute()
+    n = r.count or 0
+    if n > 0:
+        raise ValueError(f"{n} {singular}{'s' if n != 1 else ''} {descripcion}")
+    return {"pendientes": 0}
 
     integraciones = dict(checks)
     todas_ok = all(v["status"] == "ok" for v in integraciones.values())

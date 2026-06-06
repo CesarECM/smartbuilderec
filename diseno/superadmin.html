@@ -474,6 +474,24 @@
               <span class="integ-badge idle" id="badge-tokens_ia">—</span>
             </div>
           </div>
+          <div class="integ-card" id="integ-tickets_kb">
+            <span class="led led-gray" id="led-tickets_kb"></span>
+            <div class="integ-icon">🎫</div>
+            <div class="integ-body">
+              <div class="integ-name">Tickets Soporte</div>
+              <div class="integ-desc">Sin resolver</div>
+              <span class="integ-badge idle" id="badge-tickets_kb">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-sugerencias_kb">
+            <span class="led led-gray" id="led-sugerencias_kb"></span>
+            <div class="integ-icon">💡</div>
+            <div class="integ-body">
+              <div class="integ-name">Sugerencias IA</div>
+              <div class="integ-desc">Sin aplicar</div>
+              <span class="integ-badge idle" id="badge-sugerencias_kb">—</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1080,13 +1098,17 @@
       resend:   { label: "Resend",         extraFn: d => d.from || "OK" },
       stripe:       { label: "Stripe",        extraFn: d => d.mode ? d.mode.toUpperCase() : "OK" },
       docs:         { label: "Generador",    extraFn: _ => "DOCX + PPTX" },
-      stripe_pagos: { label: "Último Pago",  extraFn: d => d.monto ? `${d.monto} · ${d.hace}` : (d.ultimo || "OK") },
-      tokens_ia:    { label: "Tokens IA",    extraFn: d => d.tokens ? `${d.tokens} tok · ${d.costo}` : "OK" },
+      stripe_pagos:    { label: "Último Pago",    extraFn: d => d.monto ? `${d.monto} · ${d.hace}` : (d.ultimo || "OK") },
+      tokens_ia:       { label: "Tokens IA",     extraFn: d => d.tokens ? `${d.tokens} tok · ${d.costo}` : "OK" },
+      tickets_kb:      { label: "Tickets",        extraFn: _ => "al día" },
+      sugerencias_kb:  { label: "Sugerencias IA", extraFn: _ => "al día" },
     };
 
     function _classifyError(key, msg) {
       if (!msg) return { tag: "SIN_DETALLE", desc: "El servicio no retornó información de error." };
       const m = msg.toLowerCase();
+      if (m.includes("sin resolver") || m.includes("sin aplicar") || m.includes("pendiente"))
+        return { tag: "PENDIENTES", desc: msg };
       if (m.includes("no configurada") || m.includes("not configured") || m.includes("missing"))
         return { tag: "VAR_FALTANTE", desc: msg };
       if (m.includes("invalid api key") || m.includes("authentication") || m.includes("unauthorized") || m.includes("api key") || m.includes("401"))
