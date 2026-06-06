@@ -51,6 +51,16 @@ function abrirGrupoActivo() {
     document.body.style.paddingTop = "42px";
   }
 
+  // Inicializar wizard DESPUÉS de que Supabase cargó los datos al cache
+  cargarDatosCurso();
+  if (localStorage.getItem("ec0217_datos_completo") === "true") {
+    document.getElementById("nav-datos")?.classList.add("completed");
+    document.getElementById("nav-objetivos")?.classList.remove("disabled");
+    mostrarSeccionPrincipal("seccionObjetivos");
+  } else {
+    mostrarSeccionPrincipal("seccionDatos");
+  }
+
   abrirGrupoActivo();
 })();
 
@@ -301,17 +311,6 @@ if (btnCopiarInstructor) {
       document.getElementById('err-disenador').style.display = 'none';
     }
   });
-}
-
-cargarDatosCurso();
-
-if (localStorage.getItem('ec0217_datos_completo') === 'true') {
-  document.getElementById("nav-datos")?.classList.add("completed");
-  document.getElementById("nav-objetivos")?.classList.remove("disabled");
-
-  mostrarSeccionPrincipal("seccionObjetivos");
-} else {
-  mostrarSeccionPrincipal("seccionDatos");
 }
 
 document.getElementById("nav-datos")?.addEventListener("click", () => {

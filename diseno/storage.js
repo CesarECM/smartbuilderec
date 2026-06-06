@@ -1,19 +1,19 @@
-// ─── storage.js — Sincronización transparente localStorage ↔ Supabase ────────
+// ─── storage.js — Sincronización localStorage ↔ Supabase ─────────────────────
 // Requiere: supabase-client.js y auth.js cargados ANTES en el HTML.
 //
-// MODO NORMAL (usuario propio):
-//   ec0217_* y sbe_planeacion_id viven en localStorage (compartido entre tabs).
+// ARQUITECTURA:
+//   Los datos del wizard (ec0217_*) NUNCA se guardan en localStorage real.
+//   Viven en un _cache en memoria (un objeto JS por pestaña).
+//   localStorage solo conserva sbe_planeacion_id (puntero al curso activo).
 //
-// MODO EDICIÓN ADMIN (admin editando planeación de otro usuario):
-//   ec0217_* y sbe_planeacion_id se redirigen automáticamente a sessionStorage,
-//   que es POR-PESTAÑA. El localStorage del admin queda completamente intacto.
-//   app.js y shared.js no saben que están en modo admin — la redirección es
-//   transparente gracias a los interceptores de localStorage.
+//   Ventajas:
+//   - Cero contaminación entre pestañas (cada tab tiene su propio _cache)
+//   - Cero datos obsoletos: en cada carga de página se fetcha Supabase
+//   - Los interceptores de localStorage son transparentes para app.js/shared.js
 //
-// Flags de estado:
-//   sessionStorage["sbe_admin_mode"]    = "1"         (activo en esta pestaña)
-//   sessionStorage["sbe_planeacion_id"] = "<uuid>"    (planeación editada)
-//   localStorage  ["sbe_admin_editing"] = "<nombre>"  (para el banner en app.js)
+// MODO ADMIN-EDIT (?planeacion_id=XXX):
+//   sbe_planeacion_id también va al _cache (no a localStorage),
+//   así que el localStorage del admin nunca se toca.
 // ─────────────────────────────────────────────────────────────────────────────
 
 (function () {
@@ -32,96 +32,69 @@
   let _syncing      = false;
   let _initializing = false;
 
-  // Inicializar _adminMode desde sessionStorage para sobrevivir refreshes
-  let _adminMode = sessionStorage.getItem("sbe_admin_mode") === "1";
+  // Modo admin: se edita la planeación de otro usuario
+  let _adminMode = false;
+
+  // Cache en memoria: reemplaza localStorage para ec0217_* y sbe_planeacion_id
+  // Cada pestaña tiene el suyo. Se vacía al cerrar/refrescar la pestaña.
+  const _cache = {};
 
   const _origSetItem    = localStorage.setItem.bind(localStorage);
   const _origGetItem    = localStorage.getItem.bind(localStorage);
   const _origRemoveItem = localStorage.removeItem.bind(localStorage);
 
-  // ── Interceptores de localStorage ───────────────────────────────────────
-  // Redirigen ec0217_* y sbe_planeacion_id a sessionStorage cuando _adminMode.
-  // app.js y shared.js usan localStorage sin cambios; la redirección es opaca.
+  // ── ¿Va al cache esta clave? ─────────────────────────────────────────────
+  // ec0217_* → siempre al cache (nunca a localStorage real)
+  // sbe_planeacion_id → al cache solo en admin mode (en normal va a localStorage)
+  function _esClaveCache(key) {
+    if (key.startsWith("ec0217_")) return true;
+    if (key === "sbe_planeacion_id" && _adminMode) return true;
+    return false;
+  }
+
+  // ── Interceptores de localStorage ────────────────────────────────────────
+  // app.js y shared.js siguen usando localStorage normalmente.
+  // Los interceptores redirigen silenciosamente al cache.
 
   localStorage.setItem = function (key, value) {
-    if (_adminMode && _esClaveWizard(key)) {
-      sessionStorage.setItem(key, value);
+    if (_esClaveCache(key)) {
+      _cache[key] = value;
       if (!_initializing && key.startsWith("ec0217_")) scheduleSyncToSupabase();
       return;
     }
     _origSetItem(key, value);
-    if (!_initializing && key.startsWith("ec0217_")) scheduleSyncToSupabase();
   };
 
   localStorage.getItem = function (key) {
-    if (_adminMode && _esClaveWizard(key)) return sessionStorage.getItem(key);
+    if (_esClaveCache(key)) {
+      return Object.prototype.hasOwnProperty.call(_cache, key) ? _cache[key] : null;
+    }
     return _origGetItem(key);
   };
 
   localStorage.removeItem = function (key) {
-    if (_adminMode && _esClaveWizard(key)) { sessionStorage.removeItem(key); return; }
+    if (_esClaveCache(key)) { delete _cache[key]; return; }
     _origRemoveItem(key);
   };
-
-  function _esClaveWizard(key) {
-    return key.startsWith("ec0217_") || key === "sbe_planeacion_id";
-  }
-
-  // ── Store activo según modo ───────────────────────────────────────────────
-  // Devuelve sessionStorage en admin mode, localStorage en modo normal.
-  // Usado por recolectarEstado() y restaurarEstado() que iteran directamente.
-  function _store() { return _adminMode ? sessionStorage : localStorage; }
-
-  // ── Activar / desactivar modo admin ─────────────────────────────────────
-
-  function _activarAdminMode(planeacionId, ownerName) {
-    _adminMode = true;
-    sessionStorage.setItem("sbe_admin_mode",     "1");
-    sessionStorage.setItem("sbe_planeacion_id",  planeacionId);
-    _origSetItem("sbe_admin_editing", ownerName); // localStorage: persiste el banner
-  }
-
-  function _desactivarAdminMode() {
-    _adminMode = false;
-    sessionStorage.removeItem("sbe_admin_mode");
-    _limpiarEc0217(sessionStorage);
-    sessionStorage.removeItem("sbe_planeacion_id");
-    _origRemoveItem("sbe_admin_editing");
-  }
-
-  function _limpiarEc0217(store) {
-    for (let i = store.length - 1; i >= 0; i--) {
-      const k = store.key(i);
-      if (k && k.startsWith("ec0217_")) store.removeItem(k);
-    }
-  }
 
   // ── Recolectar / restaurar estado del wizard ─────────────────────────────
 
   function recolectarEstado() {
-    const store  = _store();
     const estado = {};
-    for (let i = 0; i < store.length; i++) {
-      const key = store.key(i);
-      if (!key || !key.startsWith("ec0217_")) continue;
+    Object.keys(_cache).forEach(key => {
+      if (!key.startsWith("ec0217_")) return;
       const shortKey = key.slice(7);
-      const raw = store.getItem(key);
+      const raw = _cache[key];
       try   { estado[shortKey] = JSON.parse(raw); }
       catch { estado[shortKey] = raw; }
-    }
+    });
     return estado;
   }
 
   function restaurarEstado(datos) {
     if (!datos || typeof datos !== "object") return;
-    // Escribir directamente al store correcto, sin pasar por el interceptor
-    // (que no existe en sessionStorage y causaría doble sync en localStorage).
-    const escribir = _adminMode
-      ? (k, v) => sessionStorage.setItem(k, v)
-      : (k, v) => _origSetItem(k, v);
-
     Object.entries(datos).forEach(([shortKey, val]) => {
-      escribir(`ec0217_${shortKey}`, typeof val === "string" ? val : JSON.stringify(val));
+      _cache[`ec0217_${shortKey}`] = typeof val === "string" ? val : JSON.stringify(val);
     });
   }
 
@@ -132,6 +105,12 @@
       if (val === "true" || val === true) ultimo = i + 1;
     });
     return Math.min(ultimo + 1, 16);
+  }
+
+  function _limpiarCache() {
+    Object.keys(_cache).forEach(key => {
+      if (key.startsWith("ec0217_") || key === "sbe_planeacion_id") delete _cache[key];
+    });
   }
 
   // ── Sincronización a Supabase ─────────────────────────────────────────────
@@ -153,18 +132,19 @@
 
       const nombreCurso  = estado.datos?.nombreCurso || "Sin título";
       const pasoActual   = calcularPasoActual(estado);
-      // localStorage.getItem está interceptado: devuelve sessionStorage en admin mode
+      // getItem ya va al cache cuando corresponde
       const planeacionId = localStorage.getItem("sbe_planeacion_id");
 
       if (planeacionId) {
-        // UPDATE — sin filtro user_id; la RLS aplica permisos correctos
+        // UPDATE — RLS aplica permisos (propio, admin del usuario, o superadmin)
         const { error } = await _supabase
           .from("planeaciones")
           .update({ datos: estado, nombre_curso: nombreCurso, paso_actual: pasoActual })
           .eq("id", planeacionId);
         if (error) console.warn("[storage] Error al actualizar:", error.message);
-      } else {
-        // INSERT: nueva planeación propia del usuario. Límite solo para rol=user.
+
+      } else if (!_adminMode) {
+        // INSERT solo en modo normal (nunca crear planeación en modo admin-edit)
         const { data: perfil } = await _supabase
           .from("profiles").select("rol").eq("id", session.user.id).single();
 
@@ -173,7 +153,7 @@
             .from("planeaciones")
             .select("id", { count: "exact", head: true })
             .eq("user_id", session.user.id);
-          if (total >= 3) { console.warn("[storage] Límite de 3 cursos alcanzado."); return; }
+          if (total >= 3) { console.warn("[storage] Límite de 3 cursos."); return; }
         }
 
         const { data, error } = await _supabase
@@ -181,21 +161,21 @@
           .insert({ user_id: session.user.id, nombre_curso: nombreCurso, datos: estado, paso_actual: pasoActual })
           .select("id").single();
         if (error) console.warn("[storage] Error al crear:", error.message);
-        if (data?.id) _origSetItem("sbe_planeacion_id", data.id);
+        // Guardar el nuevo ID: en cache (admin) o localStorage (normal)
+        if (data?.id) localStorage.setItem("sbe_planeacion_id", data.id);
       }
     } finally {
       _syncing = false;
     }
   }
 
-  // ── Inicialización ────────────────────────────────────────────────────────
+  // ── Inicialización: fuente de verdad = Supabase ──────────────────────────
 
   async function init() {
     const params = new URLSearchParams(window.location.search);
 
-    // ?new=1 → nuevo curso propio (sale de admin mode si estaba activo)
+    // ?new=1 → nuevo curso
     if (params.get("new") === "1") {
-      if (_adminMode) _desactivarAdminMode();
       limpiar();
       const url = new URL(window.location.href);
       url.searchParams.delete("new");
@@ -206,7 +186,7 @@
     const session = await getSession();
     if (!session) return;
 
-    // ?planeacion_id=XXX → cargar planeación específica
+    // ?planeacion_id=XXX → modo edición admin (cargar planeación específica)
     const targetId = params.get("planeacion_id");
     if (targetId) {
       _initializing = true;
@@ -223,25 +203,25 @@
           return;
         }
 
+        _limpiarCache();
+
         if (data.user_id !== session.user.id) {
-          // ── Planeación de OTRO usuario: activar admin mode ───────────────
-          // Los datos van a sessionStorage; localStorage del admin NO se toca.
+          // Planeación de otro usuario: sbe_planeacion_id va al cache (no a localStorage)
+          _adminMode = true;
+          _cache["sbe_planeacion_id"] = targetId;
           const owner = data["profiles"];
           const ownerName = owner
             ? ([owner.nombre, owner.apellido].filter(Boolean).join(" ") || owner.email)
             : "otro usuario";
-          _activarAdminMode(targetId, ownerName);
-          _limpiarEc0217(sessionStorage);           // limpiar sesión anterior
-          sessionStorage.setItem("sbe_planeacion_id", targetId); // restaurar tras limpiar
-          restaurarEstado(data.datos || {});
+          _origSetItem("sbe_admin_editing", ownerName);
         } else {
-          // ── Planeación propia vía URL param ──────────────────────────────
-          if (_adminMode) _desactivarAdminMode();   // salir de admin mode si estaba
-          _origRemoveItem("sbe_admin_editing");
-          _limpiarEc0217(localStorage);
+          // Planeación propia vía URL: va a localStorage normalmente
+          _adminMode = false;
           _origSetItem("sbe_planeacion_id", targetId);
-          restaurarEstado(data.datos || {});
+          _origRemoveItem("sbe_admin_editing");
         }
+
+        restaurarEstado(data.datos || {});
 
         const url = new URL(window.location.href);
         url.searchParams.delete("planeacion_id");
@@ -252,8 +232,8 @@
       return;
     }
 
-    // Flujo normal: cargar desde el store activo (localStorage o sessionStorage)
-    const planeacionId = _store().getItem("sbe_planeacion_id");
+    // Flujo normal: cargar por sbe_planeacion_id
+    const planeacionId = _origGetItem("sbe_planeacion_id"); // lee localStorage real
     if (!planeacionId) return;
 
     _initializing = true;
@@ -265,14 +245,14 @@
         .single();
 
       if (error || !data) {
-        console.warn("[storage] Planeación no encontrada. Limpiando estado.");
-        if (_adminMode) _desactivarAdminMode();
-        else { _origRemoveItem("sbe_planeacion_id"); _origRemoveItem("sbe_admin_editing"); }
+        console.warn("[storage] Planeación no encontrada. Limpiando.");
+        _origRemoveItem("sbe_planeacion_id");
+        _origRemoveItem("sbe_admin_editing");
+        _limpiarCache();
         return;
       }
 
-      // Limpiar ec0217_* del store activo antes de restaurar (evita mezcla de datos)
-      _limpiarEc0217(_store());
+      _limpiarCache();
       restaurarEstado(data.datos || {});
     } finally {
       _initializing = false;
@@ -283,12 +263,14 @@
 
   function limpiar() {
     clearTimeout(_syncTimer);
-    if (_adminMode) {
-      _desactivarAdminMode();
-    } else {
-      _origRemoveItem("sbe_planeacion_id");
-      _origRemoveItem("sbe_admin_editing");
-      _limpiarEc0217(localStorage);
+    _limpiarCache();
+    _adminMode = false;
+    _origRemoveItem("sbe_planeacion_id");
+    _origRemoveItem("sbe_admin_editing");
+    // Por si quedaron datos de ec0217_* en localStorage de versiones anteriores
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("ec0217_")) _origRemoveItem(k);
     }
   }
 
