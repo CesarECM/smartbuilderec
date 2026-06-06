@@ -92,7 +92,21 @@ def retrieve_knowledge(
             "match_count": count,
             "filtro_contexto": contexto,
         }).execute()
-        return result.data or []
+        docs = result.data or []
+
+        # Fallback: si no hay resultados, reintentar con threshold más bajo
+        if not docs and threshold > 0.50:
+            result2 = supabase.rpc("match_knowledge", {
+                "query_embedding": embedding,
+                "similarity_threshold": 0.50,
+                "match_count": count,
+                "filtro_contexto": contexto,
+            }).execute()
+            docs = result2.data or []
+            if docs:
+                print(f"[RAG] threshold adaptativo 0.50 → {len(docs)} docs")
+
+        return docs
     except Exception as e:
         print(f"[RAG] Error en match_knowledge: {e}")
         return []
