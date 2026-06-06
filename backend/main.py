@@ -1318,6 +1318,16 @@ async def health_integraciones(request: Request):
         _chk("usuarios_sin_plan",  _test_usuarios_sin_plan),
     )
 
+    integraciones = dict(checks)
+    todas_ok = all(v["status"] == "ok" for v in integraciones.values())
+
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "todas_ok": todas_ok,
+        "integraciones": integraciones,
+    }
+
+
 def _test_vigencias_proximas():
     from database import get_supabase as _gsb
     from datetime import date, timedelta
@@ -1377,14 +1387,6 @@ def _test_kb_pendientes(tabla, campo, valor, singular, descripcion, invert=False
         return {"status": "warning", "pendientes": n, "message": msg}
     return {"pendientes": 0}
 
-    integraciones = dict(checks)
-    todas_ok = all(v["status"] == "ok" for v in integraciones.values())
-
-    return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "todas_ok": todas_ok,
-        "integraciones": integraciones,
-    }
 
 @app.get("/perfil")
 def get_perfil(request: Request):
