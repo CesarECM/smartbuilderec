@@ -447,6 +447,33 @@
               <span class="integ-badge idle" id="badge-stripe">—</span>
             </div>
           </div>
+          <div class="integ-card" id="integ-docs">
+            <span class="led led-gray" id="led-docs"></span>
+            <div class="integ-icon">📄</div>
+            <div class="integ-body">
+              <div class="integ-name">Generador Docs</div>
+              <div class="integ-desc">DOCX · PPTX</div>
+              <span class="integ-badge idle" id="badge-docs">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-stripe_pagos">
+            <span class="led led-gray" id="led-stripe_pagos"></span>
+            <div class="integ-icon">💰</div>
+            <div class="integ-body">
+              <div class="integ-name">Último Pago</div>
+              <div class="integ-desc">Stripe · Checkout</div>
+              <span class="integ-badge idle" id="badge-stripe_pagos">—</span>
+            </div>
+          </div>
+          <div class="integ-card" id="integ-tokens_ia">
+            <span class="led led-gray" id="led-tokens_ia"></span>
+            <div class="integ-icon">🧮</div>
+            <div class="integ-body">
+              <div class="integ-name">Tokens IA Hoy</div>
+              <div class="integ-desc">OpenAI · Costo estimado</div>
+              <span class="integ-badge idle" id="badge-tokens_ia">—</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1051,7 +1078,10 @@
       supabase: { label: "Supabase",       extraFn: d => d.perfiles != null ? `${d.perfiles} perfiles` : "OK" },
       pgvector: { label: "pgvector",       extraFn: d => d.faqs_activas != null ? `${d.faqs_activas} FAQs` : "OK" },
       resend:   { label: "Resend",         extraFn: d => d.from || "OK" },
-      stripe:   { label: "Stripe",         extraFn: d => d.mode ? d.mode.toUpperCase() : "OK" },
+      stripe:       { label: "Stripe",        extraFn: d => d.mode ? d.mode.toUpperCase() : "OK" },
+      docs:         { label: "Generador",    extraFn: _ => "DOCX + PPTX" },
+      stripe_pagos: { label: "Último Pago",  extraFn: d => d.monto ? `${d.monto} · ${d.hace}` : (d.ultimo || "OK") },
+      tokens_ia:    { label: "Tokens IA",    extraFn: d => d.tokens ? `${d.tokens} tok · ${d.costo}` : "OK" },
     };
 
     function _classifyError(key, msg) {

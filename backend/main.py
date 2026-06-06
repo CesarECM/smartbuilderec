@@ -1245,13 +1245,72 @@ async def health_integraciones(request: Request):
         client.balance.retrieve()
         return {"mode": "test" if "test" in key else "live"}
 
+    def _test_docs():
+        from docx import Document as _Doc
+        from pptx import Presentation as _Prs
+        import io
+        buf = io.BytesIO()
+        _Doc().save(buf)
+        if buf.tell() == 0:
+            raise ValueError("python-docx generó buffer vacío")
+        buf2 = io.BytesIO()
+        _Prs().save(buf2)
+        if buf2.tell() == 0:
+            raise ValueError("python-pptx generó buffer vacío")
+        return {"docx": "ok", "pptx": "ok"}
+
+    def _test_stripe_pagos():
+        import stripe as _stripe
+        key = os.getenv("STRIPE_SECRET_KEY", "")
+        if not key or not key.startswith("sk_"):
+            raise ValueError("STRIPE_SECRET_KEY no configurada")
+        client = _stripe.StripeClient(key)
+        sessions = client.checkout.sessions.list(params={"limit": 1, "payment_status": "paid"})
+        if not sessions.data:
+            return {"ultimo": "sin pagos aún", "monto": None}
+        s = sessions.data[0]
+        diff = int(_time.time() - s.created)
+        if diff < 3600:    hace = f"hace {diff // 60} min"
+        elif diff < 86400: hace = f"hace {diff // 3600}h"
+        else:              hace = f"hace {diff // 86400}d"
+        monto = f"${(s.amount_total or 0) // 100:,.0f} MXN"
+        return {"monto": monto, "hace": hace}
+
+    def _test_tokens_ia():
+        import httpx as _httpx
+        from datetime import date as _date
+        key = os.getenv("OPENAI_API_KEY", "")
+        if not key:
+            raise ValueError("OPENAI_API_KEY no configurada")
+        today = _date.today().isoformat()
+        r = _httpx.get(
+            "https://api.openai.com/v1/usage",
+            params={"date": today},
+            headers={"Authorization": f"Bearer {key}"},
+            timeout=8,
+        )
+        if r.status_code == 403:
+            raise ValueError("Permiso 'Usage' no habilitado en esta API key — actívalo en dashboard.openai.com")
+        if r.status_code != 200:
+            raise ValueError(f"OpenAI Usage API respondió HTTP {r.status_code}")
+        entries = r.json().get("data", [])
+        tokens = sum(
+            d.get("n_context_tokens_total", 0) + d.get("n_generated_tokens_total", 0)
+            for d in entries
+        )
+        costo = round(tokens * 0.00000035, 4)
+        return {"tokens": f"{tokens:,}", "costo": f"~${costo:.3f} USD"}
+
     checks = await asyncio.gather(
-        _chk("claude",    _test_claude),
-        _chk("openai",    _test_openai),
-        _chk("supabase",  _test_supabase),
-        _chk("pgvector",  _test_pgvector),
-        _chk("resend",    _test_resend),
-        _chk("stripe",    _test_stripe),
+        _chk("claude",        _test_claude),
+        _chk("openai",        _test_openai),
+        _chk("supabase",      _test_supabase),
+        _chk("pgvector",      _test_pgvector),
+        _chk("resend",        _test_resend),
+        _chk("stripe",        _test_stripe),
+        _chk("docs",          _test_docs),
+        _chk("stripe_pagos",  _test_stripe_pagos),
+        _chk("tokens_ia",     _test_tokens_ia),
     )
 
     integraciones = dict(checks)
