@@ -248,6 +248,37 @@
 #sbe-send-btn:hover    { background: #314E7A; transform: scale(1.05); }
 #sbe-send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
+/* ── Votación ────────────────────────────────────────────────────────────── */
+
+.sbe-vote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding-left: 2px;
+  align-self: flex-start;
+}
+.sbe-vote span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+.sbe-vote-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sbe-vote-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.sbe-vote-thanks {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+}
+
 /* ── Mobile ──────────────────────────────────────────────────────────────── */
 
 @media (max-width: 480px) {

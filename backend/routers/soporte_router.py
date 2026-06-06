@@ -63,6 +63,9 @@ class SugerenciaAction(BaseModel):
     accion: str  # 'aprobar' | 'rechazar'
     propuesta: Optional[dict] = None
 
+class VotoFAQs(BaseModel):
+    ids: list[str]
+
 # ── Helpers de autorización ───────────────────────────────────────────────────
 
 def _get_user(request: Request) -> Optional[dict]:
@@ -115,6 +118,7 @@ async def soporte_chat(payload: ChatRequest):
     docs = retrieve_knowledge(payload.mensaje, sb, payload.contexto)
     system_prompt = build_system_prompt(payload.contexto, docs, payload.user_info)
     messages = payload.historial + [{"role": "user", "content": payload.mensaje}]
+    faq_ids = ",".join(d["id"] for d in docs if d.get("tipo") == "faq")
 
     collected: list[str] = []
 
@@ -140,7 +144,7 @@ async def soporte_chat(payload: ChatRequest):
     return StreamingResponse(
         stream_response(),
         media_type="text/plain; charset=utf-8",
-        headers={"x-sesion-id": str(sesion_id)},
+        headers={"x-sesion-id": str(sesion_id), "x-faq-ids": faq_ids},
     )
 
 
@@ -577,6 +581,24 @@ def gestionar_sugerencia(sug_id: str, payload: SugerenciaAction, request: Reques
     return resultado
 
 # ── FAQs ───────────────────────────────────────────────────────────────────────
+
+@router.post("/soporte/faqs/votos")
+def votar_faqs(payload: VotoFAQs):
+    if not payload.ids:
+        return {"ok": True}
+    sb = get_supabase()
+    for faq_id in payload.ids[:5]:
+        try:
+            res = sb.table("knowledge_faqs").select("votos_util") \
+                .eq("id", faq_id).eq("activo", True).single().execute()
+            if res.data:
+                sb.table("knowledge_faqs").update(
+                    {"votos_util": (res.data.get("votos_util") or 0) + 1}
+                ).eq("id", faq_id).execute()
+        except Exception:
+            pass
+    return {"ok": True}
+
 
 @router.get("/soporte/faqs")
 def listar_faqs():

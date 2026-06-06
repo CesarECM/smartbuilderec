@@ -279,6 +279,9 @@
       _hideTyping();
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
+      const faqIds = (res.headers.get('x-faq-ids') || '')
+        .split(',').map(s => s.trim()).filter(Boolean);
+
       const bub    = _addMsg('assistant', '');
       const reader = res.body.getReader();
       const dec    = new TextDecoder();
@@ -301,6 +304,7 @@
       }
 
       historial.push({ role: 'assistant', content: full });
+      _addVoteRow(bub, faqIds);
 
       // Sugerir ticket tras 5 turnos sin resolver
       if (turnos >= 5 && turnos % 4 === 1) _offerTicket();
@@ -393,6 +397,36 @@
       btn.textContent = 'Enviar ticket';
     }
   }
+
+  // ── Votación ──────────────────────────────────────────────────────────────────
+  function _addVoteRow(bub, faqIds) {
+    const wrap = bub.parentNode;
+    if (!wrap) return;
+    const row = document.createElement('div');
+    row.className = 'sbe-vote';
+    const idsJson = JSON.stringify(faqIds);
+    row.innerHTML = `<span>¿Fue útil?</span>
+      <button class="sbe-vote-btn" onclick="window._sbVote(this,${idsJson},true)">👍</button>
+      <button class="sbe-vote-btn" onclick="window._sbVote(this,[],false)">👎</button>`;
+    wrap.appendChild(row);
+    document.getElementById('sbe-chat-messages').scrollTop =
+      document.getElementById('sbe-chat-messages').scrollHeight;
+  }
+
+  window._sbVote = async function(btn, faqIds, util) {
+    const row = btn.closest('.sbe-vote');
+    if (!row) return;
+    row.innerHTML = `<span class="sbe-vote-thanks">${util ? '¡Gracias! 👍' : 'Gracias por el feedback.'}</span>`;
+    if (util && faqIds.length) {
+      try {
+        await fetch(`${BACKEND}/soporte/faqs/votos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: faqIds }),
+        });
+      } catch {}
+    }
+  };
 
   // ── Init ──────────────────────────────────────────────────────────────────────
   if (document.readyState === 'loading') {
