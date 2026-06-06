@@ -467,6 +467,10 @@
             <label for="creditosAsignar">Créditos iniciales</label>
             <input type="number" id="creditosAsignar" class="promover-input num" min="0" max="9999" value="10">
           </div>
+          <div class="promover-field">
+            <label for="vigenciaAsignar">Vigencia hasta</label>
+            <input type="date" id="vigenciaAsignar" class="promover-input">
+          </div>
           <button class="btn-primary" id="btnBuscar" onclick="buscarUsuario()">Buscar</button>
         </div>
         <div id="resultadoBusqueda" style="display:none"></div>
@@ -1315,10 +1319,12 @@
     async function buscarUsuario() {
       const email    = document.getElementById("buscarEmail").value.trim().toLowerCase();
       const creditos = parseInt(document.getElementById("creditosAsignar").value,10);
+      const vigencia = document.getElementById("vigenciaAsignar").value;
       const res      = document.getElementById("resultadoBusqueda");
       const btn      = document.getElementById("btnBuscar");
       if (!email) { mostrarToast("Ingresa un correo electrónico"); return; }
       if (isNaN(creditos)||creditos<0||creditos>9999) { mostrarToast("Créditos entre 0 y 9999"); return; }
+      if (!vigencia) { mostrarToast("Selecciona una fecha de vigencia para el admin"); return; }
       btn.disabled=true; btn.textContent="Buscando...";
       res.style.display="none";
       const {data:usuario,error} = await _supabase.from("profiles").select("id,nombre,apellido,email,rol").eq("email",email).single();
@@ -1336,15 +1342,21 @@
     }
 
     async function promoverAAdmin(userId, nombre, creditos) {
+      const vigencia = document.getElementById("vigenciaAsignar").value;
+      if (!vigencia) { mostrarToast("Selecciona una fecha de vigencia"); return; }
       const btn=document.querySelector("#resultadoBusqueda .btn-primary");
       if (btn) btn.disabled=true;
-      const {error}=await _supabase.from("profiles").update({rol:"admin",credits:creditos,admin_id:null}).eq("id",userId);
+      const {error}=await _supabase.from("profiles")
+        .update({rol:"admin", credits:creditos, admin_id:null, vigencia_hasta:vigencia})
+        .eq("id",userId);
       if (error) { alert("Error al promover: "+error.message); if(btn)btn.disabled=false; return; }
       document.getElementById("resultadoBusqueda").className="resultado-busqueda ok";
       document.getElementById("resultadoBusqueda").innerHTML=`✓ <strong>${nombre}</strong> ahora es administrador con ${creditos} créditos.`;
       document.getElementById("buscarEmail").value="";
-      mostrarToast("Admin creado correctamente");
+      document.getElementById("vigenciaAsignar").value="";
+      mostrarToast("Admin promovido correctamente");
       await Promise.all([cargarStats(),cargarAdmins()]);
+      _vigenciaLoaded = false;
     }
 
     // ── Usuarios ─────────────────────────────────────────────────
@@ -1647,7 +1659,7 @@
 
     function _claseVigencia(vigencia_hasta, activo) {
       if (!activo) return "rojo";
-      if (!vigencia_hasta) return "verde";
+      if (!vigencia_hasta) return "rojo";
       const dias = _diasVigencia(vigencia_hasta);
       if (dias < 0)  return "rojo";
       if (dias <= 15) return "amarillo";
@@ -1656,7 +1668,7 @@
 
     function renderVigenciaBadge(vigencia_hasta, activo) {
       const clase = _claseVigencia(vigencia_hasta, activo);
-      if (!vigencia_hasta) return '<span style="color:var(--c-text-4);font-size:12px">—</span>';
+      if (!vigencia_hasta) return '<span class="vigencia-badge vb-rojo"><span class="semaforo-dot dot-rojo"></span>Sin vigencia</span>';
       const dias  = _diasVigencia(vigencia_hasta);
       const fecha = new Date(vigencia_hasta).toLocaleDateString("es-MX", {day:"2-digit",month:"short",year:"numeric"});
       const dot   = clase === "rojo" ? "dot-rojo" : clase === "amarillo" ? "dot-amarillo" : "dot-verde";
