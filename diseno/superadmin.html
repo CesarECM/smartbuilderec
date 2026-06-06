@@ -2491,6 +2491,7 @@
     // ── Sugerencias de IA (Feedback Loop) ────────────────────────
 
     let _allSugerencias = [];
+    const _editando = new Set();
 
     const SUG_META = {
       nueva_faq:    { label: "Nueva FAQ",      color: "#dbeafe", colorTxt: "#1e40af", btnTxt: "Crear FAQ" },
@@ -2499,7 +2500,131 @@
       unir_faqs:    { label: "Unir FAQs",      color: "#ede9fe", colorTxt: "#5b21b6", btnTxt: "Unir y crear" },
     };
 
-    function _esc(t) { return (t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+    function _esc(t)     { return (t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+    function _escAttr(t) { return (t||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;"); }
+
+    // ── Helpers de edición inline ─────────────────────────────────
+    function _editFld(label, content) {
+      return `<div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--c-text-3)">${label}</label>
+        ${content}</div>`;
+    }
+    function _ctxSelect(id, val) {
+      const opts = ["general","ventas","checkout","onboarding","acceso","wizard_ec0217","navegacion","admin","superadmin"];
+      return `<select id="${id}" style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:6px 10px;font-size:12px;font-family:inherit;background:var(--c-surface);outline:none;width:100%;box-sizing:border-box">
+        ${opts.map(o=>`<option value="${o}"${val===o?" selected":""}>${o}</option>`).join("")}
+      </select>`;
+    }
+    function _renderSugBodyEdit(tipo, prop, sugId) {
+      const p  = id => `sedit-${id}-${sugId}`;
+      const inp = (id, val, ph="") =>
+        `<input id="${p(id)}" type="text" value="${_escAttr(val)}" placeholder="${ph}"
+         style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:7px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);outline:none;width:100%;box-sizing:border-box"
+         onfocus="this.style.borderColor='var(--c-blue-600)'" onblur="this.style.borderColor='var(--c-border)'">`;
+      const ta  = (id, val, rows=4) =>
+        `<textarea id="${p(id)}" rows="${rows}"
+         style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:7px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);outline:none;width:100%;box-sizing:border-box;resize:vertical"
+         onfocus="this.style.borderColor='var(--c-blue-600)'" onblur="this.style.borderColor='var(--c-border)'">${_esc(val)}</textarea>`;
+
+      switch (tipo) {
+        case "nueva_faq":
+          return `<div style="display:flex;flex-direction:column;gap:8px">
+            ${_editFld("Pregunta",  inp("preg", prop.pregunta||"", "¿Cómo...?"))}
+            ${_editFld("Respuesta", ta("resp", prop.respuesta||""))}
+            ${_editFld("Contexto",  _ctxSelect(p("ctx"), prop.contexto||"general"))}
+          </div>`;
+
+        case "editar_faq":
+          return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:#fef2f2;border-radius:6px;padding:10px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b;margin-bottom:4px">Actual (sin cambios)</div>
+              <div style="font-size:12px;font-weight:600;color:var(--c-text)">${_esc(prop.pregunta_original)}</div>
+              <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${_esc(prop.respuesta_original||"").slice(0,150)}${(prop.respuesta_original||"").length>150?"…":""}</div>
+            </div>
+            <div style="background:#f0fdf4;border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#065f46;margin-bottom:2px">Propuesta (editable)</div>
+              ${_editFld("Pregunta",  inp("preg", prop.pregunta||""))}
+              ${_editFld("Respuesta", ta("resp", prop.respuesta||"", 3))}
+              ${_editFld("Contexto",  _ctxSelect(p("ctx"), prop.contexto||"general"))}
+            </div>
+          </div>
+          ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3);margin-top:6px">Motivo: ${_esc(prop.causa_raiz)}</div>`:""}`;
+
+        case "eliminar_faq":
+          return `<div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:#fff1f2;border-radius:6px;padding:10px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b;margin-bottom:4px">FAQ a eliminar</div>
+              <div style="font-size:12px;font-weight:600;color:var(--c-text)">${_esc(prop.pregunta_original)}</div>
+            </div>
+            ${_editFld("Razón", ta("razon", prop.razon||"", 2))}
+          </div>`;
+
+        case "unir_faqs": {
+          const lis = (prop.preguntas_originales||[]).map(q=>`<li style="font-size:12px;color:var(--c-text-3)">${_esc(q)}</li>`).join("");
+          return `<div style="display:flex;flex-direction:column;gap:8px">
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--c-text-3);margin-bottom:4px">FAQs a fusionar</div>
+              <ul style="margin:0;padding-left:16px">${lis}</ul>
+            </div>
+            <div style="background:#f5f3ff;border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#5b21b6;margin-bottom:2px">Resultado unificado (editable)</div>
+              ${_editFld("Pregunta unificada", inp("preg", prop.pregunta||""))}
+              ${_editFld("Respuesta", ta("resp", prop.respuesta||""))}
+              ${_editFld("Contexto",  _ctxSelect(p("ctx"), prop.contexto||"general"))}
+            </div>
+            ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3)">Motivo: ${_esc(prop.causa_raiz)}</div>`:""}
+          </div>`;
+        }
+
+        default:
+          return `<div style="font-size:12px;color:var(--c-text-3)">${_esc(JSON.stringify(prop).slice(0,200))}</div>`;
+      }
+    }
+
+    function _renderSugActions(sugId, tipo) {
+      const meta = SUG_META[tipo] || SUG_META.nueva_faq;
+      return `<button class="btn-sm" onclick="toggleEditarSugerencia('${sugId}')">✏️ Editar</button>
+              <button class="btn-sm success" onclick="accionSugerencia('${sugId}','aprobar')">${meta.btnTxt}</button>
+              <button class="btn-sm danger"  onclick="accionSugerencia('${sugId}','rechazar')">Rechazar</button>`;
+    }
+
+    function toggleEditarSugerencia(sugId) {
+      const sug = _allSugerencias.find(s => s.id === sugId);
+      if (!sug) return;
+      const bodyEl    = document.getElementById(`sedit-body-${sugId}`);
+      const actionsEl = document.getElementById(`sedit-actions-${sugId}`);
+      if (!bodyEl || !actionsEl) return;
+      if (_editando.has(sugId)) {
+        _editando.delete(sugId);
+        bodyEl.innerHTML    = _renderSugBody(sug.tipo, sug.propuesta || {});
+        actionsEl.innerHTML = _renderSugActions(sugId, sug.tipo);
+      } else {
+        _editando.add(sugId);
+        bodyEl.innerHTML    = _renderSugBodyEdit(sug.tipo, sug.propuesta || {}, sugId);
+        actionsEl.innerHTML = `
+          <button class="btn-sm success" onclick="accionSugerencia('${sugId}','aprobar')">Guardar y aprobar</button>
+          <button class="btn-sm danger"  onclick="accionSugerencia('${sugId}','rechazar')">Guardar y rechazar</button>
+          <button class="btn-sm"         onclick="toggleEditarSugerencia('${sugId}')">✕ Cancelar</button>`;
+      }
+    }
+
+    function _getEditedPropuesta(sugId, tipo, propOriginal) {
+      const prop = { ...propOriginal };
+      const g = id => document.getElementById(`sedit-${id}-${sugId}`)?.value ?? "";
+      switch (tipo) {
+        case "nueva_faq":
+        case "editar_faq":
+        case "unir_faqs":
+          prop.pregunta  = g("preg");
+          prop.respuesta = g("resp");
+          prop.contexto  = g("ctx");
+          break;
+        case "eliminar_faq":
+          prop.razon = g("razon");
+          break;
+      }
+      return prop;
+    }
 
     function _renderSugBody(tipo, prop) {
       const ctx = prop.contexto || "general";
@@ -2593,11 +2718,10 @@
                   <span style="font-size:11px;color:var(--c-text-4)">${fecha}</span>
                   <span class="status-badge ${estadoBadge}">${s.estado}</span>
                 </div>
-                ${_renderSugBody(tipo, prop)}
+                <div id="sedit-body-${s.id}">${_renderSugBody(tipo, prop)}</div>
               </div>
-              ${isPendiente ? `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;padding-top:2px">
-                <button class="btn-sm success" onclick="accionSugerencia('${s.id}','aprobar')">${meta.btnTxt}</button>
-                <button class="btn-sm danger"  onclick="accionSugerencia('${s.id}','rechazar')">Rechazar</button>
+              ${isPendiente ? `<div id="sedit-actions-${s.id}" style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;padding-top:2px">
+                ${_renderSugActions(s.id, tipo)}
               </div>` : ""}
             </div>
           </div>`;
@@ -2622,14 +2746,21 @@
     }
 
     async function accionSugerencia(sugId, accion) {
+      let propuesta = null;
+      if (_editando.has(sugId)) {
+        const sug = _allSugerencias.find(s => s.id === sugId);
+        if (sug) propuesta = _getEditedPropuesta(sugId, sug.tipo, sug.propuesta || {});
+      }
       try {
         const headers = await getAuthHeaders();
+        const body = propuesta !== null ? { accion, propuesta } : { accion };
         const res = await fetch(`${BACKEND_URL}/soporte/sugerencias/${sugId}`, {
           method: "PATCH", headers: {...headers,"Content-Type":"application/json"},
-          body: JSON.stringify({ accion }),
+          body: JSON.stringify(body),
         });
         if (!res.ok) { const d = await res.json().catch(()=>{}); throw new Error(d?.detail||"Error."); }
         const data = await res.json();
+        _editando.delete(sugId);
         document.getElementById(`sug-${sugId}`)?.remove();
         const msgs = {
           nueva_faq:    "FAQ creada en el knowledge base",

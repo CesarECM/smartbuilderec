@@ -61,6 +61,7 @@ class TicketUpdate(BaseModel):
 
 class SugerenciaAction(BaseModel):
     accion: str  # 'aprobar' | 'rechazar'
+    propuesta: Optional[dict] = None
 
 # ── Helpers de autorización ───────────────────────────────────────────────────
 
@@ -489,13 +490,15 @@ def gestionar_sugerencia(sug_id: str, payload: SugerenciaAction, request: Reques
     sb = get_supabase()
     if payload.accion not in ("aprobar", "rechazar"):
         raise HTTPException(status_code=400, detail="accion debe ser 'aprobar' o 'rechazar'.")
+    if payload.propuesta is not None:
+        sb.table("soporte_sugerencias").update({"propuesta": payload.propuesta}).eq("id", sug_id).execute()
     if payload.accion == "rechazar":
         sb.table("soporte_sugerencias").update({"estado": "rechazada", "aprobada_por": uid}).eq("id", sug_id).execute()
         return {"accion": "rechazada"}
     sug = sb.table("soporte_sugerencias").select("*").eq("id", sug_id).single().execute()
     if not sug.data:
         raise HTTPException(status_code=404, detail="Sugerencia no encontrada.")
-    prop = sug.data.get("propuesta", {})
+    prop = payload.propuesta if payload.propuesta is not None else sug.data.get("propuesta", {})
     tipo = sug.data.get("tipo", "nueva_faq")
     resultado = {"accion": "aprobada", "tipo": tipo}
 
