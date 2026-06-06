@@ -95,7 +95,7 @@
 
   <!-- Navbar de navegación superior -->
   <nav id="wiz-nav">
-    <a href="dashboard.html" class="wiz-nav-back">← Mi Dashboard</a>
+    <a href="dashboard.html" class="wiz-nav-back" id="wizNavBack">← Mi Panel</a>
     <span id="wiz-nav-curso" class="wiz-nav-curso"></span>
     <div class="wiz-nav-user">
       <span id="wiz-nav-nombre"></span>
@@ -2213,6 +2213,11 @@
         if (perfil) {
           const nombre = [perfil.nombre, perfil.apellido].filter(Boolean).join(" ") || perfil.email;
           document.getElementById("wiz-nav-nombre").textContent = nombre;
+          const back = document.getElementById("wizNavBack");
+          if (back) {
+            if (perfil.rol === "super_admin") back.href = "superadmin.html";
+            else if (perfil.rol === "admin")  back.href = "admin.html";
+          }
         }
       } catch (_) {}
     })();

@@ -176,10 +176,19 @@
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script>
+    function _panelPorRol(rol) {
+      if (rol === "super_admin") return "superadmin.html";
+      if (rol === "admin")       return "admin.html";
+      return "dashboard.html";
+    }
+
     // Redirigir si ya hay sesión activa
     (async () => {
       const session = await getSession();
-      if (session) window.location.href = "dashboard.html";
+      if (session) {
+        const perfil = await getUserProfile();
+        window.location.href = _panelPorRol(perfil?.rol);
+      }
     })();
 
     const msg = document.getElementById("msg");
@@ -225,7 +234,8 @@
       try {
         await login(email, password);
         setMsg("Sesión iniciada. Redirigiendo...", "ok");
-        window.location.href = "dashboard.html";
+        const perfil = await getUserProfile();
+        window.location.href = _panelPorRol(perfil?.rol);
       } catch (err) {
         const t = err.message || "";
         if (t.includes("Invalid login") || t.includes("invalid_credentials")) {

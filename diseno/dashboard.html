@@ -327,6 +327,9 @@
       _perfil = await getUserProfile();
       if (!_perfil) { window.location.href = "login.html"; return; }
 
+      if (_perfil.rol === "super_admin") { window.location.href = "superadmin.html"; return; }
+      if (_perfil.rol === "admin")       { window.location.href = "admin.html"; return; }
+
       const nombreDisplay = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
       document.getElementById("headerAvatar").textContent  = iniciales(_perfil.nombre, _perfil.apellido);
       document.getElementById("headerNombre").textContent  = nombreDisplay;

@@ -328,11 +328,14 @@
     let _todosUsuarios = [];
 
     // ── Tabs principales ─────────────────────────────────────────
+    let _misCursosLoaded = false;
+
     function showTab(name) {
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("panel-" + name).classList.add("active");
       document.getElementById("tab-"   + name).classList.add("active");
+      if (name === "mis-cursos" && !_misCursosLoaded) { _misCursosLoaded = true; cargarMisCursos(); }
     }
 
     // ── Inner tabs (Usuarios & Acceso) ───────────────────────────
@@ -668,13 +671,6 @@
       setTimeout(() => t.classList.remove("visible"), 2500);
     }
 
-    let _misCursosLoaded = false;
-
-    const _origShowTab = showTab;
-    function showTab(name) {
-      _origShowTab(name);
-      if (name === "mis-cursos" && !_misCursosLoaded) { _misCursosLoaded = true; cargarMisCursos(); }
-    }
 
     // ══════════════════════════════════════════════════════════════
     // ── Mis Cursos ────────────────────────────────────────────────
