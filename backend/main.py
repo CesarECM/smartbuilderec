@@ -14,6 +14,7 @@ from pptx import Presentation
 from pptx.util import Inches
 import os
 import json
+import asyncio
 import pyotp
 import zipfile
 import io
@@ -1182,7 +1183,7 @@ async def health_integraciones(request: Request):
     if not prof.data or prof.data.get("rol") != "super_admin":
         raise HTTPException(status_code=403, detail="Solo superadmin.")
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     async def _chk(key: str, fn):
         try:

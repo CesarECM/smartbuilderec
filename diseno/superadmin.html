@@ -1075,7 +1075,9 @@
           const led = document.getElementById("led-" + key);
           if (led) led.className = "led led-gray";
         });
-        mostrarToast("Error al verificar integraciones: " + e.message);
+        const ts = document.getElementById("integLastCheck");
+        if (ts) ts.textContent = "· no se pudo conectar al servidor";
+        console.error("verificarIntegraciones:", e);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = "↺ Verificar"; }
       }
