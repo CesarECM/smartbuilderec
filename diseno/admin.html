@@ -122,6 +122,26 @@
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 9999; }
     .toast.visible { opacity: 1; }
 
+    /* ── Historial colapsable ───────────────────────────────────── */
+    .historial-section { margin-top: 20px; }
+    .historial-summary {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 700; color: var(--c-text-2);
+      padding: 10px 14px; background: var(--c-surface-2);
+      border-radius: var(--r-md); border: 1px solid var(--c-border);
+      list-style: none; user-select: none;
+    }
+    .historial-summary::-webkit-details-marker { display: none; }
+    .historial-summary::before { content: "▶"; font-size: 10px; transition: transform 0.2s; color: var(--c-text-3); margin-right: 2px; }
+    details[open] .historial-summary::before { transform: rotate(90deg); }
+    .vigencia-select {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
+      padding: 6px 10px; font-size: 12px; font-family: inherit;
+      background: var(--c-surface); color: var(--c-text-2); cursor: pointer; outline: none;
+      transition: border-color 0.2s;
+    }
+    .vigencia-select:focus { border-color: var(--c-blue-600); }
+
     @media (max-width: 600px) {
       .tab-btn { padding: 11px 14px; font-size: 12px; }
       .panel-main { padding: 20px 16px; }
@@ -278,7 +298,12 @@
         <div class="section-header">
           <h2>Códigos de acceso</h2>
           <div class="section-header-right">
-            <span style="font-size:12px;color:var(--c-text-3)">Expiran en 30 días</span>
+            <select id="selectVigencia" class="vigencia-select">
+              <option value="7">Vigencia: 7 días</option>
+              <option value="15">Vigencia: 15 días</option>
+              <option value="30" selected>Vigencia: 30 días</option>
+              <option value="60">Vigencia: 60 días</option>
+            </select>
             <button class="btn-primary teal" id="btnGenerarCodigo">🔑 Generar código</button>
           </div>
         </div>
@@ -563,7 +588,7 @@
       const lista = document.getElementById("listaCodigos");
       const { data: codigos, error } = await _supabase
         .from("access_codes")
-        .select("id, code, used_at, expires_at, created_at")
+        .select("id, code, used_at, expires_at, created_at, used_by")
         .eq("admin_id", _perfil.id)
         .order("created_at", { ascending: false });
 
@@ -579,31 +604,86 @@
         return;
       }
 
-      const ahora = new Date();
-      lista.innerHTML = `<div class="code-grid">${codigos.map(c => {
-        const expirado   = new Date(c.expires_at) < ahora;
-        const usado      = !!c.used_at;
-        const disponible = !usado && !expirado;
-        const badgeCls   = usado ? "badge-usado" : expirado ? "badge-expirado" : "badge-disponible";
-        const badgeTxt   = usado ? "Usado" : expirado ? "Expirado" : "Disponible";
-        const fechaExp   = new Date(c.expires_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
-        const fechaCrea  = new Date(c.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
-        return `
-          <div class="code-card" id="ccard-${c.id}">
-            <div class="code-card-top">
-              <span class="code-text">${c.code}</span>
-              <span class="${badgeCls}">${badgeTxt}</span>
+      // Obtener perfiles de quienes canjearon los códigos
+      const usedByIds = [...new Set(codigos.filter(c => c.used_by).map(c => c.used_by))];
+      const perfilesMap = {};
+      if (usedByIds.length) {
+        const { data: perfiles } = await _supabase
+          .from("profiles").select("id, nombre, apellido, email").in("id", usedByIds);
+        perfiles?.forEach(p => { perfilesMap[p.id] = p; });
+      }
+
+      const ahora  = new Date();
+      const hace30 = new Date(ahora - 30 * 24 * 60 * 60 * 1000);
+
+      const activos   = codigos.filter(c => !c.used_at && new Date(c.expires_at) > ahora);
+      const historial = codigos.filter(c => {
+        const usado    = !!c.used_at;
+        const expirado = new Date(c.expires_at) <= ahora;
+        if (!usado && !expirado) return false;
+        const ref = usado ? new Date(c.used_at) : new Date(c.expires_at);
+        return ref > hace30;
+      });
+
+      let html = "";
+
+      if (activos.length) {
+        html += `<div class="code-grid">${activos.map(c => _renderCodeCard(c, perfilesMap, ahora)).join("")}</div>`;
+      } else {
+        html += `<p class="empty-txt" style="margin-bottom:16px">No hay códigos activos. Genera uno nuevo arriba.</p>`;
+      }
+
+      if (historial.length) {
+        html += `
+          <details class="historial-section">
+            <summary class="historial-summary">
+              Historial (últimos 30 días)
+              <span class="count-tag">${historial.length} registro${historial.length !== 1 ? "s" : ""}</span>
+            </summary>
+            <div class="code-grid" style="margin-top:12px">
+              ${historial.map(c => _renderCodeCard(c, perfilesMap, ahora)).join("")}
             </div>
-            <div class="code-meta">
-              Creado: ${fechaCrea}<br>
-              Expira: ${fechaExp}${usado ? " · Canjeado" : ""}
-            </div>
-            <div class="code-actions">
-              <button class="btn-sm" onclick="copiarCodigo('${c.code}')">Copiar</button>
-              ${disponible ? `<button class="btn-sm danger" onclick="eliminarCodigo('${c.id}', this)">Eliminar</button>` : ""}
-            </div>
-          </div>`;
-      }).join("")}</div>`;
+          </details>`;
+      }
+
+      lista.innerHTML = html;
+    }
+
+    function _renderCodeCard(c, perfilesMap, ahora) {
+      const expirado   = new Date(c.expires_at) <= ahora;
+      const usado      = !!c.used_at;
+      const disponible = !usado && !expirado;
+      const badgeCls   = usado ? "badge-usado" : expirado ? "badge-expirado" : "badge-disponible";
+      const badgeTxt   = usado ? "Usado" : expirado ? "Expirado" : "Disponible";
+      const fechaExp   = new Date(c.expires_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+      const fechaCrea  = new Date(c.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+
+      let metaExtra = "";
+      if (usado) {
+        if (c.used_by && perfilesMap[c.used_by]) {
+          const p      = perfilesMap[c.used_by];
+          const nombre = [p.nombre, p.apellido].filter(Boolean).join(" ") || p.email;
+          metaExtra    = `<br>Canjeado por: <strong style="color:var(--c-text)">${nombre}</strong> <span style="color:var(--c-text-4)">(${p.email})</span>`;
+        } else {
+          metaExtra = `<br>Canjeado`;
+        }
+      }
+
+      return `
+        <div class="code-card" id="ccard-${c.id}">
+          <div class="code-card-top">
+            <span class="code-text">${c.code}</span>
+            <span class="${badgeCls}">${badgeTxt}</span>
+          </div>
+          <div class="code-meta">
+            Creado: ${fechaCrea}<br>
+            Expira: ${fechaExp}${metaExtra}
+          </div>
+          <div class="code-actions">
+            ${disponible ? `<button class="btn-sm" onclick="copiarCodigo('${c.code}')">Copiar</button>` : ""}
+            ${disponible ? `<button class="btn-sm danger" onclick="eliminarCodigo('${c.id}', this)">Eliminar</button>` : ""}
+          </div>
+        </div>`;
     }
 
     // ── Generar código ────────────────────────────────────────────
@@ -635,7 +715,8 @@
         intentos++;
       }
 
-      const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const dias    = parseInt(document.getElementById("selectVigencia")?.value || "30");
+      const expires = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await _supabase.from("access_codes")
         .insert({ code, admin_id: _perfil.id, expires_at: expires }).select().single();
 
