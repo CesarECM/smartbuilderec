@@ -1377,7 +1377,7 @@ def admin_delete_user(user_id: str, request: Request):
             raise HTTPException(status_code=403, detail="Solo puedes eliminar usuarios regulares.")
 
     try:
-        # Eliminar de auth.users → CASCADE a profiles → trigger fn_restore_admin_credit
+        # Eliminar de auth.users → CASCADE a profiles (sin restaurar crédito al admin)
         sb.auth.admin.delete_user(user_id)
 
         # Audit log explícito: el trigger no puede obtener actor_id desde service_role

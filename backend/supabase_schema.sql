@@ -137,18 +137,11 @@ BEGIN
 END;
 $$;
 
--- Restaura 1 crédito al admin cuando se elimina uno de sus usuarios.
-CREATE OR REPLACE FUNCTION public.fn_restore_admin_credit()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
-BEGIN
-  IF OLD.admin_id IS NOT NULL AND OLD.rol = 'user' THEN
-    UPDATE public.profiles
-       SET credits = credits + 1
-     WHERE id = OLD.admin_id;
-  END IF;
-  RETURN OLD;
-END;
-$$;
+-- fn_restore_admin_credit eliminada: eliminar un usuario NO devuelve créditos al admin.
+-- Eliminar y crear otro usuario consumiría un crédito adicional, evitando el abuso de
+-- reutilizar slots. Se ejecutó en Supabase:
+--   DROP TRIGGER IF EXISTS trg_restore_credit_on_user_delete ON public.profiles;
+--   DROP FUNCTION IF EXISTS public.fn_restore_admin_credit();
 
 -- Verifica si un código de acceso es válido sin exponer la tabla completa.
 -- Retorna: { valid: true, admin_id: "uuid" } o { valid: false, error: "..." }
@@ -236,14 +229,10 @@ CREATE TRIGGER trg_planeaciones_updated_at
   BEFORE UPDATE ON public.planeaciones
   FOR EACH ROW EXECUTE FUNCTION public.fn_update_updated_at();
 
--- Sistema de créditos: descontar al crear usuario con admin, restaurar al eliminarlo
+-- Sistema de créditos: descontar al crear usuario. Eliminar usuario NO restaura crédito.
 CREATE TRIGGER trg_deduct_credit_on_user_create
   AFTER INSERT ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.fn_deduct_admin_credit();
-
-CREATE TRIGGER trg_restore_credit_on_user_delete
-  AFTER DELETE ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION public.fn_restore_admin_credit();
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
