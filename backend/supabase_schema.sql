@@ -341,8 +341,9 @@ CREATE INDEX idx_access_codes_code        ON public.access_codes(code);
 -- antes de que el usuario exista en el sistema)
 GRANT EXECUTE ON FUNCTION public.verify_access_code(TEXT) TO anon, authenticated;
 
--- use_access_code: solo usuarios autenticados (se llama justo después del signUp)
-GRANT EXECUTE ON FUNCTION public.use_access_code(TEXT, UUID) TO authenticated;
+-- use_access_code: accesible a anon y authenticated — se llama justo después del signUp,
+-- momento en que el cliente puede no tener la sesión sincronizada aún.
+GRANT EXECUTE ON FUNCTION public.use_access_code(TEXT, UUID) TO anon, authenticated;
 
 -- generate_access_code: solo el backend con service_role_key la llama directamente
 -- No se otorgan permisos a anon ni authenticated intencionalmente.

@@ -86,8 +86,13 @@ async function registroConCodigo(email, password, nombre, apellido, codigo) {
   });
   if (error) throw error;
 
-  // 3. Marcar código como usado. data.user.id siempre existe tras signUp exitoso.
+  // 3. Marcar código como usado.
+  // setSession sincroniza el cliente con la sesión recién creada antes de llamar el RPC.
+  // use_access_code tiene GRANT a anon y authenticated, por lo que funciona en ambos casos.
   if (data?.user?.id) {
+    if (data.session) {
+      await _supabase.auth.setSession(data.session).catch(() => {});
+    }
     const { error: errUso } = await _supabase
       .rpc("use_access_code", { p_code: codigoFmt, p_user_id: data.user.id });
     if (errUso) console.warn("[auth] use_access_code falló:", errUso.message);
