@@ -145,7 +145,7 @@ $html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" con
 
 ('bienvenida_user_stripe', 'Bienvenida — Usuario Stripe',
  'Tu suscripción a SmartBuilderEC está activa',
- ARRAY['nombre','email','monto'],
+ ARRAY['nombre','email','monto','link_acceso'],
 $html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
@@ -160,9 +160,10 @@ $html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" con
   <table cellpadding="0" cellspacing="0" border="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 20px;margin-bottom:28px;width:100%;box-sizing:border-box">
     <tr><td style="font-size:14px;color:#166534"><strong>Monto cobrado:</strong> {{monto}}</td></tr>
   </table>
-  <p style="margin:0 0 28px;color:#64748b;font-size:13px">Ya puedes acceder con tu correo: <strong>{{email}}</strong></p>
+  <p style="margin:0 0 8px;color:#64748b;font-size:13px">Tu cuenta está lista con el correo: <strong>{{email}}</strong></p>
+  <p style="margin:0 0 28px;color:#94a3b8;font-size:12px">⏱ Este enlace es válido por <strong>24 horas</strong>. Después usa &ldquo;Olvidé mi contraseña&rdquo; en el login.</p>
   <table cellpadding="0" cellspacing="0" border="0"><tr><td style="border-radius:8px;background:#1F3B6D">
-    <a href="https://www.smartbuilderec.com/login.html" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">Ir a SmartBuilderEC →</a>
+    <a href="{{link_acceso}}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">Establecer mi contraseña →</a>
   </td></tr></table>
 </td></tr>
 <tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center">

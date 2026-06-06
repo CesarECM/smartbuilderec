@@ -10,8 +10,13 @@ import os
 router = APIRouter()
 
 
+def _test_mode() -> bool:
+    return os.getenv("STRIPE_TEST_MODE", "false").strip().lower() == "true"
+
+
 def _stripe():
-    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+    key = "STRIPE_SECRET_KEY_TEST" if _test_mode() else "STRIPE_SECRET_KEY"
+    stripe.api_key = os.getenv(key)
     return stripe
 
 
@@ -27,7 +32,7 @@ class CheckoutRequest(BaseModel):
 
 @router.post("/checkout/session")
 def crear_checkout(data: CheckoutRequest):
-    price_id = os.getenv("STRIPE_PRICE_INSTRUCTOR")
+    price_id = os.getenv("STRIPE_PRICE_INSTRUCTOR_TEST" if _test_mode() else "STRIPE_PRICE_INSTRUCTOR")
     if not price_id:
         raise HTTPException(status_code=500, detail="STRIPE_PRICE_INSTRUCTOR no configurado.")
 
@@ -89,7 +94,7 @@ def billing_portal(request: Request):
 async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
-    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET_TEST" if _test_mode() else "STRIPE_WEBHOOK_SECRET", "").strip()
 
     if not webhook_secret:
         print("[webhook] ERROR: STRIPE_WEBHOOK_SECRET no configurado")
@@ -213,11 +218,25 @@ def _handle_checkout_completed(session):
             "vigencia_hasta":     vigencia_hasta,
         }).eq("id", user_id).execute()
 
+        frontend_url = os.getenv("FRONTEND_URL", "https://www.smartbuilderec.com")
+        link_acceso = f"{frontend_url}/reset-password.html"
+        try:
+            link_res = sb.auth.admin.generate_link({
+                "type": "magiclink",
+                "email": email,
+                "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
+            })
+            if hasattr(link_res, "properties") and link_res.properties:
+                link_acceso = getattr(link_res.properties, "action_link", link_acceso) or link_acceso
+        except Exception as le:
+            print(f"[checkout] generate_link error: {le}")
+
         monto_str = f"${monto_centavos // 100:,.0f} MXN"
         send_template("bienvenida_user_stripe", email, {
-            "nombre": nombre or email,
-            "email":  email,
-            "monto":  monto_str,
+            "nombre":      nombre or email,
+            "email":       email,
+            "monto":       monto_str,
+            "link_acceso": link_acceso,
         })
         print(f"[checkout] Usuario creado: {email}")
 
