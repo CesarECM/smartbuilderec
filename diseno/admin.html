@@ -575,6 +575,10 @@
         return;
       }
 
+      // Debug: ver estado real de los códigos en consola
+      console.log("[codigos] total recibidos:", codigos.length);
+      codigos.forEach(c => console.log(`  ${c.code} | used_at: ${c.used_at} | expires_at: ${c.expires_at} | used_by: ${c.used_by}`));
+
       // Obtener perfiles de quienes canjearon los códigos
       const usedByIds = [...new Set(codigos.filter(c => c.used_by).map(c => c.used_by))];
       const perfilesMap = {};
@@ -589,6 +593,8 @@
       const activos   = codigos.filter(c => !c.used_at && new Date(c.expires_at) > ahora);
       const historial = codigos.filter(c => !!c.used_at || new Date(c.expires_at) <= ahora);
 
+      console.log("[codigos] activos:", activos.length, "| historial:", historial.length);
+
       let html = "";
 
       if (activos.length) {
@@ -597,18 +603,19 @@
         html += `<p class="empty-txt" style="margin-bottom:16px">No hay códigos activos. Genera uno nuevo arriba.</p>`;
       }
 
-      if (historial.length) {
-        html += `
-          <details class="historial-section" open>
-            <summary class="historial-summary">
-              Historial de códigos
-              <span class="count-tag">${historial.length} registro${historial.length !== 1 ? "s" : ""}</span>
-            </summary>
-            <div class="code-grid" style="margin-top:12px">
-              ${historial.map(c => _renderCodeCard(c, perfilesMap, ahora)).join("")}
-            </div>
-          </details>`;
-      }
+      // Historial: siempre se renderiza la sección para que sea visible
+      html += `
+        <details class="historial-section" open>
+          <summary class="historial-summary">
+            Historial de códigos
+            <span class="count-tag">${historial.length} registro${historial.length !== 1 ? "s" : ""}</span>
+          </summary>
+          ${historial.length
+            ? `<div class="code-grid" style="margin-top:12px">${historial.map(c => _renderCodeCard(c, perfilesMap, ahora)).join("")}</div>`
+            : `<p class="empty-txt" style="margin:12px 0 4px">Ningún código ha sido usado o expirado aún.<br>
+               <span style="font-size:12px;color:var(--c-text-3)">Cuando un alumno registre su cuenta con un código aparecerá aquí automáticamente.</span></p>`
+          }
+        </details>`;
 
       lista.innerHTML = html;
     }
