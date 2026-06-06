@@ -1265,7 +1265,7 @@ async def health_integraciones(request: Request):
         if not key or not key.startswith("sk_"):
             raise ValueError("STRIPE_SECRET_KEY no configurada")
         client = _stripe.StripeClient(key)
-        sessions = client.checkout.sessions.list(params={"limit": 1, "payment_status": "paid"})
+        sessions = client.checkout.sessions.list(params={"limit": 1, "status": "complete"})
         if not sessions.data:
             return {"ultimo": "sin pagos aún", "monto": None}
         s = sessions.data[0]
