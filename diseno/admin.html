@@ -421,7 +421,7 @@
       const lista = document.getElementById("listaUsuarios");
       const { data: usuarios, error } = await _supabase
         .from("profiles")
-        .select("id, nombre, apellido, email, activo, created_at")
+        .select("id, nombre, apellido, email, activo, created_at, vigencia_hasta")
         .eq("admin_id", _perfil.id)
         .order("created_at", { ascending: false });
 
@@ -453,6 +453,15 @@
       renderTablaUsuarios(_todosUsuarios);
     }
 
+    function _vigenciaUserBadge(vigencia_hasta) {
+      if (!vigencia_hasta) return '<span style="font-size:11px;color:var(--c-text-4)">—</span>';
+      const dias = Math.ceil((new Date(vigencia_hasta) - new Date()) / 86400000);
+      const fecha = new Date(vigencia_hasta).toLocaleDateString("es-MX", { day:"2-digit", month:"short" });
+      if (dias < 0)   return `<div style="font-size:11px;font-weight:700;color:#991b1b">Expirado<br><span style="font-weight:400">${fecha}</span></div>`;
+      if (dias <= 15) return `<div style="font-size:11px;font-weight:700;color:#92400e">${dias}d restantes<br><span style="font-weight:400">${fecha}</span></div>`;
+      return `<div style="font-size:11px;color:var(--c-text-2)">${dias}d<br><span style="color:var(--c-text-4)">${fecha}</span></div>`;
+    }
+
     function filtrarUsuarios(q) {
       if (!q.trim()) { renderTablaUsuarios(_todosUsuarios); return; }
       const lq = q.toLowerCase();
@@ -472,7 +481,7 @@
         <div class="table-wrap">
           <table class="users-table">
             <thead>
-              <tr><th>Usuario</th><th>Email</th><th>Planeaciones</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr>
+              <tr><th>Usuario</th><th>Email</th><th>Planeaciones</th><th>Estado</th><th>Vigencia</th><th>Registrado</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               ${usuarios.map(u => {
@@ -495,6 +504,7 @@
                         : `<span style="color:var(--c-text-4);font-size:12px">0</span>`}
                     </td>
                     <td><span class="status-badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}" id="badge-${u.id}">${u.activo ? "Activo" : "Inactivo"}</span></td>
+                    <td>${_vigenciaUserBadge(u.vigencia_hasta)}</td>
                     <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
                     <td>
                       <div style="display:flex;gap:6px;flex-wrap:wrap">

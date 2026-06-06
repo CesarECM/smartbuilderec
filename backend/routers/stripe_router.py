@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from database import get_supabase
 from services.email_service import send_template
+from datetime import datetime, timedelta, timezone
 import stripe
 import os
 
@@ -117,6 +118,7 @@ def _handle_checkout_completed(session: dict):
 
     stripe_customer_id = session.get("customer") or ""
     frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+    vigencia_hasta = (datetime.now(timezone.utc) + timedelta(days=90)).strftime("%Y-%m-%d")
     sb = get_supabase()
 
     try:
@@ -134,6 +136,7 @@ def _handle_checkout_completed(session: dict):
             "activo": True,
             "admin_id": None,
             "stripe_customer_id": stripe_customer_id,
+            "vigencia_hasta": vigencia_hasta,
         }).eq("id", user_id).execute()
 
         # Monto del pago (en centavos → pesos)
@@ -153,6 +156,7 @@ def _handle_checkout_completed(session: dict):
                 sb.table("profiles").update({
                     "stripe_customer_id": stripe_customer_id,
                     "activo": True,
+                    "vigencia_hasta": vigencia_hasta,
                 }).eq("email", email).execute()
             except Exception:
                 pass

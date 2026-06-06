@@ -141,8 +141,8 @@ async function authGuard(rolesPermitidos = []) {
     return null;
   }
 
-  // Vigencia expirada (solo aplica a admins con fecha asignada)
-  if (profile.rol === "admin" && profile.vigencia_hasta) {
+  // Vigencia expirada (admins y usuarios — super_admin nunca expira)
+  if (profile.rol !== "super_admin" && profile.vigencia_hasta) {
     const vence = new Date(profile.vigencia_hasta);
     if (vence < new Date()) {
       await _supabase.auth.signOut();

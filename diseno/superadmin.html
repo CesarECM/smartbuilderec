@@ -1364,10 +1364,10 @@
       const lista=document.getElementById("listaUsuariosTodos");
       lista.innerHTML='<p class="loading-txt">Cargando...</p>';
       const {data,error}=await _supabase.from("profiles")
-        .select("id,nombre,apellido,email,activo,created_at,admin_id,profiles!admin_id(nombre,apellido,email)")
+        .select("id,nombre,apellido,email,activo,created_at,vigencia_hasta,admin_id,profiles!admin_id(nombre,apellido,email)")
         .eq("rol","user").order("created_at",{ascending:false}).limit(300);
       if (error) {
-        const {data:simple}=await _supabase.from("profiles").select("id,nombre,apellido,email,activo,created_at,admin_id").eq("rol","user").order("created_at",{ascending:false}).limit(300);
+        const {data:simple}=await _supabase.from("profiles").select("id,nombre,apellido,email,activo,created_at,vigencia_hasta,admin_id").eq("rol","user").order("created_at",{ascending:false}).limit(300);
         _todosUsuarios=(simple||[]).map(u=>({...u,adminNombre:u.admin_id?u.admin_id.substring(0,8)+"…":"Sin admin"}));
       } else {
         _todosUsuarios=(data||[]).map(u=>{
@@ -1394,7 +1394,7 @@
       const lista=document.getElementById("listaUsuariosTodos");
       if (!usuarios.length) { lista.innerHTML='<p class="empty-txt">No hay usuarios que coincidan.</p>'; return; }
       lista.innerHTML=`<div class="table-wrap"><table class="users-table">
-        <thead><tr><th>Nombre</th><th>Email</th><th>Admin</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Email</th><th>Admin</th><th>Estado</th><th>Vigencia</th><th>Registrado</th><th>Acciones</th></tr></thead>
         <tbody>${usuarios.map(u=>{
           const nombre=[u.nombre,u.apellido].filter(Boolean).join(" ")||"(Sin nombre)";
           const fecha=new Date(u.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
@@ -1403,6 +1403,7 @@
             <td style="color:var(--c-text-3)">${u.email}</td>
             <td style="color:var(--c-text-3)">${u.adminNombre}</td>
             <td><span class="status-badge ${u.activo?'badge-activo':'badge-inactivo'}">${u.activo?"Activo":"Inactivo"}</span></td>
+            <td>${renderVigenciaBadge(u.vigencia_hasta, u.activo)}</td>
             <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
             <td><div style="display:flex;gap:5px">
               <button class="btn-sm" onclick="abrirReasignar('${u.id}','${nombre.replace(/'/g,"\\'")}','${u.admin_id||""}')">Reasignar</button>
