@@ -11,7 +11,8 @@ def _replace_vars(text: str, variables: dict) -> str:
 
 def send_email(to: str, subject: str, html: str) -> bool:
     api_key = os.getenv("RESEND_API_KEY")
-    from_email = os.getenv("RESEND_FROM_EMAIL", "noreply@smartbuilderec.mx")
+    _addr = os.getenv("RESEND_FROM_EMAIL", "noreply@smartbuilderec.mx")
+    from_email = f"SmartBuilderEC EC0217.01 <{_addr}>"
     if not api_key:
         print(f"⚠️ RESEND_API_KEY no configurado — email a {to} omitido")
         return False
