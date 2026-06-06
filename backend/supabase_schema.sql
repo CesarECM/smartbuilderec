@@ -63,6 +63,189 @@ COMMENT ON TABLE  public.planeaciones       IS 'Instancias del wizard EC0217.01.
 COMMENT ON COLUMN public.planeaciones.datos IS 'Estado completo del wizard. Equivalente a todas las claves ec0217_* del localStorage anterior.';
 
 
+-- ── 3b. TABLA email_templates ─────────────────────────────────────────────────
+-- Plantillas de correo editables desde el panel superadmin.
+-- El backend las lee vía service_role (bypassa RLS) al enviar notificaciones.
+-- Las variables se insertan con formato {{nombre_variable}}.
+CREATE TABLE IF NOT EXISTS public.email_templates (
+  slug        TEXT        PRIMARY KEY,
+  nombre      TEXT        NOT NULL,
+  subject     TEXT        NOT NULL,
+  body_html   TEXT        NOT NULL DEFAULT '',
+  variables   TEXT[]      NOT NULL DEFAULT '{}',
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER trg_email_templates_updated_at
+  BEFORE UPDATE ON public.email_templates
+  FOR EACH ROW EXECUTE FUNCTION public.fn_update_updated_at();
+
+ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "email_templates_superadmin"
+  ON public.email_templates FOR ALL
+  USING (public.get_my_role() = 'super_admin');
+
+-- Plantillas semilla (INSERT OR IGNORE para no sobreescribir ediciones futuras)
+INSERT INTO public.email_templates (slug, nombre, subject, variables, body_html) VALUES
+
+('bienvenida_admin', 'Bienvenida — Nuevo Admin',
+ 'Bienvenido a SmartBuilderEC — Tu panel de administrador está listo',
+ ARRAY['nombre','email','creditos','vigencia_hasta','link_acceso'],
+$html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#1F3B6D;padding:28px 40px">
+  <p style="margin:0;color:#fff;font-size:22px;font-weight:700">SmartBuilderEC</p>
+  <p style="margin:4px 0 0;color:#93c5fd;font-size:12px">EC0217.01 · Planeación Didáctica</p>
+</td></tr>
+<tr><td style="padding:36px 40px;color:#1e293b;font-size:15px;line-height:1.7">
+  <p style="margin:0 0 16px">Hola <strong>{{nombre}}</strong>,</p>
+  <p style="margin:0 0 20px">Tu cuenta de Administrador en SmartBuilderEC ha sido activada. A partir de ahora puedes gestionar instructores y generar códigos de acceso desde tu panel.</p>
+  <table cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:28px;width:100%;box-sizing:border-box">
+    <tr><td style="font-size:13px;color:#475569;padding:4px 0"><strong>Email:</strong> {{email}}</td></tr>
+    <tr><td style="font-size:13px;color:#475569;padding:4px 0"><strong>Créditos disponibles:</strong> {{creditos}}</td></tr>
+    <tr><td style="font-size:13px;color:#475569;padding:4px 0"><strong>Vigencia hasta:</strong> {{vigencia_hasta}}</td></tr>
+  </table>
+  <table cellpadding="0" cellspacing="0" border="0"><tr><td style="border-radius:8px;background:#1F3B6D">
+    <a href="{{link_acceso}}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">Acceder a mi panel →</a>
+  </td></tr></table>
+</td></tr>
+<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center">
+  <p style="margin:0;color:#94a3b8;font-size:12px">SmartBuilderEC · <a href="https://www.smartbuilderec.com" style="color:#1F3B6D;text-decoration:none">smartbuilderec.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>$html$),
+
+('bienvenida_user_codigo', 'Bienvenida — Usuario por Código',
+ 'Tu acceso a SmartBuilderEC está listo',
+ ARRAY['nombre','email','nombre_admin'],
+$html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#1F3B6D;padding:28px 40px">
+  <p style="margin:0;color:#fff;font-size:22px;font-weight:700">SmartBuilderEC</p>
+  <p style="margin:4px 0 0;color:#93c5fd;font-size:12px">EC0217.01 · Planeación Didáctica</p>
+</td></tr>
+<tr><td style="padding:36px 40px;color:#1e293b;font-size:15px;line-height:1.7">
+  <p style="margin:0 0 16px">Hola <strong>{{nombre}}</strong>,</p>
+  <p style="margin:0 0 20px">Tu cuenta en SmartBuilderEC ha sido activada por <strong>{{nombre_admin}}</strong>. Ya puedes iniciar sesión y comenzar a construir tu planeación didáctica EC0217.01.</p>
+  <p style="margin:0 0 28px;font-size:13px;color:#64748b">Accede con tu correo: <strong>{{email}}</strong></p>
+  <table cellpadding="0" cellspacing="0" border="0"><tr><td style="border-radius:8px;background:#1F3B6D">
+    <a href="https://www.smartbuilderec.com/login.html" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">Comenzar ahora →</a>
+  </td></tr></table>
+</td></tr>
+<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center">
+  <p style="margin:0;color:#94a3b8;font-size:12px">SmartBuilderEC · <a href="https://www.smartbuilderec.com" style="color:#1F3B6D;text-decoration:none">smartbuilderec.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>$html$),
+
+('bienvenida_user_stripe', 'Bienvenida — Usuario Stripe',
+ 'Tu suscripción a SmartBuilderEC está activa',
+ ARRAY['nombre','email','monto'],
+$html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#1F3B6D;padding:28px 40px">
+  <p style="margin:0;color:#fff;font-size:22px;font-weight:700">SmartBuilderEC</p>
+  <p style="margin:4px 0 0;color:#93c5fd;font-size:12px">EC0217.01 · Planeación Didáctica</p>
+</td></tr>
+<tr><td style="padding:36px 40px;color:#1e293b;font-size:15px;line-height:1.7">
+  <p style="margin:0 0 16px">Hola <strong>{{nombre}}</strong>,</p>
+  <p style="margin:0 0 12px">¡Tu suscripción a SmartBuilderEC está activa! Hemos procesado tu pago exitosamente.</p>
+  <table cellpadding="0" cellspacing="0" border="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 20px;margin-bottom:28px;width:100%;box-sizing:border-box">
+    <tr><td style="font-size:14px;color:#166534"><strong>Monto cobrado:</strong> {{monto}}</td></tr>
+  </table>
+  <p style="margin:0 0 28px;color:#64748b;font-size:13px">Ya puedes acceder con tu correo: <strong>{{email}}</strong></p>
+  <table cellpadding="0" cellspacing="0" border="0"><tr><td style="border-radius:8px;background:#1F3B6D">
+    <a href="https://www.smartbuilderec.com/login.html" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">Ir a SmartBuilderEC →</a>
+  </td></tr></table>
+</td></tr>
+<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center">
+  <p style="margin:0;color:#94a3b8;font-size:12px">SmartBuilderEC · <a href="https://www.smartbuilderec.com" style="color:#1F3B6D;text-decoration:none">smartbuilderec.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>$html$),
+
+('vigencia_admin_por_vencer', 'Vigencia por Vencer',
+ 'Tu acceso a SmartBuilderEC vence en {{dias_restantes}} días',
+ ARRAY['nombre','email','vigencia_hasta','dias_restantes'],
+$html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#92400e;padding:28px 40px">
+  <p style="margin:0;color:#fff;font-size:22px;font-weight:700">SmartBuilderEC</p>
+  <p style="margin:4px 0 0;color:#fde68a;font-size:12px">Aviso importante sobre tu cuenta</p>
+</td></tr>
+<tr><td style="padding:36px 40px;color:#1e293b;font-size:15px;line-height:1.7">
+  <p style="margin:0 0 16px">Hola <strong>{{nombre}}</strong>,</p>
+  <p style="margin:0 0 20px">Te informamos que tu acceso como Administrador en SmartBuilderEC <strong>vence en {{dias_restantes}} días</strong> ({{vigencia_hasta}}).</p>
+  <table cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px 20px;margin-bottom:28px;width:100%;box-sizing:border-box">
+    <tr><td style="font-size:13px;color:#92400e">⚠️ Después de esta fecha tu cuenta quedará suspendida y tus usuarios no podrán acceder a la plataforma.</td></tr>
+  </table>
+  <p style="margin:0 0 8px;font-size:13px;color:#64748b">Para renovar, contacta al administrador de la plataforma respondiendo este correo.</p>
+</td></tr>
+<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center">
+  <p style="margin:0;color:#94a3b8;font-size:12px">SmartBuilderEC · <a href="https://www.smartbuilderec.com" style="color:#1F3B6D;text-decoration:none">smartbuilderec.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>$html$),
+
+('vigencia_admin_expirada', 'Vigencia Expirada',
+ 'Tu acceso a SmartBuilderEC ha expirado',
+ ARRAY['nombre','email','vigencia_hasta'],
+$html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#991b1b;padding:28px 40px">
+  <p style="margin:0;color:#fff;font-size:22px;font-weight:700">SmartBuilderEC</p>
+  <p style="margin:4px 0 0;color:#fca5a5;font-size:12px">Aviso de cuenta suspendida</p>
+</td></tr>
+<tr><td style="padding:36px 40px;color:#1e293b;font-size:15px;line-height:1.7">
+  <p style="margin:0 0 16px">Hola <strong>{{nombre}}</strong>,</p>
+  <p style="margin:0 0 20px">Tu acceso como Administrador venció el <strong>{{vigencia_hasta}}</strong>. Tu cuenta ha sido suspendida temporalmente.</p>
+  <p style="margin:0 0 8px;font-size:13px;color:#64748b">Para reactivar tu cuenta y el acceso de tus usuarios, comunícate con el administrador de la plataforma.</p>
+</td></tr>
+<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center">
+  <p style="margin:0;color:#94a3b8;font-size:12px">SmartBuilderEC · <a href="https://www.smartbuilderec.com" style="color:#1F3B6D;text-decoration:none">smartbuilderec.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>$html$),
+
+('reset_password', 'Restablecer Contraseña',
+ 'Restablece tu contraseña — SmartBuilderEC',
+ ARRAY['nombre','email','link_reset'],
+$html$<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#1F3B6D;padding:28px 40px">
+  <p style="margin:0;color:#fff;font-size:22px;font-weight:700">SmartBuilderEC</p>
+  <p style="margin:4px 0 0;color:#93c5fd;font-size:12px">EC0217.01 · Planeación Didáctica</p>
+</td></tr>
+<tr><td style="padding:36px 40px;color:#1e293b;font-size:15px;line-height:1.7">
+  <p style="margin:0 0 16px">Hola <strong>{{nombre}}</strong>,</p>
+  <p style="margin:0 0 28px">Recibimos una solicitud para restablecer la contraseña de tu cuenta <strong>({{email}})</strong>. Haz clic en el botón para crear una nueva contraseña.</p>
+  <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px"><tr><td style="border-radius:8px;background:#1F3B6D">
+    <a href="{{link_reset}}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">Restablecer contraseña →</a>
+  </td></tr></table>
+  <p style="margin:0;font-size:13px;color:#94a3b8">Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña no cambiará.</p>
+</td></tr>
+<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center">
+  <p style="margin:0;color:#94a3b8;font-size:12px">SmartBuilderEC · <a href="https://www.smartbuilderec.com" style="color:#1F3B6D;text-decoration:none">smartbuilderec.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>$html$)
+
+ON CONFLICT (slug) DO NOTHING;
+
+
 -- ── 3. TABLA access_codes ────────────────────────────────────────────────
 -- Códigos de un solo uso que los admins generan para sus usuarios.
 -- Formato: XXXX-XXXX (8 caracteres hex en mayúsculas separados por guion).
