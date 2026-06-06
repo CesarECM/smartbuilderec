@@ -268,11 +268,11 @@
     .integ-badge.error { background:#fee2e2; color:#991b1b; }
     .integ-badge.idle  { background:var(--c-surface-2); color:var(--c-text-4); }
     /* ── Error detail block ─────────────────────────────────────── */
-    .integ-error-detail { margin-top:6px; padding:5px 8px; background:#fff8f8; border:1px solid #fca5a5; border-radius:6px; display:flex; align-items:flex-start; gap:6px; }
-    .integ-error-tag    { font-size:9px; font-weight:800; letter-spacing:.5px; color:#b91c1c; text-transform:uppercase; white-space:nowrap; flex-shrink:0; padding-top:1px; }
-    .integ-error-msg    { flex:1; min-width:0; font-size:10px; color:#7f1d1d; line-height:1.45; word-break:break-all; }
-    .integ-copy-btn     { flex-shrink:0; background:none; border:1px solid #fca5a5; border-radius:4px; cursor:pointer; font-size:11px; line-height:1; padding:2px 5px; color:#991b1b; opacity:.7; font-family:inherit; transition:opacity .15s,background .15s; }
-    .integ-copy-btn:hover { opacity:1; background:#fee2e2; }
+    .integ-error-detail { margin-top:6px; padding:6px 8px; background:#fff8f8; border:1px solid #fca5a5; border-radius:6px; display:flex; flex-direction:column; gap:5px; }
+    .integ-error-tag    { font-size:9px; font-weight:800; letter-spacing:.5px; color:#b91c1c; text-transform:uppercase; }
+    .integ-error-msg    { font-size:10px; color:#7f1d1d; line-height:1.5; word-break:break-word; }
+    .integ-copy-btn     { align-self:flex-start; background:#fee2e2; border:1px solid #fca5a5; border-radius:4px; cursor:pointer; font-size:10px; font-weight:700; padding:3px 8px; color:#991b1b; font-family:inherit; transition:background .15s; }
+    .integ-copy-btn:hover { background:#fecaca; }
     /* LED dot */
     .led { width:11px; height:11px; border-radius:50%; flex-shrink:0; transition:background 0.4s,box-shadow 0.4s; }
     .led-green  { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); animation:led-pulse 2.4s ease-in-out infinite; }
@@ -1122,33 +1122,27 @@
             const detail = document.createElement("div");
             detail.className = "integ-error-detail";
 
-            const leftCol = document.createElement("div");
-            leftCol.style.cssText = "flex:1;min-width:0;";
-
             const tagEl = document.createElement("div");
             tagEl.className = "integ-error-tag";
-            tagEl.textContent = err.tag + ":";
+            tagEl.textContent = err.tag;
 
             const msgEl = document.createElement("div");
             msgEl.className = "integ-error-msg";
             msgEl.textContent = err.desc;
-            msgEl.title = err.desc;
 
             const copyBtn = document.createElement("button");
             copyBtn.className = "integ-copy-btn";
-            copyBtn.textContent = "⎘";
-            copyBtn.title = "Copiar diagnóstico";
+            copyBtn.textContent = "⎘ Copiar error";
             const clipText = `INTEGRACIÓN: ${key.toUpperCase()}\nCLASIFICACIÓN: ${err.tag}\nERROR: ${err.desc}`;
             copyBtn.addEventListener("click", () => {
               navigator.clipboard.writeText(clipText).then(() => {
-                copyBtn.textContent = "✓";
-                setTimeout(() => { copyBtn.textContent = "⎘"; }, 1400);
+                copyBtn.textContent = "✓ Copiado";
+                setTimeout(() => { copyBtn.textContent = "⎘ Copiar error"; }, 1400);
               });
             });
 
-            leftCol.appendChild(tagEl);
-            leftCol.appendChild(msgEl);
-            detail.appendChild(leftCol);
+            detail.appendChild(tagEl);
+            detail.appendChild(msgEl);
             detail.appendChild(copyBtn);
             badge.parentNode.appendChild(detail);
           }
