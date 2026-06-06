@@ -263,10 +263,16 @@
     .integ-body    { flex:1; min-width:0; }
     .integ-name    { font-size:12.5px; font-weight:700; color:var(--c-text); }
     .integ-desc    { font-size:11px; color:var(--c-text-3); margin-top:1px; }
-    .integ-badge   { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap; margin-top:3px; display:inline-block; }
+    .integ-badge   { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap; margin-top:3px; display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
     .integ-badge.ok    { background:#d1fae5; color:#065f46; }
     .integ-badge.error { background:#fee2e2; color:#991b1b; }
     .integ-badge.idle  { background:var(--c-surface-2); color:var(--c-text-4); }
+    /* ── Error detail block ─────────────────────────────────────── */
+    .integ-error-detail { margin-top:6px; padding:5px 8px; background:#fff8f8; border:1px solid #fca5a5; border-radius:6px; display:flex; align-items:flex-start; gap:6px; }
+    .integ-error-tag    { font-size:9px; font-weight:800; letter-spacing:.5px; color:#b91c1c; text-transform:uppercase; white-space:nowrap; flex-shrink:0; padding-top:1px; }
+    .integ-error-msg    { flex:1; min-width:0; font-size:10px; color:#7f1d1d; line-height:1.45; word-break:break-all; }
+    .integ-copy-btn     { flex-shrink:0; background:none; border:1px solid #fca5a5; border-radius:4px; cursor:pointer; font-size:11px; line-height:1; padding:2px 5px; color:#991b1b; opacity:.7; font-family:inherit; transition:opacity .15s,background .15s; }
+    .integ-copy-btn:hover { opacity:1; background:#fee2e2; }
     /* LED dot */
     .led { width:11px; height:11px; border-radius:50%; flex-shrink:0; transition:background 0.4s,box-shadow 0.4s; }
     .led-green  { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); animation:led-pulse 2.4s ease-in-out infinite; }
@@ -1048,18 +1054,38 @@
       stripe:   { label: "Stripe",         extraFn: d => d.mode ? d.mode.toUpperCase() : "OK" },
     };
 
+    function _classifyError(key, msg) {
+      if (!msg) return { tag: "SIN_DETALLE", desc: "El servicio no retornó información de error." };
+      const m = msg.toLowerCase();
+      if (m.includes("no configurada") || m.includes("not configured") || m.includes("missing"))
+        return { tag: "VAR_FALTANTE", desc: msg };
+      if (m.includes("invalid api key") || m.includes("authentication") || m.includes("unauthorized") || m.includes("api key") || m.includes("401"))
+        return { tag: "CLAVE_INVÁLIDA", desc: msg };
+      if (m.includes("rate limit") || m.includes("429") || m.includes("too many"))
+        return { tag: "RATE_LIMIT", desc: msg };
+      if (m.includes("timeout") || m.includes("timed out") || m.includes("connection") || m.includes("network"))
+        return { tag: "RED/TIMEOUT", desc: msg };
+      if (m.includes("permission") || m.includes("403") || m.includes("forbidden") || m.includes("access denied"))
+        return { tag: "SIN_PERMISO", desc: msg };
+      if (m.includes("500") || m.includes("server error") || m.includes("internal"))
+        return { tag: "ERROR_SERVIDOR", desc: msg };
+      if (m.includes("http "))
+        return { tag: "HTTP_ERROR", desc: msg };
+      return { tag: "ERROR_API", desc: msg };
+    }
+
     async function verificarIntegraciones() {
       const btn = document.getElementById("btnVerificar");
       if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
 
-      // Poner todos en estado "verificando"
+      // Poner todos en estado "verificando" y limpiar errores previos
       Object.keys(_INTEG_META).forEach(key => {
         const led   = document.getElementById("led-"   + key);
         const badge = document.getElementById("badge-" + key);
         const card  = document.getElementById("integ-" + key);
         if (led)   { led.className   = "led led-yellow"; }
         if (badge) { badge.textContent = "…"; badge.className = "integ-badge idle"; }
-        if (card)  { card.className  = "integ-card"; }
+        if (card)  { card.className  = "integ-card"; card.querySelector(".integ-error-detail")?.remove(); }
       });
 
       try {
@@ -1075,6 +1101,7 @@
           if (!led) return;
 
           const meta = _INTEG_META[key] || {};
+          card.querySelector(".integ-error-detail")?.remove();
 
           if (info.status === "ok") {
             led.className   = "led led-green";
@@ -1084,11 +1111,46 @@
             badge.textContent = txt.replace(/^ · /, "");
             badge.className   = "integ-badge ok";
           } else {
-            led.className   = "led led-red";
-            card.className  = "integ-card error";
-            badge.textContent = "Error";
+            const err = _classifyError(key, info.error);
+            led.className  = "led led-red";
+            card.className = "integ-card error";
+            badge.textContent = err.tag;
             badge.className   = "integ-badge error";
-            badge.title       = info.error || "Error desconocido";
+            badge.title = "";
+
+            // Bloque de detalle de error con botón de copiar
+            const detail = document.createElement("div");
+            detail.className = "integ-error-detail";
+
+            const leftCol = document.createElement("div");
+            leftCol.style.cssText = "flex:1;min-width:0;";
+
+            const tagEl = document.createElement("div");
+            tagEl.className = "integ-error-tag";
+            tagEl.textContent = err.tag + ":";
+
+            const msgEl = document.createElement("div");
+            msgEl.className = "integ-error-msg";
+            msgEl.textContent = err.desc;
+            msgEl.title = err.desc;
+
+            const copyBtn = document.createElement("button");
+            copyBtn.className = "integ-copy-btn";
+            copyBtn.textContent = "⎘";
+            copyBtn.title = "Copiar diagnóstico";
+            const clipText = `INTEGRACIÓN: ${key.toUpperCase()}\nCLASIFICACIÓN: ${err.tag}\nERROR: ${err.desc}`;
+            copyBtn.addEventListener("click", () => {
+              navigator.clipboard.writeText(clipText).then(() => {
+                copyBtn.textContent = "✓";
+                setTimeout(() => { copyBtn.textContent = "⎘"; }, 1400);
+              });
+            });
+
+            leftCol.appendChild(tagEl);
+            leftCol.appendChild(msgEl);
+            detail.appendChild(leftCol);
+            detail.appendChild(copyBtn);
+            badge.parentNode.appendChild(detail);
           }
         });
 

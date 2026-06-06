@@ -1241,8 +1241,8 @@ async def health_integraciones(request: Request):
         key = os.getenv("STRIPE_SECRET_KEY", "")
         if not key or not key.startswith("sk_"):
             raise ValueError("STRIPE_SECRET_KEY no configurada")
-        _stripe.api_key = key
-        _stripe.Balance.retrieve()
+        client = _stripe.StripeClient(key)
+        client.balance.retrieve()
         return {"mode": "test" if "test" in key else "live"}
 
     checks = await asyncio.gather(

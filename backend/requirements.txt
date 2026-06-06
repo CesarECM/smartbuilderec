@@ -8,5 +8,5 @@ openai
 anthropic
 supabase
 python-jose[cryptography]
-stripe
+stripe>=8.0.0
 httpx
