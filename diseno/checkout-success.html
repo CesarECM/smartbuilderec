@@ -107,22 +107,36 @@
       const sessionId = new URLSearchParams(window.location.search).get("session_id");
       if (!sessionId) { show("stateError"); return; }
 
-      try {
-        const res  = await fetch(`${BACKEND_URL}/checkout/verify?session_id=${encodeURIComponent(sessionId)}`);
-        if (!res.ok) throw new Error("not_found");
-        const data = await res.json();
+      // Reintentos con espera — Render puede tardar hasta 50 s en despertar
+      const INTENTOS = 5;
+      const ESPERA_MS = [2000, 4000, 6000, 8000, 10000];
 
-        if (data.status === "paid" || data.status === "complete") {
-          if (data.email) document.getElementById("emailUsuario").textContent = data.email;
-          show("stateSuccess");
-        } else {
-          document.getElementById("errorMsg").textContent =
-            "Tu pago está siendo procesado. Recibirás un correo de confirmación en breve.";
-          show("stateError");
+      for (let i = 0; i < INTENTOS; i++) {
+        try {
+          const res  = await fetch(`${BACKEND_URL}/checkout/verify?session_id=${encodeURIComponent(sessionId)}`);
+          if (!res.ok) throw new Error("http_error");
+          const data = await res.json();
+
+          if (data.status === "paid" || data.status === "complete") {
+            if (data.email) document.getElementById("emailUsuario").textContent = data.email;
+            show("stateSuccess");
+            return;
+          } else {
+            // Pago en proceso — esperar y reintentar
+          }
+        } catch (_) {
+          // Red o servidor no disponible — reintentar
         }
-      } catch (_) {
-        show("stateError");
+
+        if (i < INTENTOS - 1) {
+          await new Promise(r => setTimeout(r, ESPERA_MS[i]));
+        }
       }
+
+      // Todos los intentos fallaron
+      document.getElementById("errorMsg").textContent =
+        "No pudimos confirmar tu pago automáticamente. Si realizaste el cargo, recibirás tu cuenta por correo en unos minutos.";
+      show("stateError");
     }
 
     verificar();
