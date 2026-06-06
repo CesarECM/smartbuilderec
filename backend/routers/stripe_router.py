@@ -135,20 +135,20 @@ def repair_checkout(request: Request, session_id: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Sesión no encontrada: {e}")
 
-    pstatus = session["payment_status"] if "payment_status" in session else ""
+    # Usar .get() en todo — los objetos Stripe no soportan el operador `in` como dict
+    pstatus = session.get("payment_status") or ""
     if pstatus != "paid":
         raise HTTPException(status_code=400, detail=f"El pago no está confirmado (status: {pstatus}).")
 
-    # Extraer datos como dict plano para evitar problemas con objetos Stripe anidados
-    meta = session["metadata"] or {} if "metadata" in session else {}
-    cd   = session["customer_details"] if "customer_details" in session else None
-    email    = str(meta.get("email") or (cd["email"] if cd and "email" in cd else "") or "")
-    nombre   = str(meta.get("nombre", ""))
-    apellido = str(meta.get("apellido", ""))
-    customer = session["customer"] if "customer" in session else ""
+    meta     = session.get("metadata") or {}
+    cd       = session.get("customer_details") or {}
+    email    = str(meta.get("email") or cd.get("email") or "")
+    nombre   = str(meta.get("nombre") or "")
+    apellido = str(meta.get("apellido") or "")
+    customer = session.get("customer") or ""
     if customer and not isinstance(customer, str):
-        customer = getattr(customer, "id", str(customer))
-    amount = session["amount_total"] if "amount_total" in session else 179900
+        customer = getattr(customer, "id", "")
+    amount   = session.get("amount_total") or 179900
 
     if not email:
         raise HTTPException(status_code=400, detail="No se encontró email en la sesión de Stripe.")
