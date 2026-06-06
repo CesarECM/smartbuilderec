@@ -35,11 +35,18 @@ import json as _json
 _PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session", "/checkout/verify"}
 _jwks_cache: dict = {}
 
+# Endpoints de soporte accesibles sin JWT (widget anónimo desde landing, pago, etc.)
+_SOPORTE_PUBLICOS = {
+    ("POST", "/soporte/sesiones/init"),
+    ("POST", "/soporte/chat"),
+    ("POST", "/soporte/tickets"),           # crear ticket desde el widget
+    ("POST", "/soporte/cron/analizar-patrones"),  # protegido por CRON_SECRET propio
+}
+
 def _es_publico(method: str, path: str) -> bool:
     if path in _PATHS_PUBLICOS:
         return True
-    # Los endpoints de soporte manejan su propia autorizacion internamente
-    if path.startswith("/soporte/"):
+    if (method, path) in _SOPORTE_PUBLICOS:
         return True
     return False
 
