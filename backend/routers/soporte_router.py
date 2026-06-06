@@ -163,6 +163,7 @@ def _persist_transcript_sync(sb, sesion_id: str, user_msg: str, assistant_msg: s
         transcript = res.data.get("transcript") or []
         transcript.append({"role": "user",      "content": user_msg})
         transcript.append({"role": "assistant",  "content": assistant_msg})
+        transcript = transcript[-40:]  # máx 20 exchanges en DB
         sb.table("soporte_sesiones").update({
             "transcript":   transcript,
             "total_turnos": res.data.get("total_turnos", 0) + 1,

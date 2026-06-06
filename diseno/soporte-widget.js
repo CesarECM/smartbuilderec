@@ -149,6 +149,7 @@
         <p>Conectar con soporte humano</p>
         <input type="text"  id="sbe-t-nombre"  placeholder="Tu nombre (opcional)" />
         <input type="email" id="sbe-t-email"   placeholder="Tu email (opcional)"  />
+        <p id="sbe-email-warn" style="display:none;font-size:11px;color:#dc2626;margin:-4px 0 0">Sin email no podrás recibir la respuesta del equipo.</p>
         <textarea           id="sbe-t-asunto"  placeholder="Describe tu problema con detalle..." rows="3"></textarea>
         <div id="sbe-ticket-actions">
           <button id="sbe-ticket-cancel">Cancelar</button>
@@ -173,6 +174,9 @@
     panel.querySelector('#sbe-send-btn').addEventListener('click', sendMsg);
     panel.querySelector('#sbe-ticket-cancel').addEventListener('click', closeTicketForm);
     panel.querySelector('#sbe-ticket-submit').addEventListener('click', submitTicket);
+    panel.querySelector('#sbe-t-email').addEventListener('input', function () {
+      if (this.value.trim()) document.getElementById('sbe-email-warn').style.display = 'none';
+    });
     panel.querySelector('#sbe-chat-input').addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
     });
@@ -369,6 +373,14 @@
       return;
     }
 
+    // Advertencia soft de email vacío: bloquea solo la primera vez
+    const emailWarn = document.getElementById('sbe-email-warn');
+    if (!email && emailWarn && emailWarn.style.display === 'none') {
+      emailWarn.style.display = 'block';
+      document.getElementById('sbe-t-email').focus();
+      return;
+    }
+
     btn.disabled    = true;
     btn.textContent = 'Enviando...';
 
@@ -429,9 +441,12 @@
   };
 
   // ── Init ──────────────────────────────────────────────────────────────────────
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', buildWidget);
-  } else {
-    buildWidget();
+  const _currentPage = window.location.pathname.split('/').pop() || '';
+  if (_currentPage !== 'superadmin.html') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', buildWidget);
+    } else {
+      buildWidget();
+    }
   }
 })();
