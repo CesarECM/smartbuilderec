@@ -255,7 +255,7 @@
     .integ-header  { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:12px; flex-wrap:wrap; }
     .integ-title   { font-size:14px; font-weight:700; color:var(--c-text); display:flex; align-items:center; gap:8px; }
     .integ-meta    { font-size:11px; color:var(--c-text-4); }
-    .integ-grid    { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+    .integ-grid    { display:flex; flex-direction:column; gap:8px; }
     .integ-card    { background:var(--c-surface); border:1.5px solid var(--c-border); border-radius:var(--r-lg); padding:13px 15px; display:flex; align-items:center; gap:11px; transition:border-color 0.3s,background 0.3s; }
     .integ-card.ok    { border-color:#86efac; background:#f0fdf4; }
     .integ-card.error { border-color:#fca5a5; background:#fff1f2; }
@@ -1177,6 +1177,14 @@
             badge.parentNode.appendChild(detail);
           }
         });
+
+        // Errores primero
+        const grid = document.querySelector(".integ-grid");
+        if (grid) {
+          Array.from(grid.querySelectorAll(".integ-card"))
+            .sort((a, b) => (a.classList.contains("error") ? 0 : 1) - (b.classList.contains("error") ? 0 : 1))
+            .forEach(c => grid.appendChild(c));
+        }
 
         const ts = document.getElementById("integLastCheck");
         if (ts) {
