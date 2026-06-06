@@ -339,17 +339,43 @@ def _analizar_resolucion_sync(sb, ticket_id: str, ticket: dict, resolucion: str)
             except Exception:
                 pass
 
-        # FAQs existentes para que Haiku pueda sugerir editar/unir/eliminar
+        # FAQs existentes — búsqueda semántica por relevancia al ticket
         ctx = ticket.get("categoria", "general")
-        try:
-            faq_res = sb.table("knowledge_faqs").select("id,pregunta,respuesta,contexto").eq("activo", True)\
-                .or_(f"contexto.eq.{ctx},contexto.eq.general").limit(30).execute()
-            faqs_existentes = faq_res.data or []
-        except Exception:
-            faqs_existentes = []
+        faqs_existentes = []
+
+        # 1. Intentar búsqueda semántica: las N FAQs más parecidas al ticket
+        query_parts = [ticket.get("asunto", ""), resolucion, transcript_text[:600]]
+        query_text = " ".join(p for p in query_parts if p).strip()
+        if query_text:
+            try:
+                query_emb = generate_embedding(query_text)
+                sem_res = sb.rpc("match_knowledge", {
+                    "query_embedding": query_emb,
+                    "similarity_threshold": 0.20,  # bajo para cobertura, no precisión
+                    "match_count": 60,
+                    "filtro_contexto": ctx,
+                }).execute().data or []
+                faqs_existentes = [
+                    {"id": r["id"], "pregunta": r["titulo"],
+                     "respuesta": r["contenido"], "contexto": ctx}
+                    for r in sem_res if r.get("tipo") == "faq"
+                ][:25]
+            except Exception as e:
+                print(f"[feedback] semantic FAQ search failed: {e}")
+
+        # 2. Fallback si el KB está vacío o la búsqueda falló: top-votadas del contexto
+        if len(faqs_existentes) < 8:
+            try:
+                faq_res = sb.table("knowledge_faqs") \
+                    .select("id,pregunta,respuesta,contexto").eq("activo", True) \
+                    .or_(f"contexto.eq.{ctx},contexto.eq.general") \
+                    .order("votos_util", desc=True).limit(25).execute()
+                faqs_existentes = faq_res.data or []
+            except Exception:
+                faqs_existentes = []
 
         faqs_text = "\n".join(
-            f'ID:{f["id"]} | [{f["contexto"]}] P: {f["pregunta"][:120]}'
+            f'ID:{f["id"]} | [{f["contexto"]}] P: {f["pregunta"][:150]} → R: {f.get("respuesta","")[:200]}'
             for f in faqs_existentes
         ) or "(ninguna)"
 
