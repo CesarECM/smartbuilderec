@@ -254,25 +254,30 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
-  padding-left: 2px;
-  align-self: flex-start;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(31, 59, 109, 0.1);
 }
 .sbe-vote span {
   font-size: 11px;
-  color: #94a3b8;
+  color: #7a8fa8;
+  flex: 1;
 }
 .sbe-vote-btn {
-  background: none;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-size: 13px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(31, 59, 109, 0.18);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 14px;
   cursor: pointer;
-  line-height: 1.4;
-  transition: background 0.15s, border-color 0.15s;
+  line-height: 1.3;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
-.sbe-vote-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.sbe-vote-btn:hover {
+  background: #fff;
+  border-color: rgba(31, 59, 109, 0.35);
+  transform: scale(1.12);
+}
 .sbe-vote-thanks {
   font-size: 11px;
   color: #64748b;

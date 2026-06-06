@@ -414,15 +414,13 @@
 
   // ── Votación ──────────────────────────────────────────────────────────────────
   function _addVoteRow(bub, faqIds) {
-    const wrap = bub.parentNode;
-    if (!wrap) return;
     const row = document.createElement('div');
     row.className = 'sbe-vote';
     const idsJson = JSON.stringify(faqIds);
     row.innerHTML = `<span>¿Fue útil?</span>
       <button class="sbe-vote-btn" onclick="window._sbVote(this,${idsJson},true)">👍</button>
       <button class="sbe-vote-btn" onclick="window._sbVote(this,[],false)">👎</button>`;
-    wrap.appendChild(row);
+    bub.appendChild(row);
     document.getElementById('sbe-chat-messages').scrollTop =
       document.getElementById('sbe-chat-messages').scrollHeight;
   }
