@@ -54,6 +54,14 @@ class RecursoCreate(BaseModel):
     url: str = ""
     contexto: str = "general"
 
+class TicketUpdate(BaseModel):
+    estado: str
+    resolucion: str = ""
+    notas_internas: str = ""
+
+class SugerenciaAction(BaseModel):
+    accion: str  # 'aprobar' | 'rechazar'
+
 # ── Helpers de autorización ───────────────────────────────────────────────────
 
 def _get_user(request: Request) -> Optional[dict]:
@@ -160,7 +168,7 @@ def _persist_transcript_sync(sb, sesion_id: str, user_msg: str, assistant_msg: s
 # ── Tickets ────────────────────────────────────────────────────────────────────
 
 @router.post("/soporte/tickets")
-def crear_ticket(payload: TicketRequest):
+async def crear_ticket(payload: TicketRequest):
     sb = get_supabase()
     sb.table("soporte_sesiones").update({"resolucion": "escalada"}).eq("id", payload.sesion_id).execute()
 
@@ -176,15 +184,244 @@ def crear_ticket(payload: TicketRequest):
 
     ticket = res.data[0]
     sb.table("soporte_sesiones").update({"ticket_id": ticket["id"]}).eq("id", payload.sesion_id).execute()
+    asyncio.create_task(_notificar_admin_ticket_async(sb, ticket))
     return {"ticket_id": ticket["id"], "numero": ticket["numero"]}
 
 
 @router.get("/soporte/tickets")
-def listar_tickets(request: Request):
+def listar_tickets(request: Request, estado: Optional[str] = None):
+    user = _get_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Autenticación requerida.")
+    sb = get_supabase()
+    uid = user.get("sub")
+    prof = sb.table("profiles").select("rol").eq("id", uid).single().execute()
+    rol = prof.data.get("rol") if prof.data else None
+    if rol not in ("admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Sin permisos.")
+    query = sb.table("soporte_tickets").select("id,numero,asunto,categoria,estado,prioridad,user_email,user_nombre,created_at,updated_at")
+    if rol == "admin":
+        usuarios = sb.table("profiles").select("id").eq("admin_id", uid).execute()
+        uids = [u["id"] for u in (usuarios.data or [])]
+        if not uids:
+            return []
+        query = query.in_("user_id", uids)
+    if estado:
+        query = query.eq("estado", estado)
+    return query.order("created_at", desc=True).limit(100).execute().data or []
+
+
+@router.get("/soporte/tickets/{ticket_id}")
+def get_ticket(ticket_id: str, request: Request):
     _require_admin(request)
     sb = get_supabase()
-    res = sb.table("soporte_tickets").select("*").order("created_at", desc=True).limit(100).execute()
-    return res.data or []
+    t = sb.table("soporte_tickets").select("*").eq("id", ticket_id).single().execute()
+    if not t.data:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado.")
+    ticket = dict(t.data)
+    if ticket.get("sesion_id"):
+        try:
+            s = sb.table("soporte_sesiones").select("transcript,contexto,pagina_origen").eq("id", ticket["sesion_id"]).single().execute()
+            if s.data:
+                ticket["transcript"]    = s.data.get("transcript", [])
+                ticket["pagina_origen"] = s.data.get("pagina_origen", "")
+        except Exception:
+            ticket["transcript"] = []
+    return ticket
+
+
+@router.patch("/soporte/tickets/{ticket_id}")
+async def actualizar_ticket(ticket_id: str, payload: TicketUpdate, request: Request):
+    _require_admin(request)
+    sb = get_supabase()
+    t = sb.table("soporte_tickets").select("*").eq("id", ticket_id).single().execute()
+    if not t.data:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado.")
+    ticket = t.data
+
+    upd: dict = {"estado": payload.estado}
+    if payload.resolucion:    upd["resolucion"]    = payload.resolucion
+    if payload.notas_internas: upd["notas_internas"] = payload.notas_internas
+
+    if payload.estado == "resuelto":
+        from datetime import datetime, timezone
+        created = datetime.fromisoformat(ticket["created_at"].replace("Z", "+00:00"))
+        upd["tiempo_resolucion_mins"] = int((datetime.now(timezone.utc) - created).total_seconds() / 60)
+
+    sb.table("soporte_tickets").update(upd).eq("id", ticket_id).execute()
+
+    if payload.estado == "resuelto" and payload.resolucion:
+        if ticket.get("user_email"):
+            asyncio.create_task(_email_resolucion_async(ticket, payload.resolucion))
+        asyncio.create_task(_analizar_resolucion_async(sb, ticket_id, ticket, payload.resolucion))
+
+    return {"updated": ticket_id, "estado": payload.estado}
+
+
+# ── Emails background ─────────────────────────────────────────────────────────
+
+async def _notificar_admin_ticket_async(sb, ticket: dict):
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _notificar_admin_ticket_sync, sb, ticket)
+
+def _notificar_admin_ticket_sync(sb, ticket: dict):
+    try:
+        from services.email_service import send_email
+        admin_email = None
+        if ticket.get("user_id"):
+            p = sb.table("profiles").select("admin_id").eq("id", ticket["user_id"]).single().execute()
+            if p.data and p.data.get("admin_id"):
+                a = sb.table("profiles").select("email").eq("id", p.data["admin_id"]).single().execute()
+                admin_email = a.data.get("email") if a.data else None
+        if not admin_email:
+            return
+        frontend_url = os.getenv("FRONTEND_URL", "https://www.smartbuilderec.com")
+        n = ticket.get("numero", "?")
+        asunto = ticket.get("asunto", "Sin asunto")
+        nombre = ticket.get("user_nombre") or ticket.get("user_email") or "Anónimo"
+        html = f"""<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+<h2 style="color:#1F3B6D">Nuevo ticket de soporte #{n}</h2>
+<p><strong>Asunto:</strong> {asunto}</p>
+<p><strong>De:</strong> {nombre}</p>
+<p style="margin-top:20px"><a href="{frontend_url}/admin.html" style="background:#1F3B6D;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Ver en panel admin</a></p>
+</div>"""
+        send_email(admin_email, f"Ticket #{n}: {asunto}", html)
+    except Exception as e:
+        print(f"[soporte] Error notificando admin: {e}")
+
+
+async def _email_resolucion_async(ticket: dict, resolucion: str):
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _email_resolucion_sync, ticket, resolucion)
+
+def _email_resolucion_sync(ticket: dict, resolucion: str):
+    try:
+        from services.email_service import send_email
+        frontend_url = os.getenv("FRONTEND_URL", "https://www.smartbuilderec.com")
+        n = ticket.get("numero", "?")
+        nombre = ticket.get("user_nombre") or "Usuario"
+        email  = ticket.get("user_email", "")
+        if not email:
+            return
+        html = f"""<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+<h2 style="color:#1F3B6D">Tu ticket #{n} fue respondido</h2>
+<p>Hola {nombre},</p>
+<p><strong>Tu consulta:</strong> {ticket.get("asunto","")}</p>
+<div style="background:#f0f4fb;border-radius:8px;padding:16px;margin:16px 0"><strong>Respuesta:</strong><br><br>{resolucion}</div>
+<p style="margin-top:20px"><a href="{frontend_url}" style="background:#1F3B6D;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Ir a SmartBuilderEC</a></p>
+</div>"""
+        send_email(email, f"Tu consulta fue respondida — Ticket #{n}", html)
+    except Exception as e:
+        print(f"[soporte] Error enviando resolución: {e}")
+
+
+# ── Feedback loop — Capa 3 ────────────────────────────────────────────────────
+
+async def _analizar_resolucion_async(sb, ticket_id: str, ticket: dict, resolucion: str):
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _analizar_resolucion_sync, sb, ticket_id, ticket, resolucion)
+
+def _analizar_resolucion_sync(sb, ticket_id: str, ticket: dict, resolucion: str):
+    try:
+        import anthropic as _ant, json as _json
+        client = _ant.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        transcript_text = ""
+        if ticket.get("sesion_id"):
+            try:
+                s = sb.table("soporte_sesiones").select("transcript").eq("id", ticket["sesion_id"]).single().execute()
+                msgs = s.data.get("transcript", []) if s.data else []
+                transcript_text = "\n".join(
+                    f"{m['role'].upper()}: {str(m.get('content',''))[:300]}" for m in msgs[:20]
+                )
+            except Exception:
+                pass
+        resp = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": f"""Analiza este ticket de soporte de SmartBuilderEC (plataforma EC0217.01 CONOCER México).
+
+ASUNTO: {ticket.get('asunto','')}
+CONTEXTO: {ticket.get('categoria','general')}
+
+CONVERSACIÓN CON IA:
+{transcript_text or "(sin transcripción)"}
+
+RESOLUCIÓN HUMANA:
+{resolucion}
+
+Responde SOLO JSON válido (sin markdown):
+{{
+  "ia_podia_resolverlo": true,
+  "por_que_no": null,
+  "sugerencias": [
+    {{
+      "tipo": "nueva_faq",
+      "pregunta": "texto de la pregunta",
+      "respuesta": "respuesta completa",
+      "contexto": "ventas|checkout|onboarding|acceso|wizard_ec0217|navegacion|admin|general",
+      "causa_raiz": "qué gap de conocimiento cubre"
+    }}
+  ]
+}}
+Incluye sugerencias solo si la IA no pudo resolver. Máximo 2."""}]
+        )
+        content = resp.content[0].text.strip()
+        if content.startswith("```"):
+            content = content.split("```")[1]
+            if content.startswith("json"): content = content[4:]
+            content = content.split("```")[0].strip()
+        analisis = _json.loads(content)
+        if not analisis.get("ia_podia_resolverlo") and analisis.get("sugerencias"):
+            for sug in analisis["sugerencias"]:
+                sb.table("soporte_sugerencias").insert({
+                    "tipo": sug.get("tipo","nueva_faq"),
+                    "ticket_ids": [ticket_id],
+                    "propuesta": {
+                        "pregunta":  sug.get("pregunta",""),
+                        "respuesta": sug.get("respuesta",""),
+                        "contexto":  sug.get("contexto","general"),
+                        "causa_raiz":sug.get("causa_raiz",""),
+                        "por_que_no":analisis.get("por_que_no",""),
+                    },
+                    "estado": "pendiente",
+                }).execute()
+            print(f"[feedback] {len(analisis['sugerencias'])} sugerencias para ticket {ticket_id}")
+    except Exception as e:
+        print(f"[feedback] Error en ticket {ticket_id}: {e}")
+
+
+# ── Sugerencias ───────────────────────────────────────────────────────────────
+
+@router.get("/soporte/sugerencias")
+def listar_sugerencias(request: Request, estado: str = "pendiente"):
+    _require_superadmin(request)
+    sb = get_supabase()
+    return sb.table("soporte_sugerencias").select("*").eq("estado", estado).order("created_at", desc=True).limit(50).execute().data or []
+
+
+@router.patch("/soporte/sugerencias/{sug_id}")
+def gestionar_sugerencia(sug_id: str, payload: SugerenciaAction, request: Request):
+    uid = _require_superadmin(request)
+    sb = get_supabase()
+    if payload.accion not in ("aprobar", "rechazar"):
+        raise HTTPException(status_code=400, detail="accion debe ser 'aprobar' o 'rechazar'.")
+    if payload.accion == "rechazar":
+        sb.table("soporte_sugerencias").update({"estado": "rechazada", "aprobada_por": uid}).eq("id", sug_id).execute()
+        return {"accion": "rechazada"}
+    sug = sb.table("soporte_sugerencias").select("*").eq("id", sug_id).single().execute()
+    if not sug.data:
+        raise HTTPException(status_code=404, detail="Sugerencia no encontrada.")
+    prop = sug.data.get("propuesta", {})
+    faq_creada = False
+    if sug.data.get("tipo") == "nueva_faq":
+        preg = prop.get("pregunta",""); resp = prop.get("respuesta",""); ctx = prop.get("contexto","general")
+        if preg and resp:
+            emb = generate_embedding(f"{preg} {resp}")
+            sb.table("knowledge_faqs").insert({"pregunta":preg,"respuesta":resp,"categoria":"auto-generada","contexto":ctx,"embedding":emb,"activo":True}).execute()
+            faq_creada = True
+    from datetime import datetime, timezone
+    sb.table("soporte_sugerencias").update({"estado":"aprobada","aprobada_por":uid,"aplicada_en":datetime.now(timezone.utc).isoformat()}).eq("id",sug_id).execute()
+    return {"accion": "aprobada", "faq_creada": faq_creada}
 
 # ── FAQs ───────────────────────────────────────────────────────────────────────
 

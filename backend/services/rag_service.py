@@ -136,5 +136,6 @@ def build_system_prompt(
         "- Si el usuario lleva más de 5 intercambios sin resolver su problema, "
         "sugiere activamente crear un ticket para que un humano lo asista.\n"
         "- Máximo 3 párrafos por respuesta. Sé conciso y directo.\n"
-        "- Responde siempre en español."
+        "- Responde siempre en español.\n"
+        "- IMPORTANTE: Si genuinamente no puedes responder porque no tienes información específica sobre la consulta del usuario, responde lo mejor que puedas Y añade exactamente \"[TICKET_CTA]\" al final del mensaje (sin espacios extra, en su propia línea). El sistema lo convertirá en un botón para contactar soporte humano."
     ).strip()

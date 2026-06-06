@@ -293,6 +293,13 @@
           document.getElementById('sbe-chat-messages').scrollHeight;
       }
 
+      // Detectar si la IA sugiere escalación
+      if (full.includes('[TICKET_CTA]')) {
+        full = full.replace(/\s*\[TICKET_CTA\]\s*/g, '').trim();
+        bub.innerHTML = md(full);
+        setTimeout(_offerTicket, 500);
+      }
+
       historial.push({ role: 'assistant', content: full });
 
       // Sugerir ticket tras 5 turnos sin resolver

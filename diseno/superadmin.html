@@ -166,6 +166,8 @@
     .error-txt   { color: var(--c-danger); font-size: 13px; padding: 14px; }
     .count-tag   { font-size: 12px; color: var(--c-text-3); }
     .panel-section-gap { margin-top: 36px; }
+    .badge-count { background:#dc2626;color:#fff;border-radius:9999px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;display:inline-block; }
+    .badge-count:empty { display:none; }
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 9999; }
     .toast.visible { opacity: 1; }
 
@@ -583,6 +585,23 @@
       </div>
 
       <div id="listaRecursos" style="margin-top:12px"><p class="loading-txt">Los recursos aparecerán aquí.</p></div>
+
+      <!-- Sugerencias del Feedback Loop -->
+      <div class="section-header panel-section-gap">
+        <div>
+          <h2>Sugerencias de la IA <span class="badge-count" id="sugBadge"></span></h2>
+          <p style="font-size:12px;color:var(--c-text-3);margin:4px 0 0">Generadas automáticamente al resolver tickets. Aprueba para crear FAQs nuevas.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <select id="filtroSug" class="search-input" style="width:150px" onchange="cargarSugerencias(this.value)">
+            <option value="pendiente">Pendientes</option>
+            <option value="aprobada">Aprobadas</option>
+            <option value="rechazada">Rechazadas</option>
+          </select>
+          <button class="btn-sm" onclick="cargarSugerencias(document.getElementById('filtroSug').value)">↺ Actualizar</button>
+        </div>
+      </div>
+      <div id="listaSugerencias" style="margin-top:12px"><p class="empty-txt">Las sugerencias aparecerán aquí cuando se resuelvan tickets.</p></div>
 
     </div>
 
@@ -1696,7 +1715,7 @@
 
     // ── Soporte KB ────────────────────────────────────────────────
     async function cargarKB() {
-      await Promise.all([cargarFaqs(), cargarRecursos()]);
+      await Promise.all([cargarFaqs(), cargarRecursos(), cargarSugerencias("pendiente")]);
     }
 
     // FAQs
@@ -1909,6 +1928,64 @@
         if (!res.ok) throw new Error("Error al eliminar.");
         document.getElementById(`rec-row-${recursoId}`)?.remove();
         mostrarToast("Recurso eliminado");
+      } catch(e) { alert(e.message); }
+    }
+
+    // ── Sugerencias de IA (Feedback Loop) ────────────────────────
+    async function cargarSugerencias(estado = "pendiente") {
+      const el = document.getElementById("listaSugerencias");
+      el.innerHTML = '<p class="loading-txt">Cargando sugerencias...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/sugerencias?estado=${estado}`, { headers });
+        if (!res.ok) throw new Error("Error al cargar.");
+        const sugs = await res.json();
+        const badge = document.getElementById("sugBadge");
+        if (badge && estado === "pendiente") badge.textContent = sugs.length || "";
+        if (!sugs.length) { el.innerHTML = `<p class="empty-txt">No hay sugerencias ${estado === "pendiente" ? "pendientes" : "con ese estado"}.</p>`; return; }
+        el.innerHTML = sugs.map(s => {
+          const prop = s.propuesta || {};
+          const fecha = new Date(s.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
+          const isPendiente = s.estado === "pendiente";
+          return `<div id="sug-${s.id}" style="background:var(--c-surface);border:1.5px solid var(--c-border);border-radius:var(--r-xl);padding:18px 20px;margin-bottom:10px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                  <span class="status-badge badge-user">${prop.contexto || "general"}</span>
+                  <span style="font-size:11px;color:var(--c-text-4)">${fecha}</span>
+                  <span class="status-badge ${s.estado==="aprobada"?"badge-activo":s.estado==="rechazada"?"badge-inactivo":"badge-borrador"}">${s.estado}</span>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:var(--c-text);margin-bottom:6px">${(prop.pregunta||"").replace(/</g,"&lt;")}</div>
+                <div style="font-size:12px;color:var(--c-text-2);line-height:1.5">${(prop.respuesta||"").replace(/</g,"&lt;").slice(0,300)}${(prop.respuesta||"").length>300?"…":""}</div>
+                ${prop.causa_raiz ? `<div style="font-size:11px;color:var(--c-text-3);margin-top:6px">Causa raíz: ${prop.causa_raiz}</div>` : ""}
+              </div>
+              ${isPendiente ? `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+                <button class="btn-sm success" onclick="accionSugerencia('${s.id}','aprobar')">Aprobar y crear FAQ</button>
+                <button class="btn-sm danger"  onclick="accionSugerencia('${s.id}','rechazar')">Rechazar</button>
+              </div>` : ""}
+            </div>
+          </div>`;
+        }).join("");
+      } catch(e) {
+        el.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
+    async function accionSugerencia(sugId, accion) {
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/sugerencias/${sugId}`, {
+          method: "PATCH", headers: {...headers,"Content-Type":"application/json"},
+          body: JSON.stringify({ accion }),
+        });
+        if (!res.ok) { const d = await res.json().catch(()=>{}); throw new Error(d?.detail||"Error."); }
+        const data = await res.json();
+        document.getElementById(`sug-${sugId}`)?.remove();
+        mostrarToast(accion === "aprobar"
+          ? (data.faq_creada ? "FAQ creada y embeddings generados" : "Sugerencia aprobada")
+          : "Sugerencia rechazada");
+        // Refresh badge
+        await cargarSugerencias("pendiente");
       } catch(e) { alert(e.message); }
     }
 

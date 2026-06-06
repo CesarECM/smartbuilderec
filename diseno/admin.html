@@ -129,6 +129,30 @@
       .search-input { width: 140px; }
       .code-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── Ticket badges ───────────────────────────────────────────── */
+    .badge-nuevo     { background:#fee2e2;color:#991b1b; }
+    .badge-en_revision{ background:#fef9c3;color:#92400e; }
+    .badge-resuelto  { background:#d1fae5;color:#065f46; }
+    .badge-count { background:#dc2626;color:#fff;border-radius:9999px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;display:inline-block; }
+    .badge-count:empty { display:none; }
+    /* ── Transcript chat ─────────────────────────────────────────── */
+    .chat-transcript { max-height:320px;overflow-y:auto;padding:14px;background:#f8fafc;border-radius:8px;border:1px solid var(--c-border);display:flex;flex-direction:column;gap:8px;margin-bottom:14px; }
+    .ct-msg { display:flex;max-width:90%; }
+    .ct-msg--user      { align-self:flex-end; }
+    .ct-msg--assistant { align-self:flex-start; }
+    .ct-bubble { padding:8px 12px;border-radius:12px;font-size:12.5px;line-height:1.5;white-space:pre-wrap; }
+    .ct-msg--user .ct-bubble      { background:#1F3B6D;color:#fff;border-bottom-right-radius:3px; }
+    .ct-msg--assistant .ct-bubble { background:#fff;color:#1a1a1a;border:1px solid var(--c-border);border-bottom-left-radius:3px; }
+    .ct-role-label { font-size:10px;font-weight:700;text-transform:uppercase;color:var(--c-text-3);margin-bottom:2px; }
+    /* ── Modal ───────────────────────────────────────────────────── */
+    .tk-modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto; }
+    .tk-modal-overlay.open { display:flex; }
+    .tk-modal-box { background:var(--c-surface);border-radius:var(--r-xl);box-shadow:0 24px 64px rgba(0,0,0,0.22);width:100%;max-width:680px;padding:28px 32px;position:relative;margin:auto; }
+    .tk-modal-close { position:absolute;top:14px;right:14px;background:var(--c-surface-2);border:none;width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;color:var(--c-text-3); }
+    .tk-label { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--c-text-3);margin-bottom:6px;display:block; }
+    .tk-textarea { width:100%;box-sizing:border-box;border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:9px 12px;font-size:13px;font-family:inherit;background:var(--c-surface);resize:vertical;outline:none;transition:border-color 0.15s; }
+    .tk-textarea:focus { border-color:var(--c-blue-600); }
   </style>
 </head>
 <body>
@@ -151,6 +175,7 @@
     <button class="tab-btn active" id="tab-resumen"  onclick="showTab('resumen')">📊 Resumen</button>
     <button class="tab-btn"        id="tab-usuarios" onclick="showTab('usuarios')">👥 Usuarios</button>
     <button class="tab-btn"        id="tab-codigos"  onclick="showTab('codigos')">🔑 Códigos de acceso</button>
+    <button class="tab-btn" id="tab-tickets" onclick="showTab('tickets')">🎫 Tickets <span class="badge-count" id="ticketsBadge"></span></button>
   </nav>
 
   <main class="panel-main">
@@ -215,7 +240,32 @@
       <div id="listaCodigos"><p class="loading-txt">Cargando códigos...</p></div>
     </div>
 
+    <!-- ══ Tickets ════════════════════════════════════════════════ -->
+    <div id="panel-tickets" class="tab-panel">
+      <div class="section-header">
+        <h2>Tickets de soporte</h2>
+        <div class="section-header-right">
+          <select id="filtroEstadoTicket" class="search-input" style="width:140px" onchange="cargarTickets(this.value)">
+            <option value="">Todos</option>
+            <option value="nuevo">Nuevos</option>
+            <option value="en_revision">En revisión</option>
+            <option value="resuelto">Resueltos</option>
+          </select>
+          <button class="btn-sm" onclick="cargarTickets()">↺ Actualizar</button>
+        </div>
+      </div>
+      <div id="listaTickets"><p class="loading-txt">Selecciona la pestaña para cargar tickets.</p></div>
+    </div>
+
   </main>
+
+  <!-- Modal detalle de ticket -->
+  <div class="tk-modal-overlay" id="modalTicket" onclick="cerrarTicketModal(event)">
+    <div class="tk-modal-box">
+      <button class="tk-modal-close" onclick="cerrarTicketModal()">✕</button>
+      <div id="tkModalBody"></div>
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
 
@@ -540,6 +590,149 @@
       t.classList.add("visible");
       setTimeout(() => t.classList.remove("visible"), 2500);
     }
+
+    let _ticketsLoaded = false;
+
+    // Override showTab to load tickets on first visit
+    const _origShowTab = showTab;
+    function showTab(name) {
+      _origShowTab(name);
+      if (name === "tickets" && !_ticketsLoaded) { _ticketsLoaded = true; cargarTickets(); }
+    }
+
+    // ── Tickets ───────────────────────────────────────────────────
+    async function cargarTickets(estado = "") {
+      const lista = document.getElementById("listaTickets");
+      lista.innerHTML = '<p class="loading-txt">Cargando tickets...</p>';
+      try {
+        const headers = await getAuthHeaders();
+        const url = `${BACKEND_URL}/soporte/tickets${estado ? "?estado=" + estado : ""}`;
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error("Error al cargar tickets.");
+        const tickets = await res.json();
+        // Update badge
+        const nuevos = tickets.filter(t => t.estado === "nuevo").length;
+        document.getElementById("ticketsBadge").textContent = nuevos || "";
+        if (!tickets.length) { lista.innerHTML = '<p class="empty-txt">No hay tickets' + (estado ? ' con ese estado' : '') + '.</p>'; return; }
+        lista.innerHTML = `<div class="table-wrap"><table class="users-table">
+          <thead><tr><th>#</th><th>Asunto</th><th>Estado</th><th>Usuario</th><th>Fecha</th><th></th></tr></thead>
+          <tbody>${tickets.map(t => {
+            const fecha = new Date(t.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
+            const estadoLabel = {nuevo:"Nuevo",en_revision:"En revisión",resuelto:"Resuelto"}[t.estado] || t.estado;
+            const badgeCls = `badge-${t.estado}`;
+            return `<tr>
+              <td style="font-weight:700;color:var(--c-text-3)">#${t.numero}</td>
+              <td style="font-weight:600;color:var(--c-text);max-width:240px">${t.asunto}</td>
+              <td><span class="status-badge ${badgeCls}">${estadoLabel}</span></td>
+              <td style="color:var(--c-text-3);font-size:12px">${t.user_nombre||t.user_email||"Anónimo"}</td>
+              <td style="color:var(--c-text-4);font-size:12px;white-space:nowrap">${fecha}</td>
+              <td><button class="btn-sm" onclick="abrirTicket('${t.id}')">Ver</button></td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>`;
+      } catch(e) {
+        lista.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
+    async function abrirTicket(ticketId) {
+      const body = document.getElementById("tkModalBody");
+      body.innerHTML = '<p class="loading-txt" style="padding:16px">Cargando ticket...</p>';
+      document.getElementById("modalTicket").classList.add("open");
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/tickets/${ticketId}`, { headers });
+        if (!res.ok) throw new Error("No se pudo cargar el ticket.");
+        const t = await res.json();
+        const estadoLabel = {nuevo:"Nuevo",en_revision:"En revisión",resuelto:"Resuelto"}[t.estado] || t.estado;
+        const transcript = t.transcript || [];
+        const transcriptHtml = transcript.length
+          ? transcript.map(m => `
+            <div class="ct-msg ct-msg--${m.role}">
+              <div>
+                <div class="ct-role-label">${m.role === "user" ? "Usuario" : "Asistente IA"}</div>
+                <div class="ct-bubble">${(m.content||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").slice(0,800)}</div>
+              </div>
+            </div>`).join("")
+          : '<p style="color:var(--c-text-3);font-size:12px;text-align:center;padding:8px">Sin transcripción disponible.</p>';
+        const resueltoBadge = t.estado === "resuelto"
+          ? `<div style="background:#d1fae5;border-radius:8px;padding:12px;margin-bottom:14px"><strong>Resolución:</strong><br>${(t.resolucion||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")}</div>` : "";
+        body.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-size:17px;font-weight:700;color:var(--c-text)">Ticket #${t.numero}</span>
+            <span class="status-badge badge-${t.estado}">${estadoLabel}</span>
+            ${t.user_email ? `<span style="font-size:12px;color:var(--c-text-3)">${t.user_nombre||""} &lt;${t.user_email}&gt;</span>` : ""}
+          </div>
+          <div style="font-size:13px;color:var(--c-text-2);margin-bottom:16px">${t.asunto}</div>
+          <label class="tk-label">Conversación con IA</label>
+          <div class="chat-transcript">${transcriptHtml}</div>
+          ${resueltoBadge}
+          ${t.estado !== "resuelto" ? `
+          <label class="tk-label">Resolución</label>
+          <textarea id="tkResolucion" class="tk-textarea" rows="4" placeholder="Escribe aquí la respuesta o solución para el usuario..."></textarea>
+          <div style="margin-top:8px">
+            <label class="tk-label">Notas internas <span style="font-weight:400;text-transform:none">(no se envían al usuario)</span></label>
+            <textarea id="tkNotas" class="tk-textarea" rows="2" placeholder="Notas para el equipo..."></textarea>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap">
+            ${t.estado === "nuevo" ? `<button class="btn-secondary" onclick="cambiarEstadoTicket('${t.id}','en_revision')">Marcar en revisión</button>` : ""}
+            <button class="btn-primary" onclick="resolverTicket('${t.id}')">Marcar como resuelto</button>
+          </div>
+          <p class="crear-msg" id="tkMsg"></p>
+          ` : ""}`;
+      } catch(e) {
+        body.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
+    async function cambiarEstadoTicket(ticketId, estado) {
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/tickets/${ticketId}`, {
+          method: "PATCH", headers: {...headers,"Content-Type":"application/json"},
+          body: JSON.stringify({estado})
+        });
+        if (!res.ok) throw new Error("Error al actualizar.");
+        mostrarToast("Estado actualizado");
+        cerrarTicketModal(); await cargarTickets();
+      } catch(e) { alert(e.message); }
+    }
+
+    async function resolverTicket(ticketId) {
+      const resolucion = document.getElementById("tkResolucion")?.value.trim();
+      const notas      = document.getElementById("tkNotas")?.value.trim();
+      const msg        = document.getElementById("tkMsg");
+      if (!resolucion) { if(msg){msg.textContent="Escribe la resolución antes de cerrar el ticket.";msg.className="crear-msg error";} return; }
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/soporte/tickets/${ticketId}`, {
+          method: "PATCH", headers: {...headers,"Content-Type":"application/json"},
+          body: JSON.stringify({estado:"resuelto",resolucion,notas_internas:notas||""})
+        });
+        if (!res.ok) { const d=await res.json().catch(()=>{}); throw new Error(d?.detail||"Error."); }
+        mostrarToast("Ticket resuelto. Se notificará al usuario.");
+        cerrarTicketModal(); await cargarTickets();
+      } catch(e) { if(msg){msg.textContent=e.message;msg.className="crear-msg error";} }
+    }
+
+    function cerrarTicketModal(e) {
+      if (!e || e.target === document.getElementById("modalTicket")) {
+        document.getElementById("modalTicket").classList.remove("open");
+      }
+    }
+
+    // ── Contar tickets abiertos al cargar stats ───────────────────
+    const _origCargarStats = cargarStats;
+    cargarStats = async function() {
+      await _origCargarStats();
+      // Contar tickets abiertos
+      const headers2 = await getAuthHeaders();
+      fetch(`${BACKEND_URL}/soporte/tickets?estado=nuevo`, {headers:headers2})
+        .then(r=>r.json()).then(tickets=>{
+          const badge = document.getElementById("ticketsBadge");
+          if(badge) badge.textContent = tickets.length || "";
+        }).catch(()=>{});
+    };
 
     init();
   </script>
