@@ -51,6 +51,9 @@ def _es_publico(method: str, path: str) -> bool:
         return True
     if (method, path) in _SOPORTE_PUBLICOS:
         return True
+    # Blog de recursos: público para lectura
+    if method == "GET" and (path == "/recursos" or path.startswith("/recursos/")):
+        return True
     return False
 
 async def _get_public_key(supabase_url: str, kid: str):

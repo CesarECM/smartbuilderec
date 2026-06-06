@@ -750,6 +750,7 @@
               <option value="editar_faq">Editar FAQ</option>
               <option value="eliminar_faq">Eliminar FAQ</option>
               <option value="unir_faqs">Unir FAQs</option>
+              <option value="nuevo_recurso">Nuevo Recurso</option>
             </select>
             <button class="btn-sm" onclick="cargarSugerencias(document.getElementById('spSugEstado').value||'pendiente')">↺ Actualizar</button>
           </div>
@@ -2875,10 +2876,11 @@
     const _editando = new Set();
 
     const SUG_META = {
-      nueva_faq:    { label: "Nueva FAQ",      color: "#dbeafe", colorTxt: "#1e40af", btnTxt: "Crear FAQ" },
-      editar_faq:   { label: "Editar FAQ",     color: "#fef9c3", colorTxt: "#92400e", btnTxt: "Aplicar edición" },
-      eliminar_faq: { label: "Eliminar FAQ",   color: "#fee2e2", colorTxt: "#991b1b", btnTxt: "Eliminar FAQ" },
-      unir_faqs:    { label: "Unir FAQs",      color: "#ede9fe", colorTxt: "#5b21b6", btnTxt: "Unir y crear" },
+      nueva_faq:     { label: "Nueva FAQ",       color: "#dbeafe", colorTxt: "#1e40af", btnTxt: "Crear FAQ" },
+      editar_faq:    { label: "Editar FAQ",      color: "#fef9c3", colorTxt: "#92400e", btnTxt: "Aplicar edición" },
+      eliminar_faq:  { label: "Eliminar FAQ",    color: "#fee2e2", colorTxt: "#991b1b", btnTxt: "Eliminar FAQ" },
+      unir_faqs:     { label: "Unir FAQs",       color: "#ede9fe", colorTxt: "#5b21b6", btnTxt: "Unir y crear" },
+      nuevo_recurso: { label: "Nuevo Recurso",   color: "#dcfce7", colorTxt: "#166534", btnTxt: "Publicar recurso" },
     };
 
     function _esc(t)     { return (t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
@@ -2957,6 +2959,18 @@
           </div>`;
         }
 
+        case "nuevo_recurso":
+          return `<div style="display:flex;flex-direction:column;gap:8px">
+            ${_editFld("Título", inp("titulo", prop.titulo||"", "Título del artículo"))}
+            ${_editFld("Contenido (markdown)", ta("contenido", prop.contenido||"", 8))}
+            ${_editFld("Tipo", `<select id="sedit-tipor-${sugId}" style="border:1.5px solid var(--c-border);border-radius:var(--r-sm);padding:6px 10px;font-size:12px;font-family:inherit;background:var(--c-surface);outline:none;width:100%;box-sizing:border-box">
+              <option value="articulo"${(prop.tipo_recurso||"articulo")==="articulo"?" selected":""}>Artículo</option>
+              <option value="tutorial"${prop.tipo_recurso==="tutorial"?" selected":""}>Tutorial</option>
+              <option value="guia"${prop.tipo_recurso==="guia"?" selected":""}>Guía</option>
+            </select>`)}
+            ${_editFld("Contexto", _ctxSelect(p("ctx"), prop.contexto||"general"))}
+          </div>`;
+
         default:
           return `<div style="font-size:12px;color:var(--c-text-3)">${_esc(JSON.stringify(prop).slice(0,200))}</div>`;
       }
@@ -3002,6 +3016,12 @@
           break;
         case "eliminar_faq":
           prop.razon = g("razon");
+          break;
+        case "nuevo_recurso":
+          prop.titulo    = g("titulo");
+          prop.contenido = g("contenido");
+          prop.contexto  = g("ctx");
+          prop.tipo_recurso = document.getElementById(`sedit-tipor-${sugId}`)?.value || prop.tipo_recurso || "articulo";
           break;
       }
       return prop;
@@ -3055,6 +3075,17 @@
             </div>
             ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3);margin-top:5px">Motivo: ${_esc(prop.causa_raiz)}</div>`:""}`;
         }
+
+        case "nuevo_recurso":
+          return `
+            <div style="font-size:13px;font-weight:700;color:var(--c-text);margin-bottom:5px">${_esc(prop.titulo)}</div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <span class="status-badge badge-user">${prop.tipo_recurso||"articulo"}</span>
+              <span class="status-badge badge-user">${prop.contexto||"general"}</span>
+            </div>
+            <div style="font-size:12px;color:var(--c-text-2);line-height:1.5">${_esc(prop.contenido||"").slice(0,300)}${(prop.contenido||"").length>300?"…":""}</div>
+            ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3);margin-top:5px">Motivo: ${_esc(prop.causa_raiz)}</div>`:""}
+            <a href="/recursos.html" target="_blank" style="font-size:11px;color:var(--c-blue-600);margin-top:6px;display:inline-block">Ver blog de recursos →</a>`;
 
         default:
           return `<div style="font-size:12px;color:var(--c-text-3)">${_esc(JSON.stringify(prop).slice(0,200))}</div>`;

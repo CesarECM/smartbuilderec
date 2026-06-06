@@ -452,12 +452,14 @@ Resolución del agente humano:
 FAQS ACTUALES EN EL KNOWLEDGE BASE (contexto {ctx} + general):
 {faqs_text}
 
-Analiza y sugiere hasta 3 mejoras. Puedes proponer 4 tipos de acción:
+Analiza y sugiere hasta 3 mejoras. Puedes proponer 5 tipos de acción:
 
 1. nueva_faq — crear FAQ que no existe
 2. editar_faq — mejorar una FAQ existente incompleta o imprecisa (requiere faq_id del listado)
 3. eliminar_faq — eliminar FAQ obsoleta, incorrecta o redundante (requiere faq_id)
 4. unir_faqs — fusionar 2+ FAQs muy similares en una sola (requiere faq_ids como array)
+5. nuevo_recurso — crear un artículo de blog completo cuando el tema requiere guía paso a paso,
+   tutorial extenso o documentación detallada que no cabe en una FAQ
 
 Solo sugiere si mejora genuinamente el knowledge base. Si la IA resolvió bien, devuelve sugerencias vacías.
 
@@ -497,6 +499,14 @@ Responde SOLO JSON válido (sin markdown, sin texto extra):
       "respuesta": "respuesta combinada y completa",
       "contexto": "contexto",
       "causa_raiz": "por qué unirlas"
+    }},
+    {{
+      "tipo": "nuevo_recurso",
+      "titulo": "Título del artículo",
+      "contenido": "Contenido completo en markdown: puede incluir # encabezados, listas, pasos numerados",
+      "tipo_recurso": "articulo|tutorial|guia",
+      "contexto": "ventas|checkout|onboarding|acceso|wizard_ec0217|navegacion|admin|general",
+      "causa_raiz": "por qué se necesita un artículo completo y no solo una FAQ"
     }}
   ]
 }}"""}]
@@ -542,6 +552,18 @@ Responde SOLO JSON válido (sin markdown, sin texto extra):
                     "contexto": sug.get("contexto","general"), "causa_raiz": sug.get("causa_raiz",""),
                 }
                 if not propuesta["faq_ids"]: continue
+            elif tipo == "nuevo_recurso":
+                titulo    = sug.get("titulo","")
+                contenido = sug.get("contenido","")
+                if not titulo or not contenido: continue
+                propuesta = {
+                    "titulo":       titulo,
+                    "contenido":    contenido,
+                    "tipo_recurso": sug.get("tipo_recurso","articulo"),
+                    "contexto":     sug.get("contexto","general"),
+                    "causa_raiz":   sug.get("causa_raiz",""),
+                    "por_que_no":   analisis.get("por_que_no",""),
+                }
             else:
                 continue
 
@@ -613,16 +635,36 @@ def gestionar_sugerencia(sug_id: str, payload: SugerenciaAction, request: Reques
         faq_ids = prop.get("faq_ids", []); preg = prop.get("pregunta","")
         resp    = prop.get("respuesta",""); ctx = prop.get("contexto","general")
         if faq_ids and preg and resp:
-            # Crear FAQ unificada
             emb = generate_embedding(f"{preg} {resp}")
             sb.table("knowledge_faqs").insert({
                 "pregunta": preg, "respuesta": resp, "categoria": "auto-generada",
                 "contexto": ctx, "embedding": emb, "activo": True,
             }).execute()
-            # Desactivar las originales
             for fid in faq_ids:
                 sb.table("knowledge_faqs").update({"activo": False}).eq("id", fid).execute()
             resultado["faqs_unidas"] = faq_ids
+
+    elif tipo == "nuevo_recurso":
+        titulo   = prop.get("titulo", "")
+        contenido = prop.get("contenido", "")
+        ctx      = prop.get("contexto", "general")
+        tipo_rec = prop.get("tipo_recurso", "articulo")
+        if titulo and contenido:
+            title_emb = generate_embedding(titulo)
+            r = sb.table("knowledge_recursos").insert({
+                "titulo": titulo, "tipo": tipo_rec, "contenido": contenido,
+                "contexto": ctx, "embedding": title_emb, "activo": True,
+            }).execute()
+            recurso_id = r.data[0]["id"]
+            chunks = chunk_text(contenido)
+            for i, chunk in enumerate(chunks):
+                chunk_emb = generate_embedding(chunk)
+                sb.table("knowledge_chunks").insert({
+                    "recurso_id": recurso_id, "chunk_index": i,
+                    "contenido": chunk, "embedding": chunk_emb,
+                }).execute()
+            resultado["recurso_creado"] = recurso_id
+            resultado["chunks"] = len(chunks)
 
     from datetime import datetime, timezone
     sb.table("soporte_sugerencias").update({
@@ -755,7 +797,32 @@ def eliminar_faq(faq_id: str, request: Request):
     sb.table("knowledge_faqs").update({"activo": False}).eq("id", faq_id).execute()
     return {"deleted": faq_id}
 
-# ── Recursos ───────────────────────────────────────────────────────────────────
+# ── Recursos — Blog público ────────────────────────────────────────────────────
+
+@router.get("/recursos")
+def listar_recursos_blog():
+    sb = get_supabase()
+    res = sb.table("knowledge_recursos") \
+        .select("id, titulo, tipo, url, contexto, created_at") \
+        .eq("activo", True) \
+        .order("created_at", desc=True) \
+        .execute()
+    return res.data or []
+
+
+@router.get("/recursos/{recurso_id}")
+def get_recurso_blog(recurso_id: str):
+    sb = get_supabase()
+    res = sb.table("knowledge_recursos") \
+        .select("id, titulo, tipo, contenido, url, contexto, created_at") \
+        .eq("id", recurso_id).eq("activo", True) \
+        .single().execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Recurso no encontrado.")
+    return res.data
+
+
+# ── Recursos — Admin ────────────────────────────────────────────────────────────
 
 @router.get("/soporte/recursos")
 def listar_recursos(request: Request):

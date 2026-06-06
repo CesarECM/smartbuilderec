@@ -115,12 +115,21 @@ def retrieve_knowledge(
 def _format_docs(docs: list[dict]) -> str:
     if not docs:
         return "No hay documentación específica disponible para esta consulta."
+    import os as _os
+    frontend_url = _os.getenv("FRONTEND_URL", "https://www.smartbuilderec.com").rstrip("/")
     parts = []
+    seen_recursos: set = set()
     for d in docs:
-        tipo = d.get("tipo", "doc").upper()
-        titulo = d.get("titulo", "")
+        tipo      = d.get("tipo", "doc").upper()
+        titulo    = d.get("titulo", "")
         contenido = d.get("contenido", "")
-        parts.append(f"[{tipo}] {titulo}\n{contenido}")
+        recurso_id = d.get("recurso_id")
+        if recurso_id and recurso_id not in seen_recursos:
+            seen_recursos.add(recurso_id)
+            url = f"{frontend_url}/recursos.html?id={recurso_id}"
+            parts.append(f"[{tipo}] {titulo}\n{contenido}\nARTICULO_URL: {url}")
+        else:
+            parts.append(f"[{tipo}] {titulo}\n{contenido}")
     return "\n---\n".join(parts)
 
 
@@ -151,5 +160,8 @@ def build_system_prompt(
         "sugiere activamente crear un ticket para que un humano lo asista.\n"
         "- Máximo 3 párrafos por respuesta. Sé conciso y directo.\n"
         "- Responde siempre en español.\n"
+        "- RECURSOS: Si usas información de un documento marcado con ARTICULO_URL, añade al final "
+        "de tu respuesta (en su propia línea) el enlace en formato markdown: "
+        "📖 [Leer artículo completo: {titulo}]({url}) — reemplazando {titulo} y {url} con los valores reales del ARTICULO_URL.\n"
         "- IMPORTANTE: Si genuinamente no puedes responder porque no tienes información específica sobre la consulta del usuario, responde lo mejor que puedas Y añade exactamente \"[TICKET_CTA]\" al final del mensaje (sin espacios extra, en su propia línea). El sistema lo convertirá en un botón para contactar soporte humano."
     ).strip()
