@@ -51,8 +51,25 @@ function abrirGrupoActivo() {
     document.body.style.paddingTop = "42px";
   }
 
-  // Inicializar wizard DESPUÉS de que Supabase cargó los datos al cache
+  // Re-inicializar TODO el wizard con datos frescos de Supabase.
+  // Las funciones cargarXxx() ya corrieron síncronamente con cache vacío;
+  // aquí las volvemos a llamar ahora que el cache tiene los datos reales.
+  modoEstricto = localStorage.getItem("ec0217_modo_estricto") || "on";
   cargarDatosCurso();
+  cargarObjetivos();            // internamente llama aplicarModoObjetivos()
+  cargarBeneficios();
+  cargarTemario();
+  cargarEncuadre();
+  cargarTecnicas();
+  cargarExpositiva();
+  cargarDemostrativa();
+  cargarDialogo();
+  cargarCierre();
+  cargarEvaluaciones();
+  cargarTiempos();
+  actualizarBotonDescripcionGeneral();
+
+  // Mostrar la sección correcta según el avance del curso
   if (localStorage.getItem("ec0217_datos_completo") === "true") {
     document.getElementById("nav-datos")?.classList.add("completed");
     document.getElementById("nav-objetivos")?.classList.remove("disabled");
