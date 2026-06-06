@@ -86,12 +86,11 @@ async function registroConCodigo(email, password, nombre, apellido, codigo) {
   });
   if (error) throw error;
 
-  // 3. Marcar código como usado si la sesión ya está activa (auto-confirm habilitado).
-  //    Si requiere confirmación de email, el backend lo marcará en Bloque 7.
-  if (data?.session && data?.user?.id) {
-    await _supabase
-      .rpc("use_access_code", { p_code: codigoFmt, p_user_id: data.user.id })
-      .catch(() => {});
+  // 3. Marcar código como usado. data.user.id siempre existe tras signUp exitoso.
+  if (data?.user?.id) {
+    const { error: errUso } = await _supabase
+      .rpc("use_access_code", { p_code: codigoFmt, p_user_id: data.user.id });
+    if (errUso) console.warn("[auth] use_access_code falló:", errUso.message);
   }
 
   return data;
