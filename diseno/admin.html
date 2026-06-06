@@ -384,16 +384,17 @@
 
     // ── Stats ─────────────────────────────────────────────────────
     async function cargarStats() {
-      const [resUsr, resCod, resMisCursos] = await Promise.all([
+      const [resUsr, resCod, resMisCursos, resCreds] = await Promise.all([
         _supabase.from("profiles").select("id").eq("admin_id", _perfil.id),
         _supabase.from("access_codes").select("id").eq("admin_id", _perfil.id)
           .is("used_at", null).gt("expires_at", new Date().toISOString()),
         _supabase.from("planeaciones").select("id", { count: "exact", head: true }).eq("user_id", _perfil.id),
+        _supabase.from("profiles").select("credits").eq("id", _perfil.id).single(),
       ]);
 
       const totalUsuarios  = resUsr.data?.length ?? 0;
       const codigosActivos = resCod.data?.length ?? 0;
-      const creditos       = _perfil.credits;
+      const creditos       = resCreds.data?.credits ?? _perfil.credits;
       const misCursos      = resMisCursos.count ?? 0;
 
       document.getElementById("statUsuarios").textContent       = totalUsuarios;
@@ -412,6 +413,22 @@
       }
 
       if (creditos <= 2) document.getElementById("creditAlert").style.display = "flex";
+      _actualizarEstadoBtnCodigo(creditos, codigosActivos);
+    }
+
+    function _actualizarEstadoBtnCodigo(creditos, codigosActivos) {
+      const btn = document.getElementById("btnGenerarCodigo");
+      if (!btn) return;
+      const disponibles = creditos - codigosActivos;
+      if (disponibles <= 0) {
+        btn.disabled = true;
+        btn.title = creditos <= 0
+          ? "Sin créditos — contacta al administrador de la plataforma"
+          : `Tus ${creditos} crédito${creditos !== 1 ? "s" : ""} ya están reservados por ${codigosActivos} código${codigosActivos !== 1 ? "s" : ""} activo${codigosActivos !== 1 ? "s" : ""}`;
+      } else {
+        btn.disabled = false;
+        btn.title = `Puedes generar ${disponibles} código${disponibles !== 1 ? "s" : ""} más`;
+      }
     }
 
     // ── Usuarios ──────────────────────────────────────────────────
@@ -700,10 +717,19 @@
       const btn = document.getElementById("btnGenerarCodigo");
       btn.disabled = true; btn.textContent = "Generando...";
 
-      const { data: perfil } = await _supabase.from("profiles").select("credits").eq("id", _perfil.id).single();
-      if (!perfil || perfil.credits <= 0) {
+      const [{ data: perfil }, { data: codsActivos }] = await Promise.all([
+        _supabase.from("profiles").select("credits").eq("id", _perfil.id).single(),
+        _supabase.from("access_codes").select("id")
+          .eq("admin_id", _perfil.id).is("used_at", null)
+          .gt("expires_at", new Date().toISOString()),
+      ]);
+      const codigosActivos = codsActivos?.length ?? 0;
+      if (!perfil || perfil.credits <= codigosActivos) {
         btn.disabled = false; btn.textContent = "🔑 Generar código";
-        alert("No tienes créditos disponibles. Contacta al administrador de la plataforma para recargar.");
+        const msg = !perfil || perfil.credits <= 0
+          ? "No tienes créditos disponibles. Contacta al administrador de la plataforma para recargar."
+          : `Tus ${perfil.credits} crédito${perfil.credits !== 1 ? "s" : ""} ya están comprometidos por ${codigosActivos} código${codigosActivos !== 1 ? "s" : ""} activo${codigosActivos !== 1 ? "s" : ""}.\n\nElimina un código activo o espera a que expire para generar uno nuevo.`;
+        alert(msg);
         return;
       }
 
