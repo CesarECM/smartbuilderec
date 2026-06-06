@@ -348,12 +348,10 @@
   <nav class="tab-bar">
     <button class="tab-btn active" id="tab-resumen"    onclick="showTab('resumen')">📊 Resumen</button>
     <button class="tab-btn"        id="tab-admins"     onclick="showTab('admins')">👑 Admins</button>
-    <button class="tab-btn"        id="tab-vigencia"   onclick="showTab('vigencia')">🚦 Vigencia</button>
     <button class="tab-btn"        id="tab-usuarios"   onclick="showTab('usuarios')">👥 Usuarios</button>
-    <button class="tab-btn"        id="tab-cursos"     onclick="showTab('cursos')">📚 Cursos</button>
-    <button class="tab-btn"        id="tab-historial"  onclick="showTab('historial')">📋 Historial</button>
-    <button class="tab-btn"        id="tab-plantillas" onclick="showTab('plantillas')">✉️ Plantillas</button>
+    <button class="tab-btn"        id="tab-plataforma" onclick="showTab('plataforma')">📚 Plataforma</button>
     <button class="tab-btn"        id="tab-soporte"    onclick="showTab('soporte')">🤖 Soporte KB</button>
+    <button class="tab-btn"        id="tab-config"     onclick="showTab('config')">⚙️ Configuración</button>
   </nav>
 
   <main class="panel-main">
@@ -475,6 +473,39 @@
       </div>
 
       <div id="listaAdmins"><p class="loading-txt">Cargando administradores...</p></div>
+
+      <!-- ── Sub-sección: Control de vigencias ─────────────────── -->
+      <div class="panel-section-gap">
+        <div class="kb-section">
+          <div class="kb-section-hdr" onclick="toggleVigenciaSection()">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:14px;font-weight:700;color:var(--c-text)">🚦 Control de vigencias</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn-sm" onclick="event.stopPropagation();cargarVigencia()" style="margin-right:4px">↺ Actualizar</button>
+              <button class="btn-primary" id="btnCheckVigencias" onclick="event.stopPropagation();enviarAlertasVigencia()" style="font-size:12px;padding:6px 14px">📧 Enviar alertas</button>
+              <span id="arrowVigencia" style="font-size:12px;color:var(--c-text-3);transition:transform 0.2s;margin-left:4px">▾</span>
+            </div>
+          </div>
+          <div class="kb-section-body" id="vigencia-inner-body">
+            <div class="semaforo-stats" id="semaforoStats" style="margin-top:16px">
+              <div class="semaforo-stat rojo">
+                <div class="sem-num" id="semRojo">—</div>
+                <div class="sem-lbl">Expirados / Inactivos</div>
+              </div>
+              <div class="semaforo-stat amarillo">
+                <div class="sem-num" id="semAmarillo">—</div>
+                <div class="sem-lbl">Por vencer (&lt;15 días)</div>
+              </div>
+              <div class="semaforo-stat verde">
+                <div class="sem-num" id="semVerde">—</div>
+                <div class="sem-lbl">Activos y vigentes</div>
+              </div>
+            </div>
+            <div id="vigenciaContent"><p class="empty-txt">Clic en "Actualizar" para ver el estado de vigencias.</p></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ══ Usuarios ═══════════════════════════════════════════════ -->
@@ -511,8 +542,8 @@
       <div id="listaUsuariosTodos" style="margin-top:12px"><p class="loading-txt">Cargando usuarios...</p></div>
     </div>
 
-    <!-- ══ Cursos ══════════════════════════════════════════════════ -->
-    <div id="panel-cursos" class="tab-panel">
+    <!-- ══ Plataforma ═════════════════════════════════════════════ -->
+    <div id="panel-plataforma" class="tab-panel">
       <div class="section-header">
         <h2>Mis planeaciones</h2>
         <a href="index.html?new=1" class="btn-primary" style="text-decoration:none">+ Nueva planeación</a>
@@ -524,48 +555,16 @@
         <button class="btn-sm" onclick="cargarCursosPorAdmin()">↺ Actualizar</button>
       </div>
       <div id="cursosPorAdmin"><p class="loading-txt">Cargando...</p></div>
-    </div>
 
-    <!-- ══ Historial ═══════════════════════════════════════════════ -->
-    <div id="panel-historial" class="tab-panel">
-      <div class="section-header">
+      <div class="section-header panel-section-gap">
         <h2>Historial de actividad</h2>
         <button class="btn-sm" onclick="cargarAuditLog()">↺ Actualizar</button>
       </div>
       <div id="auditContent"><p class="loading-txt">Cargando historial...</p></div>
     </div>
 
-    <!-- ══ Vigencia (semáforo) ════════════════════════════════════ -->
-    <div id="panel-vigencia" class="tab-panel">
-      <div class="section-header">
-        <h2>Control de vigencias</h2>
-        <div class="section-header-actions">
-          <button class="btn-sm" onclick="cargarVigencia()">↺ Actualizar</button>
-          <button class="btn-primary" id="btnCheckVigencias" onclick="enviarAlertasVigencia()">📧 Enviar alertas</button>
-        </div>
-      </div>
-
-      <!-- Semáforo resumen -->
-      <div class="semaforo-stats" id="semaforoStats">
-        <div class="semaforo-stat rojo">
-          <div class="sem-num" id="semRojo">—</div>
-          <div class="sem-lbl">Expirados / Inactivos</div>
-        </div>
-        <div class="semaforo-stat amarillo">
-          <div class="sem-num" id="semAmarillo">—</div>
-          <div class="sem-lbl">Por vencer (&lt;15 días)</div>
-        </div>
-        <div class="semaforo-stat verde">
-          <div class="sem-num" id="semVerde">—</div>
-          <div class="sem-lbl">Activos y vigentes</div>
-        </div>
-      </div>
-
-      <div id="vigenciaContent"><p class="loading-txt">Cargando...</p></div>
-    </div>
-
-    <!-- ══ Plantillas de Email ════════════════════════════════════ -->
-    <div id="panel-plantillas" class="tab-panel">
+    <!-- ══ Configuración ══════════════════════════════════════════ -->
+    <div id="panel-config" class="tab-panel">
       <div class="section-header">
         <h2>Plantillas de email</h2>
         <p style="font-size:13px;color:var(--c-text-3);margin:0">
@@ -963,7 +962,8 @@
     let _admins        = [];
     let _todosUsuarios = [];
     let _reasignarUserId = null;
-    let _tabsLoaded = { resumen: true, admins: true, vigencia: false, usuarios: false, cursos: false, historial: false, plantillas: false, soporte: false };
+    let _tabsLoaded = { resumen: true, admins: true, usuarios: false, plataforma: false, config: false, soporte: false };
+    let _vigenciaLoaded = false;
     let _renovarAdminId = null;
     let _tplSlugActivo  = null;
     let _editFaqId      = null;
@@ -976,12 +976,18 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("panel-" + name).classList.add("active");
       document.getElementById("tab-"   + name).classList.add("active");
-      if (name === "usuarios"  && !_tabsLoaded.usuarios)  { _tabsLoaded.usuarios  = true; cargarTodosUsuarios(); }
-      if (name === "cursos"    && !_tabsLoaded.cursos)    { _tabsLoaded.cursos    = true; cargarCursos(); }
-      if (name === "historial" && !_tabsLoaded.historial) { _tabsLoaded.historial = true; cargarAuditLog(); }
-      if (name === "vigencia"  && !_tabsLoaded.vigencia)  { _tabsLoaded.vigencia  = true; cargarVigencia(); }
-      if (name === "plantillas"&& !_tabsLoaded.plantillas){ _tabsLoaded.plantillas= true; cargarPlantillas(); }
-      if (name === "soporte"   && !_tabsLoaded.soporte)   { _tabsLoaded.soporte   = true; cargarKB(); }
+      if (name === "usuarios"   && !_tabsLoaded.usuarios)   { _tabsLoaded.usuarios   = true; cargarTodosUsuarios(); }
+      if (name === "plataforma" && !_tabsLoaded.plataforma) { _tabsLoaded.plataforma = true; cargarCursos(); cargarAuditLog(); }
+      if (name === "config"     && !_tabsLoaded.config)     { _tabsLoaded.config     = true; cargarPlantillas(); }
+      if (name === "soporte"    && !_tabsLoaded.soporte)    { _tabsLoaded.soporte    = true; cargarKB(); }
+    }
+
+    function toggleVigenciaSection() {
+      const body  = document.getElementById("vigencia-inner-body");
+      const arrow = document.getElementById("arrowVigencia");
+      const isOpen = body.classList.toggle("open");
+      if (arrow) arrow.style.transform = isOpen ? "" : "rotate(-90deg)";
+      if (isOpen && !_vigenciaLoaded) { _vigenciaLoaded = true; cargarVigencia(); }
     }
 
     function togglePanel(panelId, focusId) {
@@ -1785,7 +1791,6 @@
         cerrarModalRenovar();
         mostrarToast("Admin renovado correctamente");
         await Promise.all([cargarAdmins(), cargarVigencia()]);
-        _tabsLoaded.vigencia = true;
       } catch(e) {
         msg.textContent = e.message;
         msg.className = "crear-msg error";
@@ -1842,7 +1847,7 @@
         msg.textContent = `✓ Admin creado. Se envió email de bienvenida a ${email}.`;
         msg.className = "crear-msg ok";
         await Promise.all([cargarAdmins(), cargarStats()]);
-        _tabsLoaded.vigencia = false;
+        _vigenciaLoaded = false;
       } catch(e) {
         msg.textContent = e.message;
         msg.className = "crear-msg error";
@@ -1970,9 +1975,9 @@
         msg.textContent = "✓ Plantilla guardada correctamente.";
         msg.className = "crear-msg ok";
         mostrarToast("Plantilla guardada");
-        _tabsLoaded.plantillas = false;
+        _tabsLoaded.config = false;
         await cargarPlantillas();
-        _tabsLoaded.plantillas = true;
+        _tabsLoaded.config = true;
         document.getElementById(`tpl-card-${_tplSlugActivo}`)?.classList.add("active");
       } catch(e) {
         msg.textContent = e.message;
