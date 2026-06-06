@@ -110,10 +110,22 @@ def init_sesion(payload: SesionInitRequest):
 
 # ── Chat (RAG + Streaming) ─────────────────────────────────────────────────────
 
+MAX_TURNOS_SESION = 30
+
 @router.post("/soporte/chat")
 async def soporte_chat(payload: ChatRequest):
     sb = get_supabase()
     sesion_id = payload.sesion_id
+
+    sesion_res = sb.table("soporte_sesiones") \
+        .select("id, total_turnos") \
+        .eq("id", sesion_id) \
+        .single() \
+        .execute()
+    if not sesion_res.data:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    if (sesion_res.data.get("total_turnos") or 0) >= MAX_TURNOS_SESION:
+        raise HTTPException(status_code=429, detail="Límite de conversación alcanzado. Abre una nueva sesión.")
 
     docs = retrieve_knowledge(payload.mensaje, sb, payload.contexto)
     system_prompt = build_system_prompt(payload.contexto, docs, payload.user_info)
