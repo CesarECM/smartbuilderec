@@ -1932,6 +1932,70 @@
     }
 
     // ── Sugerencias de IA (Feedback Loop) ────────────────────────
+
+    const SUG_META = {
+      nueva_faq:    { label: "Nueva FAQ",      color: "#dbeafe", colorTxt: "#1e40af", btnTxt: "Crear FAQ" },
+      editar_faq:   { label: "Editar FAQ",     color: "#fef9c3", colorTxt: "#92400e", btnTxt: "Aplicar edición" },
+      eliminar_faq: { label: "Eliminar FAQ",   color: "#fee2e2", colorTxt: "#991b1b", btnTxt: "Eliminar FAQ" },
+      unir_faqs:    { label: "Unir FAQs",      color: "#ede9fe", colorTxt: "#5b21b6", btnTxt: "Unir y crear" },
+    };
+
+    function _esc(t) { return (t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+    function _renderSugBody(tipo, prop) {
+      const ctx = prop.contexto || "general";
+      switch (tipo) {
+
+        case "nueva_faq":
+          return `
+            <div style="font-size:13px;font-weight:700;color:var(--c-text);margin-bottom:5px">${_esc(prop.pregunta)}</div>
+            <div style="font-size:12px;color:var(--c-text-2);line-height:1.5">${_esc(prop.respuesta).slice(0,350)}${(prop.respuesta||"").length>350?"…":""}</div>
+            ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3);margin-top:5px">Cubre: ${_esc(prop.causa_raiz)}</div>`:""}`;
+
+        case "editar_faq":
+          return `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+              <div style="background:#fef2f2;border-radius:6px;padding:10px">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b;margin-bottom:4px">Actual</div>
+                <div style="font-size:12px;font-weight:600;color:var(--c-text)">${_esc(prop.pregunta_original)}</div>
+                <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${_esc(prop.respuesta_original).slice(0,150)}…</div>
+              </div>
+              <div style="background:#f0fdf4;border-radius:6px;padding:10px">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#065f46;margin-bottom:4px">Propuesta</div>
+                <div style="font-size:12px;font-weight:600;color:var(--c-text)">${_esc(prop.pregunta)}</div>
+                <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${_esc(prop.respuesta).slice(0,150)}…</div>
+              </div>
+            </div>
+            ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3)">Motivo: ${_esc(prop.causa_raiz)}</div>`:""}`;
+
+        case "eliminar_faq":
+          return `
+            <div style="background:#fff1f2;border-radius:6px;padding:10px;margin-bottom:6px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b;margin-bottom:4px">FAQ a eliminar</div>
+              <div style="font-size:12px;font-weight:600;color:var(--c-text)">${_esc(prop.pregunta_original)}</div>
+            </div>
+            <div style="font-size:12px;color:var(--c-text-2)">Razón: ${_esc(prop.razon)}</div>`;
+
+        case "unir_faqs": {
+          const originales = (prop.preguntas_originales||[]).map(p=>`<li style="font-size:12px;color:var(--c-text-3)">${_esc(p)}</li>`).join("");
+          return `
+            <div style="margin-bottom:8px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--c-text-3);margin-bottom:4px">FAQs a fusionar</div>
+              <ul style="margin:0;padding-left:16px">${originales}</ul>
+            </div>
+            <div style="background:#f5f3ff;border-radius:6px;padding:10px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#5b21b6;margin-bottom:4px">Resultado unificado</div>
+              <div style="font-size:12px;font-weight:600;color:var(--c-text)">${_esc(prop.pregunta)}</div>
+              <div style="font-size:11px;color:var(--c-text-3);margin-top:3px">${_esc(prop.respuesta).slice(0,200)}…</div>
+            </div>
+            ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3);margin-top:5px">Motivo: ${_esc(prop.causa_raiz)}</div>`:""}`;
+        }
+
+        default:
+          return `<div style="font-size:12px;color:var(--c-text-3)">${_esc(JSON.stringify(prop).slice(0,200))}</div>`;
+      }
+    }
+
     async function cargarSugerencias(estado = "pendiente") {
       const el = document.getElementById("listaSugerencias");
       el.innerHTML = '<p class="loading-txt">Cargando sugerencias...</p>';
@@ -1942,25 +2006,29 @@
         const sugs = await res.json();
         const badge = document.getElementById("sugBadge");
         if (badge && estado === "pendiente") badge.textContent = sugs.length || "";
-        if (!sugs.length) { el.innerHTML = `<p class="empty-txt">No hay sugerencias ${estado === "pendiente" ? "pendientes" : "con ese estado"}.</p>`; return; }
+        if (!sugs.length) { el.innerHTML = `<p class="empty-txt">No hay sugerencias ${estado==="pendiente"?"pendientes":"con ese estado"}.</p>`; return; }
+
         el.innerHTML = sugs.map(s => {
           const prop = s.propuesta || {};
+          const tipo = s.tipo || "nueva_faq";
+          const meta = SUG_META[tipo] || SUG_META.nueva_faq;
           const fecha = new Date(s.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
           const isPendiente = s.estado === "pendiente";
+          const estadoBadge = s.estado==="aprobada"?"badge-activo":s.estado==="rechazada"?"badge-inactivo":"badge-borrador";
+
           return `<div id="sug-${s.id}" style="background:var(--c-surface);border:1.5px solid var(--c-border);border-radius:var(--r-xl);padding:18px 20px;margin-bottom:10px">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
               <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-                  <span class="status-badge badge-user">${prop.contexto || "general"}</span>
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-wrap:wrap">
+                  <span style="background:${meta.color};color:${meta.colorTxt};font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:20px">${meta.label}</span>
+                  <span class="status-badge badge-user">${prop.contexto||"general"}</span>
                   <span style="font-size:11px;color:var(--c-text-4)">${fecha}</span>
-                  <span class="status-badge ${s.estado==="aprobada"?"badge-activo":s.estado==="rechazada"?"badge-inactivo":"badge-borrador"}">${s.estado}</span>
+                  <span class="status-badge ${estadoBadge}">${s.estado}</span>
                 </div>
-                <div style="font-size:13px;font-weight:700;color:var(--c-text);margin-bottom:6px">${(prop.pregunta||"").replace(/</g,"&lt;")}</div>
-                <div style="font-size:12px;color:var(--c-text-2);line-height:1.5">${(prop.respuesta||"").replace(/</g,"&lt;").slice(0,300)}${(prop.respuesta||"").length>300?"…":""}</div>
-                ${prop.causa_raiz ? `<div style="font-size:11px;color:var(--c-text-3);margin-top:6px">Causa raíz: ${prop.causa_raiz}</div>` : ""}
+                ${_renderSugBody(tipo, prop)}
               </div>
-              ${isPendiente ? `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-                <button class="btn-sm success" onclick="accionSugerencia('${s.id}','aprobar')">Aprobar y crear FAQ</button>
+              ${isPendiente ? `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;padding-top:2px">
+                <button class="btn-sm success" onclick="accionSugerencia('${s.id}','aprobar')">${meta.btnTxt}</button>
                 <button class="btn-sm danger"  onclick="accionSugerencia('${s.id}','rechazar')">Rechazar</button>
               </div>` : ""}
             </div>
@@ -1981,11 +2049,14 @@
         if (!res.ok) { const d = await res.json().catch(()=>{}); throw new Error(d?.detail||"Error."); }
         const data = await res.json();
         document.getElementById(`sug-${sugId}`)?.remove();
-        mostrarToast(accion === "aprobar"
-          ? (data.faq_creada ? "FAQ creada y embeddings generados" : "Sugerencia aprobada")
-          : "Sugerencia rechazada");
-        // Refresh badge
-        await cargarSugerencias("pendiente");
+        const msgs = {
+          nueva_faq:    "FAQ creada en el knowledge base",
+          editar_faq:   "FAQ actualizada y embeddings regenerados",
+          eliminar_faq: "FAQ eliminada del knowledge base",
+          unir_faqs:    "FAQs unidas: nueva creada, originales desactivadas",
+        };
+        mostrarToast(accion === "aprobar" ? (msgs[data.tipo] || "Sugerencia aprobada") : "Sugerencia rechazada");
+        await cargarSugerencias(document.getElementById("filtroSug")?.value || "pendiente");
       } catch(e) { alert(e.message); }
     }
 

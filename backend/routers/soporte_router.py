@@ -325,6 +325,8 @@ def _analizar_resolucion_sync(sb, ticket_id: str, ticket: dict, resolucion: str)
     try:
         import anthropic as _ant, json as _json
         client = _ant.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+        # Transcript
         transcript_text = ""
         if ticket.get("sesion_id"):
             try:
@@ -335,35 +337,87 @@ def _analizar_resolucion_sync(sb, ticket_id: str, ticket: dict, resolucion: str)
                 )
             except Exception:
                 pass
+
+        # FAQs existentes para que Haiku pueda sugerir editar/unir/eliminar
+        ctx = ticket.get("categoria", "general")
+        try:
+            faq_res = sb.table("knowledge_faqs").select("id,pregunta,respuesta,contexto").eq("activo", True)\
+                .or_(f"contexto.eq.{ctx},contexto.eq.general").limit(30).execute()
+            faqs_existentes = faq_res.data or []
+        except Exception:
+            faqs_existentes = []
+
+        faqs_text = "\n".join(
+            f'ID:{f["id"]} | [{f["contexto"]}] P: {f["pregunta"][:120]}'
+            for f in faqs_existentes
+        ) or "(ninguna)"
+
         resp = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": f"""Analiza este ticket de soporte de SmartBuilderEC (plataforma EC0217.01 CONOCER México).
+            max_tokens=1500,
+            messages=[{"role": "user", "content": f"""Eres el optimizador del knowledge base de SmartBuilderEC (plataforma EC0217.01 CONOCER México).
 
-ASUNTO: {ticket.get('asunto','')}
-CONTEXTO: {ticket.get('categoria','general')}
+TICKET RESUELTO:
+Asunto: {ticket.get('asunto','')}
+Contexto: {ctx}
 
-CONVERSACIÓN CON IA:
+Conversación con IA:
 {transcript_text or "(sin transcripción)"}
 
-RESOLUCIÓN HUMANA:
+Resolución del agente humano:
 {resolucion}
 
-Responde SOLO JSON válido (sin markdown):
+FAQS ACTUALES EN EL KNOWLEDGE BASE (contexto {ctx} + general):
+{faqs_text}
+
+Analiza y sugiere hasta 3 mejoras. Puedes proponer 4 tipos de acción:
+
+1. nueva_faq — crear FAQ que no existe
+2. editar_faq — mejorar una FAQ existente incompleta o imprecisa (requiere faq_id del listado)
+3. eliminar_faq — eliminar FAQ obsoleta, incorrecta o redundante (requiere faq_id)
+4. unir_faqs — fusionar 2+ FAQs muy similares en una sola (requiere faq_ids como array)
+
+Solo sugiere si mejora genuinamente el knowledge base. Si la IA resolvió bien, devuelve sugerencias vacías.
+
+Responde SOLO JSON válido (sin markdown, sin texto extra):
 {{
   "ia_podia_resolverlo": true,
   "por_que_no": null,
   "sugerencias": [
     {{
       "tipo": "nueva_faq",
-      "pregunta": "texto de la pregunta",
+      "pregunta": "pregunta completa",
       "respuesta": "respuesta completa",
       "contexto": "ventas|checkout|onboarding|acceso|wizard_ec0217|navegacion|admin|general",
-      "causa_raiz": "qué gap de conocimiento cubre"
+      "causa_raiz": "qué gap cubre"
+    }},
+    {{
+      "tipo": "editar_faq",
+      "faq_id": "uuid-exacto-del-listado",
+      "pregunta_original": "texto actual de la FAQ",
+      "respuesta_original": "respuesta actual",
+      "pregunta": "pregunta mejorada",
+      "respuesta": "respuesta mejorada",
+      "contexto": "contexto",
+      "causa_raiz": "qué se mejoró y por qué"
+    }},
+    {{
+      "tipo": "eliminar_faq",
+      "faq_id": "uuid-exacto-del-listado",
+      "pregunta_original": "texto de la FAQ a eliminar",
+      "razon": "por qué debe eliminarse"
+    }},
+    {{
+      "tipo": "unir_faqs",
+      "faq_ids": ["uuid1", "uuid2"],
+      "preguntas_originales": ["pregunta 1", "pregunta 2"],
+      "pregunta": "nueva pregunta unificada",
+      "respuesta": "respuesta combinada y completa",
+      "contexto": "contexto",
+      "causa_raiz": "por qué unirlas"
     }}
   ]
-}}
-Incluye sugerencias solo si la IA no pudo resolver. Máximo 2."""}]
+}}"""}]
         )
         content = resp.content[0].text.strip()
         if content.startswith("```"):
@@ -371,21 +425,51 @@ Incluye sugerencias solo si la IA no pudo resolver. Máximo 2."""}]
             if content.startswith("json"): content = content[4:]
             content = content.split("```")[0].strip()
         analisis = _json.loads(content)
-        if not analisis.get("ia_podia_resolverlo") and analisis.get("sugerencias"):
-            for sug in analisis["sugerencias"]:
-                sb.table("soporte_sugerencias").insert({
-                    "tipo": sug.get("tipo","nueva_faq"),
-                    "ticket_ids": [ticket_id],
-                    "propuesta": {
-                        "pregunta":  sug.get("pregunta",""),
-                        "respuesta": sug.get("respuesta",""),
-                        "contexto":  sug.get("contexto","general"),
-                        "causa_raiz":sug.get("causa_raiz",""),
-                        "por_que_no":analisis.get("por_que_no",""),
-                    },
-                    "estado": "pendiente",
-                }).execute()
-            print(f"[feedback] {len(analisis['sugerencias'])} sugerencias para ticket {ticket_id}")
+
+        sugerencias = analisis.get("sugerencias", [])
+        guardadas = 0
+        for sug in sugerencias:
+            tipo = sug.get("tipo", "nueva_faq")
+            # Construir propuesta según tipo
+            if tipo == "nueva_faq":
+                propuesta = {
+                    "pregunta": sug.get("pregunta",""), "respuesta": sug.get("respuesta",""),
+                    "contexto": sug.get("contexto","general"), "causa_raiz": sug.get("causa_raiz",""),
+                    "por_que_no": analisis.get("por_que_no",""),
+                }
+            elif tipo == "editar_faq":
+                propuesta = {
+                    "faq_id": sug.get("faq_id",""),
+                    "pregunta_original": sug.get("pregunta_original",""), "respuesta_original": sug.get("respuesta_original",""),
+                    "pregunta": sug.get("pregunta",""), "respuesta": sug.get("respuesta",""),
+                    "contexto": sug.get("contexto","general"), "causa_raiz": sug.get("causa_raiz",""),
+                }
+                if not propuesta["faq_id"]: continue
+            elif tipo == "eliminar_faq":
+                propuesta = {
+                    "faq_id": sug.get("faq_id",""),
+                    "pregunta_original": sug.get("pregunta_original",""),
+                    "razon": sug.get("razon",""),
+                }
+                if not propuesta["faq_id"]: continue
+            elif tipo == "unir_faqs":
+                propuesta = {
+                    "faq_ids": sug.get("faq_ids",[]),
+                    "preguntas_originales": sug.get("preguntas_originales",[]),
+                    "pregunta": sug.get("pregunta",""), "respuesta": sug.get("respuesta",""),
+                    "contexto": sug.get("contexto","general"), "causa_raiz": sug.get("causa_raiz",""),
+                }
+                if not propuesta["faq_ids"]: continue
+            else:
+                continue
+
+            sb.table("soporte_sugerencias").insert({
+                "tipo": tipo, "ticket_ids": [ticket_id],
+                "propuesta": propuesta, "estado": "pendiente",
+            }).execute()
+            guardadas += 1
+
+        print(f"[feedback] {guardadas} sugerencias para ticket {ticket_id}")
     except Exception as e:
         print(f"[feedback] Error en ticket {ticket_id}: {e}")
 
@@ -412,16 +496,56 @@ def gestionar_sugerencia(sug_id: str, payload: SugerenciaAction, request: Reques
     if not sug.data:
         raise HTTPException(status_code=404, detail="Sugerencia no encontrada.")
     prop = sug.data.get("propuesta", {})
-    faq_creada = False
-    if sug.data.get("tipo") == "nueva_faq":
+    tipo = sug.data.get("tipo", "nueva_faq")
+    resultado = {"accion": "aprobada", "tipo": tipo}
+
+    if tipo == "nueva_faq":
         preg = prop.get("pregunta",""); resp = prop.get("respuesta",""); ctx = prop.get("contexto","general")
         if preg and resp:
             emb = generate_embedding(f"{preg} {resp}")
-            sb.table("knowledge_faqs").insert({"pregunta":preg,"respuesta":resp,"categoria":"auto-generada","contexto":ctx,"embedding":emb,"activo":True}).execute()
-            faq_creada = True
+            sb.table("knowledge_faqs").insert({
+                "pregunta": preg, "respuesta": resp, "categoria": "auto-generada",
+                "contexto": ctx, "embedding": emb, "activo": True,
+            }).execute()
+            resultado["faq_creada"] = True
+
+    elif tipo == "editar_faq":
+        faq_id = prop.get("faq_id",""); preg = prop.get("pregunta","")
+        resp   = prop.get("respuesta",""); ctx = prop.get("contexto","general")
+        if faq_id and preg and resp:
+            emb = generate_embedding(f"{preg} {resp}")
+            sb.table("knowledge_faqs").update({
+                "pregunta": preg, "respuesta": resp, "contexto": ctx, "embedding": emb,
+            }).eq("id", faq_id).execute()
+            resultado["faq_editada"] = faq_id
+
+    elif tipo == "eliminar_faq":
+        faq_id = prop.get("faq_id","")
+        if faq_id:
+            sb.table("knowledge_faqs").update({"activo": False}).eq("id", faq_id).execute()
+            resultado["faq_eliminada"] = faq_id
+
+    elif tipo == "unir_faqs":
+        faq_ids = prop.get("faq_ids", []); preg = prop.get("pregunta","")
+        resp    = prop.get("respuesta",""); ctx = prop.get("contexto","general")
+        if faq_ids and preg and resp:
+            # Crear FAQ unificada
+            emb = generate_embedding(f"{preg} {resp}")
+            sb.table("knowledge_faqs").insert({
+                "pregunta": preg, "respuesta": resp, "categoria": "auto-generada",
+                "contexto": ctx, "embedding": emb, "activo": True,
+            }).execute()
+            # Desactivar las originales
+            for fid in faq_ids:
+                sb.table("knowledge_faqs").update({"activo": False}).eq("id", fid).execute()
+            resultado["faqs_unidas"] = faq_ids
+
     from datetime import datetime, timezone
-    sb.table("soporte_sugerencias").update({"estado":"aprobada","aprobada_por":uid,"aplicada_en":datetime.now(timezone.utc).isoformat()}).eq("id",sug_id).execute()
-    return {"accion": "aprobada", "faq_creada": faq_creada}
+    sb.table("soporte_sugerencias").update({
+        "estado": "aprobada", "aprobada_por": uid,
+        "aplicada_en": datetime.now(timezone.utc).isoformat(),
+    }).eq("id", sug_id).execute()
+    return resultado
 
 # ── FAQs ───────────────────────────────────────────────────────────────────────
 
