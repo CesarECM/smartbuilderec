@@ -105,10 +105,13 @@ async def stripe_webhook(request: Request):
     etype = event["type"]
     print(f"[webhook] Evento recibido: {etype}")
 
-    if etype == "checkout.session.completed":
-        _handle_checkout_completed(event["data"]["object"])
-    elif etype in ("customer.subscription.deleted", "customer.subscription.paused"):
-        _handle_subscription_ended(event["data"]["object"])
+    try:
+        if etype == "checkout.session.completed":
+            _handle_checkout_completed(event["data"]["object"])
+        elif etype in ("customer.subscription.deleted", "customer.subscription.paused"):
+            _handle_subscription_ended(event["data"]["object"])
+    except Exception as e:
+        print(f"[webhook] Error procesando {etype}: {type(e).__name__}: {e}")
 
     return {"received": True}
 
@@ -132,13 +135,32 @@ def repair_checkout(request: Request, session_id: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Sesión no encontrada: {e}")
 
-    pstatus = session.get("payment_status") or ""
+    pstatus = session["payment_status"] if "payment_status" in session else ""
     if pstatus != "paid":
         raise HTTPException(status_code=400, detail=f"El pago no está confirmado (status: {pstatus}).")
 
-    _handle_checkout_completed(dict(session))
-    email = (session.get("customer_details") or {}).get("email", "")
-    print(f"[repair-checkout] Cuenta activada manualmente para {email} — session {session_id}")
+    # Extraer datos como dict plano para evitar problemas con objetos Stripe anidados
+    meta = session["metadata"] or {} if "metadata" in session else {}
+    cd   = session["customer_details"] if "customer_details" in session else None
+    email    = str(meta.get("email") or (cd["email"] if cd and "email" in cd else "") or "")
+    nombre   = str(meta.get("nombre", ""))
+    apellido = str(meta.get("apellido", ""))
+    customer = session["customer"] if "customer" in session else ""
+    if customer and not isinstance(customer, str):
+        customer = getattr(customer, "id", str(customer))
+    amount = session["amount_total"] if "amount_total" in session else 179900
+
+    if not email:
+        raise HTTPException(status_code=400, detail="No se encontró email en la sesión de Stripe.")
+
+    session_plain = {
+        "metadata":         {"email": email, "nombre": nombre, "apellido": apellido},
+        "customer_details": {"email": email},
+        "customer":         customer or "",
+        "amount_total":     amount,
+    }
+    _handle_checkout_completed(session_plain)
+    print(f"[repair-checkout] Cuenta activada para {email} — session {session_id}")
     return {"ok": True, "email": email, "session_id": session_id}
 
 
