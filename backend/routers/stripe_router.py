@@ -61,10 +61,10 @@ def verificar_checkout(session_id: str):
     sc = _stripe()
     try:
         session = sc.checkout.Session.retrieve(session_id)
-        return {
-            "status": session.get("payment_status") or session.get("status"),
-            "email": (session.get("customer_details") or {}).get("email", ""),
-        }
+        status = getattr(session, "payment_status", None) or getattr(session, "status", None)
+        cd = getattr(session, "customer_details", None)
+        email = getattr(cd, "email", "") if cd else ""
+        return {"status": status, "email": email}
     except Exception:
         raise HTTPException(status_code=404, detail="Sesión no encontrada.")
 
