@@ -328,6 +328,27 @@
             <input type="text" id="apellido" placeholder="Apellido" autocomplete="family-name" required>
           </div>
           <input type="email" id="email" placeholder="Tu correo electrónico" autocomplete="email" required>
+          <div class="lp-form-row" style="margin-bottom:12px">
+            <select id="lada" style="flex:0 0 110px;padding:11px 8px;border:1.5px solid #e2e8f0;border-radius:var(--r-md);font-size:14px;font-family:inherit;background:#f8fafc;color:#1e293b;outline:none">
+              <option value="+52" selected>🇲🇽 +52</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+502">🇬🇹 +502</option>
+              <option value="+503">🇸🇻 +503</option>
+              <option value="+504">🇭🇳 +504</option>
+              <option value="+505">🇳🇮 +505</option>
+              <option value="+506">🇨🇷 +506</option>
+              <option value="+507">🇵🇦 +507</option>
+              <option value="+53">🇨🇺 +53</option>
+              <option value="+57">🇨🇴 +57</option>
+              <option value="+58">🇻🇪 +58</option>
+              <option value="+51">🇵🇪 +51</option>
+              <option value="+56">🇨🇱 +56</option>
+              <option value="+54">🇦🇷 +54</option>
+              <option value="+55">🇧🇷 +55</option>
+              <option value="+34">🇪🇸 +34</option>
+            </select>
+            <input type="tel" id="telefono" placeholder="Número de teléfono" autocomplete="tel-national" style="flex:1;margin-bottom:0">
+          </div>
           <button class="lp-pay-btn" id="btnPagar">Pagar con tarjeta →</button>
           <p class="lp-form-msg" id="formMsg"></p>
         </div>
@@ -399,6 +420,9 @@
       const nombre   = document.getElementById("nombre").value.trim();
       const apellido = document.getElementById("apellido").value.trim();
       const email    = document.getElementById("email").value.trim();
+      const lada     = document.getElementById("lada").value;
+      const telLocal = document.getElementById("telefono").value.trim();
+      const telefono = telLocal ? `${lada} ${telLocal}` : "";
       const btn      = document.getElementById("btnPagar");
 
       if (!nombre || !apellido) { setMsg("Ingresa tu nombre y apellido.", "error"); return; }
@@ -416,7 +440,7 @@
         const res = await fetch(`${BACKEND_URL}/checkout/session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, nombre, apellido, success_url, cancel_url }),
+          body: JSON.stringify({ email, nombre, apellido, telefono, success_url, cancel_url }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Error al crear la sesión de pago.");
