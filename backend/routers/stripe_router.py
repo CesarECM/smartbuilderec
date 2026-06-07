@@ -228,6 +228,7 @@ def _handle_checkout_completed(session):
             })
             if hasattr(link_res, "properties") and link_res.properties:
                 link_acceso = getattr(link_res.properties, "action_link", link_acceso) or link_acceso
+            print(f"[checkout] link_acceso generado: {link_acceso[:80]}...")
         except Exception as le:
             print(f"[checkout] generate_link error: {le}")
 
