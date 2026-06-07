@@ -156,8 +156,6 @@ def _extract_session_data(session) -> dict:
     SDK >=8: objetos tipados sin .get() → usar getattr.
     SDK <8:  StripeObject dict-like → getattr también funciona."""
     meta = getattr(session, "metadata", None) or {}
-    if not isinstance(meta, dict):
-        meta = {}
 
     cd       = getattr(session, "customer_details", None)
     cd_email = getattr(cd, "email", None) if cd else None
@@ -170,6 +168,7 @@ def _extract_session_data(session) -> dict:
     if customer and not isinstance(customer, str):
         customer = getattr(customer, "id", "") or ""
 
+    print(f"[checkout] metadata extraída — nombre: '{nombre}', apellido: '{apellido}', email: '{email}'")
     return {
         "email":    str(email),
         "nombre":   str(nombre),
