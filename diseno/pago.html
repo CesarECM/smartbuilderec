@@ -408,7 +408,12 @@
           body: JSON.stringify({ success_url, cancel_url }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Error al crear la sesión de pago.");
+        if (!res.ok) {
+          const detalle = Array.isArray(data.detail)
+            ? "Error en el servidor. Intenta de nuevo."
+            : (data.detail || "Error al crear la sesión de pago.");
+          throw new Error(detalle);
+        }
         window.location.href = data.checkout_url;
       } catch (e) {
         setMsg(e.message || "Error al conectar con el servidor. Intenta de nuevo.", "error");
