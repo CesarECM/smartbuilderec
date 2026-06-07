@@ -191,7 +191,7 @@ def _handle_checkout_completed(session):
         result = sb.auth.admin.create_user({
             "email": email,
             "email_confirm": True,
-            "user_metadata": {"nombre": nombre, "apellido": apellido},
+            "user_metadata": {"nombre": nombre},
         })
         user_id = result.user.id
 
