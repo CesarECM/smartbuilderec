@@ -25,8 +25,6 @@ def _stripe():
 class CheckoutRequest(BaseModel):
     email: str
     nombre: str
-    apellido: str
-    telefono: str = ""
     success_url: str
     cancel_url: str
 
@@ -47,10 +45,8 @@ def crear_checkout(data: CheckoutRequest):
             success_url=data.success_url,
             cancel_url=data.cancel_url,
             metadata={
-                "email":    data.email,
-                "nombre":   data.nombre,
-                "apellido": data.apellido,
-                "telefono": data.telefono,
+                "email":  data.email,
+                "nombre": data.nombre,
             },
         )
         return {"checkout_url": session.url, "session_id": session.id}
@@ -162,21 +158,17 @@ def _extract_session_data(session) -> dict:
     cd       = getattr(session, "customer_details", None)
     cd_email = getattr(cd, "email", None) if cd else None
 
-    email    = meta.get("email") or cd_email or ""
-    nombre   = meta.get("nombre") or ""
-    apellido = meta.get("apellido") or ""
-    telefono = meta.get("telefono") or ""
+    email  = meta.get("email") or cd_email or ""
+    nombre = meta.get("nombre") or ""
 
     customer = getattr(session, "customer", None) or ""
     if customer and not isinstance(customer, str):
         customer = getattr(customer, "id", "") or ""
 
-    print(f"[checkout] metadata extraída — nombre: '{nombre}', apellido: '{apellido}', email: '{email}', tel: '{telefono}'")
+    print(f"[checkout] metadata extraída — nombre: '{nombre}', email: '{email}'")
     return {
-        "email":    str(email),
-        "nombre":   str(nombre),
-        "apellido": str(apellido),
-        "telefono": str(telefono),
+        "email":  str(email),
+        "nombre": str(nombre),
         "customer": str(customer),
         "amount":   getattr(session, "amount_total", None) or 179900,
         "pstatus":  getattr(session, "payment_status", None) or "",
@@ -192,8 +184,6 @@ def _handle_checkout_completed(session):
 
     email    = data["email"]
     nombre   = data["nombre"]
-    apellido = data["apellido"]
-    telefono = data.get("telefono", "")
     stripe_customer_id = data["customer"]
     monto_centavos     = data["amount"]
 
@@ -214,8 +204,6 @@ def _handle_checkout_completed(session):
 
         sb.table("profiles").update({
             "nombre":             nombre,
-            "apellido":           apellido,
-            "telefono":           telefono,
             "rol":                "user",
             "activo":             True,
             "admin_id":           None,
