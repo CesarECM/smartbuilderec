@@ -98,12 +98,6 @@
     }
 
     async function verificar() {
-      // Si ya hay sesión activa, ir directo al dashboard
-      try {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (session) { window.location.replace("dashboard.html"); return; }
-      } catch (_) {}
-
       const sessionId = new URLSearchParams(window.location.search).get("session_id");
       if (!sessionId) { show("stateError"); return; }
 

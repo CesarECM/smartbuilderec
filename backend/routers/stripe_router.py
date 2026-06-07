@@ -218,7 +218,7 @@ def _handle_checkout_completed(session):
             "vigencia_hasta":     vigencia_hasta,
         }).eq("id", user_id).execute()
 
-        frontend_url = os.getenv("FRONTEND_URL", "https://www.smartbuilderec.com")
+        frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
         link_acceso = f"{frontend_url}/reset-password.html"
         try:
             link_res = sb.auth.admin.generate_link({
