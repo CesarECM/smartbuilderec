@@ -421,7 +421,7 @@
       const lista = document.getElementById("listaUsuarios");
       const { data: usuarios, error } = await _supabase
         .from("profiles")
-        .select("id, nombre, apellido, email, activo, created_at, vigencia_hasta")
+        .select("id, nombre, apellido, email, telefono, activo, created_at, vigencia_hasta")
         .eq("admin_id", _perfil.id)
         .order("created_at", { ascending: false });
 
@@ -471,12 +471,15 @@
       ));
     }
 
+    let _contactoAdmin = {};
+
     function renderTablaUsuarios(usuarios) {
       const ct = document.getElementById("countUsuarios");
       if (ct) ct.textContent = `(${usuarios.length})`;
       const lista = document.getElementById("listaUsuarios");
       if (!usuarios.length) { lista.innerHTML = '<p class="empty-txt">No hay usuarios que coincidan con la búsqueda.</p>'; return; }
 
+      _contactoAdmin = {};
       lista.innerHTML = `
         <div class="table-wrap">
           <table class="users-table">
@@ -489,6 +492,7 @@
                 const nombre = [u.nombre, u.apellido].filter(Boolean).join(" ") || "(Sin nombre)";
                 const fecha  = new Date(u.created_at).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
                 const nombreEsc = nombre.replace(/'/g, "\\'");
+                _contactoAdmin[u.id] = { nombre, email: u.email, tel: u.telefono||"" };
                 return `
                   <tr id="ucard-${u.id}">
                     <td>
@@ -508,6 +512,7 @@
                     <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
                     <td>
                       <div style="display:flex;gap:6px;flex-wrap:wrap">
+                        <button class="btn-sm" onclick="abrirFichaContacto('${u.id}','admin')">Contacto</button>
                         <button class="btn-sm ${u.activo ? '' : 'success'}" id="btnToggle-${u.id}"
                           onclick="toggleUsuario('${u.id}', ${u.activo})">${u.activo ? "Desactivar" : "Activar"}</button>
                         <button class="btn-sm danger" id="btnDel-${u.id}"
@@ -932,6 +937,71 @@
 
     init();
   </script>
+<!-- ── Modal Ficha de Contacto ───────────────────────────────────────── -->
+<div id="modalContacto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)cerrarFichaContacto()">
+  <div style="background:var(--c-surface);border-radius:var(--r-xl);padding:28px 28px 24px;width:100%;max-width:380px;margin:16px;box-shadow:var(--shadow-lg);border:1px solid var(--c-border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--c-text)">Ficha de contacto</h3>
+      <button onclick="cerrarFichaContacto()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--c-text-3);padding:2px 6px;border-radius:4px">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--c-surface-2);border-radius:var(--r-md);padding:10px 12px">
+        <div style="flex:0 0 72px;font-size:12px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;letter-spacing:.04em">Nombre</div>
+        <div id="fichaShowNombre" style="flex:1;font-size:14px;font-weight:600;color:var(--c-text)">—</div>
+        <button onclick="copiarCampoFicha('fichaShowNombre',this)" style="background:none;border:1px solid var(--c-border-s);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:13px;color:var(--c-text-2);white-space:nowrap" title="Copiar">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--c-surface-2);border-radius:var(--r-md);padding:10px 12px">
+        <div style="flex:0 0 72px;font-size:12px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;letter-spacing:.04em">Email</div>
+        <div id="fichaShowEmail" style="flex:1;font-size:14px;color:var(--c-text);word-break:break-all">—</div>
+        <button onclick="copiarCampoFicha('fichaShowEmail',this)" style="background:none;border:1px solid var(--c-border-s);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:13px;color:var(--c-text-2);white-space:nowrap" title="Copiar">📋</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--c-surface-2);border-radius:var(--r-md);padding:10px 12px">
+        <div style="flex:0 0 72px;font-size:12px;font-weight:600;color:var(--c-text-3);text-transform:uppercase;letter-spacing:.04em">Teléfono</div>
+        <div id="fichaShowTel" style="flex:1;font-size:14px;color:var(--c-text)">—</div>
+        <button onclick="copiarCampoFicha('fichaShowTel',this)" style="background:none;border:1px solid var(--c-border-s);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:13px;color:var(--c-text-2);white-space:nowrap" title="Copiar">📋</button>
+      </div>
+    </div>
+    <button onclick="copiarFichaCompleta()" style="width:100%;margin-top:16px;padding:10px;background:var(--c-blue-600);color:#fff;border:none;border-radius:var(--r-md);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" id="btnCopiarTodo">📋 Copiar ficha completa</button>
+  </div>
+</div>
+<script>
+  function abrirFichaContacto(id, store) {
+    const u = (store === 'admin' ? _contactoAdmin : _contactoSA)[id];
+    if (!u) return;
+    document.getElementById("fichaShowNombre").textContent = u.nombre || "—";
+    document.getElementById("fichaShowEmail").textContent  = u.email  || "—";
+    document.getElementById("fichaShowTel").textContent    = u.tel    || "Sin teléfono registrado";
+    document.getElementById("btnCopiarTodo").textContent   = "📋 Copiar ficha completa";
+    document.getElementById("modalContacto").style.display = "flex";
+  }
+
+  function cerrarFichaContacto() {
+    document.getElementById("modalContacto").style.display = "none";
+  }
+
+  function copiarCampoFicha(id, btn) {
+    const texto = document.getElementById(id).textContent;
+    if (!texto || texto === "—" || texto === "Sin teléfono registrado") return;
+    navigator.clipboard.writeText(texto).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = "✓";
+      btn.style.color = "var(--c-success)";
+      setTimeout(() => { btn.textContent = orig; btn.style.color = ""; }, 1800);
+    });
+  }
+
+  function copiarFichaCompleta() {
+    const nombre = document.getElementById("fichaShowNombre").textContent;
+    const email  = document.getElementById("fichaShowEmail").textContent;
+    const tel    = document.getElementById("fichaShowTel").textContent;
+    const ficha  = `Nombre: ${nombre}\nEmail: ${email}\nTeléfono: ${tel}`;
+    navigator.clipboard.writeText(ficha).then(() => {
+      const btn = document.getElementById("btnCopiarTodo");
+      btn.textContent = "✓ Copiado";
+      setTimeout(() => { btn.textContent = "📋 Copiar ficha completa"; }, 1800);
+    });
+  }
+</script>
 <script src="soporte-widget.js"></script>
 </body>
 </html>
