@@ -222,7 +222,7 @@ def _handle_checkout_completed(session):
         link_acceso = f"{frontend_url}/reset-password.html"
         try:
             link_res = sb.auth.admin.generate_link({
-                "type": "magiclink",
+                "type": "recovery",
                 "email": email,
                 "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
             })
