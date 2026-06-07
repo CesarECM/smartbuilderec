@@ -322,9 +322,7 @@
 
         <hr class="lp-divider">
 
-        <div class="lp-form" id="checkoutForm">
-          <input type="text" id="nombre" placeholder="Tu nombre" autocomplete="given-name" required>
-          <input type="email" id="email" placeholder="Tu correo electrónico" autocomplete="email" required>
+        <div id="checkoutForm">
           <button class="lp-pay-btn" id="btnPagar">Pagar con tarjeta →</button>
           <p class="lp-form-msg" id="formMsg"></p>
         </div>
@@ -393,12 +391,7 @@
     }
 
     document.getElementById("btnPagar").addEventListener("click", async () => {
-      const nombre = document.getElementById("nombre").value.trim();
-      const email  = document.getElementById("email").value.trim();
-      const btn    = document.getElementById("btnPagar");
-
-      if (!nombre) { setMsg("Ingresa tu nombre.", "error"); return; }
-      if (!email || !/\S+@\S+\.\S+/.test(email)) { setMsg("Ingresa un correo electrónico válido.", "error"); return; }
+      const btn = document.getElementById("btnPagar");
 
       btn.disabled = true;
       btn.textContent = "Redirigiendo al pago...";
@@ -412,7 +405,7 @@
         const res = await fetch(`${BACKEND_URL}/checkout/session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, nombre, success_url, cancel_url }),
+          body: JSON.stringify({ success_url, cancel_url }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Error al crear la sesión de pago.");

@@ -23,8 +23,6 @@ def _stripe():
 # ─── Checkout (solo plan instructor) ──────────────────────────────────────────
 
 class CheckoutRequest(BaseModel):
-    email: str
-    nombre: str
     success_url: str
     cancel_url: str
 
@@ -38,16 +36,12 @@ def crear_checkout(data: CheckoutRequest):
     sc = _stripe()
     try:
         session = sc.checkout.Session.create(
-            customer_email=data.email,
             payment_method_types=["card"],
             mode="payment",
             line_items=[{"price": price_id, "quantity": 1}],
             success_url=data.success_url,
             cancel_url=data.cancel_url,
-            metadata={
-                "email":  data.email,
-                "nombre": data.nombre,
-            },
+            billing_address_collection="auto",
         )
         return {"checkout_url": session.url, "session_id": session.id}
     except stripe.StripeError as e:
@@ -153,13 +147,12 @@ def _extract_session_data(session) -> dict:
     """Convierte un objeto Session de Stripe (cualquier versión SDK) a dict plano.
     SDK >=8: objetos tipados sin .get() → usar getattr.
     SDK <8:  StripeObject dict-like → getattr también funciona."""
-    meta = getattr(session, "metadata", None) or {}
-
     cd       = getattr(session, "customer_details", None)
     cd_email = getattr(cd, "email", None) if cd else None
+    cd_name  = getattr(cd, "name",  None) if cd else None
 
-    email  = meta.get("email") or cd_email or ""
-    nombre = meta.get("nombre") or ""
+    email  = cd_email or ""
+    nombre = cd_name  or ""
 
     customer = getattr(session, "customer", None) or ""
     if customer and not isinstance(customer, str):
