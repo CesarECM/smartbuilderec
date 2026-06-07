@@ -334,6 +334,63 @@
       .renovar-form { grid-template-columns: 1fr; }
       .crear-admin-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── Tarjeta: perfil incompleto ──────────────────────────── */
+    .card-pi {
+      background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: var(--r-lg); padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .card-pi-icon  { font-size: 20px; flex-shrink: 0; }
+    .card-pi-body  { flex: 1; min-width: 0; }
+    .card-pi-title { font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 2px; }
+    .card-pi-desc  { font-size: 13px; color: #b45309; }
+    .card-pi-btn   {
+      background: #d97706; color: white; border: none;
+      padding: 8px 14px; border-radius: var(--r-sm);
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background var(--t-fast);
+    }
+    .card-pi-btn:hover { background: #b45309; }
+
+    /* ── Sección Perfil ──────────────────────────────────────── */
+    .perfil-card {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-xl); padding: 24px 28px;
+    }
+    .perfil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .perfil-grid { grid-template-columns: 1fr; } }
+    .perfil-field        { display: flex; flex-direction: column; gap: 5px; }
+    .perfil-field.full   { grid-column: 1 / -1; }
+    .perfil-field label  { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .perfil-field input  {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
+      padding: 9px 11px; font-size: 14px; font-family: inherit;
+      background: var(--c-surface); transition: border-color 0.2s; outline: none;
+    }
+    .perfil-field input:focus    { border-color: #7c3aed; }
+    .perfil-field input:disabled { background: var(--c-surface-2); color: var(--c-text-3); cursor: not-allowed; }
+    .perfil-field input.valid    { border-color: #059669; }
+    .perfil-field input.invalid  { border-color: #dc2626; }
+    .email-wrap            { position: relative; display: flex; align-items: center; }
+    .email-wrap input      { padding-right: 36px; width: 100%; box-sizing: border-box; }
+    .email-wrap .lock-icon { position: absolute; right: 10px; font-size: 13px; color: var(--c-text-3); pointer-events: none; }
+    .perfil-hint           { font-size: 11px; margin-top: 3px; }
+    .perfil-hint.ok        { color: #059669; }
+    .perfil-hint.err       { color: #dc2626; }
+    .perfil-actions        { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .perfil-msg            { font-size: 13px; }
+    .perfil-msg.ok         { color: #059669; }
+    .perfil-msg.err        { color: #dc2626; }
+    .btn-guardar-perfil {
+      background: #7c3aed; color: white; border: none;
+      padding: 9px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer; display: inline-flex;
+      align-items: center; gap: 6px; transition: background var(--t-fast);
+    }
+    .btn-guardar-perfil:hover { background: #6d28d9; }
   </style>
 </head>
 <body>
@@ -361,6 +418,7 @@
     <button class="tab-btn"        id="tab-plataforma" onclick="showTab('plataforma')">📚 Plataforma</button>
     <button class="tab-btn"        id="tab-soporte"    onclick="showTab('soporte')">🤖 Soporte KB</button>
     <button class="tab-btn"        id="tab-config"     onclick="showTab('config')">⚙️ Configuración</button>
+    <button class="tab-btn"        id="tab-mi-perfil"  onclick="showTab('mi-perfil')">👤 Mi Perfil</button>
   </nav>
 
   <main class="panel-main">
@@ -919,6 +977,14 @@
 
     </div>
 
+    <!-- ══ Mi Perfil ═════════════════════════════════════════════ -->
+    <div id="panel-mi-perfil" class="tab-panel">
+      <div class="section-header"><h2>👤 Mi Perfil</h2></div>
+      <div class="perfil-card" id="perfilFormContainer">
+        <p class="loading-txt">Cargando...</p>
+      </div>
+    </div>
+
   </main>
 
   <!-- Modal genérico (detalle admin) -->
@@ -1079,13 +1145,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
+  <script src="perfil.js"></script>
   <script>
     const BACKEND_URL = "https://smartbuilderec.onrender.com";
     let _perfil        = null;
     let _admins        = [];
     let _todosUsuarios = [];
     let _reasignarUserId = null;
-    let _tabsLoaded = { resumen: true, admins: true, usuarios: false, plataforma: false, config: false, soporte: false };
+    let _tabsLoaded = { resumen: true, admins: true, usuarios: false, plataforma: false, config: false, soporte: false, "mi-perfil": false };
     let _vigenciaLoaded = false;
     let _renovarAdminId = null;
     let _tplSlugActivo  = null;
@@ -1103,6 +1170,11 @@
       if (name === "plataforma" && !_tabsLoaded.plataforma) { _tabsLoaded.plataforma = true; cargarCursos(); cargarAuditLog(); }
       if (name === "config"     && !_tabsLoaded.config)     { _tabsLoaded.config     = true; cargarPlantillas(); }
       if (name === "soporte"    && !_tabsLoaded.soporte)    { _tabsLoaded.soporte    = true; cargarKB(); }
+      if (name === "mi-perfil"  && !_tabsLoaded["mi-perfil"]) {
+        _tabsLoaded["mi-perfil"] = true;
+        document.getElementById("perfilFormContainer").innerHTML = _htmlPerfilForm(_perfil);
+        if (_perfil.curp) validarCurpInput();
+      }
     }
 
     function toggleVigenciaSection() {
@@ -1135,6 +1207,11 @@
       document.getElementById("headerNombre").textContent =
         [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
       await Promise.all([cargarStats(), cargarAdmins()]);
+      // Tarjeta de aviso si el perfil está incompleto
+      const faltantes = _camposFaltantesPerfil(_perfil);
+      if (faltantes.length) {
+        renderCardPI(document.getElementById("panel-resumen"), _perfil, () => showTab("mi-perfil"));
+      }
       // Verificar integraciones en segundo plano (no bloquea la UI)
       setTimeout(verificarIntegraciones, 800);
     }

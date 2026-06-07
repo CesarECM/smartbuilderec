@@ -20,7 +20,7 @@ async function getUserProfile() {
   if (!user) return null;
   const { data } = await _supabase
     .from("profiles")
-    .select("id, nombre, apellido, email, rol, credits, admin_id, activo, vigencia_hasta")
+    .select("id, nombre, apellido, email, rol, credits, admin_id, activo, vigencia_hasta, telefono, curp")
     .eq("id", user.id)
     .single();
   return data;
