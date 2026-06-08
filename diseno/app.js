@@ -1,4 +1,19 @@
-// ─── W#1: Indicador de guardado automático | W#2: Progreso global ────────────
+// ─── W#1: Indicador de guardado | W#2: Progreso global | D#3: Badge desactualizado ──
+function _mostrarBadgeDesactualizado() {
+  const navFormatos = document.getElementById("nav-formatos");
+  if (!navFormatos) return;
+  if (!document.getElementById("sbe-badge-desact")) {
+    const badge = document.createElement("span");
+    badge.id = "sbe-badge-desact";
+    badge.textContent = "●";
+    badge.style.cssText = "color:#f87171;font-size:8px;vertical-align:super;margin-left:3px;";
+    navFormatos.appendChild(badge);
+  }
+}
+function _ocultarBadgeDesactualizado() {
+  document.getElementById("sbe-badge-desact")?.remove();
+}
+
 (function initSyncUI() {
   const icon  = document.getElementById("sbe-sync-icon");
   const text  = document.getElementById("sbe-sync-text");
@@ -20,6 +35,8 @@
     icon.textContent = "☁️"; text.textContent = "Guardado";
     text.style.color = "rgba(255,255,255,0.5)";
     _okTimer = setTimeout(() => { text.textContent = "Sincronizado"; }, 3000);
+    // D#3: si hay una descarga previa registrada, los docs están desactualizados
+    if (localStorage.getItem("sbe_ultima_descarga")) _mostrarBadgeDesactualizado();
   });
   window.addEventListener("sbe:sync-error", () => {
     icon.textContent = "⚠️"; text.textContent = "Error al guardar";
@@ -4790,6 +4807,10 @@ function validarExpedienteCompleto() {
 async function descargarPlaneacionFinal() {
   const payload = recolectarPayload();
 
+  // D#10: incluir planeacion_id para el log de descargas en backend
+  const planeacionId = localStorage.getItem("sbe_planeacion_id");
+  if (planeacionId) payload.planeacion_id = planeacionId;
+
   // Validación cruzada antes de generar
   const erroresValidacion = validarExpedienteCompleto();
   if (erroresValidacion.length > 0) {
@@ -4848,6 +4869,10 @@ async function descargarPlaneacionFinal() {
     a.remove();
 
     URL.revokeObjectURL(url);
+
+    // D#3: guardar timestamp de última descarga y limpiar badge de desactualizado
+    localStorage.setItem("sbe_ultima_descarga", Date.now());
+    _ocultarBadgeDesactualizado();
 
     if (mensajeFormatos) {
       mensajeFormatos.style.display = "block";

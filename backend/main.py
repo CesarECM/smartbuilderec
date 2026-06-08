@@ -280,6 +280,7 @@ class PlaneacionRequest(BaseModel):
     dialogo: dict = {}
     cierre: dict = {}
     materiales: dict = {}
+    planeacion_id: Optional[str] = None
 
 
 class ExpositivaRequest(BaseModel):
@@ -1789,7 +1790,7 @@ def _validar_expediente(data: PlaneacionRequest) -> None:
 
 
 @app.post("/generate-doc/planeacion")
-def generate_doc_planeacion(data: PlaneacionRequest):
+def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
     try:
         _validar_expediente(data)
 
@@ -1873,9 +1874,23 @@ def generate_doc_planeacion(data: PlaneacionRequest):
                 zf.writestr(nombre_archivo, contenido)
 
         zip_buffer.seek(0)
+        zip_bytes = zip_buffer.read()
+
+        # D#10: Registrar descarga en tabla descargas (best-effort, no bloquea la respuesta)
+        try:
+            user_id = getattr(request.state, "user", {}).get("sub")
+            if user_id and data.planeacion_id:
+                from database import get_supabase
+                get_supabase().table("descargas").insert({
+                    "planeacion_id": data.planeacion_id,
+                    "user_id": user_id,
+                    "num_docs": len(documentos),
+                }).execute()
+        except Exception as e_log:
+            print(f"[log] Error registrando descarga: {repr(e_log)}")
 
         return StreamingResponse(
-            io.BytesIO(zip_buffer.read()),
+            io.BytesIO(zip_bytes),
             media_type="application/zip",
             headers={
                 "Content-Disposition": f"attachment; filename=Expediente_{nombre_curso}.zip"
