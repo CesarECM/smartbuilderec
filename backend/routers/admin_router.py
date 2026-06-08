@@ -228,21 +228,31 @@ class AssignEditorRequest(BaseModel):
 
 @router.post("/admin/assign-editor", status_code=200)
 def assign_editor(data: AssignEditorRequest, request: Request):
-    """Asigna rol 'editor' a un usuario ya registrado, buscado por email."""
+    """Asigna rol 'editor' a un usuario ya registrado, buscado por email (case-insensitive)."""
     caller_id = request.state.user.get("sub")
     sb = get_supabase()
     _require_super_admin(caller_id, sb)
 
-    res = sb.table("profiles").select("id, nombre, rol").eq("email", data.email).single().execute()
+    # ilike para búsqueda case-insensitive de email
+    res = (
+        sb.table("profiles")
+        .select("id, nombre, apellido, rol")
+        .ilike("email", data.email.strip())
+        .execute()
+    )
     if not res.data:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado con ese correo.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Usuario no encontrado con el correo '{data.email}'. Verifica que esté registrado en la plataforma."
+        )
 
-    perfil = res.data
+    perfil = res.data[0]
     if perfil["rol"] == "super_admin":
         raise HTTPException(status_code=400, detail="No se puede cambiar el rol de un super_admin.")
 
     sb.table("profiles").update({"rol": "editor"}).eq("id", perfil["id"]).execute()
-    return {"ok": True, "id": perfil["id"], "nombre": perfil.get("nombre", "")}
+    nombre = " ".join(filter(None, [perfil.get("nombre"), perfil.get("apellido")])) or data.email
+    return {"ok": True, "id": perfil["id"], "nombre": nombre}
 
 
 @router.delete("/admin/editores/{editor_id}", status_code=200)
