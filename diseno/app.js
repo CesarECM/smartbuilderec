@@ -4962,17 +4962,23 @@ if (btnDescargarPlaneacionFinal) {
   const btnTodoExp = document.getElementById("btnGenerarTodoExpositiva");
   if (btnTodoExp) {
     const camposExp = ["introduccion","experiencia","desarrollo","ejemplos","sintesis","preguntas","utilidad"];
-    btnTodoExp.addEventListener("click", () =>
+    btnTodoExp.addEventListener("click", () => {
+      const getId = c => "exp" + c[0].toUpperCase() + c.slice(1);
+      const existentes = camposExp.filter(c => document.getElementById(getId(c)));
+      const vacios = existentes.filter(c => !document.getElementById(getId(c)).value.trim());
+      if (!vacios.length) { showAlert("Todos los campos ya tienen contenido."); return; }
+      if (vacios.length < existentes.length &&
+          !confirm("Algunos campos ya tienen contenido y no serán modificados. ¿Deseas generar solo los que están vacíos?")) return;
       generarSeccionCompleta(
-        camposExp,
+        vacios,
         async (campo) => {
           const fakeBtn = { disabled: false, textContent: "" };
           await generarExpositivaIA(campo, fakeBtn);
         },
         btnTodoExp,
         guardarExpositivaFinal
-      )
-    );
+      );
+    });
   }
   const contenedorUndoExp = document.getElementById("btnUndoExpositiva");
   if (contenedorUndoExp) {
@@ -4987,17 +4993,23 @@ if (btnDescargarPlaneacionFinal) {
   const btnTodoDem = document.getElementById("btnGenerarTodoDemostrativa");
   if (btnTodoDem) {
     const camposDem = ["experiencia","actividad","ejemplos","preguntas"];
-    btnTodoDem.addEventListener("click", () =>
+    btnTodoDem.addEventListener("click", () => {
+      const getId = c => "demo" + c[0].toUpperCase() + c.slice(1);
+      const existentes = camposDem.filter(c => document.getElementById(getId(c)));
+      const vacios = existentes.filter(c => !document.getElementById(getId(c)).value.trim());
+      if (!vacios.length) { showAlert("Todos los campos ya tienen contenido."); return; }
+      if (vacios.length < existentes.length &&
+          !confirm("Algunos campos ya tienen contenido y no serán modificados. ¿Deseas generar solo los que están vacíos?")) return;
       generarSeccionCompleta(
-        camposDem,
+        vacios,
         async (campo) => {
           const fakeBtn = { disabled: false, textContent: "" };
           await generarDemostrativaIA(campo, fakeBtn);
         },
         btnTodoDem,
         guardarDemostrativaFinal
-      )
-    );
+      );
+    });
   }
   const contenedorUndoDem = document.getElementById("btnUndoDemostrativa");
   if (contenedorUndoDem) {
@@ -5011,17 +5023,23 @@ if (btnDescargarPlaneacionFinal) {
   const btnTodoDia = document.getElementById("btnGenerarTodoDialogo");
   if (btnTodoDia) {
     const camposDia = ["actividad","tema","instrucciones","tiempo","reglas","introduccion","ejemplos","conclusion"];
-    btnTodoDia.addEventListener("click", () =>
+    btnTodoDia.addEventListener("click", () => {
+      const getId = c => "dialogo" + c[0].toUpperCase() + c.slice(1);
+      const existentes = camposDia.filter(c => document.getElementById(getId(c)));
+      const vacios = existentes.filter(c => !document.getElementById(getId(c)).value.trim());
+      if (!vacios.length) { showAlert("Todos los campos ya tienen contenido."); return; }
+      if (vacios.length < existentes.length &&
+          !confirm("Algunos campos ya tienen contenido y no serán modificados. ¿Deseas generar solo los que están vacíos?")) return;
       generarSeccionCompleta(
-        camposDia,
+        vacios,
         async (campo) => {
           const fakeBtn = { disabled: false, textContent: "" };
           await generarDialogoIA(campo, fakeBtn);
         },
         btnTodoDia,
         guardarDialogoFinal
-      )
-    );
+      );
+    });
   }
   const contenedorUndoDia = document.getElementById("btnUndoDialogo");
   if (contenedorUndoDia) {
