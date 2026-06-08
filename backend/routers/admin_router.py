@@ -203,3 +203,58 @@ def check_vigencias(request: Request):
     sb = get_supabase()
     _require_super_admin(caller_id, sb)
     return _procesar_vigencias(sb)
+
+
+# ─── Gestión de editores ───────────────────────────────────────────────────────
+
+@router.get("/admin/editores", status_code=200)
+def list_editores(request: Request):
+    caller_id = request.state.user.get("sub")
+    sb = get_supabase()
+    _require_super_admin(caller_id, sb)
+    res = (
+        sb.table("profiles")
+        .select("id, nombre, apellido, email, created_at, activo")
+        .eq("rol", "editor")
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return res.data or []
+
+
+class AssignEditorRequest(BaseModel):
+    email: str
+
+
+@router.post("/admin/assign-editor", status_code=200)
+def assign_editor(data: AssignEditorRequest, request: Request):
+    """Asigna rol 'editor' a un usuario ya registrado, buscado por email."""
+    caller_id = request.state.user.get("sub")
+    sb = get_supabase()
+    _require_super_admin(caller_id, sb)
+
+    res = sb.table("profiles").select("id, nombre, rol").eq("email", data.email).single().execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado con ese correo.")
+
+    perfil = res.data
+    if perfil["rol"] == "super_admin":
+        raise HTTPException(status_code=400, detail="No se puede cambiar el rol de un super_admin.")
+
+    sb.table("profiles").update({"rol": "editor"}).eq("id", perfil["id"]).execute()
+    return {"ok": True, "id": perfil["id"], "nombre": perfil.get("nombre", "")}
+
+
+@router.delete("/admin/editores/{editor_id}", status_code=200)
+def remove_editor(editor_id: str, request: Request):
+    """Revoca el rol editor y lo regresa a 'user'."""
+    caller_id = request.state.user.get("sub")
+    sb = get_supabase()
+    _require_super_admin(caller_id, sb)
+
+    res = sb.table("profiles").select("rol").eq("id", editor_id).single().execute()
+    if not res.data or res.data.get("rol") != "editor":
+        raise HTTPException(status_code=404, detail="Editor no encontrado.")
+
+    sb.table("profiles").update({"rol": "user"}).eq("id", editor_id).execute()
+    return {"ok": True}

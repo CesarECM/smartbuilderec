@@ -649,6 +649,21 @@
           </div>
         </div>
       </div>
+
+      <!-- ── Sub-sección: Editores de Wizards ─────────────────── -->
+      <div class="panel-section-gap" style="margin-top:32px">
+        <div class="section-header">
+          <h2>🔧 Editores de Wizards</h2>
+          <div class="section-header-actions">
+            <button class="btn-primary" onclick="abrirModalAsignarEditor()">➕ Asignar editor</button>
+          </div>
+        </div>
+        <p style="font-size:13px;color:var(--c-text-2);margin-bottom:16px">
+          Los editores pueden gestionar los schemas de wizards desde <strong>editor.html</strong>.
+          Solo aplica a usuarios ya registrados en la plataforma.
+        </p>
+        <div id="listaEditores"><p class="loading-txt">Cargando editores...</p></div>
+      </div>
     </div>
 
     <!-- ══ Usuarios ═══════════════════════════════════════════════ -->
@@ -1140,6 +1155,24 @@
     </div>
   </div>
 
+  <!-- Modal: Asignar Editor ─────────────────────────────────── -->
+  <div class="sa-modal-overlay" id="modalAsignarEditor" onclick="cerrarModalAsignarEditor(event)">
+    <div class="sa-modal-box narrow">
+      <button class="sa-modal-close" onclick="cerrarModalAsignarEditor()">✕</button>
+      <div class="sa-modal-title">Asignar rol Editor</div>
+      <div class="sa-modal-subtitle">El usuario debe estar registrado en la plataforma.</div>
+      <div class="renovar-field" style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:var(--c-text-2);display:block;margin-bottom:4px">Correo del usuario *</label>
+        <input type="email" id="editorEmailInput" class="renovar-input" style="width:100%;box-sizing:border-box" placeholder="usuario@ejemplo.com">
+      </div>
+      <p class="crear-msg" id="asignarEditorMsg"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn-secondary" onclick="cerrarModalAsignarEditor()">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarAsignarEditor" onclick="confirmarAsignarEditor()">Asignar editor</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1206,7 +1239,7 @@
       if (!_perfil) { window.location.href = "login.html"; return; }
       document.getElementById("headerNombre").textContent =
         [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
-      await Promise.all([cargarStats(), cargarAdmins()]);
+      await Promise.all([cargarStats(), cargarAdmins(), cargarEditores()]);
       // Tarjeta de aviso si el perfil está incompleto
       const faltantes = _camposFaltantesPerfil(_perfil);
       if (faltantes.length) {
@@ -2190,6 +2223,116 @@
     function cerrarModalCrearAdmin(e) {
       if (!e || e.target === document.getElementById("modalCrearAdmin")) {
         document.getElementById("modalCrearAdmin").classList.remove("open");
+      }
+    }
+
+    // ── Gestión de Editores ───────────────────────────────────────
+
+    async function cargarEditores() {
+      const wrap = document.getElementById("listaEditores");
+      if (!wrap) return;
+      wrap.innerHTML = '<p class="loading-txt">Cargando...</p>';
+      try {
+        const { data: { session } } = await _supabase.auth.getSession();
+        const token = session?.access_token || "";
+        const resp  = await fetch(`${window.SBE_API || "https://smartbuilderec.onrender.com"}/admin/editores`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        const editores = await resp.json();
+
+        if (!editores.length) {
+          wrap.innerHTML = '<p class="empty-txt">No hay editores asignados aún.</p>';
+          return;
+        }
+
+        wrap.innerHTML = `
+          <table class="admin-table">
+            <thead><tr><th>Nombre</th><th>Correo</th><th>Desde</th><th>Acciones</th></tr></thead>
+            <tbody>
+              ${editores.map(e => `
+                <tr>
+                  <td><strong>${[e.nombre, e.apellido].filter(Boolean).join(" ") || "—"}</strong></td>
+                  <td>${e.email}</td>
+                  <td style="color:var(--c-text-3);font-size:12px">${new Date(e.created_at).toLocaleDateString("es-MX")}</td>
+                  <td>
+                    <button class="btn-sm danger" onclick="revocarEditor('${e.id}','${e.email}')">Revocar</button>
+                  </td>
+                </tr>`).join("")}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        wrap.innerHTML = `<p class="error-txt">Error al cargar editores: ${err.message}</p>`;
+      }
+    }
+
+    function abrirModalAsignarEditor() {
+      document.getElementById("editorEmailInput").value = "";
+      document.getElementById("asignarEditorMsg").textContent = "";
+      document.getElementById("asignarEditorMsg").className = "crear-msg";
+      document.getElementById("modalAsignarEditor").classList.add("open");
+      setTimeout(() => document.getElementById("editorEmailInput").focus(), 100);
+    }
+
+    function cerrarModalAsignarEditor(e) {
+      if (!e || e.target === document.getElementById("modalAsignarEditor")) {
+        document.getElementById("modalAsignarEditor").classList.remove("open");
+      }
+    }
+
+    async function confirmarAsignarEditor() {
+      const email = document.getElementById("editorEmailInput").value.trim();
+      const msg   = document.getElementById("asignarEditorMsg");
+      const btn   = document.getElementById("btnConfirmarAsignarEditor");
+
+      if (!email) {
+        msg.textContent = "El correo es obligatorio.";
+        msg.className   = "crear-msg error";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Asignando...";
+      msg.textContent = "";
+
+      try {
+        const { data: { session } } = await _supabase.auth.getSession();
+        const token = session?.access_token || "";
+        const resp  = await fetch(`${window.SBE_API || "https://smartbuilderec.onrender.com"}/admin/assign-editor`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const body = await resp.json();
+        if (!resp.ok) throw new Error(body.detail || "Error al asignar");
+
+        msg.textContent = `✓ ${body.nombre || email} ahora es editor.`;
+        msg.className   = "crear-msg success";
+        await cargarEditores();
+        setTimeout(cerrarModalAsignarEditor, 1500);
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className   = "crear-msg error";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Asignar editor";
+      }
+    }
+
+    async function revocarEditor(editorId, email) {
+      if (!confirm(`¿Revocar el rol editor a ${email}? Volverá a ser usuario normal.`)) return;
+      try {
+        const { data: { session } } = await _supabase.auth.getSession();
+        const token = session?.access_token || "";
+        const resp  = await fetch(`${window.SBE_API || "https://smartbuilderec.onrender.com"}/admin/editores/${editorId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        mostrarToast("Rol editor revocado.");
+        await cargarEditores();
+      } catch (err) {
+        mostrarToast("Error: " + err.message);
       }
     }
 
