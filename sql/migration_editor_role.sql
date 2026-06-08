@@ -36,22 +36,64 @@ CREATE POLICY "instancias_editor_lee"
   USING (public.get_my_role() = 'editor');
 
 
--- ── 4. Función helper: asignar rol editor a un usuario existente ─────
+-- ── 4. Función: asignar rol editor (llamable desde el frontend) ──────
+-- SECURITY DEFINER → se ejecuta como el owner de la BD, bypasea RLS.
+-- Valida internamente que el llamante sea super_admin.
 CREATE OR REPLACE FUNCTION public.fn_assign_editor(target_email TEXT)
-RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_perfil RECORD;
 BEGIN
   IF public.get_my_role() <> 'super_admin' THEN
     RAISE EXCEPTION 'Solo el super_admin puede asignar el rol editor.';
   END IF;
 
-  UPDATE public.profiles
-  SET rol = 'editor', updated_at = NOW()
-  WHERE email = target_email;
+  -- Búsqueda case-insensitive
+  SELECT id, nombre, apellido, rol
+    INTO v_perfil
+    FROM public.profiles
+   WHERE lower(email) = lower(target_email)
+   LIMIT 1;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Usuario no encontrado: %', target_email;
+    RAISE EXCEPTION 'Usuario no encontrado con el correo: %', target_email;
   END IF;
+
+  IF v_perfil.rol = 'super_admin' THEN
+    RAISE EXCEPTION 'No se puede cambiar el rol de un super_admin.';
+  END IF;
+
+  UPDATE public.profiles
+     SET rol = 'editor', updated_at = NOW()
+   WHERE id = v_perfil.id;
+
+  RETURN jsonb_build_object(
+    'ok', true,
+    'id', v_perfil.id,
+    'nombre', COALESCE(NULLIF(trim(v_perfil.nombre || ' ' || COALESCE(v_perfil.apellido,'')), ''), target_email)
+  );
 END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.fn_assign_editor(TEXT) TO authenticated;
+
+
+-- ── 5. Función: revocar rol editor (vuelve a 'user') ─────────────────
+CREATE OR REPLACE FUNCTION public.fn_revoke_editor(target_id UUID)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF public.get_my_role() <> 'super_admin' THEN
+    RAISE EXCEPTION 'Solo el super_admin puede revocar el rol editor.';
+  END IF;
+
+  UPDATE public.profiles
+     SET rol = 'user', updated_at = NOW()
+   WHERE id = target_id AND rol = 'editor';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Editor no encontrado o ya no tiene ese rol.';
+  END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.fn_revoke_editor(UUID) TO authenticated;

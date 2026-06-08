@@ -2226,47 +2226,43 @@
       }
     }
 
-    // ── Gestión de Editores ───────────────────────────────────────
+    // ── Gestión de Editores (vía Supabase RPC — sin depender del backend) ───
 
     async function cargarEditores() {
       const wrap = document.getElementById("listaEditores");
       if (!wrap) return;
       wrap.innerHTML = '<p class="loading-txt">Cargando...</p>';
-      try {
-        const { data: { session } } = await _supabase.auth.getSession();
-        const token = session?.access_token || "";
-        const resp  = await fetch(`${window.SBE_API || "https://smartbuilderec.onrender.com"}/admin/editores`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({ detail: "Error de conexión con el backend" }));
-          throw new Error(err.detail || `Error ${resp.status}`);
-        }
-        const editores = await resp.json();
 
-        if (!editores.length) {
-          wrap.innerHTML = '<p class="empty-txt">No hay editores asignados aún.</p>';
-          return;
-        }
+      const { data: editores, error } = await _supabase
+        .from("profiles")
+        .select("id, nombre, apellido, email, created_at")
+        .eq("rol", "editor")
+        .order("created_at", { ascending: false });
 
-        wrap.innerHTML = `
-          <table class="admin-table">
-            <thead><tr><th>Nombre</th><th>Correo</th><th>Desde</th><th>Acciones</th></tr></thead>
-            <tbody>
-              ${editores.map(e => `
-                <tr>
-                  <td><strong>${[e.nombre, e.apellido].filter(Boolean).join(" ") || "—"}</strong></td>
-                  <td>${e.email}</td>
-                  <td style="color:var(--c-text-3);font-size:12px">${new Date(e.created_at).toLocaleDateString("es-MX")}</td>
-                  <td>
-                    <button class="btn-sm danger" onclick="revocarEditor('${e.id}','${e.email}')">Revocar</button>
-                  </td>
-                </tr>`).join("")}
-            </tbody>
-          </table>`;
-      } catch (err) {
-        wrap.innerHTML = `<p class="error-txt">Error al cargar editores: ${err.message}</p>`;
+      if (error) {
+        wrap.innerHTML = `<p class="error-txt">Error: ${error.message}</p>`;
+        return;
       }
+      if (!editores?.length) {
+        wrap.innerHTML = '<p class="empty-txt">No hay editores asignados aún.</p>';
+        return;
+      }
+
+      wrap.innerHTML = `
+        <table class="admin-table">
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Desde</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${editores.map(e => `
+              <tr>
+                <td><strong>${[e.nombre, e.apellido].filter(Boolean).join(" ") || "—"}</strong></td>
+                <td>${e.email}</td>
+                <td style="color:var(--c-text-3);font-size:12px">${new Date(e.created_at).toLocaleDateString("es-MX")}</td>
+                <td>
+                  <button class="btn-sm danger" onclick="revocarEditor('${e.id}','${e.email}')">Revocar</button>
+                </td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
     }
 
     function abrirModalAsignarEditor() {
@@ -2294,49 +2290,39 @@
         return;
       }
 
-      btn.disabled = true;
+      btn.disabled    = true;
       btn.textContent = "Asignando...";
       msg.textContent = "";
 
-      try {
-        const { data: { session } } = await _supabase.auth.getSession();
-        const token = session?.access_token || "";
-        const resp  = await fetch(`${window.SBE_API || "https://smartbuilderec.onrender.com"}/admin/assign-editor`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
-        });
-        const body = await resp.json();
-        if (!resp.ok) throw new Error(body.detail || "Error al asignar");
+      // Llama a la función RPC SECURITY DEFINER en Supabase — no requiere backend
+      const { data, error } = await _supabase.rpc("fn_assign_editor", { target_email: email });
 
-        msg.textContent = `✓ ${body.nombre || email} ahora es editor.`;
-        msg.className   = "crear-msg success";
-        await cargarEditores();
-        setTimeout(cerrarModalAsignarEditor, 1500);
-      } catch (err) {
-        msg.textContent = err.message;
+      if (error) {
+        msg.textContent = error.message;
         msg.className   = "crear-msg error";
-      } finally {
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = "Asignar editor";
+        return;
       }
+
+      msg.textContent = `✓ ${data?.nombre || email} ahora es editor.`;
+      msg.className   = "crear-msg success";
+      await cargarEditores();
+      setTimeout(cerrarModalAsignarEditor, 1500);
+      btn.disabled    = false;
+      btn.textContent = "Asignar editor";
     }
 
     async function revocarEditor(editorId, email) {
       if (!confirm(`¿Revocar el rol editor a ${email}? Volverá a ser usuario normal.`)) return;
-      try {
-        const { data: { session } } = await _supabase.auth.getSession();
-        const token = session?.access_token || "";
-        const resp  = await fetch(`${window.SBE_API || "https://smartbuilderec.onrender.com"}/admin/editores/${editorId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!resp.ok) throw new Error(await resp.text());
-        mostrarToast("Rol editor revocado.");
-        await cargarEditores();
-      } catch (err) {
-        mostrarToast("Error: " + err.message);
+
+      const { error } = await _supabase.rpc("fn_revoke_editor", { target_id: editorId });
+      if (error) {
+        mostrarToast("Error: " + error.message);
+        return;
       }
+      mostrarToast("Rol editor revocado.");
+      await cargarEditores();
     }
 
     // ── Plantillas de email ───────────────────────────────────────
