@@ -1,6 +1,6 @@
 // ─── auth.js — Autenticación SmartBuilderEC ──────────────────────────────────
 // Requiere: supabase-client.js cargado ANTES en el HTML.
-// Roles válidos: 'super_admin' | 'admin' | 'user'
+// Roles válidos: 'super_admin' | 'admin' | 'user' | 'editor'
 
 // ── Sesión y usuario ──────────────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ async function registroConCodigo(email, password, nombre, apellido, codigo) {
 async function logout() {
   await _supabase.auth.signOut();
   Object.keys(localStorage)
-    .filter(k => k.startsWith("ec0217_") || k.startsWith("sbe_"))
+    .filter(k => k.startsWith("ec0217_") || k.startsWith("ec0301_") || k.startsWith("sbe_"))
     .forEach(k => localStorage.removeItem(k));
   window.location.href = "login.html";
 }

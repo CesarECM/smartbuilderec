@@ -81,6 +81,29 @@
     .badge-super_admin { background: #ede9fe; color: #5b21b6; }
     .badge-admin       { background: #fef3c7; color: #92400e; }
     .badge-user        { background: #dbeafe; color: #1e40af; }
+    .badge-editor      { background: #f0fdf4; color: #166534; }
+
+    /* ── Badges de norma ─────────────────────────────────────── */
+    .norma-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+    }
+    .norma-ec0217 { background: #dbeafe; color: #1e40af; }
+    .norma-ec0301 { background: #dcfce7; color: #166534; }
+
+    /* ── Modal selector de norma ─────────────────────────────── */
+    .modal-norma-box { max-width: 520px; }
+    .norma-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    @media (max-width: 480px) { .norma-cards { grid-template-columns: 1fr; } }
+    .norma-card {
+      border: 2px solid var(--c-border); border-radius: var(--r-lg);
+      padding: 20px 16px; cursor: pointer; background: var(--c-surface);
+      transition: all var(--t-fast); text-align: left; font-family: inherit; width: 100%;
+    }
+    .norma-card:hover { border-color: var(--c-blue-600); box-shadow: var(--shadow-sm); background: #f0f7ff; }
+    .norma-card-icon  { font-size: 28px; margin-bottom: 10px; display: block; }
+    .norma-card-titulo { font-size: 14px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+    .norma-card-desc  { font-size: 12px; color: var(--c-text-2); line-height: 1.5; }
 
     /* ── Stats ───────────────────────────────────────────────── */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; margin-bottom: 28px; }
@@ -303,7 +326,7 @@
         <p id="subtituloWelcome"></p>
       </div>
       <button class="btn-nuevo" id="btnNuevoCurso" onclick="crearNuevoCurso()">
-        + Nuevo curso
+        + Nuevo expediente
       </button>
     </div>
 
@@ -311,6 +334,20 @@
       <p class="loading-txt">Cargando tu cuenta...</p>
     </div>
   </main>
+
+  <!-- Modal: Seleccionar norma para nuevo expediente -->
+  <div class="modal-overlay" id="modalNorma" style="display:none">
+    <div class="modal-box modal-norma-box">
+      <h3>¿Qué expediente quieres crear?</h3>
+      <p>Selecciona la norma técnica de competencia laboral.</p>
+      <div class="norma-cards" id="normaCards">
+        <p class="loading-txt">Cargando...</p>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn-cancel" onclick="cerrarModalNorma()">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal de confirmación para eliminar -->
   <div class="modal-overlay" id="modalEliminar" style="display:none">
@@ -387,6 +424,7 @@
 
       if (_perfil.rol === "super_admin") { window.location.href = "superadmin.html"; return; }
       if (_perfil.rol === "admin")       { window.location.href = "admin.html"; return; }
+      if (_perfil.rol === "editor")      { window.location.href = "editor.html"; return; }
 
       const nombreDisplay = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
       document.getElementById("headerAvatar").textContent  = iniciales(_perfil.nombre, _perfil.apellido);
@@ -467,7 +505,7 @@
 
       const { data, error } = await _supabase
         .from("planeaciones")
-        .select("id, nombre_curso, paso_actual, status, updated_at, created_at")
+        .select("id, nombre_curso, paso_actual, status, norma, updated_at, created_at")
         .eq("user_id", _perfil.id)
         .order("updated_at", { ascending: false });
 
@@ -481,8 +519,8 @@
           <div class="empty-state">
             <div class="empty-state-icon">📋</div>
             <h3>Aún no tienes cursos</h3>
-            <p>Crea tu primer expediente didáctico EC0217.01 con asistencia de IA.</p>
-            <button class="btn-nuevo" onclick="crearNuevoCurso()">+ Crear primer curso</button>
+            <p>Crea tu primer expediente didáctico EC0217.01 o EC0301.01 con asistencia de IA.</p>
+            <button class="btn-nuevo" onclick="crearNuevoCurso()">+ Crear primer expediente</button>
           </div>`;
         return;
       }
@@ -500,7 +538,7 @@
           btnNuevo.style.cursor  = "not-allowed";
         } else {
           btnNuevo.disabled    = false;
-          btnNuevo.textContent = `+ Nuevo curso (${total}/${MAX})`;
+          btnNuevo.textContent = `+ Nuevo expediente (${total}/${MAX})`;
           btnNuevo.title       = "";
           btnNuevo.style.opacity = "";
           btnNuevo.style.cursor  = "";
@@ -539,6 +577,7 @@
                   <span class="status-badge ${esCompleta ? 'status-completa' : 'status-borrador'}">
                     ${esCompleta ? "Completa" : "Borrador"}
                   </span>
+                  <span class="norma-badge norma-${p.norma || 'ec0217'}">${(p.norma || 'ec0217').toUpperCase()}</span>
                 </div>
                 <div class="card-meta">Editado ${tiempo}</div>
               </div>
@@ -579,20 +618,21 @@
     async function abrirPlaneacion(id) {
       const { data: p, error } = await _supabase
         .from("planeaciones")
-        .select("datos, paso_actual")
+        .select("datos, paso_actual, norma")
         .eq("id", id)
         .single();
 
       if (error || !p) { alert("No se pudo cargar el curso."); return; }
 
-      // Precargar datos en localStorage para el wizard
+      const norma = p.norma || "ec0217";
       if (p.datos && typeof p.datos === "object") {
         Object.entries(p.datos).forEach(([key, val]) => {
-          localStorage.setItem(`ec0217_${key}`, typeof val === "string" ? val : JSON.stringify(val));
+          localStorage.setItem(`${norma}_${key}`, typeof val === "string" ? val : JSON.stringify(val));
         });
       }
       localStorage.setItem("sbe_planeacion_id", id);
-      window.location.href = "index.html";
+      localStorage.setItem("sbe_norma_activa", norma);
+      window.location.href = norma === "ec0301" ? "wizard-ec0301.html" : "index.html";
     }
 
     // ── Renombrar inline ──────────────────────────────────────────────────────
@@ -815,26 +855,70 @@
 
     // ── Crear nuevo curso (con límite de 3 para rol user) ────────────────────
     async function crearNuevoCurso() {
-      if (_perfil.rol !== "user") {
-        _limpiarLocalStorage();
-        window.location.href = "index.html?new=1";
-        return;
+      if (_perfil.rol === "user") {
+        const { count } = await _supabase
+          .from("planeaciones")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", _perfil.id);
+        if (count >= 3) return; // el botón ya está deshabilitado, seguridad adicional
       }
-      const { count } = await _supabase
-        .from("planeaciones")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", _perfil.id);
-      if (count >= 3) return; // el botón ya está deshabilitado, seguridad adicional
-      _limpiarLocalStorage();
-      window.location.href = "index.html?new=1";
+      abrirModalNorma();
     }
 
     function _limpiarLocalStorage() {
       Object.keys(localStorage)
-        .filter(k => k.startsWith("ec0217_"))
+        .filter(k => k.startsWith("ec0217_") || k.startsWith("ec0301_"))
         .forEach(k => localStorage.removeItem(k));
       localStorage.removeItem("sbe_planeacion_id");
+      localStorage.removeItem("sbe_norma_activa");
     }
+
+    // ── Modal: selector de norma ──────────────────────────────────────────────
+    async function abrirModalNorma() {
+      document.getElementById("modalNorma").style.display = "flex";
+      const container = document.getElementById("normaCards");
+      container.innerHTML = '<p class="loading-txt">Cargando...</p>';
+
+      let normas = null;
+      try {
+        const { data, error } = await _supabase
+          .from("wizard_normas")
+          .select("id, nombre, descripcion, icono")
+          .eq("activo", true)
+          .order("orden");
+        if (!error) normas = data;
+      } catch (_) {}
+
+      // Fallback si la tabla aún no existe en DB
+      if (!normas?.length) {
+        normas = [
+          { id: "ec0217", nombre: "EC0217.01", descripcion: "Impartición de cursos de formación del capital humano de manera presencial grupal", icono: "📋" },
+          { id: "ec0301", nombre: "EC0301.01", descripcion: "Diseño de cursos de capital humano de manera presencial grupal", icono: "📐" }
+        ];
+      }
+
+      container.innerHTML = normas.map(n => `
+        <button class="norma-card" onclick="seleccionarNorma('${n.id}')">
+          <span class="norma-card-icon">${n.icono || "📋"}</span>
+          <div class="norma-card-titulo">${n.nombre}</div>
+          <div class="norma-card-desc">${n.descripcion || ""}</div>
+        </button>
+      `).join("");
+    }
+
+    function cerrarModalNorma() {
+      document.getElementById("modalNorma").style.display = "none";
+    }
+
+    function seleccionarNorma(norma) {
+      cerrarModalNorma();
+      _limpiarLocalStorage();
+      window.location.href = norma === "ec0301" ? "wizard-ec0301.html?new=1" : "index.html?new=1";
+    }
+
+    document.getElementById("modalNorma").addEventListener("click", e => {
+      if (e.target === document.getElementById("modalNorma")) cerrarModalNorma();
+    });
 
     init();
   </script>

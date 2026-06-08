@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor de Wizards — SmartBuilderEC</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--c-bg); }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .dash-header {
+      background: #166534; padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      height: 60px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .dash-header img { max-height: 38px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.22); color: white;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .header-nombre { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; }
+    .header-badge  {
+      background: rgba(255,255,255,0.2); color: white;
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; text-transform: uppercase;
+    }
+    .header-btn {
+      background: rgba(255,255,255,0.14); color: white; border: none;
+      padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background 0.15s;
+    }
+    .header-btn:hover { background: rgba(255,255,255,0.26); }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .editor-main { max-width: 1000px; margin: 0 auto; padding: 36px 24px; }
+    .page-title  { font-size: 22px; font-weight: 800; color: var(--c-text); margin-bottom: 4px; }
+    .page-sub    { font-size: 14px; color: var(--c-text-2); margin-bottom: 32px; }
+
+    /* ── Sección ─────────────────────────────────────────────── */
+    .section { margin-bottom: 40px; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; padding-bottom: 10px;
+      border-bottom: 2px solid var(--c-border);
+    }
+    .section-header h2 { font-size: 16px; font-weight: 700; color: var(--c-text); margin: 0; }
+
+    /* ── Tabla de normas ─────────────────────────────────────── */
+    .normas-table { width: 100%; border-collapse: collapse; }
+    .normas-table th, .normas-table td {
+      text-align: left; padding: 10px 14px;
+      border-bottom: 1px solid var(--c-border); font-size: 13px;
+    }
+    .normas-table th { font-weight: 700; color: var(--c-text-2); background: var(--c-surface-2); font-size: 11px; text-transform: uppercase; }
+    .normas-table tr:last-child td { border-bottom: none; }
+    .normas-table tr:hover td { background: var(--c-surface-2); }
+    .norma-id-badge {
+      font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 20px; text-transform: uppercase;
+    }
+    .norma-activa   { background: #dcfce7; color: #166534; }
+    .norma-inactiva { background: #fee2e2; color: #991b1b; }
+
+    /* ── Botones ─────────────────────────────────────────────── */
+    .btn-sm {
+      background: var(--c-surface-2); color: var(--c-text-2);
+      border: 1px solid var(--c-border-s); padding: 5px 12px;
+      border-radius: var(--r-sm); font-size: 12px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-sm:hover { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+    .btn-sm.danger:hover { background: #dc2626; color: white; border-color: #dc2626; }
+    .btn-primary {
+      background: var(--c-blue-600); color: white; border: none;
+      padding: 9px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--c-blue-700); }
+
+    /* ── Cards de módulos futuros ────────────────────────────── */
+    .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 14px; }
+    .module-card {
+      background: var(--c-surface); border: 2px dashed var(--c-border);
+      border-radius: var(--r-lg); padding: 22px 20px;
+    }
+    .module-card-icon  { font-size: 28px; margin-bottom: 10px; }
+    .module-card-title { font-size: 14px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+    .module-card-desc  { font-size: 12px; color: var(--c-text-3); line-height: 1.5; }
+    .module-badge {
+      display: inline-block; background: #fef3c7; color: #92400e;
+      font-size: 10px; font-weight: 700; padding: 2px 8px;
+      border-radius: 20px; margin-top: 8px; text-transform: uppercase;
+    }
+
+    /* ── Modal editar norma ──────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+    }
+    .modal-box {
+      background: var(--c-surface); border-radius: var(--r-xl);
+      padding: 28px; max-width: 420px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .modal-box h3 { font-size: 16px; font-weight: 700; color: var(--c-text); margin-bottom: 20px; }
+    .form-field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 5px; }
+    .form-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .form-field input, .form-field textarea {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
+      padding: 9px 11px; font-size: 13px; font-family: inherit;
+      background: var(--c-surface); outline: none; transition: border-color 0.2s;
+    }
+    .form-field input:focus, .form-field textarea:focus { border-color: var(--c-blue-600); }
+    .form-field textarea { resize: vertical; min-height: 70px; }
+    .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+    .modal-btn-cancel {
+      background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-border-s);
+      padding: 8px 16px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+    }
+    .modal-btn-ok {
+      background: var(--c-blue-600); color: white; border: none;
+      padding: 8px 16px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+    }
+    .modal-btn-ok:hover { background: var(--c-blue-700); }
+
+    .loading-txt { color: var(--c-text-3); font-size: 14px; padding: 16px 0; }
+    .error-txt   { color: var(--c-danger); font-size: 14px; }
+    .success-msg { color: #059669; font-size: 13px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <header class="dash-header">
+    <img src="img/LogoECM.png" alt="CEECM">
+    <div class="header-right">
+      <span class="header-badge">Editor</span>
+      <div class="header-avatar" id="headerAvatar">E</div>
+      <span class="header-nombre" id="headerNombre"></span>
+      <button class="header-btn" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="editor-main">
+    <h1 class="page-title">Panel de Editor</h1>
+    <p class="page-sub">Administra las normas disponibles en la plataforma.</p>
+
+    <!-- Sección: Normas -->
+    <div class="section">
+      <div class="section-header">
+        <h2>📋 Normas activas</h2>
+        <button class="btn-primary" onclick="abrirModalNuevaNorma()">+ Nueva norma</button>
+      </div>
+      <div id="tablaNormasWrap">
+        <p class="loading-txt">Cargando normas...</p>
+      </div>
+    </div>
+
+    <!-- Sección: Módulos futuros -->
+    <div class="section">
+      <div class="section-header">
+        <h2>🔧 Motor de wizards</h2>
+      </div>
+      <div class="module-grid">
+        <div class="module-card">
+          <div class="module-card-icon">📝</div>
+          <div class="module-card-title">Editor de pasos</div>
+          <div class="module-card-desc">Define los pasos y campos de cada wizard usando un esquema visual.</div>
+          <span class="module-badge">Sprint 4</span>
+        </div>
+        <div class="module-card">
+          <div class="module-card-icon">📄</div>
+          <div class="module-card-title">Plantillas de documentos</div>
+          <div class="module-card-desc">Administra los templates Word/PPTX generados por cada norma.</div>
+          <span class="module-badge">Sprint 5</span>
+        </div>
+        <div class="module-card">
+          <div class="module-card-icon">🤖</div>
+          <div class="module-card-title">Prompts de IA</div>
+          <div class="module-card-desc">Configura los prompts de generación por campo y sección.</div>
+          <span class="module-badge">Sprint 5</span>
+        </div>
+        <div class="module-card">
+          <div class="module-card-icon">🔗</div>
+          <div class="module-card-title">Campos compartidos</div>
+          <div class="module-card-desc">Define qué campos se comparten entre normas para importación cruzada.</div>
+          <span class="module-badge">Sprint 4</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Nueva/Editar norma -->
+  <div class="modal-overlay" id="modalNorma" style="display:none">
+    <div class="modal-box">
+      <h3 id="modalNormaTitulo">Nueva norma</h3>
+      <div class="form-field">
+        <label>ID (ej: ec0302)</label>
+        <input type="text" id="normaCampoId" placeholder="ec0302" maxlength="20">
+      </div>
+      <div class="form-field">
+        <label>Nombre corto</label>
+        <input type="text" id="normaCampoNombre" placeholder="EC0302.01" maxlength="60">
+      </div>
+      <div class="form-field">
+        <label>Descripción</label>
+        <textarea id="normaCampoDesc" placeholder="Descripción completa de la norma..."></textarea>
+      </div>
+      <div class="form-field">
+        <label>Ícono (emoji)</label>
+        <input type="text" id="normaCampoIcono" placeholder="📋" maxlength="4">
+      </div>
+      <div id="modalNormaMsg"></div>
+      <div class="modal-btns">
+        <button class="modal-btn-cancel" onclick="cerrarModalNorma()">Cancelar</button>
+        <button class="modal-btn-ok" id="modalNormaBtnOk" onclick="guardarNorma()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    let _perfil = null;
+    let _editandoNormaId = null;
+
+    // ── Inicialización ────────────────────────────────────────────────────────
+    async function init() {
+      const session = await authGuard(["editor", "super_admin"]);
+      if (!session) return;
+
+      _perfil = await getUserProfile();
+      if (!_perfil) { window.location.href = "login.html"; return; }
+
+      const nombre = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
+      document.getElementById("headerNombre").textContent = nombre;
+      document.getElementById("headerAvatar").textContent =
+        ((_perfil.nombre?.[0] || "") + (_perfil.apellido?.[0] || "")).toUpperCase() || "E";
+
+      await cargarNormas();
+    }
+
+    // ── Tabla de normas ───────────────────────────────────────────────────────
+    async function cargarNormas() {
+      const wrap = document.getElementById("tablaNormasWrap");
+      wrap.innerHTML = '<p class="loading-txt">Cargando...</p>';
+
+      const { data: normas, error } = await _supabase
+        .from("wizard_normas")
+        .select("*")
+        .order("orden");
+
+      if (error) {
+        wrap.innerHTML = `<p class="error-txt">Error al cargar normas: ${error.message}</p>`;
+        return;
+      }
+      if (!normas?.length) {
+        wrap.innerHTML = '<p class="loading-txt">No hay normas registradas aún.</p>';
+        return;
+      }
+
+      wrap.innerHTML = `
+        <table class="normas-table">
+          <thead>
+            <tr>
+              <th>Ícono</th><th>ID</th><th>Nombre</th><th>Descripción</th><th>Estado</th><th>Orden</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${normas.map(n => `
+              <tr>
+                <td>${n.icono || "📋"}</td>
+                <td><span class="norma-id-badge ${n.activo ? 'norma-activa' : 'norma-inactiva'}">${n.id}</span></td>
+                <td><strong>${n.nombre}</strong></td>
+                <td style="max-width:260px;color:var(--c-text-2)">${n.descripcion || "—"}</td>
+                <td>${n.activo ? "✅ Activa" : "⛔ Inactiva"}</td>
+                <td>${n.orden}</td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn-sm" onclick="abrirModalEditarNorma('${n.id}')">Editar</button>
+                  <button class="btn-sm" onclick="toggleNorma('${n.id}', ${n.activo})">
+                    ${n.activo ? "Desactivar" : "Activar"}
+                  </button>
+                </td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    async function toggleNorma(id, activo) {
+      const { error } = await _supabase
+        .from("wizard_normas")
+        .update({ activo: !activo })
+        .eq("id", id);
+      if (!error) await cargarNormas();
+    }
+
+    // ── Modal norma ───────────────────────────────────────────────────────────
+    function abrirModalNuevaNorma() {
+      _editandoNormaId = null;
+      document.getElementById("modalNormaTitulo").textContent = "Nueva norma";
+      document.getElementById("normaCampoId").value    = "";
+      document.getElementById("normaCampoNombre").value = "";
+      document.getElementById("normaCampoDesc").value  = "";
+      document.getElementById("normaCampoIcono").value = "📋";
+      document.getElementById("normaCampoId").disabled = false;
+      document.getElementById("modalNormaMsg").textContent = "";
+      document.getElementById("modalNorma").style.display = "flex";
+    }
+
+    function abrirModalEditarNorma(id) {
+      _editandoNormaId = id;
+      document.getElementById("modalNormaTitulo").textContent = "Editar norma";
+
+      _supabase.from("wizard_normas").select("*").eq("id", id).single()
+        .then(({ data: n }) => {
+          if (!n) return;
+          document.getElementById("normaCampoId").value    = n.id;
+          document.getElementById("normaCampoNombre").value = n.nombre;
+          document.getElementById("normaCampoDesc").value  = n.descripcion || "";
+          document.getElementById("normaCampoIcono").value = n.icono || "📋";
+          document.getElementById("normaCampoId").disabled = true;
+        });
+
+      document.getElementById("modalNormaMsg").textContent = "";
+      document.getElementById("modalNorma").style.display = "flex";
+    }
+
+    function cerrarModalNorma() {
+      document.getElementById("modalNorma").style.display = "none";
+      _editandoNormaId = null;
+    }
+
+    async function guardarNorma() {
+      const id     = document.getElementById("normaCampoId").value.trim().toLowerCase();
+      const nombre = document.getElementById("normaCampoNombre").value.trim();
+      const desc   = document.getElementById("normaCampoDesc").value.trim();
+      const icono  = document.getElementById("normaCampoIcono").value.trim() || "📋";
+      const msg    = document.getElementById("modalNormaMsg");
+
+      if (!id || !nombre) {
+        msg.innerHTML = '<span class="error-txt">ID y Nombre son obligatorios.</span>';
+        return;
+      }
+
+      const btn = document.getElementById("modalNormaBtnOk");
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+
+      let error;
+      if (_editandoNormaId) {
+        ({ error } = await _supabase
+          .from("wizard_normas")
+          .update({ nombre, descripcion: desc, icono })
+          .eq("id", _editandoNormaId));
+      } else {
+        const { count } = await _supabase
+          .from("wizard_normas")
+          .select("id", { count: "exact", head: true })
+          .order("orden");
+        ({ error } = await _supabase
+          .from("wizard_normas")
+          .insert({ id, nombre, descripcion: desc, icono, orden: (count || 0) + 1 }));
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Guardar";
+
+      if (error) {
+        msg.innerHTML = `<span class="error-txt">Error: ${error.message}</span>`;
+        return;
+      }
+
+      cerrarModalNorma();
+      await cargarNormas();
+    }
+
+    document.getElementById("modalNorma").addEventListener("click", e => {
+      if (e.target === document.getElementById("modalNorma")) cerrarModalNorma();
+    });
+
+    init();
+  </script>
+</body>
+</html>
