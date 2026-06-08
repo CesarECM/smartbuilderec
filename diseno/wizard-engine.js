@@ -501,24 +501,45 @@ const Engine = {
 
   _renderFormatosBlock(paso) {
     const docs = this.schema.documentos || [];
-    let cards = `<div class="wiz-formatos-grid">`;
-    docs.forEach(d => {
-      cards += `<div class="wiz-formato-card">
+    if (!docs.length) {
+      return `<div class="wiz-card"><p style="color:var(--c-text-3);font-size:14px">
+        No hay documentos definidos en el schema de esta norma.</p></div>`;
+    }
+
+    const cards = docs.map(d => {
+      const tieneTemplate = !!d.template_path;
+      const badge = tieneTemplate
+        ? `<span style="background:#dcfce7;color:#166534;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:6px;display:inline-block">✓ Template listo</span>`
+        : `<span style="background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:6px;display:inline-block">⚠ Sin template</span>`;
+      const btnStyle = tieneTemplate
+        ? `style="margin-top:8px;width:100%;justify-content:center"`
+        : `style="margin-top:8px;width:100%;justify-content:center;opacity:0.45;cursor:not-allowed" disabled`;
+      const title = tieneTemplate ? "" : `title="Sube un template .docx desde el editor"`;
+      return `<div class="wiz-formato-card">
         <span class="wiz-formato-tipo">${d.formato.toUpperCase()}</span>
         <span class="wiz-formato-nombre">${d.nombre}</span>
+        ${badge}
+        <button class="wiz-btn-ia" ${btnStyle} ${title}
+          onclick="Engine._generarDocumento('${d.id}')">
+          📥 Descargar
+        </button>
       </div>`;
-    });
-    cards += `</div>`;
+    }).join("");
+
+    const tieneEndpointLegacy = !!DOC_ENDPOINTS[this.normaId];
+    const legacyBtn = tieneEndpointLegacy
+      ? `<button class="wiz-btn-generar-todo" onclick="Engine.generarDocumentos()" style="margin-bottom:20px">
+           📦 Descargar paquete completo (generadores originales)
+         </button>`
+      : "";
 
     return `<div class="wiz-card">
-      <p style="font-size:14px;color:var(--c-text-2);margin-bottom:20px">
-        El paquete incluye <strong>${docs.length} documento${docs.length!==1?"s":""}</strong>.
-        Asegúrate de haber completado todos los pasos antes de generar.
+      <p style="font-size:14px;color:var(--c-text-2);margin-bottom:16px">
+        Descarga cada documento individualmente usando su template,
+        o el paquete completo con los generadores originales.
       </p>
-      <button class="wiz-btn-generar-todo" id="wiz-btn-generar-todo" onclick="Engine.generarDocumentos()">
-        📥 Generar y descargar paquete completo
-      </button>
-      ${cards}
+      ${legacyBtn}
+      <div class="wiz-formatos-grid">${cards}</div>
     </div>`;
   },
 
@@ -817,6 +838,145 @@ const Engine = {
         otros:         d.mat_otros         || [],
       },
       tiempos: d.tiempos_bloques || [],
+    };
+  },
+
+  // ── Generación con templates .docx (navegador, sin backend) ────────────
+
+  _getDocById(docId) {
+    return (this.schema.documentos || []).find(d => d.id === docId);
+  },
+
+  async _generarDocumento(docId) {
+    const doc = this._getDocById(docId);
+    if (!doc) { this._toast("Documento no encontrado.", true); return; }
+
+    if (!doc.template_path) {
+      this._toast(`"${doc.nombre}" aún no tiene template. Súbelo desde el editor de schemas.`, true);
+      return;
+    }
+
+    this._mostrarLoading(`Generando ${doc.nombre}...`);
+    try {
+      // 1. Descargar template desde Supabase Storage
+      const { data: blob, error: dlErr } = await _supabase.storage
+        .from("wizard-templates")
+        .download(doc.template_path);
+      if (dlErr) throw new Error("No se pudo descargar el template: " + dlErr.message);
+
+      // 2. Cargar en PizZip
+      const arrayBuffer = await blob.arrayBuffer();
+      const zip = new PizZip(arrayBuffer);
+
+      // 3. Sustituir variables con docxtemplater
+      const Docx = window.Docxtemplater || window.docxtemplater;
+      if (!Docx) throw new Error("docxtemplater no cargado. Recarga la página.");
+
+      const docx = new Docx(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+      });
+      docx.render(this._datosToTemplateVars());
+
+      // 4. Generar blob y descargar
+      const out = docx.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const url    = URL.createObjectURL(out);
+      const a      = document.createElement("a");
+      const nombre = (this.datos.nombreCurso || "curso").replace(/\s+/g, "_");
+      a.href       = url;
+      a.download   = `${doc.nombre}_${nombre}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      this._toast(`✓ ${doc.nombre} descargado`);
+    } catch (e) {
+      this._toast(`Error: ${e.message}`, true);
+      console.error(e);
+    } finally {
+      this._ocultarLoading();
+    }
+  },
+
+  // Convierte datos del wizard a variables planas para {variable} en templates
+  _datosToTemplateVars() {
+    const d   = this.datos;
+    const txt = (arr) => Array.isArray(arr) ? arr.filter(Boolean).join("\n") : (arr || "");
+    const lst = (arr) => (Array.isArray(arr) ? arr : []).filter(Boolean).map(v => ({ valor: v }));
+
+    return {
+      // Datos generales
+      nombre_curso:      d.nombreCurso   || "",
+      instructor:        d.instructor    || "",
+      disenador:         d.disenador     || "",
+      lugar:             d.lugar         || "",
+      fecha:             d.fecha ? new Date(d.fecha + "T12:00:00").toLocaleDateString("es-MX") : "",
+      duracion:          String(d.duracion      || ""),
+      participantes:     String(d.participantes || ""),
+      perfil:            d.perfil        || "",
+      // Objetivos
+      obj_cognitiva:    d.obj_cognitiva  || "",
+      obj_psicomotriz:  d.obj_psicomotriz|| "",
+      obj_afectiva:     d.obj_afectiva   || "",
+      obj_general:      d.obj_general    || "",
+      // Beneficios
+      beneficios:       d.beneficios     || "",
+      // Temario (texto plano + lista para loops)
+      temario_u1_titulo: d.temario_u1_titulo || "Unidad 1",
+      temario_u1:        txt(d.temario_u1),
+      temario_u1_items:  lst(d.temario_u1),
+      temario_u2_titulo: d.temario_u2_titulo || "Unidad 2",
+      temario_u2:        txt(d.temario_u2),
+      temario_u2_items:  lst(d.temario_u2),
+      temario_u3_titulo: d.temario_u3_titulo || "Unidad 3",
+      temario_u3:        txt(d.temario_u3),
+      temario_u3_items:  lst(d.temario_u3),
+      // Encuadre
+      preguntas:         d.preguntas     || "",
+      reglas:            txt(d.reglasTexto),
+      reglas_items:      lst(d.reglasTexto),
+      contrato:          d.contrato      || "",
+      // Técnicas
+      integracion_nombre: d.rhSeleccion      || "",
+      integracion_obj:    d.rhObjetivo       || "",
+      integracion_desc:   d.rhInstrucciones  || "",
+      integracion_dur:    d.rhDuracion       || "",
+      integracion_mat:    d.rhMateriales     || "",
+      energizante_nombre: d.enSeleccion      || "",
+      energizante_obj:    d.enObjetivo       || "",
+      energizante_desc:   d.enInstrucciones  || "",
+      energizante_dur:    d.enDuracion       || "",
+      expositiva:         d.expositiva_descripcion   || "",
+      expositiva_dur:     d.expositiva_duracion      || "",
+      demostrativa:       d.demostrativa_descripcion || "",
+      demostrativa_dur:   d.demostrativa_duracion    || "",
+      dialogo_preguntas:  txt(d.dialogo_preguntas),
+      dialogo_items:      lst(d.dialogo_preguntas),
+      dialogo_conclusion: d.dialogo_conclusion || "",
+      // Cierre
+      resumen:            d.cierre_resumen    || "",
+      compromisos:        txt(d.cierre_compromisos),
+      compromisos_items:  lst(d.cierre_compromisos),
+      bibliografias:      txt(d.cierre_bibliografias),
+      bibliografias_items:lst(d.cierre_bibliografias),
+      descripcion_instructor: d.descripcionGeneral || "",
+      // Evaluaciones
+      pct_diagnostica:    String(d.pctDiagnostica            || 0),
+      inst_diagnostica:   d.instDiagnostica          || "",
+      pct_formativa:      String(d.pctFormativa               || 0),
+      tipo_formativa:     d.tipoInstrumentoFormativa  || "",
+      inst_formativa:     d.instFormativa             || "",
+      pct_sumativa:       String(d.pctSumativa                || 0),
+      inst_sumativa:      d.instSumativa              || "",
+      inst_reaccion:      d.instReac                  || "",
+      // Materiales
+      mat_didacticos:    txt(d.mat_didacticos),
+      mat_fungibles:     txt(d.mat_fungibles),
+      mat_instalaciones: txt(d.mat_instalaciones),
+      mat_herramientas:  txt(d.mat_herramientas),
+      mat_tecnologicos:  txt(d.mat_tecnologicos),
+      mat_otros:         txt(d.mat_otros),
     };
   },
 

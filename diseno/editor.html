@@ -627,6 +627,175 @@
       addSec.textContent = "+ sección";
       addSec.onclick = () => _seAgregarSeccion();
       tree.appendChild(addSec);
+
+      // ── Nodo Documentos ──────────────────────────────────────────
+      const docsHeader = document.createElement("div");
+      docsHeader.className = "se-tree-seccion";
+      docsHeader.style.marginTop = "16px";
+      docsHeader.textContent = "📄 Documentos";
+      tree.appendChild(docsHeader);
+
+      (_seSchema.documentos || []).forEach((doc, di) => {
+        const docEl = document.createElement("div");
+        docEl.className = "se-tree-item se-tree-paso";
+        const ok = !!doc.template_path;
+        docEl.innerHTML = `
+          <span style="font-size:11px;color:${ok?"#166534":"#92400e"}">${ok?"✓":"⚠"}</span>
+          <span>${doc.nombre || doc.id}</span>
+          <span class="se-tree-badge">${doc.formato || "docx"}</span>`;
+        docEl.onclick = () => _seSelectDocumento(di);
+        tree.appendChild(docEl);
+      });
+
+      const addDoc = document.createElement("div");
+      addDoc.className = "se-tree-item se-tree-paso";
+      addDoc.style.cssText = "color:var(--c-blue-600);font-style:italic;font-size:11px;margin-top:4px";
+      addDoc.textContent = "+ documento";
+      addDoc.onclick = () => _seAgregarDocumento();
+      tree.appendChild(addDoc);
+    }
+
+    // ── Variables disponibles en templates ────────────────────────────────────
+    const SE_TEMPLATE_VARS = [
+      "{nombre_curso}","{instructor}","{disenador}","{lugar}","{fecha}","{duracion}","{participantes}",
+      "{perfil}","{obj_cognitiva}","{obj_psicomotriz}","{obj_afectiva}","{obj_general}","{beneficios}",
+      "{temario_u1_titulo}","{temario_u1}","{temario_u2_titulo}","{temario_u2}","{temario_u3_titulo}","{temario_u3}",
+      "{preguntas}","{reglas}","{contrato}",
+      "{integracion_nombre}","{integracion_obj}","{integracion_desc}","{integracion_dur}","{integracion_mat}",
+      "{energizante_nombre}","{energizante_obj}","{energizante_desc}","{energizante_dur}",
+      "{expositiva}","{expositiva_dur}","{demostrativa}","{demostrativa_dur}",
+      "{dialogo_preguntas}","{dialogo_conclusion}",
+      "{resumen}","{compromisos}","{bibliografias}","{descripcion_instructor}",
+      "{pct_diagnostica}","{inst_diagnostica}","{pct_formativa}","{tipo_formativa}","{inst_formativa}",
+      "{pct_sumativa}","{inst_sumativa}","{inst_reaccion}",
+      "{mat_didacticos}","{mat_fungibles}","{mat_instalaciones}","{mat_herramientas}","{mat_tecnologicos}","{mat_otros}",
+      "— Listas (loop): {#reglas_items}{valor}{/reglas_items}",
+      "{#compromisos_items}{valor}{/compromisos_items}",
+      "{#temario_u1_items}{valor}{/temario_u1_items}",
+    ];
+
+    function _seSelectDocumento(di) {
+      _seSelected = { type: "documento", docIdx: di };
+      const doc = (_seSchema.documentos || [])[di];
+      if (!doc) return;
+      const ok = !!doc.template_path;
+
+      document.getElementById("seTabVisual").innerHTML = `
+        <div class="se-props">
+          <h3>📄 Documento: ${doc.nombre}</h3>
+          <div class="se-field"><label>ID</label>
+            <input value="${doc.id||""}" oninput="_seSchema.documentos[${di}].id=this.value">
+          </div>
+          <div class="se-field"><label>Nombre</label>
+            <input value="${doc.nombre||""}" oninput="_seSchema.documentos[${di}].nombre=this.value;_seRenderTree()">
+          </div>
+          <div class="se-field"><label>Formato</label>
+            <select onchange="_seSchema.documentos[${di}].formato=this.value">
+              <option value="docx" ${doc.formato==="docx"?"selected":""}>docx</option>
+              <option value="pptx" ${doc.formato==="pptx"?"selected":""}>pptx</option>
+            </select>
+          </div>
+          <div class="se-field"><label>Generador legacy (backend, opcional)</label>
+            <input value="${doc.generador||""}" placeholder="ej: ec0301_manual_instructor"
+              oninput="_seSchema.documentos[${di}].generador=this.value">
+          </div>
+          <hr style="border-color:var(--c-border);margin:16px 0">
+          <h3 style="font-size:14px;margin-bottom:10px">📎 Template .docx</h3>
+          ${ok
+            ? `<p style="font-size:13px;font-weight:600;color:#166534;margin-bottom:10px">
+                ✓ Template: <code style="font-size:11px">${doc.template_path}</code>
+               </p>
+               <button class="se-btn-action" style="margin-bottom:10px"
+                 onclick="_seDescargarTemplate('${doc.template_path}','${doc.nombre}')">
+                 ⬇ Descargar template actual
+               </button><br>`
+            : `<p style="font-size:13px;color:#92400e;margin-bottom:10px">
+                ⚠ Sin template — el botón de descarga aparecerá deshabilitado para el usuario.
+               </p>`}
+          <input type="file" id="seTemplateInput_${di}" accept=".docx,.pptx" style="display:none"
+            onchange="_seSubirTemplate(${di}, this)">
+          <button class="se-btn-action" style="background:#166534"
+            onclick="document.getElementById('seTemplateInput_${di}').click()">
+            ⬆ ${ok?"Reemplazar template":"Subir template .docx"}
+          </button>
+          <p id="seTemplateMsg_${di}" style="font-size:12px;margin-top:8px"></p>
+          <hr style="border-color:var(--c-border);margin:16px 0">
+          <details>
+            <summary style="font-size:12px;font-weight:700;color:var(--c-text-2);cursor:pointer">
+              📋 Variables disponibles en el template
+            </summary>
+            <div style="margin-top:10px;font-size:11px;font-family:monospace;color:var(--c-text-2);
+              background:var(--c-surface-2);border-radius:8px;padding:12px;line-height:2">
+              ${SE_TEMPLATE_VARS.join("<br>")}
+            </div>
+          </details>
+          <div class="se-props-btns" style="margin-top:16px">
+            <button class="se-btn-danger" onclick="_seEliminarDocumento(${di})">🗑 Eliminar documento</button>
+          </div>
+        </div>`;
+    }
+
+    async function _seSubirTemplate(di, inputEl) {
+      const file = inputEl.files[0];
+      if (!file) return;
+      const doc   = (_seSchema.documentos || [])[di];
+      const msgEl = document.getElementById(`seTemplateMsg_${di}`);
+      if (!msgEl) return;
+      msgEl.textContent = "Subiendo...";
+      msgEl.style.color = "var(--c-text-3)";
+
+      const ext  = file.name.split(".").pop();
+      const path = `${_seNormaId}/${doc.id || "doc_" + di}.${ext}`;
+
+      const { error } = await _supabase.storage
+        .from("wizard-templates")
+        .upload(path, file, { upsert: true });
+
+      if (error) {
+        msgEl.textContent = "Error: " + error.message;
+        msgEl.style.color = "#dc2626";
+        return;
+      }
+
+      _seSchema.documentos[di].template_path = path;
+      msgEl.textContent = "✓ Template subido. Guardando schema...";
+      msgEl.style.color = "#166534";
+      _seRenderTree();
+      await guardarSchema();
+      // Re-render el panel para mostrar el nuevo estado
+      _seSelectDocumento(di);
+    }
+
+    async function _seDescargarTemplate(path, nombre) {
+      const { data: blob, error } = await _supabase.storage
+        .from("wizard-templates")
+        .download(path);
+      if (error) { alert("Error: " + error.message); return; }
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement("a");
+      a.href     = url;
+      a.download = nombre.replace(/\s+/g, "_") + ".docx";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function _seAgregarDocumento() {
+      if (!_seSchema.documentos) _seSchema.documentos = [];
+      _seSchema.documentos.push({
+        id:            "doc_" + Date.now(),
+        nombre:        "Nuevo documento",
+        formato:       "docx",
+        generador:     "",
+        template_path: "",
+      });
+      _seRenderTree();
+    }
+
+    function _seEliminarDocumento(di) {
+      if (!confirm("¿Eliminar este documento del schema?")) return;
+      _seSchema.documentos.splice(di, 1);
+      _seRenderTree();
+      _seShowProps(null);
     }
 
     function _seSelectMeta() {
