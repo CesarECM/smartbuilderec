@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartBuilderEC — Wizard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Layout del motor ───────────────────────────────────────── */
+    body { margin: 0; background: var(--c-bg); }
+
+    /* Topbar */
+    #wiz-topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 300;
+      background: var(--c-blue-700);
+      display: flex; align-items: center; padding: 0 16px; gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    #wiz-topbar-back {
+      color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 600;
+      text-decoration: none; padding: 5px 10px; border-radius: 6px;
+      background: rgba(255,255,255,0.12); white-space: nowrap;
+    }
+    #wiz-topbar-back:hover { background: rgba(255,255,255,0.22); color: white; }
+    #wiz-topbar-titulo {
+      flex: 1; color: rgba(255,255,255,0.7); font-size: 13px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 8px;
+    }
+    .wiz-topbar-badge {
+      background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9);
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; text-transform: uppercase; white-space: nowrap;
+    }
+    #wiz-topbar-save-status {
+      font-size: 11px; color: rgba(255,255,255,0.5); white-space: nowrap;
+    }
+
+    /* Banner admin pre-llenado */
+    #wiz-assigned-banner {
+      display: none; position: fixed; top: 48px; left: 0; right: 0; z-index: 299;
+      background: #1e40af; color: white; text-align: center;
+      padding: 7px 16px; font-size: 12px; font-weight: 600;
+    }
+
+    /* Sidebar */
+    #wiz-sidebar {
+      position: fixed; top: 48px; left: 0; bottom: 0; width: 240px; z-index: 200;
+      background: var(--c-surface); border-right: 1px solid var(--c-border);
+      overflow-y: auto; padding: 12px 0 32px;
+    }
+    .wiz-sidebar-norma {
+      padding: 10px 16px 6px; font-size: 11px; font-weight: 700;
+      color: var(--c-text-3); text-transform: uppercase; letter-spacing: .5px;
+    }
+    .wiz-sidebar-grupo { margin-bottom: 2px; }
+    .wiz-sidebar-grupo-hdr {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; cursor: pointer; user-select: none;
+      font-size: 13px; font-weight: 700; color: var(--c-text-2);
+      border-radius: 0; transition: background 0.12s;
+    }
+    .wiz-sidebar-grupo-hdr:hover { background: var(--c-surface-2); }
+    .wiz-sidebar-grupo-arrow { font-size: 10px; transition: transform 0.15s; }
+    .wiz-sidebar-grupo-arrow.open { transform: rotate(90deg); }
+    .wiz-sidebar-grupo-items { display: none; }
+    .wiz-sidebar-grupo-items.open { display: block; }
+    .wiz-sidebar-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 16px 7px 32px; cursor: pointer;
+      font-size: 13px; color: var(--c-text-2); border-left: 3px solid transparent;
+      transition: all 0.12s; text-decoration: none;
+    }
+    .wiz-sidebar-item:hover { background: var(--c-surface-2); color: var(--c-text); }
+    .wiz-sidebar-item.active {
+      background: #eff6ff; color: var(--c-blue-600);
+      border-left-color: var(--c-blue-600); font-weight: 600;
+    }
+    .wiz-sidebar-item.completed { color: #166534; }
+    .wiz-sidebar-item.completed::after {
+      content: "✓"; margin-left: auto; font-size: 12px; color: #16a34a;
+    }
+    .wiz-sidebar-item.locked { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .wiz-paso-num {
+      min-width: 20px; height: 20px; border-radius: 50%;
+      background: var(--c-surface-2); color: var(--c-text-3);
+      font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .wiz-sidebar-item.active .wiz-paso-num { background: var(--c-blue-600); color: white; }
+    .wiz-sidebar-item.completed .wiz-paso-num { background: #dcfce7; color: #166534; }
+
+    /* Contenido principal */
+    #wiz-main {
+      margin-left: 240px; margin-top: 48px;
+      min-height: calc(100vh - 48px);
+      padding: 32px 40px 80px;
+      max-width: 900px;
+    }
+    .wiz-paso-label { font-size: 12px; color: var(--c-text-3); font-weight: 500; margin-bottom: 4px; }
+    .wiz-paso-titulo { font-size: 24px; font-weight: 800; color: var(--c-text); margin: 0 0 24px; }
+
+    /* Cards y form grid */
+    .wiz-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .wiz-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .wiz-field { display: flex; flex-direction: column; gap: 4px; }
+    .wiz-field.full { grid-column: 1 / -1; }
+    .wiz-label { font-size: 13px; font-weight: 600; color: var(--c-text-2); }
+    .wiz-hint  { font-size: 11px; color: var(--c-text-3); margin-top: 2px; }
+    .wiz-error { font-size: 11px; color: #dc2626; display: none; margin-top: 2px; }
+    .wiz-field.has-error .wiz-error { display: block; }
+    .wiz-field.has-error input,
+    .wiz-field.has-error textarea { border-color: #dc2626 !important; }
+
+    /* Inputs */
+    .wiz-input, .wiz-textarea, .wiz-select {
+      border: 1.5px solid var(--c-border-s); border-radius: 8px;
+      padding: 9px 12px; font-size: 14px; font-family: inherit;
+      color: var(--c-text); background: var(--c-surface); transition: border-color 0.15s;
+      width: 100%; box-sizing: border-box;
+    }
+    .wiz-input:focus, .wiz-textarea:focus { outline: none; border-color: var(--c-blue-600); }
+    .wiz-textarea { resize: vertical; min-height: 100px; }
+
+    /* Botón IA */
+    .wiz-btn-ia {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #eff6ff; color: var(--c-blue-600); border: 1.5px solid #bfdbfe;
+      border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: all 0.15s; margin-top: 6px;
+    }
+    .wiz-btn-ia:hover { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+    .wiz-btn-ia:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wiz-btn-ia.loading::before { content: ""; display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Botón siguiente/anterior */
+    .wiz-nav-btns { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .wiz-btn-next {
+      background: var(--c-blue-600); color: white; border: none;
+      padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: background 0.15s;
+    }
+    .wiz-btn-next:hover { background: var(--c-blue-700); }
+    .wiz-btn-prev {
+      background: var(--c-surface-2); color: var(--c-text-2);
+      border: 1px solid var(--c-border-s); padding: 11px 24px;
+      border-radius: 8px; font-size: 14px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: all 0.15s;
+    }
+    .wiz-btn-prev:hover { background: var(--c-surface-3); }
+
+    /* Listas dinámicas */
+    .wiz-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+    .wiz-list-row { display: flex; gap: 6px; align-items: center; }
+    .wiz-list-input { flex: 1; }
+    .wiz-list-del {
+      flex-shrink: 0; background: none; border: 1.5px solid var(--c-border-s);
+      color: var(--c-text-3); width: 30px; height: 30px; border-radius: 6px;
+      cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s;
+    }
+    .wiz-list-del:hover { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+    .wiz-list-add {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; border: 1.5px dashed var(--c-border-s);
+      color: var(--c-text-3); padding: 5px 12px; border-radius: 6px;
+      font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+      transition: all 0.12s; margin-top: 2px;
+    }
+    .wiz-list-add:hover { border-color: var(--c-blue-600); color: var(--c-blue-600); background: #eff6ff; }
+
+    /* Tipo especial: objetivos_tabs */
+    .wiz-obj-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .wiz-obj-tab {
+      padding: 7px 16px; border-radius: 8px; border: 1.5px solid var(--c-border-s);
+      background: var(--c-surface); color: var(--c-text-2);
+      font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .wiz-obj-tab.active { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+    .wiz-obj-tab.done { border-color: #86efac; color: #166534; background: #f0fdf4; }
+    .wiz-obj-panel { display: none; }
+    .wiz-obj-panel.active { display: block; }
+
+    /* Tipo especial: evaluaciones_block */
+    .wiz-eval-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .wiz-eval-card { border: 1.5px solid var(--c-border); border-radius: 10px; padding: 16px; }
+    .wiz-eval-card h4 { margin: 0 0 12px; font-size: 14px; color: var(--c-text); font-weight: 700; }
+
+    /* Tipo especial: temario_unidades */
+    .wiz-temario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 700px) { .wiz-temario-grid { grid-template-columns: 1fr; } }
+    .wiz-temario-unit { border: 1.5px solid var(--c-border); border-radius: 10px; padding: 16px; }
+    .wiz-temario-unit h4 { margin: 0 0 8px; font-size: 13px; color: var(--c-text-2); font-weight: 700; text-transform: uppercase; }
+
+    /* Tipo especial: tiempos_block */
+    .wiz-tiempos-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .wiz-tiempos-table th { background: var(--c-surface-2); padding: 8px 12px; text-align: left; font-size: 11px; color: var(--c-text-2); font-weight: 700; text-transform: uppercase; }
+    .wiz-tiempos-table td { padding: 6px 8px; border-bottom: 1px solid var(--c-border); }
+    .wiz-tiempos-table input[type="number"] { width: 70px; }
+    .wiz-tiempos-total { font-weight: 700; color: var(--c-blue-600); }
+    .wiz-tiempos-status { font-size: 13px; margin-top: 8px; font-weight: 600; }
+    .wiz-tiempos-status.ok  { color: #166534; }
+    .wiz-tiempos-status.err { color: #dc2626; }
+
+    /* Tipo especial: formatos_block */
+    .wiz-formatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .wiz-formato-card {
+      border: 1.5px solid var(--c-border); border-radius: 10px; padding: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .wiz-formato-nombre { font-size: 13px; font-weight: 600; color: var(--c-text); }
+    .wiz-formato-tipo { font-size: 11px; color: var(--c-text-3); text-transform: uppercase; font-weight: 700; }
+    .wiz-btn-generar-todo {
+      background: var(--c-blue-600); color: white; border: none;
+      padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer; margin-bottom: 20px; transition: background 0.15s;
+    }
+    .wiz-btn-generar-todo:hover { background: var(--c-blue-700); }
+    .wiz-btn-generar-todo:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Loading overlay */
+    #wiz-loading {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 9999; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    }
+    #wiz-loading.show { display: flex; }
+    .wiz-loading-spinner {
+      width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    .wiz-loading-txt { color: white; font-size: 15px; font-weight: 600; }
+
+    /* Toast */
+    #wiz-toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9000;
+      background: #1e293b; color: white; padding: 12px 20px;
+      border-radius: 10px; font-size: 13px; font-weight: 600;
+      opacity: 0; transform: translateY(8px); transition: all 0.2s;
+      pointer-events: none; max-width: 320px;
+    }
+    #wiz-toast.show { opacity: 1; transform: translateY(0); }
+    #wiz-toast.error { background: #991b1b; }
+
+    @media (max-width: 768px) {
+      #wiz-sidebar { width: 0; overflow: hidden; }
+      #wiz-main { margin-left: 0; padding: 20px 16px 80px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <nav id="wiz-topbar">
+    <a href="dashboard.html" id="wiz-topbar-back">← Dashboard</a>
+    <span id="wiz-topbar-titulo">Cargando...</span>
+    <span class="wiz-topbar-badge" id="wiz-topbar-norma"></span>
+    <span id="wiz-topbar-save-status"></span>
+  </nav>
+
+  <!-- Banner admin pre-llenado -->
+  <div id="wiz-assigned-banner">
+    ✏️ Esta planeación fue pre-llenada por un administrador. Puedes continuar desde donde se dejó.
+  </div>
+
+  <!-- Sidebar -->
+  <aside id="wiz-sidebar">
+    <div class="wiz-sidebar-norma" id="wiz-sidebar-norma-label"></div>
+    <div id="wiz-sidebar-content"></div>
+  </aside>
+
+  <!-- Contenido principal del wizard -->
+  <main id="wiz-main">
+    <div id="wiz-content">
+      <!-- Renderizado dinámicamente por wizard-engine.js -->
+      <p style="color:var(--c-text-3);font-size:14px;">Cargando wizard...</p>
+    </div>
+  </main>
+
+  <!-- Loading overlay -->
+  <div id="wiz-loading">
+    <div class="wiz-loading-spinner"></div>
+    <div class="wiz-loading-txt" id="wiz-loading-txt">Generando documentos...</div>
+  </div>
+
+  <!-- Toast de notificaciones -->
+  <div id="wiz-toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script src="wizard-engine.js"></script>
+</body>
+</html>

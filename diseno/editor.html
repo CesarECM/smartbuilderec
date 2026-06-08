@@ -164,39 +164,144 @@
       </div>
     </div>
 
-    <!-- Sección: Módulos futuros -->
+    <!-- Sección: Motor activo -->
     <div class="section">
       <div class="section-header">
-        <h2>🔧 Motor de wizards</h2>
+        <h2>🔧 Motor Genérico de Wizards</h2>
       </div>
+      <p style="font-size:13px;color:var(--c-text-2);margin-bottom:12px">
+        Haz clic en <strong>🔧 Schema</strong> en cualquier norma para abrir el editor de esquemas.<br>
+        El motor renderiza el wizard automáticamente a partir del JSON guardado en <code>wizard_schemas</code>.
+      </p>
       <div class="module-grid">
-        <div class="module-card">
+        <div class="module-card" style="border-color:var(--c-blue-600);opacity:1">
           <div class="module-card-icon">📝</div>
-          <div class="module-card-title">Editor de pasos</div>
-          <div class="module-card-desc">Define los pasos y campos de cada wizard usando un esquema visual.</div>
-          <span class="module-badge">Sprint 4</span>
+          <div class="module-card-title">Editor de schemas</div>
+          <div class="module-card-desc">Edita el JSON de secciones, pasos y campos de cada norma.</div>
+          <span class="module-badge" style="background:#dcfce7;color:#166534">✅ Sprint 4 — Activo</span>
+        </div>
+        <div class="module-card" style="border-color:var(--c-blue-600);opacity:1">
+          <div class="module-card-icon">🤖</div>
+          <div class="module-card-title">Prompts de IA por campo</div>
+          <div class="module-card-desc">Edita el prompt de IA de cada campo directamente en el schema JSON.</div>
+          <span class="module-badge" style="background:#dcfce7;color:#166534">✅ Sprint 4 — Activo</span>
         </div>
         <div class="module-card">
           <div class="module-card-icon">📄</div>
           <div class="module-card-title">Plantillas de documentos</div>
-          <div class="module-card-desc">Administra los templates Word/PPTX generados por cada norma.</div>
+          <div class="module-card-desc">Templates .docx generados dinámicamente desde el schema.</div>
           <span class="module-badge">Sprint 5</span>
         </div>
         <div class="module-card">
-          <div class="module-card-icon">🤖</div>
-          <div class="module-card-title">Prompts de IA</div>
-          <div class="module-card-desc">Configura los prompts de generación por campo y sección.</div>
+          <div class="module-card-icon">📊</div>
+          <div class="module-card-title">Instancias de wizards</div>
+          <div class="module-card-desc">Revisa y gestiona planeaciones de todos los usuarios.</div>
           <span class="module-badge">Sprint 5</span>
-        </div>
-        <div class="module-card">
-          <div class="module-card-icon">🔗</div>
-          <div class="module-card-title">Campos compartidos</div>
-          <div class="module-card-desc">Define qué campos se comparten entre normas para importación cruzada.</div>
-          <span class="module-badge">Sprint 4</span>
         </div>
       </div>
     </div>
   </main>
+
+  <!-- ── Editor de Schema (panel full-screen) ─────────────────────── -->
+  <div id="schemaEditorPanel" style="display:none;position:fixed;inset:0;z-index:2000;background:var(--c-bg);flex-direction:column">
+    <style>
+      .se-topbar {
+        height: 52px; background: #166534; display: flex; align-items: center;
+        padding: 0 20px; gap: 14px; flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      }
+      .se-topbar-title { color: white; font-size: 15px; font-weight: 700; flex: 1; }
+      .se-topbar-norma { background: rgba(255,255,255,0.15); color: white; font-size: 11px;
+        font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
+      .se-btn { background: rgba(255,255,255,0.15); color: white; border: none;
+        padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600;
+        font-family: inherit; cursor: pointer; transition: background 0.15s; }
+      .se-btn:hover { background: rgba(255,255,255,0.28); }
+      .se-btn-save { background: #15803d; }
+      .se-btn-save:hover { background: #166534; }
+      .se-body { display: flex; flex: 1; overflow: hidden; }
+      .se-sidebar {
+        width: 280px; border-right: 1px solid var(--c-border); overflow-y: auto;
+        padding: 12px 0; flex-shrink: 0; background: var(--c-surface);
+      }
+      .se-tree-item {
+        padding: 6px 12px; cursor: pointer; font-size: 13px; color: var(--c-text-2);
+        border-left: 3px solid transparent; transition: all 0.1s; user-select: none;
+        display: flex; align-items: center; gap: 6px;
+      }
+      .se-tree-item:hover { background: var(--c-surface-2); color: var(--c-text); }
+      .se-tree-item.active { background: #eff6ff; color: var(--c-blue-600); border-left-color: var(--c-blue-600); font-weight: 600; }
+      .se-tree-seccion { font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--c-text-3); padding: 10px 12px 4px; letter-spacing: .5px; }
+      .se-tree-paso { padding-left: 24px; }
+      .se-tree-campo { padding-left: 40px; font-size: 12px; }
+      .se-tree-badge { font-size: 10px; background: var(--c-surface-2); color: var(--c-text-3);
+        padding: 1px 6px; border-radius: 10px; margin-left: auto; white-space: nowrap; }
+      .se-main { flex: 1; overflow-y: auto; padding: 24px 28px; }
+      .se-props h3 { font-size: 16px; font-weight: 700; color: var(--c-text); margin: 0 0 20px; }
+      .se-field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+      .se-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+      .se-field input, .se-field textarea, .se-field select {
+        border: 1.5px solid var(--c-border); border-radius: 7px;
+        padding: 8px 10px; font-size: 13px; font-family: inherit;
+        background: var(--c-surface); outline: none; transition: border-color 0.15s;
+      }
+      .se-field input:focus, .se-field textarea:focus, .se-field select:focus { border-color: var(--c-blue-600); }
+      .se-field textarea { resize: vertical; min-height: 80px; }
+      .se-props-btns { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+      .se-btn-danger { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca;
+        padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 600;
+        font-family: inherit; cursor: pointer; }
+      .se-btn-action { background: var(--c-blue-600); color: white; border: none;
+        padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600;
+        font-family: inherit; cursor: pointer; }
+      .se-json-box { position: relative; }
+      .se-json-area { width: 100%; box-sizing: border-box; height: calc(100vh - 200px);
+        border: 1.5px solid var(--c-border); border-radius: 8px; padding: 12px;
+        font-size: 12px; font-family: monospace; background: #1e1e1e; color: #d4d4d4;
+        resize: none; outline: none; }
+      .se-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+      .se-tab { padding: 7px 16px; border-radius: 7px; border: 1.5px solid var(--c-border);
+        background: var(--c-surface); color: var(--c-text-2); font-size: 13px; font-weight: 600;
+        cursor: pointer; transition: all 0.15s; font-family: inherit; }
+      .se-tab.active { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+      .se-msg { font-size: 13px; padding: 8px 12px; border-radius: 7px; margin-bottom: 12px; }
+      .se-msg.ok  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+      .se-msg.err { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    </style>
+
+    <div class="se-topbar">
+      <button class="se-btn" onclick="cerrarEditorSchema()">← Volver</button>
+      <span class="se-topbar-title">Editor de Schema</span>
+      <span class="se-topbar-norma" id="schemaNormaLabel"></span>
+      <button class="se-btn" onclick="previewSchema()">▶ Previsualizar</button>
+      <button class="se-btn se-btn-save" onclick="guardarSchema()">💾 Guardar Schema</button>
+    </div>
+
+    <div class="se-body">
+      <!-- Sidebar árbol -->
+      <div class="se-sidebar" id="seTree"></div>
+
+      <!-- Panel principal -->
+      <div class="se-main" id="seMain">
+        <div class="se-tabs">
+          <button class="se-tab active" onclick="seTab('visual')">Visual</button>
+          <button class="se-tab" onclick="seTab('json')">JSON crudo</button>
+        </div>
+        <div id="seTabVisual">
+          <p style="color:var(--c-text-3);font-size:14px">Selecciona un elemento del árbol para editar sus propiedades.</p>
+        </div>
+        <div id="seTabJson" style="display:none">
+          <p style="font-size:12px;color:var(--c-text-3);margin-bottom:8px">
+            Edita el schema JSON directamente. Los cambios se aplican al guardar.
+          </p>
+          <div id="seJsonMsg"></div>
+          <div class="se-json-box">
+            <textarea class="se-json-area" id="seJsonArea" spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal: Nueva/Editar norma -->
   <div class="modal-overlay" id="modalNorma" style="display:none">
@@ -289,6 +394,8 @@
                   <button class="btn-sm" onclick="toggleNorma('${n.id}', ${n.activo})">
                     ${n.activo ? "Desactivar" : "Activar"}
                   </button>
+                  <button class="btn-sm" onclick="abrirEditorSchema('${n.id}','${n.nombre}')">🔧 Schema</button>
+                  <a class="btn-sm" href="wizard-engine.html?norma=${n.id}" target="_blank" style="text-decoration:none">▶ Probar</a>
                 </td>
               </tr>`).join("")}
           </tbody>
@@ -386,6 +493,333 @@
     document.getElementById("modalNorma").addEventListener("click", e => {
       if (e.target === document.getElementById("modalNorma")) cerrarModalNorma();
     });
+
+    // ── Editor de Schemas ─────────────────────────────────────────────────────
+
+    const API_BASE = "https://smartbuilderec.onrender.com";
+    let _seNormaId  = null;
+    let _seSchema   = null;
+    let _seSelected = null; // { type: "seccion"|"paso"|"campo", secIdx, pasoIdx, campoIdx }
+    let _seTabActiva = "visual";
+
+    async function _getToken() {
+      const { data } = await _supabase.auth.getSession();
+      return data?.session?.access_token || "";
+    }
+
+    async function abrirEditorSchema(normaId, normaName) {
+      _seNormaId = normaId;
+      _seSelected = null;
+      document.getElementById("schemaNormaLabel").textContent = normaId.toUpperCase();
+      document.getElementById("seJsonMsg").textContent = "";
+
+      const panel = document.getElementById("schemaEditorPanel");
+      panel.style.display = "flex";
+
+      // Cargar schema desde backend
+      try {
+        const token = await _getToken();
+        const resp  = await fetch(`${API_BASE}/wizard/${normaId}/schema`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (resp.ok) {
+          const body = await resp.json();
+          _seSchema = body.esquema;
+        } else if (resp.status === 404) {
+          _seSchema = { meta: { codigo: normaId.toUpperCase(), nombre: "", color_header: "#1F3B6D" }, secciones: [], documentos: [] };
+        } else {
+          throw new Error("Error al cargar schema");
+        }
+      } catch (e) {
+        _seSchema = { meta: { codigo: normaId.toUpperCase(), nombre: "", color_header: "#1F3B6D" }, secciones: [], documentos: [] };
+      }
+
+      _seRenderTree();
+      _seRenderJson();
+      _seShowProps(null);
+    }
+
+    function cerrarEditorSchema() {
+      document.getElementById("schemaEditorPanel").style.display = "none";
+      _seNormaId = null; _seSchema = null;
+    }
+
+    function seTab(tab) {
+      _seTabActiva = tab;
+      document.querySelectorAll(".se-tab").forEach((el, i) => {
+        el.classList.toggle("active", (i === 0 && tab === "visual") || (i === 1 && tab === "json"));
+      });
+      document.getElementById("seTabVisual").style.display = tab === "visual" ? "block" : "none";
+      document.getElementById("seTabJson").style.display   = tab === "json"   ? "block" : "none";
+      if (tab === "json") _seRenderJson();
+    }
+
+    function _seRenderJson() {
+      document.getElementById("seJsonArea").value = JSON.stringify(_seSchema, null, 2);
+    }
+
+    function _seRenderTree() {
+      const tree = document.getElementById("seTree");
+      tree.innerHTML = "";
+
+      // Meta
+      const metaEl = document.createElement("div");
+      metaEl.className = "se-tree-item";
+      metaEl.textContent = "⚙ Meta del wizard";
+      metaEl.onclick = () => _seSelectMeta();
+      tree.appendChild(metaEl);
+
+      (_seSchema.secciones || []).forEach((sec, si) => {
+        const secHeader = document.createElement("div");
+        secHeader.className = "se-tree-seccion";
+        secHeader.textContent = `${sec.icono || "📄"} ${sec.titulo || "(sección)"}`;
+        tree.appendChild(secHeader);
+
+        const secEl = document.createElement("div");
+        secEl.className = "se-tree-item";
+        secEl.innerHTML = `<span style="font-size:11px;color:var(--c-text-3)">Propiedades sección</span>`;
+        secEl.onclick = () => _seSelectSeccion(si);
+        tree.appendChild(secEl);
+
+        (sec.pasos || []).forEach((paso, pi) => {
+          const pasoEl = document.createElement("div");
+          pasoEl.className = "se-tree-item se-tree-paso";
+          pasoEl.innerHTML = `Paso ${paso.numero || pi+1}: ${paso.titulo || "(paso)"}
+            ${paso.tipo_especial ? `<span class="se-tree-badge">${paso.tipo_especial}</span>` : ""}`;
+          pasoEl.onclick = () => _seSelectPaso(si, pi);
+          tree.appendChild(pasoEl);
+
+          (paso.campos || []).forEach((campo, ci) => {
+            const campoEl = document.createElement("div");
+            campoEl.className = "se-tree-item se-tree-campo";
+            campoEl.innerHTML = `<span style="color:var(--c-text-3)">${campo.tipo}</span> ${campo.label || campo.id}`;
+            campoEl.onclick = () => _seSelectCampo(si, pi, ci);
+            tree.appendChild(campoEl);
+          });
+
+          // Botón añadir campo
+          const addCampo = document.createElement("div");
+          addCampo.className = "se-tree-item se-tree-campo";
+          addCampo.style.cssText = "color:var(--c-blue-600);font-style:italic;font-size:11px";
+          addCampo.textContent = "+ campo";
+          addCampo.onclick = () => _seAgregarCampo(si, pi);
+          tree.appendChild(addCampo);
+        });
+
+        // Botón añadir paso
+        const addPaso = document.createElement("div");
+        addPaso.className = "se-tree-item se-tree-paso";
+        addPaso.style.cssText = "color:var(--c-blue-600);font-style:italic;font-size:11px";
+        addPaso.textContent = "+ paso";
+        addPaso.onclick = () => _seAgregarPaso(si);
+        tree.appendChild(addPaso);
+      });
+
+      // Botón añadir sección
+      const addSec = document.createElement("div");
+      addSec.className = "se-tree-item";
+      addSec.style.cssText = "color:var(--c-blue-600);font-style:italic;margin-top:8px";
+      addSec.textContent = "+ sección";
+      addSec.onclick = () => _seAgregarSeccion();
+      tree.appendChild(addSec);
+    }
+
+    function _seSelectMeta() {
+      _seSelected = { type: "meta" };
+      const m = _seSchema.meta || {};
+      document.getElementById("seTabVisual").innerHTML = `
+        <div class="se-props">
+          <h3>⚙ Meta del wizard</h3>
+          <div class="se-field"><label>Código</label><input id="seMetaCodigo" value="${m.codigo||""}" oninput="_seSchema.meta.codigo=this.value"></div>
+          <div class="se-field"><label>Nombre largo</label><input id="seMetaNombre" value="${m.nombre||""}" oninput="_seSchema.meta.nombre=this.value"></div>
+          <div class="se-field"><label>Color header (hex)</label><input id="seMetaColor" value="${m.color_header||"#1F3B6D"}" oninput="_seSchema.meta.color_header=this.value"></div>
+          <div class="se-field"><label>Duración mínima (min)</label><input type="number" value="${m.min_duracion||120}" oninput="_seSchema.meta.min_duracion=parseInt(this.value)||120"></div>
+          <div class="se-field"><label>Participantes mínimos</label><input type="number" value="${m.min_participantes||4}" oninput="_seSchema.meta.min_participantes=parseInt(this.value)||4"></div>
+        </div>`;
+    }
+
+    function _seSelectSeccion(si) {
+      _seSelected = { type: "seccion", secIdx: si };
+      const sec = _seSchema.secciones[si];
+      document.getElementById("seTabVisual").innerHTML = `
+        <div class="se-props">
+          <h3>📄 Sección: ${sec.titulo || ""}</h3>
+          <div class="se-field"><label>Título</label><input value="${sec.titulo||""}" oninput="_seSchema.secciones[${si}].titulo=this.value;_seRenderTree()"></div>
+          <div class="se-field"><label>Ícono (emoji)</label><input value="${sec.icono||"📄"}" maxlength="4" oninput="_seSchema.secciones[${si}].icono=this.value;_seRenderTree()"></div>
+          <div class="se-props-btns">
+            <button class="se-btn-danger" onclick="_seEliminarSeccion(${si})">🗑 Eliminar sección</button>
+          </div>
+        </div>`;
+    }
+
+    function _seSelectPaso(si, pi) {
+      _seSelected = { type: "paso", secIdx: si, pasoIdx: pi };
+      const paso = _seSchema.secciones[si].pasos[pi];
+      document.getElementById("seTabVisual").innerHTML = `
+        <div class="se-props">
+          <h3>📋 Paso: ${paso.titulo || ""}</h3>
+          <div class="se-field"><label>Título</label><input value="${paso.titulo||""}" oninput="_seSchema.secciones[${si}].pasos[${pi}].titulo=this.value;_seRenderTree()"></div>
+          <div class="se-field"><label>Número</label><input value="${paso.numero||""}" oninput="_seSchema.secciones[${si}].pasos[${pi}].numero=this.value"></div>
+          <div class="se-field"><label>Tipo especial (opcional)</label>
+            <select onchange="_seSchema.secciones[${si}].pasos[${pi}].tipo_especial=this.value||undefined">
+              <option value="">— Ninguno (campos genéricos) —</option>
+              <option value="objetivos_tabs" ${paso.tipo_especial==="objetivos_tabs"?"selected":""}>objetivos_tabs</option>
+              <option value="temario_unidades" ${paso.tipo_especial==="temario_unidades"?"selected":""}>temario_unidades</option>
+              <option value="evaluaciones_block" ${paso.tipo_especial==="evaluaciones_block"?"selected":""}>evaluaciones_block</option>
+              <option value="tiempos_block" ${paso.tipo_especial==="tiempos_block"?"selected":""}>tiempos_block</option>
+              <option value="formatos_block" ${paso.tipo_especial==="formatos_block"?"selected":""}>formatos_block</option>
+              <option value="tecnica_card" ${paso.tipo_especial==="tecnica_card"?"selected":""}>tecnica_card</option>
+            </select>
+          </div>
+          <div class="se-props-btns">
+            <button class="se-btn-danger" onclick="_seEliminarPaso(${si},${pi})">🗑 Eliminar paso</button>
+          </div>
+        </div>`;
+    }
+
+    function _seSelectCampo(si, pi, ci) {
+      _seSelected = { type: "campo", secIdx: si, pasoIdx: pi, campoIdx: ci };
+      const campo = _seSchema.secciones[si].pasos[pi].campos[ci];
+      const ai    = campo.ai || {};
+      document.getElementById("seTabVisual").innerHTML = `
+        <div class="se-props">
+          <h3>🔤 Campo: ${campo.label || campo.id}</h3>
+          <div class="se-field"><label>ID del campo</label><input value="${campo.id||""}" oninput="_seSchema.secciones[${si}].pasos[${pi}].campos[${ci}].id=this.value"></div>
+          <div class="se-field"><label>Tipo</label>
+            <select onchange="_seSchema.secciones[${si}].pasos[${pi}].campos[${ci}].tipo=this.value">
+              <option value="text" ${campo.tipo==="text"?"selected":""}>text</option>
+              <option value="textarea" ${campo.tipo==="textarea"?"selected":""}>textarea</option>
+              <option value="date" ${campo.tipo==="date"?"selected":""}>date</option>
+              <option value="number" ${campo.tipo==="number"?"selected":""}>number</option>
+              <option value="list" ${campo.tipo==="list"?"selected":""}>list</option>
+              <option value="table" ${campo.tipo==="table"?"selected":""}>table</option>
+            </select>
+          </div>
+          <div class="se-field"><label>Label</label><input value="${campo.label||""}" oninput="_seSchema.secciones[${si}].pasos[${pi}].campos[${ci}].label=this.value;_seRenderTree()"></div>
+          <div class="se-field"><label>Placeholder</label><input value="${campo.placeholder||campo.placeholder_item||""}" oninput="_seSchema.secciones[${si}].pasos[${pi}].campos[${ci}].placeholder=this.value"></div>
+          <div class="se-field"><label>Hint (texto de ayuda)</label><input value="${campo.hint||""}" oninput="_seSchema.secciones[${si}].pasos[${pi}].campos[${ci}].hint=this.value"></div>
+          <div class="se-field">
+            <label><input type="checkbox" ${campo.requerido?"checked":""} onchange="_seSchema.secciones[${si}].pasos[${pi}].campos[${ci}].requerido=this.checked"> Campo requerido</label>
+          </div>
+          <div class="se-field">
+            <label><input type="checkbox" ${campo.full_width?"checked":""} onchange="_seSchema.secciones[${si}].pasos[${pi}].campos[${ci}].full_width=this.checked"> Ancho completo</label>
+          </div>
+          <hr style="border-color:var(--c-border);margin:16px 0">
+          <h3 style="font-size:14px;margin-bottom:12px">🤖 Configuración IA</h3>
+          <div class="se-field">
+            <label><input type="checkbox" id="seAiActivo" ${ai.activo?"checked":""} onchange="_seToggleAI(${si},${pi},${ci},this.checked)"> Activar botón IA en este campo</label>
+          </div>
+          <div id="seAiFields" style="${ai.activo?"":"display:none"}">
+            <div class="se-field"><label>Etiqueta del botón</label><input value="${ai.boton_label||"✨ Generar con IA"}" oninput="_seSetAI(${si},${pi},${ci},'boton_label',this.value)"></div>
+            <div class="se-field"><label>Prompt (usa {{campo_id}} como variable)</label>
+              <textarea rows="5" oninput="_seSetAI(${si},${pi},${ci},'prompt',this.value)">${ai.prompt||""}</textarea>
+            </div>
+          </div>
+          <div class="se-props-btns">
+            <button class="se-btn-danger" onclick="_seEliminarCampo(${si},${pi},${ci})">🗑 Eliminar campo</button>
+          </div>
+        </div>`;
+    }
+
+    function _seToggleAI(si, pi, ci, activo) {
+      if (!_seSchema.secciones[si].pasos[pi].campos[ci].ai) {
+        _seSchema.secciones[si].pasos[pi].campos[ci].ai = {};
+      }
+      _seSchema.secciones[si].pasos[pi].campos[ci].ai.activo = activo;
+      document.getElementById("seAiFields").style.display = activo ? "block" : "none";
+    }
+
+    function _seSetAI(si, pi, ci, key, val) {
+      if (!_seSchema.secciones[si].pasos[pi].campos[ci].ai) {
+        _seSchema.secciones[si].pasos[pi].campos[ci].ai = { activo: true };
+      }
+      _seSchema.secciones[si].pasos[pi].campos[ci].ai[key] = val;
+    }
+
+    function _seShowProps(html) {
+      document.getElementById("seTabVisual").innerHTML = html ||
+        '<p style="color:var(--c-text-3);font-size:14px">Selecciona un elemento del árbol izquierdo para editar sus propiedades.</p>';
+    }
+
+    function _seAgregarSeccion() {
+      if (!_seSchema.secciones) _seSchema.secciones = [];
+      _seSchema.secciones.push({ id: "seccion_" + Date.now(), titulo: "Nueva sección", icono: "📄", pasos: [] });
+      _seRenderTree();
+    }
+
+    function _seEliminarSeccion(si) {
+      if (!confirm("¿Eliminar esta sección y todos sus pasos?")) return;
+      _seSchema.secciones.splice(si, 1);
+      _seRenderTree(); _seShowProps(null);
+    }
+
+    function _seAgregarPaso(si) {
+      const pasos = _seSchema.secciones[si].pasos || [];
+      pasos.push({ id: "paso_" + Date.now(), titulo: "Nuevo paso", numero: pasos.length + 1, campos: [] });
+      _seSchema.secciones[si].pasos = pasos;
+      _seRenderTree();
+    }
+
+    function _seEliminarPaso(si, pi) {
+      if (!confirm("¿Eliminar este paso y todos sus campos?")) return;
+      _seSchema.secciones[si].pasos.splice(pi, 1);
+      _seRenderTree(); _seShowProps(null);
+    }
+
+    function _seAgregarCampo(si, pi) {
+      const campos = _seSchema.secciones[si].pasos[pi].campos || [];
+      campos.push({ id: "campo_" + Date.now(), tipo: "text", label: "Nuevo campo", requerido: false });
+      _seSchema.secciones[si].pasos[pi].campos = campos;
+      _seRenderTree();
+      _seSelectCampo(si, pi, campos.length - 1);
+    }
+
+    function _seEliminarCampo(si, pi, ci) {
+      if (!confirm("¿Eliminar este campo?")) return;
+      _seSchema.secciones[si].pasos[pi].campos.splice(ci, 1);
+      _seRenderTree(); _seShowProps(null);
+    }
+
+    async function guardarSchema() {
+      // Si estamos en tab JSON, sincronizar el schema desde el textarea
+      if (_seTabActiva === "json") {
+        const jsonEl = document.getElementById("seJsonArea");
+        const msgEl  = document.getElementById("seJsonMsg");
+        try {
+          _seSchema = JSON.parse(jsonEl.value);
+          msgEl.innerHTML = "";
+        } catch (e) {
+          msgEl.innerHTML = `<div class="se-msg err">JSON inválido: ${e.message}</div>`;
+          return;
+        }
+      }
+
+      const token  = await _getToken();
+      const msgEl  = document.getElementById("seJsonMsg");
+
+      try {
+        // Upsert via backend (service role) — usamos Supabase directamente con service role en el frontend
+        // ya que el backend no expone un endpoint de escritura de schemas aún para super_admin
+        const { error } = await _supabase
+          .from("wizard_schemas")
+          .upsert({
+            norma_id: _seNormaId,
+            esquema: _seSchema,
+            activo: true,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "norma_id", ignoreDuplicates: false });
+
+        if (error) throw error;
+        msgEl.innerHTML = `<div class="se-msg ok">✓ Schema guardado correctamente</div>`;
+        setTimeout(() => { msgEl.innerHTML = ""; }, 3000);
+      } catch (e) {
+        msgEl.innerHTML = `<div class="se-msg err">Error al guardar: ${e.message}</div>`;
+      }
+    }
+
+    function previewSchema() {
+      window.open(`wizard-engine.html?norma=${_seNormaId}`, "_blank");
+    }
 
     init();
   </script>

@@ -140,11 +140,13 @@ from routers import stripe_router
 from routers import admin_router
 from routers import email_router
 from routers import soporte_router
+from routers import wizard_router
 
 app.include_router(stripe_router.router,  tags=["stripe"])
 app.include_router(admin_router.router,   tags=["admin"])
 app.include_router(email_router.router,   tags=["email"])
 app.include_router(soporte_router.router, tags=["soporte"])
+app.include_router(wizard_router.router,  tags=["wizard"])
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
@@ -2784,4 +2786,24 @@ def generate_materiales(data: MaterialesRequest):
             status_code=500,
             detail=f"Error al generar materiales para {data.tecnica}: {str(e)}"
         )
+
+
+# ─── Motor Genérico: Generación IA por campo ──────────────────────────────────
+# Usado por wizard-engine.js. Recibe un prompt ya interpolado y devuelve texto.
+
+class GenerarCampoRequest(BaseModel):
+    prompt: str
+    temperature: float = 0.4
+
+@app.post("/ai/generar-campo")
+def ai_generar_campo(data: GenerarCampoRequest, request: Request):
+    try:
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL_GRL,
+            messages=[{"role": "user", "content": data.prompt}],
+            temperature=data.temperature,
+        )
+        return {"resultado": response.choices[0].message.content.strip()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     

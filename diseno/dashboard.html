@@ -983,15 +983,9 @@
     }
 
     function seleccionarNorma(norma) {
-      _limpiarLocalStorage();
-      localStorage.setItem("sbe_norma_activa", norma);
-
-      if (norma === "ec0301") {
-        _mostrarPanel("panelImportarPregunta");
-        return;
-      }
       cerrarModalNorma();
-      window.location.href = "index.html?new=1";
+      // Motor genérico: todas las normas usan wizard-engine
+      window.location.href = `wizard-engine.html?norma=${norma}`;
     }
 
     function volverASeleccionNorma() {
