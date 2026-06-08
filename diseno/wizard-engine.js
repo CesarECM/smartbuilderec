@@ -13,6 +13,58 @@ const DOC_ENDPOINTS = {
   ec0301: `${API}/generate-doc/ec0301`,
 };
 
+// Fallback a endpoints específicos que ya existen en producción.
+// Se usa cuando /ai/generar-campo no está disponible (backend no actualizado).
+// Cada entrada: { ep, req(datos)→body, res(respuesta)→string|array, tipo }
+const LEGACY_AI_MAP = {
+  obj_general: {
+    ep:  "/generate-general",
+    req: (d) => ({ cognitiva: d.obj_cognitiva||"", psicomotriz: d.obj_psicomotriz||"", afectiva: d.obj_afectiva||"" }),
+    res: (r) => r.general || "",
+  },
+  beneficios: {
+    ep:  "/generate-beneficios",
+    req: (d) => ({ general: d.obj_general||"", nombre: d.nombreCurso||"" }),
+    res: (r) => r.beneficios || "",
+  },
+  // Temario: un solo call genera las 3 unidades; devuelve la que corresponde
+  temario_u1: {
+    ep:  "/generate-temario",
+    req: (d) => ({ nombre: d.nombreCurso||"", general: d.obj_general||"", cognitiva: d.obj_cognitiva||"", psicomotriz: d.obj_psicomotriz||"", afectiva: d.obj_afectiva||"", beneficios: d.beneficios||"" }),
+    res: (r) => r.u1 || [],
+    tipo: "list",
+  },
+  temario_u2: {
+    ep:  "/generate-temario",
+    req: (d) => ({ nombre: d.nombreCurso||"", general: d.obj_general||"", cognitiva: d.obj_cognitiva||"", psicomotriz: d.obj_psicomotriz||"", afectiva: d.obj_afectiva||"", beneficios: d.beneficios||"" }),
+    res: (r) => r.u2 || [],
+    tipo: "list",
+  },
+  temario_u3: {
+    ep:  "/generate-temario",
+    req: (d) => ({ nombre: d.nombreCurso||"", general: d.obj_general||"", cognitiva: d.obj_cognitiva||"", psicomotriz: d.obj_psicomotriz||"", afectiva: d.obj_afectiva||"", beneficios: d.beneficios||"" }),
+    res: (r) => r.u3 || [],
+    tipo: "list",
+  },
+  preguntas: {
+    ep:  "/generate-preguntas",
+    req: (d) => ({ nombre: d.nombreCurso||"", perfil: d.perfil||"" }),
+    res: (r) => Array.isArray(r.preguntas) ? r.preguntas : (r.preguntas||""),
+    tipo: "list",
+  },
+  cierre_resumen: {
+    ep:  "/generate-resumen",
+    req: (d) => ({ nombreCurso: d.nombreCurso||"", objetivoGeneral: d.obj_general||"", objetivoCognitivo: d.obj_cognitiva||"", objetivoPsicomotriz: d.obj_psicomotriz||"", objetivoAfectivo: d.obj_afectiva||"", desarrolloExpositiva: d.expositiva_descripcion||"", actividadDemostrativa: d.demostrativa_descripcion||"", instruccionesDialogo: "", sugerenciasContinuidad: "", referenciasBibliograficas: "", compromisos: "" }),
+    res: (r) => r.resumen || r.texto || Object.values(r).find(v => typeof v === "string") || "",
+  },
+  cierre_compromisos: {
+    ep:  "/generate-compromisos",
+    req: (d) => ({ nombreCurso: d.nombreCurso||"", objetivoGeneral: d.obj_general||"", objetivoCognitivo: d.obj_cognitiva||"", objetivoPsicomotriz: d.obj_psicomotriz||"", objetivoAfectivo: d.obj_afectiva||"" }),
+    res: (r) => Array.isArray(r.compromisos) ? r.compromisos : (r.compromisos || Object.values(r).find(v => typeof v === "string") || ""),
+    tipo: "list",
+  },
+};
+
 const Engine = {
   schema:     null,
   normaId:    null,
@@ -624,12 +676,11 @@ const Engine = {
   async _generarConIA(btn, paso) {
     const fieldId = btn.dataset.aiField;
     const campo   = (paso.campos || []).find(c => c.id === fieldId);
-    if (!campo?.ai?.prompt) {
+    if (!campo?.ai?.prompt && !LEGACY_AI_MAP[fieldId]) {
       this._toast("Este campo no tiene prompt de IA configurado.", true);
       return;
     }
 
-    const prompt = this._interpolar(campo.ai.prompt);
     btn.disabled = true;
     const originalText = btn.innerHTML;
     btn.classList.add("loading");
@@ -637,35 +688,77 @@ const Engine = {
 
     try {
       const token = await this._getToken();
-      const resp  = await fetch(`${API}/ai/generar-campo`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, temperature: 0.4 })
-      });
-      if (!resp.ok) throw new Error("Error en la generación IA");
-      const { resultado } = await resp.json();
+      let resultado = null;
+      let tipoResultado = campo?.tipo || "textarea";
 
-      // Pegar resultado en el campo correspondiente
-      const el = document.getElementById(`wf_${fieldId}`);
-      if (el) {
-        el.value = resultado;
-        this.datos[fieldId] = resultado;
-        this._scheduleSave();
-      } else if (campo.tipo === "list") {
-        // IA devuelve líneas separadas → convertir a lista
-        const lineas = resultado.split("\n").map(l => l.replace(/^[-•*\d.]+\s*/, "").trim()).filter(Boolean);
-        this.datos[fieldId] = lineas;
-        this._rerenderList(fieldId, campo, lineas);
-        this._scheduleSave();
+      // ── Intento 1: endpoint genérico nuevo ───────────────────────
+      if (campo?.ai?.prompt) {
+        const prompt = this._interpolar(campo.ai.prompt);
+        const resp   = await fetch(`${API}/ai/generar-campo`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, temperature: 0.4 }),
+        });
+
+        if (resp.ok) {
+          const body = await resp.json();
+          resultado = body.resultado;
+        } else if (resp.status !== 404) {
+          // Error real (500, 401…) — no es que falte el endpoint
+          throw new Error(`Error IA: ${resp.status}`);
+        }
+        // Si es 404 → endpoint nuevo no disponible, caemos al fallback
       }
+
+      // ── Intento 2: fallback a endpoint legacy en producción ───────
+      if (resultado === null) {
+        const legacy = LEGACY_AI_MAP[fieldId];
+        if (!legacy) {
+          throw new Error("La IA para este campo estará disponible cuando se actualice el backend. Por ahora puedes escribir manualmente.");
+        }
+
+        const resp = await fetch(`${API}${legacy.ep}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(legacy.req(this.datos)),
+        });
+        if (!resp.ok) throw new Error(`Error IA (${legacy.ep}): ${resp.status}`);
+
+        const body = await resp.json();
+        resultado  = legacy.res(body);
+        if (legacy.tipo) tipoResultado = legacy.tipo;
+      }
+
+      // ── Aplicar resultado al campo ───────────────────────────────
+      this._aplicarResultadoIA(fieldId, campo, resultado, tipoResultado);
       this._toast("✓ Generado con IA");
+
     } catch (e) {
-      this._toast("Error: " + e.message, true);
+      this._toast(e.message, true);
     } finally {
       btn.disabled = false;
       btn.classList.remove("loading");
       btn.innerHTML = originalText;
     }
+  },
+
+  _aplicarResultadoIA(fieldId, campo, resultado, tipoResultado) {
+    const esList = tipoResultado === "list" || campo?.tipo === "list";
+
+    if (esList) {
+      // Resultado puede ser array o string con saltos de línea
+      const items = Array.isArray(resultado)
+        ? resultado.map(String).filter(Boolean)
+        : String(resultado).split("\n").map(l => l.replace(/^[-•*\d.]+\s*/, "").trim()).filter(Boolean);
+      this.datos[fieldId] = items;
+      if (campo) this._rerenderList(fieldId, campo, items);
+    } else {
+      const texto = typeof resultado === "string" ? resultado : JSON.stringify(resultado, null, 2);
+      const el    = document.getElementById(`wf_${fieldId}`);
+      if (el) el.value = texto;
+      this.datos[fieldId] = texto;
+    }
+    this._scheduleSave();
   },
 
   _rerenderList(fieldId, campo, items) {
