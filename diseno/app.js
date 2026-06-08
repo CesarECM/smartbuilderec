@@ -5042,6 +5042,123 @@ if (btnDescargarPlaneacionFinal) {
 
 })();
 
+// ─── D#1: Vista previa del expediente ────────────────────────────────────────
+function cerrarVistaPrevia() {
+  document.getElementById("preview-modal").style.display = "none";
+}
+
+function _pvEsc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function _pvTabla(titulo, filas) {
+  const style = {
+    hdr:  'background:#1F3B6D;color:#fff;font-weight:700;padding:10px 14px;font-size:12px;',
+    lbl:  'background:#D6E4F0;color:#1F3B6D;font-weight:700;padding:8px 12px;font-size:11px;white-space:nowrap;',
+    val:  'padding:8px 12px;font-size:11px;color:#1e293b;border:1px solid #e2e8f0;',
+    row:  'border:1px solid #e2e8f0;',
+  };
+  const rowsHtml = filas.map(([etq, val, span]) => `
+    <tr>
+      <td style="${style.lbl}width:200px;">${_pvEsc(etq)}</td>
+      <td style="${style.val}" ${span ? `colspan="${span}"` : ''}>${_pvEsc(val)}</td>
+    </tr>`).join('');
+  return `
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      <tr><th colspan="2" style="${style.hdr}text-align:left;">${_pvEsc(titulo)}</th></tr>
+      ${rowsHtml}
+    </table>`;
+}
+
+function generarHTMLVistaPrevia(p) {
+  const dat = p.datos || {};
+  const obj = p.objetivos || {};
+  const tem = p.temario || {};
+  const ev  = p.evaluaciones || {};
+  const tms = p.tiempos || [];
+
+  const pctD = ev.pctDiagnostica ?? ev.pctDiag ?? 0;
+  const pctF = ev.pctFormativa   ?? ev.pctForm ?? 0;
+  const pctS = ev.pctSumativa    ?? ev.pctSuma ?? 0;
+
+  const totalMin = tms.reduce((a, b) =>
+    a + (b.filas||[]).reduce((s,f) => s + (parseInt(f.tiempo)||0), 0), 0);
+
+  const u1 = (tem.u1||[]).map((t,i) => `${i+1}. ${t}`).join('<br>') || '—';
+  const u2 = (tem.u2||[]).map((t,i) => `${i+1}. ${t}`).join('<br>') || '—';
+  const u3 = (tem.u3||[]).map((t,i) => `${i+1}. ${t}`).join('<br>') || '—';
+
+  const alertas = validarExpedienteCompleto();
+  const alertasHtml = alertas.length ? `
+    <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:12px 16px;margin-bottom:16px;">
+      <strong style="color:#854d0e;font-size:12px;">⚠️ Inconsistencias detectadas</strong><br>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:11px;color:#854d0e;">
+        ${alertas.map(e => `<li>${_pvEsc(e)}</li>`).join('')}
+      </ul>
+    </div>` : `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#166534;">✅ Sin inconsistencias detectadas</div>`;
+
+  return `
+    <h2 style="margin:0 0 4px;color:#1F3B6D;font-size:18px;">Vista previa — Expediente EC0217.01</h2>
+    <p style="color:#64748b;font-size:12px;margin-bottom:20px;">Revisa los datos antes de descargar. Esta vista no es una representación exacta del formato final.</p>
+    ${alertasHtml}
+
+    ${_pvTabla('INFORMACIÓN GENERAL', [
+      ['Nombre del curso',    dat.nombreCurso   || '—'],
+      ['Instructor',         dat.instructor    || '—'],
+      ['Diseñador',          dat.disenador     || '—'],
+      ['Lugar',              dat.lugar         || '—'],
+      ['Fecha',              dat.fecha         || '—'],
+      ['Duración',           dat.duracion ? `${dat.duracion} min` : '—'],
+      ['Participantes',      dat.participantes || '—'],
+      ['Perfil',             dat.perfil        || '—'],
+    ])}
+
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      <tr><th colspan="2" style="background:#1F3B6D;color:#fff;font-weight:700;padding:10px 14px;font-size:12px;text-align:left;">OBJETIVOS Y TEMARIO</th></tr>
+      <tr>
+        <td style="background:#D6E4F0;color:#1F3B6D;font-weight:700;padding:8px 12px;font-size:11px;width:50%;vertical-align:top;">
+          <div style="margin-bottom:6px;"><strong>Objetivo General:</strong><br><span style="font-weight:400;color:#1e293b;">${_pvEsc(obj.general||'—')}</span></div>
+          <div style="margin-bottom:6px;"><strong>1. Cognitivo:</strong><br><span style="font-weight:400;color:#1e293b;">${_pvEsc(obj.cognitiva||'—')}</span></div>
+          <div style="margin-bottom:6px;"><strong>2. Psicomotriz:</strong><br><span style="font-weight:400;color:#1e293b;">${_pvEsc(obj.psicomotriz||'—')}</span></div>
+          <div><strong>3. Afectivo:</strong><br><span style="font-weight:400;color:#1e293b;">${_pvEsc(obj.afectiva||'—')}</span></div>
+        </td>
+        <td style="padding:8px 12px;font-size:11px;color:#1e293b;border:1px solid #e2e8f0;vertical-align:top;">
+          <div style="margin-bottom:8px;"><strong style="color:#1F3B6D;">Unidad 1:</strong><br>${u1}</div>
+          <div style="margin-bottom:8px;"><strong style="color:#1F3B6D;">Unidad 2:</strong><br>${u2}</div>
+          <div><strong style="color:#1F3B6D;">Unidad 3:</strong><br>${u3}</div>
+        </td>
+      </tr>
+    </table>
+
+    ${_pvTabla('EVALUACIONES', [
+      ['Diagnóstica',  `${pctD}% — ${_pvEsc(ev.instDiagnostica||ev.instDiag||'—')}`],
+      ['Formativa',    `${pctF}% — ${_pvEsc(ev.instFormativa||ev.instForm||'—')}`],
+      ['Sumativa',     `${pctS}% — ${_pvEsc(ev.instSumativa||ev.instSuma||'—')}`],
+      ['Total',        `${pctD+pctF+pctS}% ${pctD+pctF+pctS===100 ? '✅' : '⚠️'}`],
+    ])}
+
+    ${_pvTabla('DISTRIBUCIÓN DE TIEMPOS', [
+      ['Total registrado',  `${totalMin} min`],
+      ['Duración del curso', `${dat.duracion||0} min`],
+      ['Diferencia',        `${totalMin - (dat.duracion||0)} min ${totalMin === (dat.duracion||0) ? '✅' : '⚠️'}`],
+    ])}
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;text-align:center;">
+      <button onclick="cerrarVistaPrevia()" style="padding:10px 24px;border-radius:8px;border:none;background:#1F3B6D;color:white;font-size:13px;font-weight:600;cursor:pointer;">Cerrar vista previa</button>
+    </div>`;
+}
+
+document.getElementById("btnVistaPrevia")?.addEventListener("click", () => {
+  const payload = recolectarPayload();
+  document.getElementById("preview-content").innerHTML = generarHTMLVistaPrevia(payload);
+  document.getElementById("preview-modal").style.display = "block";
+  document.getElementById("preview-modal").scrollTop = 0;
+});
+
+document.getElementById("preview-modal")?.addEventListener("click", (e) => {
+  if (e.target === document.getElementById("preview-modal")) cerrarVistaPrevia();
+});
+
 // ─── D#2: Descarga de documentos individuales ────────────────────────────────
 document.querySelectorAll(".btn-doc-individual").forEach(btn => {
   btn.addEventListener("click", async () => {

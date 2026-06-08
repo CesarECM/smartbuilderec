@@ -558,7 +558,11 @@ def _filas_cierre(d):
 
 # ─── Función principal ─────────────────────────────────────────────────────────
 
-def generar_planeacion_docx_v2(payload: dict) -> bytes:
+def generar_planeacion_docx_v2(payload: dict, branding: dict | None = None) -> bytes:
+    br = branding or {}
+    empresa_footer = br.get("empresa") or "SmartBuilder EC  •  Centro ECM"
+    logo_url = br.get("logo_url")
+
     doc = Document()
     sec = doc.sections[0]
     sec.page_width = Twips(12240); sec.page_height = Twips(15840)
@@ -566,6 +570,25 @@ def generar_planeacion_docx_v2(payload: dict) -> bytes:
     sec.top_margin  = sec.bottom_margin = Twips(720)
     doc.styles['Normal'].font.name = 'Arial'
     doc.styles['Normal'].font.size = Pt(10)
+
+    # D#7: Logo del admin si existe
+    if logo_url:
+        try:
+            import urllib.request, tempfile, os
+            with urllib.request.urlopen(logo_url, timeout=5) as resp:
+                logo_bytes = resp.read()
+            ext = logo_url.split(".")[-1].lower().split("?")[0]
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}")
+            tmp.write(logo_bytes); tmp.close()
+            lp = doc.add_paragraph()
+            lp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            lp.paragraph_format.space_before = Twips(0)
+            lp.paragraph_format.space_after  = Twips(80)
+            run = lp.add_run()
+            run.add_picture(tmp.name, height=Pt(36))
+            os.unlink(tmp.name)
+        except Exception as e_logo:
+            print(f"[branding] No se pudo insertar logo: {e_logo}")
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -603,7 +626,7 @@ def generar_planeacion_docx_v2(payload: dict) -> bytes:
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Twips(320)
-    r = p.add_run(f"SmartBuilder EC  •  Centro ECM  •  {dat.get('nombreCurso','')}  •  {dat.get('fecha','')}")
+    r = p.add_run(f"{empresa_footer}  •  {dat.get('nombreCurso','')}  •  {dat.get('fecha','')}")
     r.font.name = 'Arial'; r.font.size = Pt(8)
     r.font.color.rgb = RGBColor.from_string("999999")
 

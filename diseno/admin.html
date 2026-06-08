@@ -270,6 +270,7 @@
     <button class="tab-btn"        id="tab-mis-cursos" onclick="showTab('mis-cursos')">📚 Mis Cursos</button>
     <button class="tab-btn"        id="tab-usuarios"   onclick="showTab('usuarios')">👥 Usuarios &amp; Acceso</button>
     <button class="tab-btn"        id="tab-mi-perfil"  onclick="showTab('mi-perfil')">👤 Mi Perfil</button>
+    <button class="tab-btn"        id="tab-branding"   onclick="showTab('branding')">🎨 Branding</button>
   </nav>
 
   <main class="panel-main">
@@ -363,6 +364,45 @@
       </div>
     </div>
 
+    <!-- ══ Branding ═══════════════════════════════════════════════ -->
+    <div id="panel-branding" class="tab-panel">
+      <div class="section-header"><h2>🎨 Branding de la plataforma</h2></div>
+      <div class="perfil-card" style="max-width:560px;">
+        <p style="font-size:13px;color:#64748b;margin-bottom:20px;">
+          Los documentos Word generados para tus instructores incluirán el logo y el nombre de tu organización.
+        </p>
+
+        <!-- Logo actual -->
+        <div style="margin-bottom:20px;">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">Logo actual</label>
+          <div id="branding-logo-preview" style="width:160px;height:80px;border:1px dashed #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#94a3b8;font-size:12px;">
+            Sin logo
+          </div>
+        </div>
+
+        <!-- Subir logo -->
+        <div style="margin-bottom:20px;">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">Subir nuevo logo (PNG o JPG, máx 2 MB)</label>
+          <input type="file" id="branding-logo-input" accept="image/png,image/jpeg,image/jpg"
+            style="font-size:13px;width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:6px;">
+        </div>
+
+        <!-- Nombre empresa -->
+        <div style="margin-bottom:24px;">
+          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">Nombre de tu organización</label>
+          <input type="text" id="branding-empresa" placeholder="Ej. Capacitaciones ACME S.A. de C.V."
+            style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:inherit;">
+          <p style="font-size:11px;color:#94a3b8;margin-top:4px;">Aparece en el pie de página de los documentos generados.</p>
+        </div>
+
+        <button id="branding-save-btn" onclick="guardarBranding()"
+          style="padding:10px 24px;border-radius:8px;border:none;background:#1F3B6D;color:white;font-size:13px;font-weight:600;cursor:pointer;">
+          Guardar branding
+        </button>
+        <span id="branding-msg" style="font-size:12px;margin-left:12px;"></span>
+      </div>
+    </div>
+
   </main>
 
   <!-- Modal: planeaciones de un usuario (desde tabla de usuarios) -->
@@ -419,6 +459,7 @@
         document.getElementById("perfilFormContainer").innerHTML = _htmlPerfilForm(_perfil);
         if (_perfil.curp) validarCurpInput();
       }
+      if (name === "branding") cargarBranding();
     }
 
     // ── Inner tabs (Usuarios & Acceso) ───────────────────────────
@@ -1010,6 +1051,61 @@
     function cerrarModalUserCursos(e) {
       if (!e || e.target === document.getElementById("modalUserCursos")) {
         document.getElementById("modalUserCursos").classList.remove("open");
+      }
+    }
+
+    // ── D#7: Branding ─────────────────────────────────────────────
+    async function cargarBranding() {
+      if (!_perfil) return;
+      const logoUrl = _perfil.branding_logo_url;
+      const empresa = _perfil.branding_empresa || "";
+      document.getElementById("branding-empresa").value = empresa;
+      const preview = document.getElementById("branding-logo-preview");
+      if (logoUrl) {
+        preview.innerHTML = `<img src="${logoUrl}" style="max-width:156px;max-height:76px;object-fit:contain;" onerror="this.parentElement.textContent='Logo no disponible'">`;
+      }
+    }
+
+    async function guardarBranding() {
+      const btn = document.getElementById("branding-save-btn");
+      const msg = document.getElementById("branding-msg");
+      const empresa = document.getElementById("branding-empresa").value.trim();
+      const file = document.getElementById("branding-logo-input").files[0];
+      btn.disabled = true; btn.textContent = "Guardando..."; msg.textContent = "";
+
+      try {
+        let logoUrl = _perfil.branding_logo_url || null;
+
+        // Subir logo si se seleccionó uno
+        if (file) {
+          if (file.size > 2 * 1024 * 1024) throw new Error("El logo debe pesar menos de 2 MB.");
+          const ext = file.name.split(".").pop().toLowerCase();
+          if (!["png","jpg","jpeg"].includes(ext)) throw new Error("Solo se aceptan PNG o JPG.");
+          const path = `${_perfil.id}/logo.${ext}`;
+          const { error: upErr } = await _supabase.storage
+            .from("branding")
+            .upload(path, file, { upsert: true, contentType: file.type });
+          if (upErr) throw new Error("Error al subir logo: " + upErr.message);
+          const { data: urlData } = _supabase.storage.from("branding").getPublicUrl(path);
+          logoUrl = urlData.publicUrl;
+        }
+
+        // Guardar en profiles
+        const updates = { branding_empresa: empresa };
+        if (logoUrl) updates.branding_logo_url = logoUrl;
+        const { error } = await _supabase.from("profiles").update(updates).eq("id", _perfil.id);
+        if (error) throw new Error(error.message);
+
+        _perfil.branding_empresa  = empresa;
+        _perfil.branding_logo_url = logoUrl;
+        cargarBranding();
+        msg.textContent = "✅ Guardado correctamente";
+        msg.style.color = "#16a34a";
+      } catch (err) {
+        msg.textContent = "⚠️ " + err.message;
+        msg.style.color = "#dc2626";
+      } finally {
+        btn.disabled = false; btn.textContent = "Guardar branding";
       }
     }
 

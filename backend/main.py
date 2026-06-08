@@ -402,7 +402,7 @@ def crear_zip_con_docx(docx_bytes: bytes, nombre: str = "objetivos_EC0217.docx")
 
 from generar_planeacion_v2 import generar_planeacion_docx_v2
 
-def generar_planeacion_docx(payload: dict) -> bytes:
+def generar_planeacion_docx(payload: dict, branding: dict | None = None) -> bytes:
     # Normalizar tecnicas: reconstruir rhDetalle/enDetalle si vienen vacíos
     tc = payload.get("tecnicas", {})
     if not tc.get("rhDetalle"):
@@ -420,7 +420,7 @@ def generar_planeacion_docx(payload: dict) -> bytes:
                                f"b) Dará las instrucciones de la técnica:\n{en_ins}")
     payload["tecnicas"] = tc
 
-    return generar_planeacion_docx_v2(payload)
+    return generar_planeacion_docx_v2(payload, branding=branding)
     
 
 
@@ -1875,6 +1875,21 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
         # D#9: comprobar caché por hash antes de regenerar
         user_id = getattr(request.state, "user", {}).get("sub")
         hash_actual = _payload_hash(data.model_dump())
+
+        # D#7: obtener branding del admin al que pertenece el instructor
+        _branding = None
+        try:
+            if user_id:
+                from database import get_supabase as _gs
+                _sb = _gs()
+                _prof = _sb.table("profiles").select("admin_id").eq("id", user_id).single().execute().data
+                _admin_id = (_prof or {}).get("admin_id") or user_id
+                _admin = _sb.table("profiles").select("branding_logo_url, branding_empresa") \
+                           .eq("id", _admin_id).single().execute().data or {}
+                if _admin.get("branding_logo_url") or _admin.get("branding_empresa"):
+                    _branding = {"logo_url": _admin.get("branding_logo_url"), "empresa": _admin.get("branding_empresa")}
+        except Exception as e_br:
+            print(f"[branding] No se pudo obtener branding: {repr(e_br)}")
         if user_id and data.planeacion_id:
             try:
                 from database import get_supabase
@@ -1900,7 +1915,7 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
         tipo_form = (data.evaluaciones.tipoInstrumentoFormativa or "").lower().strip()
 
         documentos = [
-            ("01_Documento_de_Planeacion_EC0217.docx",  lambda: generar_planeacion_docx(payload)),
+            ("01_Documento_de_Planeacion_EC0217.docx",  lambda: generar_planeacion_docx(payload, branding=_branding)),
             ("02_Evaluacion_Diagnostica.docx",           lambda: generar_evaluacion_diagnostica(data)),
             ("05_Evaluacion_Sumativa.docx",              lambda: generar_evaluacion_sumativa(data)),
             ("06_Evaluacion_Reaccion.docx",              lambda: generar_evaluacion_reaccion(data)),
