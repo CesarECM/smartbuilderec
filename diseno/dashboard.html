@@ -467,7 +467,7 @@
 
       const { data, error } = await _supabase
         .from("planeaciones")
-        .select("id, nombre_curso, paso_actual, status, updated_at, created_at")
+        .select("id, nombre_curso, paso_actual, status, updated_at, created_at, ultimo_zip_url")
         .eq("user_id", _perfil.id)
         .order("updated_at", { ascending: false });
 
@@ -546,6 +546,7 @@
                 <button class="btn-sm" onclick="abrirPlaneacion('${p.id}')">
                   ${esCompleta ? "Ver" : "Continuar"}
                 </button>
+                ${p.ultimo_zip_url ? `<button class="btn-sm secondary" onclick="redescargarZip('${p.id}', this)" title="Volver a descargar el último expediente generado">⬇</button>` : ''}
                 <button class="btn-sm secondary" onclick="iniciarRenombrar('${p.id}', this)" title="Renombrar">✏️</button>
                 <button class="btn-sm danger secondary" onclick="confirmarEliminar('${p.id}', '${(p.nombre_curso||'').replace(/'/g,"\\'")}', this)" title="Eliminar">🗑️</button>
               </div>
@@ -573,6 +574,33 @@
         else alert("No se pudo abrir el portal de facturación.");
       } catch (e) {
         alert("Error al conectar con el servidor.");
+      }
+    }
+
+    // D#6: Re-descargar último ZIP generado via signed URL
+    async function redescargarZip(planeacionId, btn) {
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        const BACKEND = "https://smartbuilderec.onrender.com";
+        const { data: { session } } = await _supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) throw new Error("Sin sesión");
+        const res = await fetch(`${BACKEND}/planeaciones/${planeacionId}/download`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const { url } = await res.json();
+        const a = document.createElement("a");
+        a.href = url; a.download = ""; a.target = "_blank";
+        document.body.appendChild(a); a.click(); a.remove();
+      } catch (err) {
+        alert("No se pudo descargar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = original;
       }
     }
 

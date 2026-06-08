@@ -1709,6 +1709,7 @@ def generate_doc_objetivos(data: ObjetivosRequest):
 
 import re
 import time as _time
+import hashlib
 
 # D#5: progreso real de generación de documentos (en memoria, por job_id)
 _progreso_jobs: dict = {}
@@ -1804,10 +1805,94 @@ def generate_doc_individual(nombre_doc: str, data: PlaneacionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _payload_hash(payload: dict) -> str:
+    """Hash MD5 del contenido del expediente (excluye metadatos)."""
+    copia = {k: v for k, v in payload.items() if k != "planeacion_id"}
+    return hashlib.md5(
+        json.dumps(copia, sort_keys=True, ensure_ascii=False).encode()
+    ).hexdigest()
+
+def _storage_path(user_id: str, planeacion_id: str) -> str:
+    return f"{user_id}/{planeacion_id}/ultimo.zip"
+
+def _subir_zip(user_id: str, planeacion_id: str, zip_bytes: bytes) -> str | None:
+    """Sube el ZIP a Supabase Storage. Devuelve el path o None si falla."""
+    try:
+        from database import get_supabase
+        sb = get_supabase()
+        path = _storage_path(user_id, planeacion_id)
+        sb.storage.from_("expedientes").upload(
+            path=path, file=zip_bytes,
+            file_options={"content-type": "application/zip", "upsert": "true"}
+        )
+        return path
+    except Exception as e:
+        print(f"[storage] Error al subir ZIP: {repr(e)}")
+        return None
+
+def _signed_url(user_id: str, planeacion_id: str, expires: int = 3600) -> str | None:
+    """Genera URL firmada para descargar el último ZIP."""
+    try:
+        from database import get_supabase
+        sb = get_supabase()
+        path = _storage_path(user_id, planeacion_id)
+        res = sb.storage.from_("expedientes").create_signed_url(path, expires)
+        return res.get("signedURL") or res.get("signed_url")
+    except Exception as e:
+        print(f"[storage] Error al generar signed URL: {repr(e)}")
+        return None
+
+@app.get("/planeaciones/{planeacion_id}/download")
+def descargar_ultimo_zip(planeacion_id: str, request: Request):
+    """Devuelve una signed URL de 1 hora para el último ZIP generado."""
+    try:
+        from database import get_supabase
+        user_id = request.state.user.get("sub")
+        sb = get_supabase()
+        row = sb.table("planeaciones").select("ultimo_zip_url, user_id") \
+                .eq("id", planeacion_id).single().execute().data
+        if not row:
+            raise HTTPException(status_code=404, detail="Planeación no encontrada.")
+        if row["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Sin acceso.")
+        if not row["ultimo_zip_url"]:
+            raise HTTPException(status_code=404, detail="Sin descarga previa para esta planeación.")
+        url = _signed_url(user_id, planeacion_id)
+        if not url:
+            raise HTTPException(status_code=500, detail="No se pudo generar el enlace de descarga.")
+        return {"url": url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/generate-doc/planeacion")
 def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
     try:
         _validar_expediente(data)
+
+        # D#9: comprobar caché por hash antes de regenerar
+        user_id = getattr(request.state, "user", {}).get("sub")
+        hash_actual = _payload_hash(data.model_dump())
+        if user_id and data.planeacion_id:
+            try:
+                from database import get_supabase
+                sb = get_supabase()
+                row = sb.table("planeaciones").select("payload_hash, ultimo_zip_url") \
+                        .eq("id", data.planeacion_id).single().execute().data
+                if row and row.get("payload_hash") == hash_actual and row.get("ultimo_zip_url"):
+                    zip_cached = sb.storage.from_("expedientes") \
+                                   .download(_storage_path(user_id, data.planeacion_id))
+                    if zip_cached:
+                        nombre_curso = limpiar_nombre_archivo(data.datos.nombreCurso or "EC0217")
+                        return StreamingResponse(
+                            io.BytesIO(zip_cached), media_type="application/zip",
+                            headers={"Content-Disposition": f"attachment; filename=Expediente_{nombre_curso}.zip",
+                                     "X-Cache": "HIT"}
+                        )
+            except Exception as e_cache:
+                print(f"[cache] Falló el chequeo, regenerando: {repr(e_cache)}")
 
         payload = data.model_dump()
         nombre_curso = (data.datos.nombreCurso or "EC0217").replace(" ", "_")
@@ -1901,18 +1986,30 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
         zip_buffer.seek(0)
         zip_bytes = zip_buffer.read()
 
-        # D#10: Registrar descarga en tabla descargas (best-effort, no bloquea la respuesta)
+        # D#6 + D#9 + D#10: Storage, caché y log de descarga (best-effort)
         try:
-            user_id = getattr(request.state, "user", {}).get("sub")
             if user_id and data.planeacion_id:
                 from database import get_supabase
-                get_supabase().table("descargas").insert({
+                sb = get_supabase()
+
+                # D#6: subir ZIP a Storage
+                path_storage = _subir_zip(user_id, data.planeacion_id, zip_bytes)
+
+                # D#9: actualizar hash y URL en planeaciones
+                update_payload = {"payload_hash": hash_actual}
+                if path_storage:
+                    update_payload["ultimo_zip_url"] = path_storage
+                sb.table("planeaciones").update(update_payload) \
+                  .eq("id", data.planeacion_id).execute()
+
+                # D#10: registrar descarga
+                sb.table("descargas").insert({
                     "planeacion_id": data.planeacion_id,
                     "user_id": user_id,
                     "num_docs": len(documentos),
                 }).execute()
         except Exception as e_log:
-            print(f"[log] Error registrando descarga: {repr(e_log)}")
+            print(f"[log] Error en post-generación: {repr(e_log)}")
 
         return StreamingResponse(
             io.BytesIO(zip_bytes),
