@@ -34,6 +34,7 @@ import base64 as _b64
 import json as _json
 
 _PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session", "/checkout/verify"}
+# SSE de progreso: accesible con JWT (el middleware lo verifica), pero también listado aquí para claridad
 _jwks_cache: dict = {}
 
 # Endpoints de soporte accesibles sin JWT (widget anónimo desde landing, pago, etc.)
@@ -1707,6 +1708,30 @@ def generate_doc_objetivos(data: ObjetivosRequest):
 
 
 import re
+import time as _time
+
+# D#5: progreso real de generación de documentos (en memoria, por job_id)
+_progreso_jobs: dict = {}
+
+@app.get("/generate-doc/progreso/{job_id}")
+async def progreso_generacion(job_id: str):
+    async def _stream():
+        for _ in range(60):  # máximo 60s de espera
+            estado = _progreso_jobs.get(job_id)
+            if estado:
+                completados = estado.get("completados", 0)
+                total       = estado.get("total", 10)
+                docs        = estado.get("docs", [])
+                pct         = round(completados / total * 100) if total else 0
+                yield f"data: {json.dumps({'completados': completados, 'total': total, 'pct': pct, 'ultimo': docs[-1] if docs else ''})}\n\n"
+                if completados >= total:
+                    _progreso_jobs.pop(job_id, None)
+                    break
+            else:
+                yield f"data: {json.dumps({'pct': 0, 'completados': 0, 'total': 10, 'ultimo': ''})}\n\n"
+            await asyncio.sleep(1)
+    return StreamingResponse(_stream(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 def limpiar_nombre_archivo(texto: str) -> str:
     texto = str(texto or "").strip()
@@ -1813,10 +1838,20 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
 
             zf.writestr(f"{instructor}_{fecha}.json", payload_json_bytes)
 
-            # Generar los 10 documentos en paralelo (reduce ~50 s → ~15 s)
+            # D#5: registrar progreso real por documento completado
+            _job_id = data.planeacion_id or "anon"
+            _progreso_jobs[_job_id] = {"total": len(documentos), "completados": 0, "docs": []}
+
+            def _wrap(nombre, gen):
+                result = gen()
+                _progreso_jobs[_job_id]["completados"] += 1
+                _progreso_jobs[_job_id]["docs"].append(nombre)
+                return result
+
+            # Generar los documentos en paralelo (reduce ~50 s → ~15 s)
             with ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {
-                    executor.submit(generador): nombre_archivo
+                    executor.submit(_wrap, nombre_archivo, generador): nombre_archivo
                     for nombre_archivo, generador in documentos
                 }
                 resultados = {}

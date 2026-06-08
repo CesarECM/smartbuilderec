@@ -351,21 +351,33 @@ function _cmDetectTitle(msg) {
         mainBtn.disabled = true;
         mainBtn.textContent = "⏳";
 
-        // Barra de progreso simulada mientras se generan los documentos
-        let progreso = 0;
+        // D#5: barra de progreso real via SSE, con fallback simulado
         const barraId = "sd-progreso-bar";
         let barraEl = document.getElementById(barraId);
         if (!barraEl) {
           barraEl = document.createElement("div");
           barraEl.id = barraId;
-          barraEl.style.cssText = "position:fixed;bottom:0;left:0;width:0%;height:4px;background:#1F3B6D;transition:width 0.5s;z-index:9999;";
+          barraEl.style.cssText = "position:fixed;bottom:0;left:0;width:0%;height:4px;background:#1F3B6D;transition:width 0.4s;z-index:9999;";
           document.body.appendChild(barraEl);
         }
         barraEl.style.width = "0%";
-        const progTimer = setInterval(() => {
-          progreso = Math.min(progreso + 3, 88);
-          barraEl.style.width = progreso + "%";
-        }, 800);
+        const planeacionId = localStorage.getItem("sbe_planeacion_id");
+        if (planeacionId) payload.planeacion_id = planeacionId;
+        let sse = null; let progTimer = null;
+        if (planeacionId && typeof getAuthHeaders === "function") {
+          try {
+            const hdrs = await getAuthHeaders();
+            const token = (hdrs["Authorization"] || "").replace("Bearer ", "");
+            if (token) {
+              sse = new EventSource(`${BACKEND_URL}/generate-doc/progreso/${planeacionId}?token=${encodeURIComponent(token)}`);
+              sse.onmessage = (e) => { try { const { pct } = JSON.parse(e.data); barraEl.style.width = Math.min(pct, 95) + "%"; } catch(_){} };
+            }
+          } catch(_) {}
+        }
+        if (!sse) {
+          let progreso = 0;
+          progTimer = setInterval(() => { progreso = Math.min(progreso + 3, 88); barraEl.style.width = progreso + "%"; }, 800);
+        }
 
         try {
         const response = await fetchConTimeout(`${BACKEND_URL}/generate-doc/planeacion`, {
@@ -406,7 +418,9 @@ function _cmDetectTitle(msg) {
         showAlert(`⚠️ ${mensajeAmigable(err)}`);
         console.error(err);
         } finally {
-        clearInterval(progTimer);
+        if (sse) sse.close();
+        if (progTimer) clearInterval(progTimer);
+        barraEl.style.width = "100%";
         setTimeout(() => { barraEl.style.width = "0%"; }, 600);
         mainBtn.disabled = false;
         mainBtn.textContent = "🧪";
