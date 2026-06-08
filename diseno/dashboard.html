@@ -104,6 +104,18 @@
     .norma-card-icon  { font-size: 28px; margin-bottom: 10px; display: block; }
     .norma-card-titulo { font-size: 14px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
     .norma-card-desc  { font-size: 12px; color: var(--c-text-2); line-height: 1.5; }
+    /* ── Tarjetas de cursos en lista importar ────────────────── */
+    .import-curso-card {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-md);
+      padding: 12px 16px; cursor: pointer; background: var(--c-surface);
+      transition: all var(--t-fast); text-align: left; font-family: inherit; width: 100%;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .import-curso-card:hover { border-color: var(--c-blue-600); background: #f0f7ff; }
+    .import-curso-card:disabled { opacity: 0.6; cursor: not-allowed; }
+    .import-curso-titulo { font-size: 14px; font-weight: 600; color: var(--c-text); }
+    .import-curso-meta  { font-size: 12px; color: var(--c-text-3); margin-top: 2px; }
+    .import-curso-arrow { font-size: 16px; color: var(--c-text-3); flex-shrink: 0; }
 
     /* ── Stats ───────────────────────────────────────────────── */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; margin-bottom: 28px; }
@@ -335,17 +347,70 @@
     </div>
   </main>
 
-  <!-- Modal: Seleccionar norma para nuevo expediente -->
+  <!-- Modal: Seleccionar norma → Importar → Lista cursos -->
   <div class="modal-overlay" id="modalNorma" style="display:none">
     <div class="modal-box modal-norma-box">
-      <h3>¿Qué expediente quieres crear?</h3>
-      <p>Selecciona la norma técnica de competencia laboral.</p>
-      <div class="norma-cards" id="normaCards">
-        <p class="loading-txt">Cargando...</p>
+
+      <!-- Panel 1: Selección de norma -->
+      <div id="panelSeleccionNorma">
+        <h3>¿Qué expediente quieres crear?</h3>
+        <p>Selecciona la norma técnica de competencia laboral.</p>
+        <div class="norma-cards" id="normaCards">
+          <p class="loading-txt">Cargando...</p>
+        </div>
+        <div class="modal-btns">
+          <button class="modal-btn-cancel" onclick="cerrarModalNorma()">Cancelar</button>
+        </div>
       </div>
-      <div class="modal-btns">
-        <button class="modal-btn-cancel" onclick="cerrarModalNorma()">Cancelar</button>
+
+      <!-- Panel 2: ¿Importar datos del EC0217? -->
+      <div id="panelImportarPregunta" style="display:none">
+        <div style="text-align:center;padding:4px 0 20px">
+          <span style="font-size:40px">📐</span>
+          <h3 style="margin:10px 0 6px">Nuevo EC0301.01</h3>
+          <p style="font-size:13px;color:var(--c-text-2);margin:0">
+            ¿Quieres importar los datos de un curso EC0217.01 existente?<br>
+            Esto pre-rellenará los 16 pasos del wizard automáticamente.
+          </p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+          <button class="norma-card" style="display:flex;align-items:center;gap:14px;text-align:left"
+            onclick="mostrarListaCursosImportar()">
+            <span style="font-size:26px;flex-shrink:0">📥</span>
+            <div>
+              <div class="norma-card-titulo">Sí, importar datos del EC0217</div>
+              <div class="norma-card-desc">Pre-rellena los 16 pasos con tu información ya capturada</div>
+            </div>
+          </button>
+          <button class="norma-card" style="display:flex;align-items:center;gap:14px;text-align:left"
+            onclick="iniciarEC0301SinImportar()">
+            <span style="font-size:26px;flex-shrink:0">🆕</span>
+            <div>
+              <div class="norma-card-titulo">No, empezar desde cero</div>
+              <div class="norma-card-desc">Wizard vacío para llenar manualmente</div>
+            </div>
+          </button>
+        </div>
+        <div class="modal-btns">
+          <button class="modal-btn-cancel" onclick="volverASeleccionNorma()">← Atrás</button>
+        </div>
       </div>
+
+      <!-- Panel 3: Lista de cursos EC0217 para importar -->
+      <div id="panelImportarLista" style="display:none">
+        <h3 style="margin-bottom:6px">Seleccionar curso a importar</h3>
+        <p style="font-size:13px;color:var(--c-text-2);margin-bottom:14px">
+          Elige el curso EC0217.01 cuyos datos quieres copiar al nuevo EC0301.01.
+        </p>
+        <div id="listaCursosImportar"
+          style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          <p class="loading-txt">Cargando cursos...</p>
+        </div>
+        <div class="modal-btns">
+          <button class="modal-btn-cancel" onclick="volverAPreguntaImportar()">← Atrás</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -908,13 +973,129 @@
 
     function cerrarModalNorma() {
       document.getElementById("modalNorma").style.display = "none";
+      _mostrarPanel("panelSeleccionNorma");
+    }
+
+    function _mostrarPanel(id) {
+      ["panelSeleccionNorma","panelImportarPregunta","panelImportarLista"].forEach(p => {
+        document.getElementById(p).style.display = p === id ? "" : "none";
+      });
     }
 
     function seleccionarNorma(norma) {
-      cerrarModalNorma();
       _limpiarLocalStorage();
-      localStorage.setItem("sbe_norma_activa", norma); // set AFTER limpiar
-      window.location.href = norma === "ec0301" ? "wizard-ec0301.html?new=1" : "index.html?new=1";
+      localStorage.setItem("sbe_norma_activa", norma);
+
+      if (norma === "ec0301") {
+        _mostrarPanel("panelImportarPregunta");
+        return;
+      }
+      cerrarModalNorma();
+      window.location.href = "index.html?new=1";
+    }
+
+    function volverASeleccionNorma() {
+      _mostrarPanel("panelSeleccionNorma");
+    }
+
+    function iniciarEC0301SinImportar() {
+      cerrarModalNorma();
+      window.location.href = "wizard-ec0301.html?new=1";
+    }
+
+    async function mostrarListaCursosImportar() {
+      _mostrarPanel("panelImportarLista");
+      const lista = document.getElementById("listaCursosImportar");
+      lista.innerHTML = '<p class="loading-txt">Cargando cursos EC0217...</p>';
+
+      try {
+        const { data, error } = await _supabase
+          .from("planeaciones")
+          .select("id, nombre_curso, updated_at, paso_actual")
+          .eq("user_id", _perfil.id)
+          .eq("norma", "ec0217")
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (!data?.length) {
+          lista.innerHTML = `
+            <p style="color:var(--c-text-3);font-size:13px;padding:12px 0;text-align:center">
+              No tienes cursos EC0217.01 disponibles.<br>
+              <button class="btn-sm" style="margin-top:10px" onclick="iniciarEC0301SinImportar()">
+                Empezar desde cero
+              </button>
+            </p>`;
+          return;
+        }
+
+        lista.innerHTML = data.map(p => `
+          <button class="import-curso-card" onclick="crearEC0301DesdeEC0217('${p.id}','${(p.nombre_curso||'Sin título').replace(/'/g,"\\'")}',this)">
+            <div>
+              <div class="import-curso-titulo">${p.nombre_curso || "(Sin título)"}</div>
+              <div class="import-curso-meta">Paso ${p.paso_actual}/16 · ${tiempoRelativo(p.updated_at)}</div>
+            </div>
+            <span class="import-curso-arrow">→</span>
+          </button>
+        `).join("");
+
+      } catch(err) {
+        lista.innerHTML = `<p class="error-txt">Error al cargar: ${err.message}</p>`;
+      }
+    }
+
+    function volverAPreguntaImportar() {
+      _mostrarPanel("panelImportarPregunta");
+    }
+
+    async function crearEC0301DesdeEC0217(idOrigen, nombreOrigen, btn) {
+      if (btn) { btn.disabled = true; btn.querySelector(".import-curso-arrow").textContent = "⏳"; }
+
+      try {
+        // Verificar límite de planeaciones
+        const { count } = await _supabase
+          .from("planeaciones")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", _perfil.id);
+        if (count >= 3) {
+          alert("Has alcanzado el límite de 3 expedientes. Elimina uno para crear otro.");
+          if (btn) { btn.disabled = false; btn.querySelector(".import-curso-arrow").textContent = "→"; }
+          return;
+        }
+
+        // Obtener datos del EC0217
+        const { data: origen, error } = await _supabase
+          .from("planeaciones")
+          .select("datos, nombre_curso")
+          .eq("id", idOrigen)
+          .single();
+        if (error || !origen) throw new Error("No se pudo cargar el curso de origen.");
+
+        // Crear nueva planeación EC0301 con los mismos datos
+        const nombreNuevo = (origen.nombre_curso || nombreOrigen || "Sin título");
+        const { data: nuevo, error: errInsert } = await _supabase
+          .from("planeaciones")
+          .insert({
+            user_id:      _perfil.id,
+            nombre_curso: nombreNuevo,
+            datos:        origen.datos || {},
+            paso_actual:  1,
+            norma:        "ec0301",
+          })
+          .select("id")
+          .single();
+        if (errInsert) throw errInsert;
+
+        // Apuntar al nuevo expediente y navegar al wizard
+        localStorage.setItem("sbe_planeacion_id", nuevo.id);
+        localStorage.setItem("sbe_norma_activa",  "ec0301");
+        cerrarModalNorma();
+        window.location.href = "wizard-ec0301.html";
+
+      } catch(err) {
+        if (btn) { btn.disabled = false; btn.querySelector(".import-curso-arrow").textContent = "→"; }
+        alert("Error al importar: " + err.message);
+      }
     }
 
     document.getElementById("modalNorma").addEventListener("click", e => {
