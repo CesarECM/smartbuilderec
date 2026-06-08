@@ -156,9 +156,10 @@
           if (total >= 3) { console.warn("[storage] Límite de 3 cursos."); return; }
         }
 
+        const normaActiva = _origGetItem("sbe_norma_activa") || "ec0217";
         const { data, error } = await _supabase
           .from("planeaciones")
-          .insert({ user_id: session.user.id, nombre_curso: nombreCurso, datos: estado, paso_actual: pasoActual })
+          .insert({ user_id: session.user.id, nombre_curso: nombreCurso, datos: estado, paso_actual: pasoActual, norma: normaActiva })
           .select("id").single();
         if (error) console.warn("[storage] Error al crear:", error.message);
         // Guardar el nuevo ID: en cache (admin) o localStorage (normal)

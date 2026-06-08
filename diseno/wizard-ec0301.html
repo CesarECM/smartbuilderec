@@ -1,115 +1,2474 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EC0301.01 — SmartBuilderEC</title>
-  <link rel="stylesheet" href="styles.css">
+  <!-- Safety: set norma before storage.js loads -->
+  <script>try { if (!localStorage.getItem("sbe_norma_activa")) localStorage.setItem("sbe_norma_activa", "ec0301"); } catch(_) {}</script>
   <style>
-    body { background: var(--c-bg); }
-    .dash-header {
-      background: var(--c-blue-700); padding: 0 32px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      height: 60px; position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    /* ── Modal importar EC0217 ─────────────────────────────── */
+    .modal-import-ec0217 {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 2000; align-items: center; justify-content: center; padding: 20px;
     }
-    .dash-header img { max-height: 38px; }
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .header-nombre { color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; }
-    .header-btn {
-      background: rgba(255,255,255,0.14); color: white; border: none;
-      padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 600;
-      font-family: inherit; cursor: pointer; text-decoration: none;
+    .modal-import-box {
+      background: var(--c-surface); border-radius: 16px; padding: 28px;
+      max-width: 480px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-height: 80vh; display: flex; flex-direction: column; gap: 16px;
+    }
+    .modal-import-header { display: flex; align-items: center; justify-content: space-between; }
+    .modal-import-header h3 { font-size: 16px; font-weight: 700; color: var(--c-text); margin: 0; }
+    .modal-import-close {
+      background: none; border: none; cursor: pointer; font-size: 18px;
+      color: var(--c-text-3); padding: 4px; border-radius: 4px;
       transition: background 0.15s;
     }
-    .header-btn:hover { background: rgba(255,255,255,0.26); }
+    .modal-import-close:hover { background: var(--c-surface-2); }
+    .modal-import-desc { font-size: 13px; color: var(--c-text-2); margin: 0; }
+    .import-lista { overflow-y: auto; max-height: 320px; display: flex; flex-direction: column; gap: 8px; }
+    .import-card {
+      border: 1.5px solid var(--c-border); border-radius: 10px;
+      padding: 14px 16px; cursor: pointer; background: var(--c-surface);
+      transition: all 0.15s; text-align: left; font-family: inherit; width: 100%;
+    }
+    .import-card:hover { border-color: var(--c-blue-600); background: #f0f7ff; }
+    .import-card-titulo { font-size: 14px; font-weight: 600; color: var(--c-text); margin-bottom: 4px; }
+    .import-card-meta   { font-size: 12px; color: var(--c-text-3); }
+    .wiz-nav-norma-badge {
+      background: rgba(220,252,231,0.2); color: #86efac; font-size: 11px;
+      font-weight: 700; padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase; white-space: nowrap;
+      border: 1px solid rgba(134,239,172,0.3);
+    }
+    .wiz-nav-import-btn {
+      background: rgba(255,255,255,0.12); border: none; color: rgba(255,255,255,0.85);
+      padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .wiz-nav-import-btn:hover { background: rgba(255,255,255,0.22); }
+  </style>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    /* ── Materiales section ─────────────────────────────── */
+    .materiales-bloque {
+      margin-bottom: 8px;
+    }
+    .materiales-bloque-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .materiales-bloque-header h3 {
+      margin: 0;
+    }
+    .materiales-bloque-header .btn-siguiente {
+      margin: 0;
+      padding: 8px 18px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .materiales-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1.5px solid #c5cfe8;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    .materiales-textarea:focus {
+      border-color: #1F3B6D;
+      outline: none;
+    }
+    .loader-materiales {
+      font-size: 13px;
+      color: #1F3B6D;
+      margin-bottom: 8px;
+      font-style: italic;
+    }
 
-    .coming-soon {
-      max-width: 560px; margin: 80px auto; padding: 0 24px; text-align: center;
+    /* ── Wizard navbar ──────────────────────────────────────── */
+    #wiz-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      height: 48px; background: var(--c-blue-700);
+      display: flex; align-items: center; padding: 0 16px; gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     }
-    .coming-soon-icon { font-size: 64px; margin-bottom: 24px; }
-    .coming-soon h1  { font-size: 24px; font-weight: 800; color: var(--c-text); margin-bottom: 12px; }
-    .coming-soon p   { font-size: 15px; color: var(--c-text-2); line-height: 1.6; margin-bottom: 8px; }
-    .badge-norma {
-      display: inline-block; background: #dcfce7; color: #166534;
-      font-size: 12px; font-weight: 700; padding: 4px 12px;
-      border-radius: 20px; margin-bottom: 24px; text-transform: uppercase;
+    .wiz-nav-back {
+      color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 600;
+      text-decoration: none; white-space: nowrap; padding: 5px 10px;
+      border-radius: 6px; background: rgba(255,255,255,0.12);
+      transition: background 0.15s;
     }
-    .progress-list {
-      background: var(--c-surface); border: 1px solid var(--c-border);
-      border-radius: var(--r-xl); padding: 20px 24px; text-align: left;
-      margin: 28px 0; list-style: none;
+    .wiz-nav-back:hover { background: rgba(255,255,255,0.22); color: white; }
+    .wiz-nav-curso {
+      flex: 1; text-align: center; color: rgba(255,255,255,0.6);
+      font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 0 8px;
     }
-    .progress-list li {
-      font-size: 13px; color: var(--c-text-2); padding: 6px 0;
-      border-bottom: 1px solid var(--c-border); display: flex; align-items: center; gap: 10px;
+    .wiz-nav-user { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    #wiz-nav-nombre {
+      color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; white-space: nowrap;
     }
-    .progress-list li:last-child { border-bottom: none; }
-    .progress-list li.done  { color: #059669; }
-    .progress-list li.next  { color: var(--c-blue-600); font-weight: 600; }
-    .btn-back {
-      background: var(--c-blue-600); color: white; border: none;
-      padding: 12px 24px; border-radius: var(--r-md); font-size: 14px; font-weight: 600;
-      font-family: inherit; cursor: pointer; text-decoration: none;
-      display: inline-flex; align-items: center; gap: 8px;
-      transition: background 0.15s; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    .wiz-nav-logout {
+      background: rgba(255,255,255,0.12); border: none; color: rgba(255,255,255,0.8);
+      padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background 0.15s; white-space: nowrap;
     }
-    .btn-back:hover { background: var(--c-blue-700); }
+    .wiz-nav-logout:hover { background: rgba(255,255,255,0.22); color: white; }
+    /* Empujar layout debajo del navbar */
+    .layout { margin-top: 48px !important; height: calc(100vh - 48px) !important; }
+    @media (max-width: 768px) {
+      .sidebar { top: 48px !important; height: calc(100vh - 48px) !important; }
+      .menu-toggle { top: 62px !important; }
+      #wiz-nav-nombre { display: none; }
+    }
   </style>
 </head>
+
 <body>
 
-  <header class="dash-header">
-    <img src="img/LogoECM.png" alt="CEECM">
-    <div class="header-right">
-      <span class="header-nombre" id="headerNombre"></span>
-      <button class="header-btn" onclick="logout()">Cerrar sesión</button>
+  <!-- Navbar de navegación superior -->
+  <nav id="wiz-nav">
+    <a href="dashboard.html" class="wiz-nav-back" id="wizNavBack">← Mi Panel</a>
+    <span class="wiz-nav-norma-badge">EC0301.01</span>
+    <button class="wiz-nav-import-btn" id="btnImportarEC0217" onclick="abrirModalImportarEC0217()">
+      📥 Importar del EC0217
+    </button>
+    <span id="wiz-nav-curso" class="wiz-nav-curso"></span>
+    <div class="wiz-nav-user">
+      <span id="wiz-nav-nombre"></span>
+      <button class="wiz-nav-logout" onclick="logout()">Salir</button>
     </div>
-  </header>
+  </nav>
 
-  <div class="coming-soon">
-    <div class="coming-soon-icon">📐</div>
-    <span class="badge-norma">EC0301.01</span>
-    <h1>Diseño de Cursos de Capital Humano</h1>
-    <p>El wizard para la norma <strong>EC0301.01</strong> está en desarrollo activo.</p>
-    <p>Podrás crear el <em>Manual del Instructor</em> y el <em>Manual del Participante</em>,
-       importando automáticamente los datos del expediente EC0217.01 correspondiente.</p>
+  <!-- Pestaña para salir del modo Focus — siempre visible en el borde izquierdo -->
+  <button id="btnFocusExit" title="Mostrar sidebar (Esc)">▶ SIDEBAR</button>
 
-    <ul class="progress-list">
-      <li class="done">✅ Sprint 1 — Base de datos, dashboard multi-norma y rol Editor</li>
-      <li class="next">🔄 Sprint 2 — Wizard EC0301 UI + importar datos del EC0217</li>
-      <li>⏳ Sprint 3 — Generación de documentos Word (Manual Instructor + Participante)</li>
-    </ul>
+  <button class="menu-toggle" id="menuToggle">
+    <i class="fa fa-bars"></i>
+  </button>
 
-    <a href="dashboard.html" class="btn-back">← Volver al dashboard</a>
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar">
+
+      <div class="logo-container">
+        <img src="img/LogoECM.png" alt="Logo CEECM" class="logo-img">
+      </div>
+
+      <!-- <div id="userMenu" style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;">
+        <span id="userNombre" style="color:rgba(255,255,255,0.8);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        <button onclick="logout()" title="Cerrar sesión" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">Salir</button>
+      </div> -->
+
+      <button id="btnFocusMode" title="Ocultar/mostrar barra lateral">⬅ Modo Focus</button>
+
+      <nav class="menu">
+        <ul class="nav-grupos">
+
+          <!-- ── Planeación ── -->
+          <li class="nav-grupo">
+            <div class="nav-grupo-header" data-grupo="planeacion">
+              <span>📋 Planeación</span>
+              <span class="nav-grupo-arrow">▾</span>
+            </div>
+            <ul class="nav-grupo-items open">
+              <li id="nav-datos" class="nav-item active">Datos del curso</li>
+              <li id="nav-objetivos" class="nav-item">Objetivos</li>
+              <li id="nav-beneficios" class="nav-item disabled">Beneficios</li>
+              <li id="nav-temario" class="nav-item disabled">Temario</li>
+            </ul>
+          </li>
+
+          <!-- ── Encuadre ── -->
+          <li class="nav-grupo">
+            <div class="nav-grupo-header" data-grupo="encuadre">
+              <span>🔲 Encuadre</span>
+              <span class="nav-grupo-arrow">▾</span>
+            </div>
+            <ul class="nav-grupo-items open">
+              <li id="nav-integracion" class="nav-item disabled">Técnica de integración</li>
+              <li id="nav-preguntas" class="nav-item disabled">Preguntas</li>
+              <li id="nav-reglas" class="nav-item disabled">Reglas</li>
+              <li id="nav-contrato" class="nav-item disabled">Contrato de aprendizaje</li>
+            </ul>
+          </li>
+
+          <!-- ── Desarrollo ── -->
+          <li class="nav-grupo">
+            <div class="nav-grupo-header" data-grupo="desarrollo">
+              <span>⚙️ Desarrollo</span>
+              <span class="nav-grupo-arrow">▾</span>
+            </div>
+            <ul class="nav-grupo-items open">
+              <li id="nav-expositiva" class="nav-item disabled">Técnica expositiva</li>
+              <li id="nav-demostrativa" class="nav-item disabled">Técnica demostrativa</li>
+              <li id="nav-energizante" class="nav-item disabled">Técnica energizante</li>
+              <li id="nav-dialogo" class="nav-item disabled">Técnica diálogo/discusión</li>
+            </ul>
+          </li>
+
+          <!-- ── Cierre ── -->
+          <li class="nav-grupo">
+            <div class="nav-grupo-header" data-grupo="cierre">
+              <span>🏁 Cierre</span>
+              <span class="nav-grupo-arrow">▾</span>
+            </div>
+            <ul class="nav-grupo-items open">
+              <li id="nav-cierre" class="nav-item disabled">Cierre</li>
+            </ul>
+          </li>
+
+          <!-- ── Evaluaciones ── -->
+          <li class="nav-grupo">
+            <div class="nav-grupo-header" data-grupo="evaluaciones">
+              <span>📊 Evaluaciones</span>
+              <span class="nav-grupo-arrow">▾</span>
+            </div>
+            <ul class="nav-grupo-items open">
+              <li id="nav-evaluaciones" class="nav-item disabled">Evaluaciones</li>
+            </ul>
+          </li>
+
+          <!-- ── Revisión Final del DGC ── -->
+          <li class="nav-grupo">
+            <div class="nav-grupo-header" data-grupo="revision">
+              <span>✅ Revisión Final</span>
+              <span class="nav-grupo-arrow">▾</span>
+            </div>
+            <ul class="nav-grupo-items open">
+              <li id="nav-tiempos" class="nav-item disabled">Tiempos</li>
+              <li id="nav-materiales" class="nav-item disabled">Materiales</li>
+            </ul>
+          </li>
+
+          <!-- ── Formatos adicionales ── -->
+          <li class="nav-grupo">
+            <div class="nav-grupo-header" data-grupo="formatos">
+              <span>📄 Formatos adicionales</span>
+              <span class="nav-grupo-arrow">▾</span>
+            </div>
+            <ul class="nav-grupo-items open">
+              <li id="nav-formatos" class="nav-item disabled">Formatos</li>
+            </ul>
+          </li>
+
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main">
+
+      <!-- ── Progress bar superior ── -->
+      <div id="progress-bar-container">
+        <div id="progress-bar-inner">
+          <span id="progress-step-label">Paso 1 — Datos del curso</span>
+          <div id="progress-track"><div id="progress-fill"></div></div>
+          <span id="progress-pct">0%</span>
+        </div>
+      </div>
+
+      <!-- ── Celebration overlay ── -->
+      <div id="celebration-overlay">
+        <div class="celebration-icon">🎉</div>
+        <div class="celebration-title">¡Expediente generado!</div>
+        <div class="celebration-sub">Tu ZIP con los 10 documentos se está descargando.</div>
+        <div class="celebration-bar"><div class="celebration-bar-fill"></div></div>
+      </div>
+
+      <!-- ── Toast container ── -->
+      <div id="toast-container"></div>
+
+      <!-- SECCIÓN 1: DATOS DEL CURSO -->
+      <section id="seccionDatos" class="wizard-section">
+        <p class="paso-titulo">Paso 1 de 16</p>
+        <h1>Datos del Curso</h1>
+
+        <!-- CARD DE IMPORTAR PLANEACIÓN -->
+        <div class="card" style="max-width:800px; margin-bottom:20px; border: 2px dashed #1F3B6D; background:#f0f4fb;">
+          <div style="display:flex; align-items:flex-start; gap:16px;">
+            <span style="font-size:36px; line-height:1;">📂</span>
+            <div style="flex:1;">
+              <h3 style="margin:0 0 6px 0; color:#1F3B6D;">¿Ya tienes una planeación guardada?</h3>
+              <p style="margin:0 0 14px 0; color:#444; font-size:14px;">
+                Si descargaste anteriormente el paquete completo, puedes importar el archivo
+                <strong>datos_planeacion_*.json</strong> que viene dentro del ZIP para
+                rellenar automáticamente todos los campos del sistema.
+              </p>
+              <label for="inputImportarJSON" class="btn-siguiente" style="display:inline-block; cursor:pointer; margin:0;">
+                📂 Importar planeación (.json)
+              </label>
+              <input type="file" id="inputImportarJSON" accept=".json" style="display:none;">
+              <span id="importarStatus" style="display:none; margin-left:14px; font-size:13px; color:#2e7d32; font-weight:600;"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="max-width: 800px;">
+          <div class="form-grid">
+
+            <div class="form-group full-width">
+              <label for="nombreCurso">Nombre del curso *</label>
+              <input type="text" id="nombreCurso" placeholder="Ej. Manejo de Extintores">
+              <span class="error-msg" id="err-nombreCurso">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="instructor">Instructor *</label>
+              <input type="text" id="instructor" placeholder="Nombre completo del instructor">
+              <span class="error-msg" id="err-instructor">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="disenador" style="display:flex; align-items:center; gap:8px;">
+                Diseñador *
+                <button type="button" id="btnCopiarInstructor" title="Copiar nombre del instructor"
+                  style="background:none; border:1.5px solid #1f3b6d; border-radius:6px; padding:2px 8px; font-size:11px; color:#1f3b6d; cursor:pointer; line-height:1.6;">
+                  <i class="fa fa-copy"></i> Usar el mismo nombre de instructor
+                </button>
+              </label>
+              <input type="text" id="disenador" placeholder="Nombre completo del diseñador">
+              <span class="error-msg" id="err-disenador">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="lugar">Lugar *</label>
+              <input type="text" id="lugar" placeholder="Ciudad o instalación">
+              <span class="error-msg" id="err-lugar">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="fecha">Fecha *</label>
+              <input type="date" id="fecha">
+              <span class="error-msg" id="err-fecha">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="duracion">Duración (minutos) *</label>
+              <input type="number" id="duracion" placeholder="Mínimo 120" min="120">
+              <span class="hint">Mínimo 120 minutos según EC0301.01</span>
+              <span class="error-msg" id="err-duracion">Mínimo 120 minutos.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="participantes">Número de participantes *</label>
+              <input type="number" id="participantes" placeholder="Mínimo 4" min="4">
+              <span class="hint">Mínimo 4 participantes según EC0301.01</span>
+              <span class="error-msg" id="err-participantes">Mínimo 4 participantes.</span>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="perfil">Perfil del participante *</label>
+              <textarea spellcheck="true" lang="es" id="perfil"
+                placeholder="Describe el perfil: puesto, experiencia previa, nivel educativo, etc.">
+                Conocimientos:
+                AHV:
+                Habilidades:
+                Valores:
+              </textarea>
+              <span class="error-msg" id="err-perfil">Este campo es requerido.</span>
+            </div>
+
+          </div>
+
+          <button class="btn-siguiente" id="btnSiguienteDatos">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 2: OBJETIVOS -->
+      <section id="seccionObjetivos" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 2 de 16</p>
+
+        <div class="modo-objetivos">
+          <p><strong>Modo estricto:</strong></p>
+
+          <button type="button" id="btnModoEstrictoOn" class="btn-modo active">
+            On
+          </button>
+
+          <button type="button" id="btnModoEstrictoOff" class="btn-modo">
+            Off
+          </button>
+        </div>
+
+
+        <div class="objetivos-tabs">
+          <button id="nav-cognitiva" class="nav-item active" type="button">
+            Cognitiva
+          </button>
+
+          <button id="nav-psicomotriz" class="nav-item disabled" type="button">
+            Psicomotriz
+          </button>
+
+          <button id="nav-afectiva" class="nav-item disabled" type="button">
+            Afectiva
+          </button>
+
+          <button id="nav-general" class="nav-item disabled" type="button">
+            General
+          </button>
+        </div>
+        <h1 id="sectionTitle">Objetivo Cognitivo</h1>
+
+        <div class="card input-card">
+          <textarea spellcheck="true" lang="es" id="objectiveInput"
+            placeholder="Redacta el objetivo cognitivo..."></textarea>
+
+            <button type="button" id="btnGenerarObjetivoGeneral" class="btn-siguiente" style="display:none;">
+              ✨ Generar objetivo general con IA
+            </button>
+          <button type="button" id="btnGuardarObjetivoLibre" class="btn-siguiente" style="display:none;">
+            Guardar objetivo
+          </button>
+          <button class="send-btn" id="sendBtn">Revisar con IA</button>
+        </div>
+
+        <div class="results">
+
+          <div class="card">
+            <div id="observacionesBox">
+              <h3>Observaciones</h3>
+              <ul class="checks" id="checksList">
+                <li id="chk-quien">❌ Quién</li>
+                <li id="chk-cuando">❌ Cuándo</li>
+                <li id="chk-accion">❌ Acción</li>
+                <li id="chk-objeto">❌ Objeto</li>
+                <li id="chk-condicion">❌ Condición</li>
+                <li id="chk-finalidad">❌ Finalidad</li>
+              </ul>
+            </div>
+
+            <div id="contenedorLoader1">
+              <div class="contenedor-loader">
+                <div class="rueda"></div>
+              </div>
+              <div class="cargando">Cargando...</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Resumen</h3>
+            <p id="summary">Aquí aparecerá el análisis automático.</p>
+
+            <button id="nextBtn" class="next-btn">
+              Siguiente →
+            </button>
+
+            <button id="btnGenerarGeneral" class="next-btn" style="display:none;">
+              ✨ Generar Objetivo General con IA
+            </button>
+
+            <button id="btnIrBeneficios" class="next-btn" style="display:none;">
+              Siguiente
+            </button>
+
+            <p id="mensajeDescarga" style="display: none; margin-top: 10px;"></p>
+
+            <div id="contenedorLoader2">
+              <div class="contenedor-loader">
+                <div class="rueda"></div>
+              </div>
+              <div class="cargando">Cargando...</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECCIÓN 3: BENEFICIOS -->
+      <section id="seccionBeneficios" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 3 de 16</p>
+        <h1>Beneficios del Curso</h1>
+
+        <div class="card" style="max-width: 900px;">
+          <p>
+            Los beneficios describen el valor práctico que obtendrán los participantes al terminar el curso.
+            Se presentan al grupo durante el encuadre para motivar su participación.
+          </p>
+          <p class="hint">
+            💡 <strong>Ejemplo:</strong> "Aplicarás técnicas seguras de operación de montacargas que reducen el riesgo de accidentes en el almacén."
+            Usa lenguaje directo y orientado a resultados concretos del trabajo diario.
+          </p>
+
+          <button class="btn-siguiente" id="btnGenerarBeneficios">
+            ✨ Generar beneficios con IA
+          </button>
+
+          <div id="loaderBeneficios" style="display:none; margin-top:15px;">
+            Generando beneficios...
+          </div>
+
+          <div class="form-group full-width" style="margin-top:20px;">
+            <label for="beneficiosTexto">Beneficios del curso *</label>
+            <textarea spellcheck="true" lang="es" id="beneficiosTexto" rows="12"
+              placeholder="Aquí aparecerán los beneficios generados. También puedes escribirlos manualmente."></textarea>
+            <span class="error-msg" id="err-beneficiosTexto">
+              Escribe al menos 3 beneficios.
+            </span>
+          </div>
+
+          <button class="btn-siguiente" id="btnGuardarBeneficios">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+            <!-- SECCIÓN 4: TEMARIO -->
+      <section id="seccionTemario" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 4 de 16</p>
+        <h1>Temario del Curso</h1>
+
+        <div class="card" style="max-width: 950px;">
+
+          <p>
+            Puedes usar la IA para generar un temario inicial a partir del objetivo general, o escribirlo completamente desde cero. Recuerda que el temario debe estar organizado en unidades y cada unidad debe contener al menos un tema.       
+          </p>
+
+          <button type="button" id="btnGenerarTemario" class="btn-siguiente">
+            ✨ Generar temas con IA
+          </button>
+
+          <strong>"Los temas generados son unicamente sugerencia"</strong>
+          <div id="loaderTemario" style="display:none; margin-top:15px;">
+            Generando temario...
+          </div>
+
+          <p>
+            Organiza los temas del curso en tres unidades. Cada unidad se relaciona con un tipo de objetivo:
+            cognitivo, psicomotriz y afectivo.
+          </p>
+
+          <!-- UNIDAD 1 -->
+          <div class="form-group full-width">
+            <h3>Unidad 1 — Técnica Expositiva</h3>
+            <p><strong>Relacionado con:</strong> Objetivo Cognitivo</p>
+
+            <div id="listaTemasU1" class="temas-lista"></div>
+
+            <div class="tema-input-row">
+              <input type="text" id="temaU1Input" placeholder="Escribe un tema para la unidad 1">
+
+              <button type="button" id="btnAgregarTemaU1" class="btn-siguiente">
+                Agregar temas
+              </button>
+            </div>
+
+            <span class="error-msg" id="err-u1">Agrega al menos un tema en la unidad 1.</span>
+          </div>
+
+          <hr>
+
+          <!-- UNIDAD 2 -->
+          <div class="form-group full-width">
+            <h3>Unidad 2 — Técnica Demostrativa</h3>
+            <p><strong>Relacionado con:</strong> Objetivo Psicomotriz</p>
+
+            <div id="listaTemasU2" class="temas-lista"></div>
+
+            <div class="tema-input-row">
+              <input type="text" id="temaU2Input" placeholder="Escribe un tema para la unidad 2">
+
+              <button type="button" id="btnAgregarTemaU2" class="btn-siguiente">
+                Agregar temas
+              </button>
+            </div>
+
+            <span class="error-msg" id="err-u2">Agrega al menos un tema en la unidad 2.</span>
+          </div>
+
+          <hr>
+
+          <!-- UNIDAD 3 -->
+          <div class="form-group full-width">
+            <h3>Unidad 3 — Técnica Diálogo/Discusión</h3>
+            <p><strong>Relacionado con:</strong> Objetivo Afectivo</p>
+
+            <div id="listaTemasU3" class="temas-lista"></div>
+
+            <div class="tema-input-row">
+              <input type="text" id="temaU3Input" placeholder="Escribe un tema para la unidad 3">
+              
+              <button type="button" id="btnAgregarTemaU3" class="btn-siguiente">
+                Agregar temas
+              </button>
+            </div>
+
+            <span class="error-msg" id="err-u3">Agrega al menos un tema en la unidad 3.</span>
+          </div>
+
+          <button class="btn-siguiente" id="btnGuardarTemario">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 5: ENCUADRE -->
+
+      <section id="seccionPreguntas" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 5 de 16</p>
+        <h1>Preguntas de Experiencia</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Las preguntas de experiencia se hacen al grupo al inicio del curso para conectar los temas con
+            la vida laboral de los participantes y crear un ambiente de participación.
+          </p>
+          <p class="hint">
+            💡 <strong>Ejemplo:</strong> "¿Alguna vez han visto o vivido un accidente con montacargas en su área de trabajo?
+            ¿Qué creen que lo causó?" — Deben ser abiertas, relacionadas con el tema y fáciles de responder.
+          </p>
+
+          <div class="form-group full-width">
+
+            <button type="button" id="btnGenerarPreguntas" class="btn-siguiente">
+              ✨ Generar preguntas con IA
+            </button>
+
+            <div id="loaderPreguntas" style="display:none; margin-top:15px;">
+              Generando preguntas...
+            </div>
+
+            <textarea
+            spellcheck="true" lang="es"
+              id="preguntasEncuadre"
+              rows="6"
+              placeholder="Aquí aparecerán 4 preguntas sugeridas por IA. También puedes escribirlas manualmente."
+            ></textarea>
+          </div>
+
+          <span class="error-msg" id="err-preguntas">
+            Escribe o genera al menos una pregunta para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarPreguntas">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionReglas" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 6 de 16</p>
+        <h1>Reglas del Curso</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Las reglas de operación se acuerdan con el grupo al inicio del encuadre para garantizar
+            un ambiente de aprendizaje respetuoso y organizado. Se mencionan en el contrato de aprendizaje.
+          </p>
+          <p class="hint">
+            💡 Selecciona las que apliquen a tu contexto. Puedes agregar una regla personalizada al final
+            si ninguna de las opciones cubre tu situación específica.
+          </p>
+
+          <hr>
+
+          <h3>Reglas del curso</h3>
+
+          <div class="checkbox-list">
+            <div class="regla-apartado">
+              <h4>Puntualidad</h4>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaPuntualidad"
+                  class="regla-check"
+                  value="Puntualidad: Entrada libre en cualquier momento."
+                >
+                Entrada libre en cualquier momento.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaPuntualidad"
+                  class="regla-check"
+                  value="Puntualidad: Tolerancia amplia; se puede entrar tarde si es una excepción justificada."
+                >
+                Tolerancia amplia; se puede entrar tarde si es una excepción justificada.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaPuntualidad"
+                  class="regla-check"
+                  value="Puntualidad: Tolerancia de 5-10 min; después se registra como retardo o falta."
+                >
+                Tolerancia de 5-10 min; después se registra como retardo o falta.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaPuntualidad"
+                  class="regla-check"
+                  value="Puntualidad: No hay acceso tras el inicio de la sesión."
+                >
+                No hay acceso tras el inicio de la sesión.
+              </label>
+            </div>
+
+            <div class="regla-apartado">
+              <h4>Limpieza / Espacio</h4>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaLimpiezaEspacio"
+                  class="regla-check"
+                  value="Limpieza / Espacio: Cada quien decide su orden."
+                >
+                Cada quien decide su orden.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaLimpiezaEspacio"
+                  class="regla-check"
+                  value="Limpieza / Espacio: El grupo es responsable de dejar el salón decente al final del día."
+                >
+                El grupo es responsable de dejar el salón decente al final del día.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaLimpiezaEspacio"
+                  class="regla-check"
+                  value="Limpieza / Espacio: Cada alumno debe limpiar su sitio específico antes de retirarse."
+                >
+                Cada alumno debe limpiar su sitio específico antes de retirarse.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaLimpiezaEspacio"
+                  class="regla-check"
+                  value="Limpieza / Espacio: Inspección de bancos y piso antes de permitir la salida del grupo."
+                >
+                Inspección de bancos y piso antes de permitir la salida del grupo.
+              </label>
+            </div>
+
+            <div class="regla-apartado">
+              <h4>Uso del Celular</h4>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaCelular"
+                  class="regla-check"
+                  value="Uso del Celular: Uso libre y constante."
+                >
+                Uso libre y constante.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaCelular"
+                  class="regla-check"
+                  value="Uso del Celular: Permitido sobre la mesa para consultas rápidas o si esperan una llamada."
+                >
+                Permitido sobre la mesa para consultas rápidas o si esperan una llamada.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaCelular"
+                  class="regla-check"
+                  value="Uso del Celular: Guardado en la mochila; solo se saca si el instructor lo pide para una actividad."
+                >
+                Guardado en la mochila; solo se saca si el instructor lo pide para una actividad.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaCelular"
+                  class="regla-check"
+                  value="Uso del Celular: Prohibido y guardado. Uso conlleva sanción o retiro del equipo."
+                >
+                Prohibido y guardado. Uso conlleva sanción o retiro del equipo.
+              </label>
+            </div>
+
+            <div class="regla-apartado">
+              <h4>Alimentos / Bebidas</h4>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaAlimentosBebidas"
+                  class="regla-check"
+                  value="Alimentos / Bebidas: Comida completa en el escritorio."
+                >
+                Comida completa en el escritorio.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaAlimentosBebidas"
+                  class="regla-check"
+                  value="Alimentos / Bebidas: Snacks y bebidas permitidas siempre que no generen ruido o basura."
+                >
+                Snacks y bebidas permitidas siempre que no generen ruido o basura.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaAlimentosBebidas"
+                  class="regla-check"
+                  value="Alimentos / Bebidas: Solo bebidas con tapa. Comida permitida únicamente en el receso."
+                >
+                Solo bebidas con tapa. Comida permitida únicamente en el receso.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaAlimentosBebidas"
+                  class="regla-check"
+                  value="Alimentos / Bebidas: Prohibido cualquier tipo de consumo, incluido chicle o agua."
+                >
+                Prohibido cualquier tipo de consumo, incluido chicle o agua.
+              </label>
+            </div>
+
+            <div class="regla-apartado">
+              <h4>Salidas del Aula</h4>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSalidasAula"
+                  class="regla-check"
+                  value="Salidas del Aula: Flujo constante de personas."
+                >
+                Flujo constante de personas.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSalidasAula"
+                  class="regla-check"
+                  value="Salidas del Aula: Salidas libres uno a la vez sin interrumpir la explicación."
+                >
+                Salidas libres "uno a la vez" sin interrumpir la explicación.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSalidasAula"
+                  class="regla-check"
+                  value="Salidas del Aula: Se debe pedir permiso visual o verbal antes de salir de la sesión."
+                >
+                Se debe pedir permiso visual o verbal antes de salir de la sesión.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSalidasAula"
+                  class="regla-check"
+                  value="Salidas del Aula: Salidas restringidas exclusivamente a los minutos de descanso."
+                >
+                Salidas restringidas exclusivamente a los minutos de descanso.
+              </label>
+            </div>
+
+            <div class="regla-apartado">
+              <h4>Solicitar la Palabra</h4>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSolicitarPalabra"
+                  class="regla-check"
+                  value="Solicitar la Palabra: Charla abierta, estilo café."
+                >
+                Charla abierta, estilo café.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSolicitarPalabra"
+                  class="regla-check"
+                  value="Solicitar la Palabra: Se puede interrumpir educadamente para aportar al hilo de la idea."
+                >
+                Se puede interrumpir educadamente para aportar al hilo de la idea.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSolicitarPalabra"
+                  class="regla-check"
+                  value="Solicitar la Palabra: Obligatorio levantar la mano y esperar a que el instructor ceda el turno."
+                >
+                Obligatorio levantar la mano y esperar a que el instructor ceda el turno.
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="reglaSolicitarPalabra"
+                  class="regla-check"
+                  value="Solicitar la Palabra: Solo se habla cuando el instructor lanza una pregunta directa."
+                >
+                Solo se habla cuando el instructor lanza una pregunta directa.
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="otraRegla">Otra regla</label>
+            <input
+              type="text"
+              id="otraRegla"
+              placeholder="Escribe otra regla si aplica"
+            >
+          </div>
+
+          <button type="button" id="btnCopiarReglas" class="btn-siguiente">
+            Añadir las opciones seleccionadas
+          </button><br>
+
+          <br><div class="form-group full-width">
+            <label for="reglasCursoTexto">Reglas del curso seleccionadas</label>
+            <strong>Las reglas que aparecen en este recuadro, seran las que aparecerán en los documentos finales</strong>
+            <textarea
+            spellcheck="true" lang="es"
+              id="reglasCursoTexto"
+              rows="7"
+              placeholder="Aquí aparecerán las reglas seleccionadas. Puedes editarlas antes de continuar."
+            ></textarea>
+          </div>
+
+          <hr>
+
+          <span id="err-reglas" class="error-msg">Agrega preguntas de experiencia o reglas del curso para continuar.</span>
+
+          <button class="btn-siguiente" id="btnGuardarReglas">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+
+      <section id="seccionContrato" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 7 de 16</p>
+        <h1>Contrato de Aprendizaje</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Selecciona los compromisos que formarán parte del contrato de aprendizaje.
+          </p>
+
+          <h3>Contrato de aprendizaje</h3>
+
+          <div class="checkbox-list">
+            <label>
+              <input type="checkbox" class="acuerdo-check" value="Me comprometo a participar activamente durante el curso">
+              Me comprometo a participar activamente durante el curso
+            </label>
+
+            <label>
+              <input type="checkbox" class="acuerdo-check" value="Me comprometo a realizar las actividades solicitadas">
+              Me comprometo a realizar las actividades solicitadas
+            </label>
+
+            <label>
+              <input type="checkbox" class="acuerdo-check" value="Me comprometo a respetar las opiniones de mis compañeros">
+              Me comprometo a respetar las opiniones de mis compañeros
+            </label>
+
+            <label>
+              <input type="checkbox" class="acuerdo-check" value="Me comprometo a cumplir con los tiempos establecidos">
+              Me comprometo a cumplir con los tiempos establecidos
+            </label>
+
+            <label>
+              <input type="checkbox" class="acuerdo-check" value="Me comprometo a aplicar los conocimientos adquiridos">
+              Me comprometo a aplicar los conocimientos adquiridos
+            </label>
+
+            <label>
+              <input type="checkbox" class="acuerdo-check" value="Me comprometo a mantener una actitud de respeto y colaboración">
+              Me comprometo a mantener una actitud de respeto y colaboración
+            </label>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="otroAcuerdo">Otro compromiso del contrato de aprendizaje</label>
+
+            <div class="tema-input-row">
+              <input
+                type="text"
+                id="otroAcuerdo"
+                placeholder="Escribe otro compromiso si aplica"
+              >
+
+              <button type="button" id="btnAgregarAcuerdo" class="btn-siguiente">
+                Agregar compromiso
+              </button>
+            </div>
+
+            <div id="listaAcuerdosPersonalizados" class="temas-lista"></div>
+          </div>
+
+          <span id="err-contrato" class="error-msg">Selecciona al menos un compromiso o escribe uno personalizado.</span>
+
+          <button class="btn-siguiente" id="btnGuardarContrato">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      
+      <section id="seccionIntegracion" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 8 de 16</p>
+        <h1>Técnica de Integración</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Selecciona una técnica integracion para facilitar la integración inicial del grupo.
+          </p>
+
+          <h3>Técnica de integración</h3>
+
+          <div class="radio-card-group">
+
+            <div id="detalleIntegracion" class="tecnica-detalle">
+              <input
+                type="text"
+                id="detalleIntegracionNombre"
+                class="tecnica-nombre-editable"
+                placeholder="Nombre de la técnica"
+              />
+
+              <div class="form-group full-width">
+                <label for="detalleIntegracionObjetivo">
+                  a) Explicará objetivo de la técnica:
+                </label>
+                <textarea spellcheck="true" lang="es" id="detalleIntegracionObjetivo" rows="4"></textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="detalleIntegracionInstrucciones">
+                  b) Dará las instrucciones de la técnica:
+                </label>
+                <textarea spellcheck="true" lang="es" id="detalleIntegracionInstrucciones" rows="10"></textarea>
+              </div>
+            </div>
+
+            <div class="radio-card-group tecnica-nombres">
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="bingo">
+                <div>
+                  <h4>El Bingo de Presentación</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="dos-verdades">
+                <div>
+                  <h4>Dos Verdades y Una Mentira</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="objetos-historia">
+                <div>
+                  <h4>Objetos con Historia (Secreto)</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="tombola">
+                <div>
+                  <h4>La Tómbola de Preguntas</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="red-similitudes">
+                <div>
+                  <h4>La Red de Similitudes (Round Robin)</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="circulo-cumpleanos">
+                <div>
+                  <h4>El Círculo de Cumpleaños (Mudo)</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="isla-desierta">
+                <div>
+                  <h4>La Isla Desierta</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="mapa-ficticio">
+                <div>
+                  <h4>El Mapa Ficticio</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="linea-tiempo">
+                <div>
+                  <h4>La Línea del Tiempo Compartida</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="telegrama">
+                <div>
+                  <h4>El Telegrama de 10 Palabras</h4>
+                </div>
+              </label>
+
+              <label class="radio-card tecnica-nombre-card">
+                <input type="radio" name="tecnicaIntegracion" value="personalizada">
+                <div>
+                  <h4>Personalizada</h4>
+                </div>
+              </label>
+
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-integracion">
+            Selecciona una técnica integracion para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarIntegracion">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+
+      <section id="seccionEnergizante" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 9 de 16</p>
+        <h1>Técnica Energizante</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Selecciona una técnica energizante para recuperar la atención, movimiento y participación del grupo.
+          </p>
+
+          <!-- DETALLE ARRIBA -->
+          <div id="detalleEnergizante" class="tecnica-detalle">
+            <input
+              type="text"
+              id="detalleEnergizanteNombre"
+              class="tecnica-nombre-editable"
+              placeholder="Nombre de la técnica"
+            />
+
+            <div class="form-group full-width">
+              <label for="detalleEnergizanteObjetivo">
+                a) Explicará objetivo de la técnica:
+              </label>
+              <textarea
+            spellcheck="true" lang="es"
+                id="detalleEnergizanteObjetivo"
+                rows="4"
+                placeholder="Aquí aparecerá o podrás escribir el objetivo de la técnica energizante."
+              ></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="detalleEnergizanteInstrucciones">
+                b) Dará las instrucciones de la técnica:
+              </label>
+              <textarea
+            spellcheck="true" lang="es"
+                id="detalleEnergizanteInstrucciones"
+                rows="10"
+                placeholder="Aquí aparecerán o podrás escribir las instrucciones de la técnica energizante."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- OPCIONES ABAJO -->
+          <h3>Técnica energizante</h3>
+
+          <div class="radio-card-group">
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="memorama">
+              <div>
+                <h4>Memorama</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="nudo-humano">
+              <div>
+                <h4>El Nudo Humano</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="zip-zap-boing">
+              <div>
+                <h4>Zip Zap Boing</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="respiracion-478">
+              <div>
+                <h4>Respiración 4-7-8</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="espejo">
+              <div>
+                <h4>El Espejo</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="palabras-encadenadas">
+              <div>
+                <h4>Palabras Encadenadas por Categoría</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="palmadas-ritmo">
+              <div>
+                <h4>Palmadas con Ritmo (Body Percussion)</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="secuencia-simon">
+              <div>
+                <h4>La Secuencia Simón</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="numero-prohibido">
+              <div>
+                <h4>El Número Prohibido</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="caminata-intenciones">
+              <div>
+                <h4>Caminata de Intenciones</h4>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="tecnicaEnergizante" value="personalizada">
+              <div>
+                <h4>Personalizada</h4>
+              </div>
+            </label>
+
+          </div>
+
+          <span class="error-msg" id="err-energizante">
+            Selecciona una técnica energizante y completa el objetivo e instrucciones para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarEnergizante">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionExpositiva" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 10 de 16</p>
+        <h1>Técnica Expositiva</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Completa la estructura de la técnica expositiva. Puedes generar sugerencias con IA y editarlas manualmente.
+          </p>
+
+          <h3>El instructor aplicará la técnica expositiva:</h3>
+
+          <div class="form-group full-width">
+            <label for="expObjetivo">
+              a) Presentará el objetivo del tema:
+            </label>
+            <textarea
+            spellcheck="true" lang="es"
+              id="expObjetivo"
+              rows="4"
+              readonly
+              placeholder="Aquí aparecerá automáticamente el objetivo cognitivo."
+            ></textarea>
+            <small>Este campo se toma del objetivo cognitivo y no se puede editar aquí.</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expIntroduccion">
+              b) Realizará una introducción general al contenido temático.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expIntroduccion" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="introduccion">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expExperiencia">
+              c) Recuperará la experiencia previa de los participantes, preguntando sobre sus conocimientos previos del contenido temático:
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expExperiencia" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="experiencia">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expDesarrollo">
+              d) Desarrollará el contenido.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expDesarrollo" rows="6"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="desarrollo">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expEjemplos">
+              e) Utilizará ejemplos relacionados con los temas y las situaciones cotidianas.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expEjemplos" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="ejemplos">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expSintesis">
+              f) Realizará la síntesis haciendo énfasis en los aspectos sobresalientes, invitando a los participantes a participar.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expSintesis" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="sintesis">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expPreguntas">
+              g) Planteará preguntas dirigidas que verifiquen la comprensión del tema.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expPreguntas" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="preguntas">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expUtilidad">
+              h) Promoverá comentarios sobre la utilidad y aplicación de los temas en su vida profesional y personal.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expUtilidad" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="utilidad">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-expositiva">
+            Completa todos los apartados de la técnica expositiva para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarExpositiva">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionDemostrativa" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 11 de 16</p>
+        <h1>Técnica Demostrativa</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Completa la estructura de la técnica demostrativa. Puedes generar sugerencias con IA y editarlas manualmente.
+          </p>
+
+          <h3>El instructor aplicará la técnica demostrativa:</h3>
+
+          <div class="form-group full-width">
+            <label for="demoObjetivo">
+              a) Presentará objetivo de la actividad a desarrollar:
+            </label>
+            <textarea
+            spellcheck="true" lang="es"
+              id="demoObjetivo"
+              rows="4"
+              readonly
+              placeholder="Aquí aparecerá automáticamente el objetivo psicomotriz."
+            ></textarea>
+            <small>Este campo se toma del objetivo psicomotriz y no se puede editar aquí.</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoExperiencia">
+              b) Recuperará la experiencia previa de los participantes.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoExperiencia" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="experiencia">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoActividad">
+              c) Presentará la actividad a desarrollar y mencionará el propósito de la misma.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoActividad" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="actividad">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoEjemplos">
+              h) Usará ejemplos relacionados con los temas y situaciones cotidianas.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoEjemplos" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="ejemplos">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoPreguntas">
+              i) Preguntará por los conocimientos adquiridos y la utilidad de lo aprendido en su actividad.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoPreguntas" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="preguntas">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-demostrativa">
+            Completa todos los apartados de la técnica demostrativa para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarDemostrativa">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionDialogo" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 12 de 16</p>
+        <h1>Técnica Diálogo/Discusión</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Completa la estructura de la técnica diálogo/discusión. Puedes generar sugerencias con IA y editarlas manualmente.
+          </p>
+
+          <h3>El instructor aplicará la técnica diálogo/discusión:</h3>
+
+          <div class="form-group full-width">
+            <label for="dialogoObjetivo">
+              a) Mencionará el objetivo de la técnica.
+            </label>
+            <textarea
+            spellcheck="true" lang="es"
+              id="dialogoObjetivo"
+              rows="4"
+              readonly
+              placeholder="Aquí aparecerá automáticamente el objetivo afectivo."
+            ></textarea>
+            <small>Este campo se toma del objetivo afectivo y no se puede editar aquí.</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoActividad">
+              b) Presentará la actividad a desarrollar.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoActividad" rows="5" placeholder="Redactar beneficio/propósito."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="actividad">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoInstrucciones">
+              d) Indicará las instrucciones de la actividad.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoInstrucciones" rows="6" placeholder="Redactar las instrucciones."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="instrucciones">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoEjemplos">
+              h) Utilizará ejemplos relacionados con los temas y las situaciones cotidianas.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoEjemplos" rows="5" placeholder="Redactar aquí 2 ejemplos relacionados con las situaciones cotidianas."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="ejemplos">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoConclusion">
+              i) Desarrollará junto con el grupo las conclusiones acerca del tema discutido y su utilidad.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoConclusion" rows="5" placeholder="Redactar una breve conclusión del tema."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="conclusion">
+                ✨ Generar con IA
+              </button>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-dialogo">
+            Completa todos los apartados de la técnica diálogo/discusión para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarDialogo">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionCierre" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 13 de 16</p>
+        <h1>Cierre</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            El cierre es la etapa final del curso donde el instructor refuerza lo aprendido,
+            motiva a los participantes a aplicar sus nuevos conocimientos y concluye la sesión.
+          </p>
+          <p class="hint">
+            💡 Primero genera o escribe el <strong>texto de cierre</strong> (la conclusión que leerás al grupo),
+            luego el sistema generará automáticamente el <strong>resumen</strong> para el documento de planeación.
+            Puedes editar ambos textos antes de continuar.
+          </p>
+
+          <!-- Resumen (con IA) -->
+          <div class="form-group full-width">
+            <label for="cierreResumen">Resumen</label>
+            <button type="button" id="btnGenerarResumen" class="btn-siguiente">
+              ✨ Generar resumen con IA
+            </button>
+            <div id="loaderResumen" style="display:none; margin-top:15px;">
+              Generando resumen...
+            </div>
+            <textarea
+            spellcheck="true" lang="es"
+              id="cierreResumen"
+              rows="8"
+              placeholder="Aquí aparecerá el resumen generado con IA. También puedes escribirlo manualmente."
+            ></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Sugerencias de continuidad de aprendizaje -->
+          <div class="form-group full-width">
+            <label for="sugerenciasContinuidad">Sugerencias de continuidad de aprendizaje</label>
+            <textarea
+            spellcheck="true" lang="es"
+              id="sugerenciasContinuidad"
+              rows="6"
+              placeholder="Escribe las sugerencias de continuidad de aprendizaje que se darán a los participantes."
+            ></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Referencias bibliográficas -->
+          <div class="form-group full-width">
+            <label for="referenciasBibliograficas">Referencias bibliográficas</label>
+            <textarea
+            spellcheck="true" lang="es"
+              id="referenciasBibliograficas"
+              rows="6"
+              placeholder="Enlista las referencias bibliográficas, fuentes de consulta o materiales recomendados."
+            ></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Compromisos (con IA) -->
+          <div class="form-group full-width">
+            <label for="compromisosTexto">Compromisos de aplicación del aprendizaje</label>
+            <button type="button" id="btnGenerarCompromisos" class="btn-siguiente">
+              ✨ Generar compromisos con IA
+            </button>
+            <div id="loaderCompromisos" style="display:none; margin-top:15px;">
+              Generando compromisos...
+            </div>
+            <textarea
+            spellcheck="true" lang="es"
+              id="compromisosTexto"
+              rows="8"
+              placeholder="Aquí aparecerán los compromisos generados con IA. También puedes escribirlos manualmente."
+            ></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Cierre (con IA) -->
+          <div class="form-group full-width">
+            <label for="cierreTexto">Cierre</label>
+            <button type="button" id="btnGenerarCierre" class="btn-siguiente">
+              ✨ Generar cierre con IA
+            </button>
+            <div id="loaderCierre" style="display:none; margin-top:15px;">
+              Generando cierre...
+            </div>
+            <textarea
+            spellcheck="true" lang="es"
+              id="cierreTexto"
+              rows="10"
+              placeholder="Aquí aparecerá el cierre generado con IA. También puedes escribirlo manualmente."
+            ></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Descripción general -->
+          <h3>Descripción general</h3>
+          <button type="button" id="btnGenerarDescripcionGeneral" class="btn-siguiente" disabled>
+            Crear descripción general
+          </button>
+          <div id="loaderDescripcionGeneral" style="display:none; margin-top:15px;">
+            Creando descripción general...
+          </div>
+          <div class="form-group full-width" style="margin-top:20px;">
+            <label for="descripcionGeneralEvaluacion">Descripción general</label>
+            <textarea
+            spellcheck="true" lang="es"
+              id="descripcionGeneralEvaluacion"
+              rows="8"
+              placeholder="Aquí aparecerá la descripción general."
+            ></textarea>
+          </div>
+
+          <span class="error-msg" id="err-cierre">
+            Escribe o genera el cierre para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarCierre">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionEvaluaciones" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 14 de 16</p>
+        <h1>Evaluaciones</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Define los instrumentos y porcentajes de evaluación que se utilizarán durante el curso.
+          </p>
+
+          <h3>Porcentajes de evaluación</h3>
+
+          <div class="evaluacion-porcentajes-card">
+
+            <div class="evaluacion-diagnostica-card">
+              <span>Evaluación diagnóstica</span>
+              <strong id="pctDiagnosticaLabel">0%</strong>
+              <small>La evaluación diagnóstica no tiene valor ponderado.</small>
+            </div>
+
+            <div class="evaluacion-valores">
+              <div class="evaluacion-valor-card">
+                <span class="evaluacion-label">Formativa</span>
+                <strong id="pctFormativaValor">50%</strong>
+              </div>
+
+              <div class="evaluacion-valor-card">
+                <span class="evaluacion-label">Sumativa</span>
+                <strong id="pctSumativaValor">50%</strong>
+              </div>
+            </div>
+
+            <div class="slider-contenedor">
+              <label for="sliderEvaluaciones">
+                Ajusta la distribución entre evaluación formativa y sumativa
+              </label>
+
+              <input
+                type="range"
+                id="sliderEvaluaciones"
+                min="0"
+                max="100"
+                step="5"
+                value="50"
+              >
+
+              <div class="slider-extremos">
+                <span>Formativa</span>
+                <span>Equilibrado</span>
+                <span>Sumativa</span>
+              </div>
+            </div>
+
+            <input type="hidden" id="pctDiagnostica" value="0">
+            <input type="hidden" id="pctFormativa" value="50">
+            <input type="hidden" id="pctSumativa" value="50">
+
+          </div>
+
+
+          <span class="hint">
+            La suma de evaluación formativa y sumativa debe ser 100%. La diagnóstica puede ser 0% porque normalmente solo identifica conocimientos previos.
+          </span>
+
+          <hr>
+
+          <h3>Instrumentos de evaluación</h3>
+
+          <div class="form-group full-width">
+            <label for="instDiagnostica">Evaluación diagnóstica</label>
+
+            <button type="button" id="btnGenerarDiagnostica" class="btn-siguiente">
+              ✨ Generar evaluación diagnóstica con IA
+            </button>
+
+            <div id="loaderDiagnostica" style="display:none; margin-top:15px;">
+              Generando evaluación diagnóstica...
+            </div>
+
+            <textarea
+            spellcheck="true" lang="es"
+              id="instDiagnostica"
+              rows="12"
+              placeholder="Aquí aparecerán 5 preguntas de opción múltiple."
+            ></textarea>
+          </div><br>
+
+          <div class="form-group full-width">
+            <label for="instFormativa">Instrumento de evaluación formativa</label>
+
+            <button type="button" id="btnGenerarFormativa" class="btn-siguiente">
+              ✨ Generar evaluación formativa con IA
+            </button>
+
+            <div id="loaderFormativa" style="display:none; margin-top:15px;">
+              Generando evaluación formativa...
+            </div>
+
+            <textarea
+            spellcheck="true" lang="es"
+              id="instFormativa"
+              rows="12"
+              placeholder="Aquí aparecerá una lista de cotejo o guía de observación generada con IA."
+            ></textarea>
+          </div>
+
+          <br>
+          <div class="form-group full-width">
+            <label for="instSumativa">Evaluación sumativa</label>
+
+            <button type="button" id="btnGenerarSumativa" class="btn-siguiente">
+              ✨ Generar evaluación sumativa con IA
+            </button>
+
+            <div id="loaderSumativa" style="display:none; margin-top:15px;">
+              Generando evaluación sumativa...
+            </div>
+
+            <textarea
+            spellcheck="true" lang="es"
+              id="instSumativa"
+              rows="12"
+              placeholder="Aquí aparecerán 5 preguntas de opción múltiple."
+            ></textarea>
+          </div>
+
+
+          <div class="form-group full-width">
+            <label for="instReac">Preguntas adicionales de evaluación de reacción <span class="hint">(opcional)</span></label>
+            <span class="hint">Agrega preguntas personalizadas que aparecerán al final de la encuesta de satisfacción.</span>
+            <textarea
+            spellcheck="true" lang="es"
+              id="instReac"
+              rows="5"
+              placeholder="Escribe aquí preguntas adicionales para la evaluación de reacción, una por línea."
+            ></textarea>
+          </div>
+
+          <span class="error-msg" id="err-evaluaciones">
+            Completa los porcentajes e instrumentos de evaluación. La suma de formativa y sumativa debe ser 100%.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarEvaluaciones">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionTiempos" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 15 de 16</p>
+        <h1>Distribución de Tiempos</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Ajusta los minutos de cada actividad para que el total sea exactamente <strong>120 minutos</strong>.
+            Todos los campos son editables — modifica los valores hasta que el contador llegue a 120.
+          </p>
+          <p class="hint">
+            💡 <strong>Sugerencia:</strong> Si te sobran o faltan minutos, ajusta primero las técnicas grupales
+            (Rompe Hielo, Energizante) o los descansos, ya que son las actividades más flexibles en duración.
+          </p>
+
+          <div id="tablaTiempos"></div>
+
+          <hr>
+
+          <div id="totalTiemposCard" class="total-tiempos-card">
+            <h3>Total general</h3>
+            <div>
+              <span id="totalTiempos" class="total-tiempos-numero">0</span>
+              <span>minutos</span>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-tiempos">
+            La suma total debe ser exactamente 120 minutos.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarTiempos">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 14B: MATERIALES -->
+      <section id="seccionMateriales" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 15B de 16</p>
+        <h1>Revisión Final: Materiales</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Revisa que las siguientes actividades indiquen de manera correcta los materiales que se van a requerir.
+            Puedes editarlos manualmente o usar los botones de IA para generarlos.
+          </p>
+          <p class="hint">
+            💡 <strong>Paso 1:</strong> Usa el botón de abajo para generar los materiales de cada técnica.
+            <strong>Paso 2:</strong> En la sección de clasificación, clasifícalos automáticamente en las categorías del EC0301.
+          </p>
+
+          <button type="button" id="btnGenerarTodosMateriales" class="btn-siguiente btn-ia" style="margin-bottom:8px;">
+            ✨ Generar materiales de todas las técnicas
+          </button>
+          <div id="loaderTodosMateriales" style="display:none; margin-bottom:16px; font-size:13px; color:var(--c-text-3);">
+            ⏳ Generando materiales con IA…
+          </div>
+
+          <hr style="margin:20px 0;">
+
+          <!-- Técnica de Integración -->
+          <div class="materiales-bloque">
+            <div class="materiales-bloque-header"><h3>Técnica de Integración</h3></div>
+            <div class="loader-materiales" id="loaderMat-integracion" style="display:none;">Generando materiales…</div>
+            <textarea spellcheck="true" lang="es" id="mat-integracion" class="materiales-textarea" rows="5"
+              placeholder="Los materiales de la técnica de integración aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Técnica Expositiva -->
+          <div class="materiales-bloque">
+            <div class="materiales-bloque-header"><h3>Técnica Expositiva</h3></div>
+            <div class="loader-materiales" id="loaderMat-expositiva" style="display:none;">Generando materiales…</div>
+            <textarea spellcheck="true" lang="es" id="mat-expositiva" class="materiales-textarea" rows="5"
+              placeholder="Los materiales de la técnica expositiva aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Técnica Demostrativa -->
+          <div class="materiales-bloque">
+            <div class="materiales-bloque-header"><h3>Técnica Demostrativa</h3></div>
+            <div class="loader-materiales" id="loaderMat-demostrativa" style="display:none;">Generando materiales…</div>
+            <textarea spellcheck="true" lang="es" id="mat-demostrativa" class="materiales-textarea" rows="5"
+              placeholder="Los materiales de la técnica demostrativa aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Técnica Energizante -->
+          <div class="materiales-bloque">
+            <div class="materiales-bloque-header"><h3>Técnica Energizante</h3></div>
+            <div class="loader-materiales" id="loaderMat-energizante" style="display:none;">Generando materiales…</div>
+            <textarea spellcheck="true" lang="es" id="mat-energizante" class="materiales-textarea" rows="5"
+              placeholder="Los materiales de la técnica energizante aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
+          </div>
+
+          <hr>
+
+          <!-- Técnica Diálogo/Discusión -->
+          <div class="materiales-bloque">
+            <div class="materiales-bloque-header"><h3>Técnica Diálogo/Discusión</h3></div>
+            <div class="loader-materiales" id="loaderMat-dialogo" style="display:none;">Generando materiales…</div>
+            <textarea spellcheck="true" lang="es" id="mat-dialogo" class="materiales-textarea" rows="5"
+              placeholder="Los materiales de la técnica diálogo/discusión aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
+          </div>
+
+          <hr>
+
+          <!-- ── Clasificación de requerimientos ── -->
+          <div id="seccion-clasificacion">
+            <h2 style="margin-bottom:6px;">Clasificación de requerimientos</h2>
+            <p class="hint" style="margin-bottom:18px;">
+              Toma el texto de cada técnica (generado arriba) y lo clasifica automáticamente en las
+              6 categorías oficiales del EC0217. Esta información poblará directamente la
+              <strong>Lista de Verificación de Requerimientos</strong>.
+            </p>
+
+            <button type="button" id="btnGenerarClasificacion" class="btn-siguiente btn-ia">
+              ✨ Clasificar materiales por categoría
+            </button>
+            <div id="loaderClasificacion" style="display:none; margin-top:12px; font-size:14px; color:var(--c-text-3);">
+              ⏳ Clasificando materiales con IA…
+            </div>
+
+            <div style="margin-top:24px; display:flex; flex-direction:column; gap:18px;">
+
+              <div class="form-group full-width">
+                <label for="req-instalaciones">Instalaciones, mobiliario y su distribución</label>
+                <textarea spellcheck="true" lang="es" id="req-instalaciones" rows="5"
+                  placeholder="Ej: • Aula con iluminación adecuada&#10;• Mesas y sillas para los participantes&#10;• Pintarrón"></textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="req-equipo">Equipo de apoyo</label>
+                <textarea spellcheck="true" lang="es" id="req-equipo" rows="5"
+                  placeholder="Ej: • Laptop del instructor&#10;• Proyector&#10;• Pantalla o pared blanca&#10;• Extensión eléctrica"></textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="req-materiales-didacticos">Materiales didácticos de apoyo y servicios</label>
+                <textarea spellcheck="true" lang="es" id="req-materiales-didacticos" rows="5"
+                  placeholder="Ej: • Hojas blancas (1 por participante)&#10;• Bolígrafos&#10;• Manual del participante"></textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="req-humanos">Requerimientos humanos</label>
+                <textarea spellcheck="true" lang="es" id="req-humanos" rows="4"
+                  placeholder="Ej: • Instructor certificado&#10;• Participantes registrados"></textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="req-otros">Otros requerimientos</label>
+                <textarea spellcheck="true" lang="es" id="req-otros" rows="4"
+                  placeholder="Materiales especiales de las dinámicas que no entran en las otras categorías."></textarea>
+              </div>
+
+              <div class="form-group full-width">
+                <label for="req-seguridad">Material y equipo para medidas de salud / seguridad / higiene / protección civil</label>
+                <textarea spellcheck="true" lang="es" id="req-seguridad" rows="4"
+                  placeholder="Ej: • Botiquín de primeros auxilios&#10;• Señalización de salidas de emergencia&#10;• Gel antibacterial"></textarea>
+              </div>
+
+            </div>
+          </div>
+
+          <hr>
+
+          <span class="error-msg" id="err-materiales">
+            Completa los materiales de al menos una técnica antes de continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarMateriales">
+            Siguiente
+          </button>
+        </div>
+      </section>
+
+      <section id="seccionFormatos" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 16 de 16</p>
+        <h1>Documentos EC0301.01</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            El sistema generará estos documentos a partir de la información ingresada en los 15 pasos anteriores.
+          </p>
+
+          <div class="formatos-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="formato-card">
+              <div style="font-size:36px;margin-bottom:14px;">📘</div>
+              <h3>Manual del Instructor</h3>
+              <p>
+                Guía completa para el instructor. Incluye planeación de sesión,
+                técnicas de enseñanza, instrumentos de evaluación y material de apoyo.
+              </p>
+              <span style="display:inline-block;background:#dbeafe;color:#1e40af;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;margin-top:10px;">Word (.docx)</span>
+            </div>
+            <div class="formato-card">
+              <div style="font-size:36px;margin-bottom:14px;">📗</div>
+              <h3>Manual del Participante</h3>
+              <p>
+                Material de apoyo para los participantes. Incluye contenidos por unidad,
+                actividades de aprendizaje y ejercicios prácticos.
+              </p>
+              <span style="display:inline-block;background:#dcfce7;color:#166534;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;margin-top:10px;">Word (.docx)</span>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;padding:16px 20px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:22px;flex-shrink:0;">🔧</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#92400e;">Generación de documentos — Sprint 3</div>
+              <div style="font-size:13px;color:#b45309;margin-top:3px;">Los documentos Word se generarán automáticamente en la próxima actualización.</div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+            <!-- app.js usa este ID; lo mantenemos oculto para que no crashee -->
+            <button type="button" id="btnDescargarPlaneacionFinal" style="display:none"></button>
+            <button type="button" id="btnGenerarEC0301" class="btn-siguiente"
+              disabled title="Disponible en Sprint 3"
+              style="opacity:0.55;cursor:not-allowed;">
+              Generar Manuales (próximamente)
+            </button>
+            <button type="button" id="btnGuardarProgresoEC0301" class="btn-siguiente"
+              style="background:var(--c-surface-2);color:var(--c-text);border:1.5px solid var(--c-border-s);"
+              onclick="guardarProgresoEC0301()">
+              💾 Guardar progreso
+            </button>
+          </div>
+
+          <div id="loaderFormatos" style="display:none;margin-top:15px;">Guardando...</div>
+          <p id="mensajeFormatos" style="display:none;margin-top:15px;"></p>
+        </div>
+      </section>
+
+    </main>
+
   </div>
+
+
+  <!-- Modal: Importar datos del EC0217 -->
+  <div id="modalImportarEC0217" class="modal-import-ec0217" style="display:none">
+    <div class="modal-import-box">
+      <div class="modal-import-header">
+        <h3>📥 Importar del EC0217.01</h3>
+        <button class="modal-import-close" onclick="cerrarModalImportarEC0217()">✕</button>
+      </div>
+      <p class="modal-import-desc">
+        Selecciona un curso del EC0217.01 para copiar sus datos a este expediente EC0301.01.
+        Los campos que rellenes manualmente no se sobreescribirán si ya existen.
+      </p>
+      <div class="import-lista" id="listaPlaneacionesEC0217">
+        <p style="color:var(--c-text-3);font-size:14px;padding:12px 0;">Cargando cursos...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ─── EC0301: Importar desde EC0217 ────────────────────────────────────────
+  (function() {
+
+    function tiempoRelativoEC0301(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const mins  = Math.floor(diff / 60000);
+      const horas = Math.floor(mins / 60);
+      const dias  = Math.floor(horas / 24);
+      if (mins  < 2)  return "Ahora mismo";
+      if (mins  < 60) return `Hace ${mins} min`;
+      if (horas < 24) return `Hace ${horas} h`;
+      if (dias  === 1) return "Ayer";
+      if (dias  < 7)  return `Hace ${dias} días`;
+      return new Date(dateStr).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+    }
+
+    window.abrirModalImportarEC0217 = async function() {
+      const modal = document.getElementById("modalImportarEC0217");
+      modal.style.display = "flex";
+      const lista = document.getElementById("listaPlaneacionesEC0217");
+      lista.innerHTML = '<p style="color:var(--c-text-3);font-size:14px;padding:12px 0;">Cargando cursos EC0217...</p>';
+
+      try {
+        const session = await getSession();
+        if (!session) return;
+
+        const { data, error } = await _supabase
+          .from("planeaciones")
+          .select("id, nombre_curso, updated_at, paso_actual")
+          .eq("user_id", session.user.id)
+          .eq("norma", "ec0217")
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (!data?.length) {
+          lista.innerHTML = '<p style="color:var(--c-text-3);font-size:14px;padding:12px 0;">No tienes cursos EC0217.01 disponibles para importar.</p>';
+          return;
+        }
+
+        lista.innerHTML = data.map(p => `
+          <button class="import-card"
+            onclick="importarDesdeEC0217('${p.id}', '${(p.nombre_curso || 'Sin título').replace(/'/g, "\\'")}')">
+            <div class="import-card-titulo">${p.nombre_curso || "(Sin título)"}</div>
+            <div class="import-card-meta">Paso ${p.paso_actual}/16 · ${tiempoRelativoEC0301(p.updated_at)}</div>
+          </button>
+        `).join("");
+
+      } catch(err) {
+        lista.innerHTML = `<p style="color:#dc2626;font-size:13px;padding:8px 0;">Error al cargar: ${err.message}</p>`;
+      }
+    };
+
+    window.cerrarModalImportarEC0217 = function() {
+      document.getElementById("modalImportarEC0217").style.display = "none";
+    };
+
+    document.getElementById("modalImportarEC0217").addEventListener("click", function(e) {
+      if (e.target === this) window.cerrarModalImportarEC0217();
+    });
+
+    window.importarDesdeEC0217 = async function(id, nombre) {
+      window.cerrarModalImportarEC0217();
+
+      const confirmado = await showConfirm(
+        `¿Importar los datos del curso "${nombre}" en este expediente EC0301.01?\n\nLa información ingresada actualmente se reemplazará.`,
+        { title: "Importar del EC0217.01", icon: "📥", confirmText: "Importar", cancelText: "Cancelar" }
+      );
+      if (!confirmado) return;
+
+      const btn = document.getElementById("btnImportarEC0217");
+      if (btn) { btn.disabled = true; btn.textContent = "⏳ Importando..."; }
+
+      try {
+        const { data, error } = await _supabase
+          .from("planeaciones")
+          .select("datos")
+          .eq("id", id)
+          .single();
+
+        if (error || !data) throw new Error("No se pudo cargar el curso EC0217.");
+
+        // Limpiar sesión EC0301 actual y cargar datos importados en cache
+        if (typeof storageSync !== "undefined") storageSync.limpiar();
+
+        // sbe_norma_activa se mantiene en real localStorage; no lo toca storageSync.limpiar()
+        // Asegurar que siga siendo 'ec0301'
+        localStorage.setItem("sbe_norma_activa", "ec0301");
+
+        // Restaurar datos en cache (interceptados por storage.js → _cache con prefijo ec0217_)
+        const datosImportados = data.datos || {};
+        Object.entries(datosImportados).forEach(([key, val]) => {
+          localStorage.setItem(
+            "ec0217_" + key,
+            typeof val === "string" ? val : JSON.stringify(val)
+          );
+        });
+
+        // Forzar sync: crea nueva planeación EC0301 en Supabase con los datos
+        if (typeof storageSync !== "undefined" && storageSync.syncNow) {
+          await storageSync.syncNow();
+        }
+
+        await showAlert(
+          `✅ Datos del curso "${nombre}" importados correctamente.\n\nLa página se recargará para mostrar todos los campos.`,
+          { title: "Importación exitosa", icon: "✅" }
+        );
+        window.location.reload();
+
+      } catch(err) {
+        if (btn) { btn.disabled = false; btn.textContent = "📥 Importar del EC0217"; }
+        await showAlert("⚠️ Error al importar: " + err.message);
+      }
+    };
+
+    // ── Guardar progreso manual ───────────────────────────────────────────────
+    window.guardarProgresoEC0301 = async function() {
+      const btn = document.getElementById("btnGuardarProgresoEC0301");
+      const msg = document.getElementById("mensajeFormatos");
+      if (btn) { btn.disabled = true; btn.textContent = "Guardando..."; }
+      try {
+        if (typeof storageSync !== "undefined" && storageSync.syncNow) {
+          await storageSync.syncNow();
+        }
+        if (msg) { msg.style.display = "block"; msg.style.color = "green"; msg.textContent = "✅ Progreso guardado correctamente."; }
+        if (btn) { btn.textContent = "✅ Guardado"; }
+        setTimeout(() => {
+          if (btn) { btn.disabled = false; btn.textContent = "💾 Guardar progreso"; }
+          if (msg) msg.style.display = "none";
+        }, 2500);
+      } catch(_) {
+        if (btn) { btn.disabled = false; btn.textContent = "💾 Guardar progreso"; }
+      }
+    };
+
+  })();
+  </script>
+
+  <script>
+  // ─── EC0301 placeholder para importar desde JSON (mantiene compat con app.js) ──
+  (function() {
+    const CLAVES = {
+      datos:        "ec0217_datos",
+      objetivos:    "ec0217_objetivos",
+      beneficios:   "ec0217_beneficios",
+      temario:      "ec0217_temario",
+      encuadre:     "ec0217_encuadre",
+      tecnicas:     "ec0217_tecnicas",
+      expositiva:   "ec0217_expositiva",
+      demostrativa: "ec0217_demostrativa",
+      dialogo:      "ec0217_dialogo",
+      cierre:       "ec0217_cierre",
+      evaluaciones: "ec0217_evaluaciones",
+      tiempos:      "ec0217_tiempos",
+      materiales:   "ec0217_materiales",
+    };
+
+    function normalizarEvaluaciones(ev) {
+      if (!ev) return {};
+      return {
+        pctDiagnostica:           ev.pctDiagnostica  ?? ev.pctDiag  ?? 0,
+        instDiagnostica:          ev.instDiagnostica ?? ev.instDiag ?? "",
+        pctFormativa:             ev.pctFormativa     ?? ev.pctForm  ?? 0,
+        instFormativa:            ev.instFormativa    ?? ev.instForm ?? "",
+        pctSumativa:              ev.pctSumativa      ?? ev.pctSuma  ?? 0,
+        instSumativa:             ev.instSumativa     ?? ev.instSuma ?? "",
+        instReac:                 ev.instReac                        ?? "",
+        tipoInstrumentoFormativa: ev.tipoInstrumentoFormativa        ?? "",
+        descripcionGeneral:       ev.descripcionGeneral              ?? "",
+      };
+    }
+
+    function cargarEnLocalStorage(jsonObj) {
+      if (!jsonObj || typeof jsonObj !== "object") throw new Error("Formato de archivo inválido.");
+      if (!jsonObj.datos || !jsonObj.datos.nombreCurso) throw new Error("El archivo no contiene datos de curso.");
+
+      if (jsonObj.evaluaciones) jsonObj.evaluaciones = normalizarEvaluaciones(jsonObj.evaluaciones);
+
+      for (const [campo, clave] of Object.entries(CLAVES)) {
+        if (jsonObj[campo] === undefined) continue;
+        // No sobreescribir tiempos con array vacío; la estructura default es mejor
+        if (campo === "tiempos" && Array.isArray(jsonObj[campo]) && jsonObj[campo].length === 0) continue;
+        const val = campo === "beneficios" && typeof jsonObj[campo] === "string"
+          ? jsonObj[campo].split("\n").filter(Boolean)
+          : jsonObj[campo];
+        localStorage.setItem(clave, JSON.stringify(val));
+      }
+
+      // Restaurar flags _completo para desbloquear la navegacion lateral.
+      // Si el JSON contiene datos de una seccion, se considera que esa seccion ya fue completada.
+      // "integracion" y "energizante" se guardan en el JSON bajo "tecnicas"
+      const flagMap = {
+        datos:        "datos",
+        objetivos:    "objetivos",
+        beneficios:   "beneficios",
+        temario:      "temario",
+        preguntas:    "preguntas",
+        reglas:       "reglas",
+        contrato:     "contrato",
+        integracion:  "tecnicas",
+        energizante:  "tecnicas",
+        tecnicas:     "tecnicas",
+        expositiva:   "expositiva",
+        demostrativa: "demostrativa",
+        dialogo:      "dialogo",
+        cierre:       "cierre",
+        evaluaciones: "evaluaciones",
+        tiempos:      "tiempos"
+      };
+      Object.entries(flagMap).forEach(([seccion, claveJSON]) => {
+        if (jsonObj[claveJSON] === undefined) return;
+        // No marcar tiempos como completo si el array está vacío
+        if (claveJSON === "tiempos" && Array.isArray(jsonObj[claveJSON]) && jsonObj[claveJSON].length === 0) return;
+        localStorage.setItem("ec0217_" + seccion + "_completo", "true");
+      });
+      // "datos" siempre se marca completo si los datos del curso son validos
+      localStorage.setItem("ec0217_datos_completo", "true");
+
+      return jsonObj.datos.nombreCurso;
+    }
+
+    function prerellenarPaso1(d) {
+      const campos = ["nombreCurso","instructor","disenador","lugar","fecha","duracion","participantes","perfil"];
+      for (const id of campos) {
+        const el = document.getElementById(id);
+        if (el && d[id] !== undefined && d[id] !== "") el.value = d[id];
+      }
+    }
+
+    document.getElementById("inputImportarJSON").addEventListener("change", async function() {
+      const file = this.files[0];
+      if (!file) return;
+      this.value = "";
+
+      const status = document.getElementById("importarStatus");
+      status.style.display = "inline";
+      status.style.color = "#1F3B6D";
+      status.textContent = "⏳ Leyendo archivo...";
+
+      try {
+        if (!file.name.endsWith(".json")) throw new Error("Solo se aceptan archivos .json. Extrae el archivo del ZIP primero.");
+
+        const text = await file.text();
+        let jsonObj;
+        try { jsonObj = JSON.parse(text); }
+        catch(_) { throw new Error("El archivo no es un JSON válido."); }
+
+        const nombreCurso = cargarEnLocalStorage(jsonObj);
+
+        // Prerellenar campos visibles del paso 1 inmediatamente
+        prerellenarPaso1(jsonObj.datos || {});
+
+        // Persistir en Supabase antes de recargar: el _cache (in-memory) se destruye
+        // en el reload, así que hay que guardarlo ahora para que init() lo recupere.
+        status.style.color = "#1F3B6D";
+        status.textContent = "⏳ Guardando en servidor...";
+        try {
+          if (typeof storageSync !== "undefined" && storageSync.syncNow) {
+            await storageSync.syncNow();
+          }
+        } catch (_) { /* no bloquear el reload si falla el sync */ }
+
+        status.style.color = "#2e7d32";
+        status.textContent = `✅ "${nombreCurso}" importado. Recargando...`;
+        setTimeout(() => window.location.reload(), 1200);
+
+        // Banner superior de confirmación
+        let banner = document.getElementById("banner-importado");
+        if (!banner) {
+          banner = document.createElement("div");
+          banner.id = "banner-importado";
+          Object.assign(banner.style, {
+            position:"fixed", top:"0", left:"0", right:"0", zIndex:"10000",
+            background:"#2e7d32", color:"#fff", padding:"10px 20px",
+            fontSize:"14px", display:"flex", alignItems:"center",
+            gap:"10px", boxShadow:"0 2px 6px rgba(0,0,0,0.3)"
+          });
+          document.body.prepend(banner);
+        }
+        banner.innerHTML =
+          "✅ <strong>Planeación importada:</strong> " + nombreCurso +
+          ". Todos los campos están prellenados. Revisa y continúa normalmente." +
+          " <button onclick=\"this.parentElement.remove()\" style=\"margin-left:auto;background:none;border:1px solid #fff;color:#fff;padding:2px 10px;border-radius:4px;cursor:pointer;\">✕</button>";
+        setTimeout(() => banner && banner.remove(), 10000);
+
+      } catch(err) {
+        status.style.color = "#c62828";
+        status.textContent = "⚠️ " + err.message;
+        console.error("Error importando:", err);
+      }
+    });
+
+    // Al cargar la página, prerellenar paso 1 si ya hay datos en localStorage
+    window.addEventListener("DOMContentLoaded", function() {
+      const raw = localStorage.getItem("ec0217_datos");
+      if (!raw) return;
+      try { prerellenarPaso1(JSON.parse(raw)); } catch(_) {}
+    });
+  })();
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
+  <script src="storage.js"></script>
+  <script src="shared.js"></script>
+  <script src="app.js"></script>
+
   <script>
-    async function init() {
-      const session = await authGuard();
-      if (!session) return;
+    // Poblar navbar EC0301: nombre del curso y del usuario
+    (async function () {
+      // Asegurar norma activa (por si acaso la limpieza la borró)
+      try { localStorage.setItem("sbe_norma_activa", "ec0301"); } catch(_) {}
 
-      const perfil = await getUserProfile();
-      if (!perfil) { window.location.href = "login.html"; return; }
-
-      document.getElementById("headerNombre").textContent =
-        [perfil.nombre, perfil.apellido].filter(Boolean).join(" ") || perfil.email;
-
-      // Si viene con ?new=1 limpiar cualquier sesión EC0301 anterior
-      if (new URLSearchParams(window.location.search).get("new") === "1") {
-        Object.keys(localStorage)
-          .filter(k => k.startsWith("ec0301_"))
-          .forEach(k => localStorage.removeItem(k));
-        localStorage.removeItem("sbe_planeacion_id");
-        localStorage.setItem("sbe_norma_activa", "ec0301");
-      }
-    }
-
-    init();
+      try {
+        const raw = localStorage.getItem("ec0217_datos");
+        if (raw) {
+          const d = JSON.parse(raw);
+          const nombre = d.nombreCurso || d.nombre_curso || "";
+          if (nombre) document.getElementById("wiz-nav-curso").textContent = nombre;
+        }
+      } catch (_) {}
+      try {
+        const perfil = await getUserProfile();
+        if (perfil) {
+          const nombre = [perfil.nombre, perfil.apellido].filter(Boolean).join(" ") || perfil.email;
+          document.getElementById("wiz-nav-nombre").textContent = nombre;
+          const back = document.getElementById("wizNavBack");
+          if (back) {
+            if (perfil.rol === "super_admin") back.href = "superadmin.html";
+            else if (perfil.rol === "admin")  back.href = "admin.html";
+          }
+        }
+      } catch (_) {}
+    })();
   </script>
-  <script src="soporte-widget.js"></script>
+<script src="soporte-widget.js"></script>
 </body>
 </html>
+

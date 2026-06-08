@@ -913,6 +913,7 @@
     function seleccionarNorma(norma) {
       cerrarModalNorma();
       _limpiarLocalStorage();
+      localStorage.setItem("sbe_norma_activa", norma); // set AFTER limpiar
       window.location.href = norma === "ec0301" ? "wizard-ec0301.html?new=1" : "index.html?new=1";
     }
 
