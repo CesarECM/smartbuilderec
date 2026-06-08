@@ -397,71 +397,29 @@ def crear_zip_con_docx(docx_bytes: bytes, nombre: str = "objetivos_EC0217.docx")
     return zip_buffer.read()
 
 
-# ─── Generación del Documento de Planeación (Node.js) ────────────────────────
+# ─── Generación del Documento de Planeación (Python — D#4) ──────────────────
+
+from generar_planeacion_v2 import generar_planeacion_docx_v2
 
 def generar_planeacion_docx(payload: dict) -> bytes:
-    script_path = BASE_DIR / "generar_planeacion.js"
-    if not script_path.exists():
-        raise FileNotFoundError("No se encontró generar_planeacion.js en el backend")
-
-    # Normalizar evaluaciones: el frontend puede mandar pctDiag o pctDiagnostica, etc.
-    ev = payload.get("evaluaciones", {})
-    payload["evaluaciones"] = {
-        "pctDiagnostica":          ev.get("pctDiagnostica", ev.get("pctDiag", 0)),
-        "instDiagnostica":         ev.get("instDiagnostica", ev.get("instDiag", "")),
-        "pctFormativa":            ev.get("pctFormativa",    ev.get("pctForm", 0)),
-        "instFormativa":           ev.get("instFormativa",   ev.get("instForm", "")),
-        "pctSumativa":             ev.get("pctSumativa",     ev.get("pctSuma", 0)),
-        "instSumativa":            ev.get("instSumativa",    ev.get("instSuma", "")),
-        "instReac":                ev.get("instReac", ""),
-        "descripcionGeneral":      ev.get("descripcionGeneral", ""),
-        "tipoInstrumentoFormativa": ev.get("tipoInstrumentoFormativa", ""),
-    }
-
-    # Normalizar tecnicas: asegurar que rhDetalle y enDetalle estén presentes.
-    # El frontend los construye pero si vienen vacíos los reconstruimos desde objetivo+instrucciones.
+    # Normalizar tecnicas: reconstruir rhDetalle/enDetalle si vienen vacíos
     tc = payload.get("tecnicas", {})
-    rh_objetivo     = tc.get("rhObjetivo", "")
-    rh_instrucciones = tc.get("rhInstrucciones", "")
-    en_objetivo     = tc.get("enObjetivo", "")
-    en_instrucciones = tc.get("enInstrucciones", "")
-
-    if not tc.get("rhDetalle") and (rh_objetivo or rh_instrucciones):
-        tc["rhDetalle"] = (
-            f"a) Explicará objetivo de la técnica:\n{rh_objetivo}\n\n"
-            f"b) Dará las instrucciones de la técnica:\n{rh_instrucciones}\n\n"
-            f"c) Mencionará el tiempo para realizarla.\n\n"
-            f"d) Propiciará la participación del grupo.\n\n"
-            f"e) Integrará al grupo.\n\n"
-            f"f) Controlará el tiempo."
-        )
-    if not tc.get("enDetalle") and (en_objetivo or en_instrucciones):
-        tc["enDetalle"] = (
-            f"a) Explicará objetivo de la técnica:\n{en_objetivo}\n\n"
-            f"b) Dará las instrucciones de la técnica:\n{en_instrucciones}"
-        )
-    # Asegurar que enObjetivo también esté en el nivel raíz de tecnicas para el JS
-    if not tc.get("enObjetivo") and en_objetivo:
-        tc["enObjetivo"] = en_objetivo
+    if not tc.get("rhDetalle"):
+        rh_obj = tc.get("rhObjetivo", ""); rh_ins = tc.get("rhInstrucciones", "")
+        if rh_obj or rh_ins:
+            tc["rhDetalle"] = (f"a) Explicará objetivo de la técnica:\n{rh_obj}\n\n"
+                               f"b) Dará las instrucciones de la técnica:\n{rh_ins}\n\n"
+                               f"c) Mencionará el tiempo para realizarla.\n\n"
+                               f"d) Propiciará la participación del grupo.\n\n"
+                               f"e) Integrará al grupo.\n\nf) Controlará el tiempo.")
+    if not tc.get("enDetalle"):
+        en_obj = tc.get("enObjetivo", ""); en_ins = tc.get("enInstrucciones", "")
+        if en_obj or en_ins:
+            tc["enDetalle"] = (f"a) Explicará objetivo de la técnica:\n{en_obj}\n\n"
+                               f"b) Dará las instrucciones de la técnica:\n{en_ins}")
     payload["tecnicas"] = tc
 
-    payload_json = json.dumps(payload, ensure_ascii=False)
-    result = subprocess.run(
-        ["node", str(script_path)],
-        input=payload_json.encode("utf-8"),
-        capture_output=True,
-        cwd=str(BASE_DIR),
-        timeout=30
-    )
-
-    stderr_msg = result.stderr.decode("utf-8", errors="replace").strip()
-    if result.returncode != 0 or not result.stdout:
-        raise RuntimeError(f"Error al generar el documento: {stderr_msg or 'stdout vacío'}")
-
-    try:
-        return base64.b64decode(result.stdout)
-    except Exception as e:
-        raise RuntimeError(f"Error al decodificar base64: {e}. stderr: {stderr_msg}")
+    return generar_planeacion_docx_v2(payload)
     
 
 
