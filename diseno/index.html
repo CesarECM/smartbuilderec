@@ -123,6 +123,20 @@
         <button onclick="logout()" title="Cerrar sesión" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;">Salir</button>
       </div> -->
 
+      <!-- W#1: indicador de guardado | W#2: progreso global -->
+      <div id="sbe-sidebar-status" style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div id="sbe-sync-status" style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px;">
+          <span id="sbe-sync-icon">☁️</span>
+          <span id="sbe-sync-text">Sincronizado</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+            <div id="sbe-progress-bar" style="height:100%;width:0%;background:#4ade80;border-radius:2px;transition:width 0.4s ease;"></div>
+          </div>
+          <span id="sbe-progress-label" style="font-size:10px;color:rgba(255,255,255,0.4);white-space:nowrap;">0 / 16</span>
+        </div>
+      </div>
+
       <button id="btnFocusMode" title="Ocultar/mostrar barra lateral">⬅ Modo Focus</button>
 
       <nav class="menu">

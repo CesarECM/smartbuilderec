@@ -115,14 +115,20 @@
 
   // ── Sincronización a Supabase ─────────────────────────────────────────────
 
+  function _emitir(nombre, detalle) {
+    window.dispatchEvent(new CustomEvent(nombre, { detail: detalle }));
+  }
+
   function scheduleSyncToSupabase() {
     clearTimeout(_syncTimer);
+    _emitir("sbe:sync-pending");
     _syncTimer = setTimeout(syncToSupabase, DEBOUNCE_MS);
   }
 
   async function syncToSupabase() {
     if (_syncing) return;
     _syncing = true;
+    _emitir("sbe:sync-start");
     try {
       const session = await getSession();
       if (!session) return;
@@ -132,6 +138,7 @@
 
       const nombreCurso  = estado.datos?.nombreCurso || "Sin título";
       const pasoActual   = calcularPasoActual(estado);
+      _emitir("sbe:progress", { paso: pasoActual, total: 16 });
       // getItem ya va al cache cuando corresponde
       const planeacionId = localStorage.getItem("sbe_planeacion_id");
 
@@ -141,7 +148,10 @@
           .from("planeaciones")
           .update({ datos: estado, nombre_curso: nombreCurso, paso_actual: pasoActual })
           .eq("id", planeacionId);
-        if (error) console.warn("[storage] Error al actualizar:", error.message);
+        if (error) {
+          console.warn("[storage] Error al actualizar:", error.message);
+          _emitir("sbe:sync-error");
+        }
 
       } else if (!_adminMode) {
         // INSERT solo en modo normal (nunca crear planeación en modo admin-edit)
@@ -169,10 +179,14 @@
           .from("planeaciones")
           .insert({ user_id: session.user.id, nombre_curso: nombreCurso, datos: estado, paso_actual: pasoActual })
           .select("id").single();
-        if (error) console.warn("[storage] Error al crear:", error.message);
+        if (error) {
+          console.warn("[storage] Error al crear:", error.message);
+          _emitir("sbe:sync-error");
+        }
         // Guardar el nuevo ID: en cache (admin) o localStorage (normal)
         if (data?.id) localStorage.setItem("sbe_planeacion_id", data.id);
       }
+      _emitir("sbe:sync-ok");
     } finally {
       _syncing = false;
     }
