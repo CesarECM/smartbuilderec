@@ -334,6 +334,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
+  <script src="env.js"></script>
   <script>
     let _perfil = null;
     let _editandoNormaId = null;
@@ -496,7 +497,7 @@
 
     // ── Editor de Schemas ─────────────────────────────────────────────────────
 
-    const API_BASE = "https://smartbuilderec.onrender.com";
+    const API_BASE = window.SBE_API || "https://smartbuilderec.onrender.com";
     let _seNormaId  = null;
     let _seSchema   = null;
     let _seSelected = null; // { type: "seccion"|"paso"|"campo", secIdx, pasoIdx, campoIdx }

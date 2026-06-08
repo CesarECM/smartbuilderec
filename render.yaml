@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: smartbuilderec-api-preview
+    runtime: python
+    repo: https://github.com/CesarECM/smartbuilderec
+    branch: feature/ec0301-wizard
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://smartbuilderec-git-feature-ec0301-wizard-directorio-conocer-s-projects.vercel.app
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_INSTRUCTOR
+        sync: false

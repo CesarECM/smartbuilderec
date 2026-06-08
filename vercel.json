@@ -1,5 +1,5 @@
 {
   "outputDirectory": "diseno",
-  "buildCommand": "",
+  "buildCommand": "node -e \"require('fs').writeFileSync('diseno/env.js', 'window.SBE_API=\\\"' + (process.env.SBE_API_URL || 'https://smartbuilderec.onrender.com') + '\\\";');\"",
   "framework": null
 }

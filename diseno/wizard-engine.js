@@ -4,7 +4,7 @@
  * URL: /diseno/wizard-engine.html?norma=ec0217[&instancia=<uuid>]
  */
 
-const API = "https://smartbuilderec.onrender.com";
+const API = window.SBE_API || "https://smartbuilderec.onrender.com";
 const SAVE_DEBOUNCE_MS = 2000;
 
 const Engine = {
