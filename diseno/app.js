@@ -4576,8 +4576,53 @@ if (btnGuardarTiempos) {
 
 
 
+function validarExpedienteCompleto() {
+  const errores = [];
+
+  // 1. Porcentajes de evaluación deben sumar 100%
+  const ev = getData("ec0217_evaluaciones") || {};
+  const pctDiag = ev.pctDiagnostica ?? ev.pctDiag ?? 0;
+  const pctForm = ev.pctFormativa    ?? ev.pctForm ?? 0;
+  const pctSuma = ev.pctSumativa     ?? ev.pctSuma ?? 0;
+  const totalPct = pctDiag + pctForm + pctSuma;
+  if (totalPct !== 100) {
+    errores.push(`Los porcentajes de evaluación suman ${totalPct}% (deben sumar 100%) — Paso 14.`);
+  }
+
+  // 2. Suma de tiempos debe coincidir con la duración del curso
+  const datos = getData("ec0217_datos") || {};
+  const duracionCurso = parseInt(datos.duracion, 10) || 0;
+  const tiempos = getData("ec0217_tiempos") || [];
+  const totalTiempoMinutos = tiempos.reduce((acc, bloque) => {
+    return acc + (bloque.filas || []).reduce((s, f) => s + (parseInt(f.tiempo, 10) || 0), 0);
+  }, 0);
+  if (duracionCurso > 0 && totalTiempoMinutos !== duracionCurso) {
+    errores.push(`La distribución de tiempos suma ${totalTiempoMinutos} min pero la duración del curso es ${duracionCurso} min — Paso 15.`);
+  }
+
+  // 3. Temario debe tener al menos un tema
+  const temario = getData("ec0217_temario") || {};
+  const totalTemas = (temario.u1?.length || 0) + (temario.u2?.length || 0) + (temario.u3?.length || 0);
+  if (totalTemas === 0) {
+    errores.push("El temario no tiene ningún tema registrado — Paso 4.");
+  }
+
+  return errores;
+}
+
 async function descargarPlaneacionFinal() {
   const payload = recolectarPayload();
+
+  // Validación cruzada antes de generar
+  const erroresValidacion = validarExpedienteCompleto();
+  if (erroresValidacion.length > 0) {
+    const lista = erroresValidacion.map(e => `• ${e}`).join("\n");
+    const continuar = await showConfirm(
+      `Se encontraron inconsistencias en el expediente:\n\n${lista}\n\nPuedes corregirlas o descargar de todas formas (los documentos se generarán con los datos actuales).`,
+      { title: "Revisar antes de descargar", icon: "⚠️", confirmText: "Descargar de todas formas", cancelText: "Ir a corregir" }
+    );
+    if (!continuar) return;
+  }
 
   try {
     if (loaderFormatos) loaderFormatos.style.display = "block";

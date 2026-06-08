@@ -153,7 +153,16 @@
             .from("planeaciones")
             .select("id", { count: "exact", head: true })
             .eq("user_id", session.user.id);
-          if (total >= 3) { console.warn("[storage] Límite de 3 cursos."); return; }
+          if (total >= 3) {
+            if (!window._limiteAlertaMostrada) {
+              window._limiteAlertaMostrada = true;
+              showConfirm(
+                "Has alcanzado el límite de 3 cursos guardados.\n\nTus datos no se están guardando en la nube. Para continuar, ve al dashboard y elimina un curso anterior.",
+                { title: "Límite de cursos alcanzado", icon: "⚠️", confirmText: "Ir al dashboard", cancelText: "Cerrar" }
+              ).then(ir => { if (ir) window.location.href = "dashboard.html"; });
+            }
+            return;
+          }
         }
 
         const { data, error } = await _supabase
