@@ -151,6 +151,56 @@ function abrirGrupoActivo() {
 
 
 
+// ─── W#5: Botones de Deshacer por sección ────────────────────────────────────
+function _crearBtnUndo(clave, onUndo) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.textContent = "↩ Deshacer";
+  btn.style.cssText = "font-size:12px;padding:4px 10px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#64748b;cursor:pointer;margin-left:8px;display:none;";
+  btn.title = "Restaurar la versión anterior de esta sección";
+
+  function actualizarVisibilidad() {
+    const hist = storageSync?.historial?.[clave];
+    btn.style.display = hist && hist.length > 0 ? "inline-block" : "none";
+  }
+
+  btn.addEventListener("click", async () => {
+    const version = storageSync.undo(clave);
+    if (version) {
+      await onUndo(version);
+      actualizarVisibilidad();
+    } else {
+      btn.style.display = "none";
+    }
+  });
+
+  window.addEventListener("sbe:sync-ok", actualizarVisibilidad);
+  window.addEventListener("sbe:sync-pending", actualizarVisibilidad);
+  setTimeout(actualizarVisibilidad, 1000);
+  return btn;
+}
+
+// ─── W#3: Generar sección completa con IA ────────────────────────────────────
+async function generarSeccionCompleta(campos, generadorFn, btnTodo, guardarFn) {
+  btnTodo.disabled = true;
+  const original = btnTodo.textContent;
+  btnTodo.textContent = `Generando 0/${campos.length}...`;
+  let completados = 0;
+  try {
+    await Promise.all(campos.map(async campo => {
+      await generadorFn(campo);
+      completados++;
+      btnTodo.textContent = `Generando ${completados}/${campos.length}...`;
+    }));
+    guardarFn();
+  } catch (err) {
+    showAlert(`⚠️ Error al generar sección completa:\n${mensajeAmigable(err)}`);
+  } finally {
+    btnTodo.disabled = false;
+    btnTodo.textContent = original;
+  }
+}
+
 // ─── W#4: Modo libre de navegación ───────────────────────────────────────────
 const NAV_A_SECCION = {
   "nav-datos":        "seccionDatos",
@@ -4904,6 +4954,127 @@ if (btnDescargarPlaneacionFinal) {
   btnDescargarPlaneacionFinal.addEventListener("click", descargarPlaneacionFinal);
 }
 
+
+// ─── W#3 + W#5: Conectar botones Generar Todo y Deshacer ─────────────────────
+(function conectarW3yW5() {
+
+  // ── Expositiva ──────────────────────────────────────────────────────────────
+  const btnTodoExp = document.getElementById("btnGenerarTodoExpositiva");
+  if (btnTodoExp) {
+    const camposExp = ["introduccion","experiencia","desarrollo","ejemplos","sintesis","preguntas","utilidad"];
+    btnTodoExp.addEventListener("click", () =>
+      generarSeccionCompleta(
+        camposExp,
+        async (campo) => {
+          const fakeBtn = { disabled: false, textContent: "" };
+          await generarExpositivaIA(campo, fakeBtn);
+        },
+        btnTodoExp,
+        guardarExpositivaFinal
+      )
+    );
+  }
+  const contenedorUndoExp = document.getElementById("btnUndoExpositiva");
+  if (contenedorUndoExp) {
+    contenedorUndoExp.appendChild(_crearBtnUndo("ec0217_expositiva", (version) => {
+      const datos = JSON.parse(version);
+      saveData("ec0217_expositiva", datos);
+      cargarExpositiva();
+    }));
+  }
+
+  // ── Demostrativa ───────────────────────────────────────────────────────────
+  const btnTodoDem = document.getElementById("btnGenerarTodoDemostrativa");
+  if (btnTodoDem) {
+    const camposDem = ["experiencia","actividad","ejemplos","preguntas"];
+    btnTodoDem.addEventListener("click", () =>
+      generarSeccionCompleta(
+        camposDem,
+        async (campo) => {
+          const fakeBtn = { disabled: false, textContent: "" };
+          await generarDemostrativaIA(campo, fakeBtn);
+        },
+        btnTodoDem,
+        guardarDemostrativaFinal
+      )
+    );
+  }
+  const contenedorUndoDem = document.getElementById("btnUndoDemostrativa");
+  if (contenedorUndoDem) {
+    contenedorUndoDem.appendChild(_crearBtnUndo("ec0217_demostrativa", (version) => {
+      saveData("ec0217_demostrativa", JSON.parse(version));
+      cargarDemostrativa();
+    }));
+  }
+
+  // ── Diálogo ────────────────────────────────────────────────────────────────
+  const btnTodoDia = document.getElementById("btnGenerarTodoDialogo");
+  if (btnTodoDia) {
+    const camposDia = ["actividad","tema","instrucciones","tiempo","reglas","introduccion","ejemplos","conclusion"];
+    btnTodoDia.addEventListener("click", () =>
+      generarSeccionCompleta(
+        camposDia,
+        async (campo) => {
+          const fakeBtn = { disabled: false, textContent: "" };
+          await generarDialogoIA(campo, fakeBtn);
+        },
+        btnTodoDia,
+        guardarDialogoFinal
+      )
+    );
+  }
+  const contenedorUndoDia = document.getElementById("btnUndoDialogo");
+  if (contenedorUndoDia) {
+    contenedorUndoDia.appendChild(_crearBtnUndo("ec0217_dialogo", (version) => {
+      saveData("ec0217_dialogo", JSON.parse(version));
+      cargarDialogo();
+    }));
+  }
+
+  // ── Cierre (solo undo, no generar todo porque usa un único botón ya existente) ──
+  const contenedorUndoCierre = document.getElementById("btnUndoCierre");
+  if (contenedorUndoCierre) {
+    contenedorUndoCierre.appendChild(_crearBtnUndo("ec0217_cierre", (version) => {
+      saveData("ec0217_cierre", JSON.parse(version));
+      cargarCierre();
+    }));
+  }
+
+})();
+
+// ─── D#2: Descarga de documentos individuales ────────────────────────────────
+document.querySelectorAll(".btn-doc-individual").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const nombreDoc = btn.dataset.doc;
+    const ext       = btn.dataset.ext;
+    const original  = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Generando...";
+    try {
+      const payload = recolectarPayload();
+      const response = await fetchConTimeout(
+        `${BACKEND_URL}/generate-doc/individual/${nombreDoc}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+        60000
+      );
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `${nombreDoc}.${ext}`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showAlert(`⚠️ Error al generar ${nombreDoc}:\n${mensajeAmigable(err)}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  });
+});
 
 // ─── UTILIDADES ───────────────────────────────────────────────────────────────
 

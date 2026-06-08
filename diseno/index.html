@@ -1399,9 +1399,11 @@
             Completa todos los apartados de la técnica expositiva para continuar.
           </span>
 
-          <button class="btn-siguiente" id="btnGuardarExpositiva">
-            Siguiente
-          </button>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button class="btn-siguiente" id="btnGuardarExpositiva">Siguiente</button>
+            <button type="button" id="btnGenerarTodoExpositiva" style="padding:10px 18px;border-radius:8px;border:1px solid #1F3B6D;background:white;color:#1F3B6D;font-size:13px;font-weight:600;cursor:pointer;">✨ Generar todo con IA</button>
+            <span id="btnUndoExpositiva"></span>
+          </div>
         </div>
       </section>
 
@@ -1482,9 +1484,11 @@
             Completa todos los apartados de la técnica demostrativa para continuar.
           </span>
 
-          <button class="btn-siguiente" id="btnGuardarDemostrativa">
-            Siguiente
-          </button>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button class="btn-siguiente" id="btnGuardarDemostrativa">Siguiente</button>
+            <button type="button" id="btnGenerarTodoDemostrativa" style="padding:10px 18px;border-radius:8px;border:1px solid #1F3B6D;background:white;color:#1F3B6D;font-size:13px;font-weight:600;cursor:pointer;">✨ Generar todo con IA</button>
+            <span id="btnUndoDemostrativa"></span>
+          </div>
         </div>
       </section>
 
@@ -1565,9 +1569,11 @@
             Completa todos los apartados de la técnica diálogo/discusión para continuar.
           </span>
 
-          <button class="btn-siguiente" id="btnGuardarDialogo">
-            Siguiente
-          </button>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button class="btn-siguiente" id="btnGuardarDialogo">Siguiente</button>
+            <button type="button" id="btnGenerarTodoDialogo" style="padding:10px 18px;border-radius:8px;border:1px solid #1F3B6D;background:white;color:#1F3B6D;font-size:13px;font-weight:600;cursor:pointer;">✨ Generar todo con IA</button>
+            <span id="btnUndoDialogo"></span>
+          </div>
         </div>
       </section>
 
@@ -1691,9 +1697,10 @@
             Escribe o genera el cierre para continuar.
           </span>
 
-          <button class="btn-siguiente" id="btnGuardarCierre">
-            Siguiente
-          </button>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button class="btn-siguiente" id="btnGuardarCierre">Siguiente</button>
+            <span id="btnUndoCierre"></span>
+          </div>
         </div>
       </section>
 
@@ -2074,10 +2081,30 @@
             <ul id="res-alertas-lista" style="margin:0;padding-left:16px;font-size:12px;color:#854d0e;"></ul>
           </div>
 
-          <!-- Documentos que se generarán -->
-          <p style="font-size:12px;color:#64748b;margin-bottom:16px;">
-            Se generarán <strong>10 documentos</strong> en formato Word y PowerPoint empaquetados en un archivo ZIP.
-          </p>
+          <!-- D#2: Descarga individual por documento -->
+          <details style="margin-bottom:16px;">
+            <summary style="cursor:pointer;font-size:12px;color:#1F3B6D;font-weight:600;padding:8px 0;">
+              ⬇ Descargar documento individual
+            </summary>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+              <button class="btn-doc-individual" data-doc="01_Documento_de_Planeacion_EC0217" data-ext="docx">📄 Planeación EC0217</button>
+              <button class="btn-doc-individual" data-doc="02_Evaluacion_Diagnostica" data-ext="docx">📝 Evaluación Diagnóstica</button>
+              <button class="btn-doc-individual" data-doc="03_Evaluacion_Formativa_Cotejo" data-ext="docx">📋 Formativa — Lista de cotejo</button>
+              <button class="btn-doc-individual" data-doc="04_Evaluacion_Formativa_Guia" data-ext="docx">📋 Formativa — Guía de observación</button>
+              <button class="btn-doc-individual" data-doc="05_Evaluacion_Sumativa" data-ext="docx">📝 Evaluación Sumativa</button>
+              <button class="btn-doc-individual" data-doc="06_Evaluacion_Reaccion" data-ext="docx">📊 Evaluación de Reacción</button>
+              <button class="btn-doc-individual" data-doc="07_Lista_de_Asistencia" data-ext="docx">👥 Lista de Asistencia</button>
+              <button class="btn-doc-individual" data-doc="08_Contrato_de_Aprendizaje" data-ext="docx">✍️ Contrato de Aprendizaje</button>
+              <button class="btn-doc-individual" data-doc="09_Lista_de_Requerimientos" data-ext="docx">🔧 Lista de Requerimientos</button>
+              <button class="btn-doc-individual" data-doc="10_Guia_de_Presentacion_EC0217" data-ext="pptx">📊 Guía de Presentación (.pptx)</button>
+            </div>
+          </details>
+
+          <style>
+            .btn-doc-individual { padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;background:white;color:#334155;font-size:11px;cursor:pointer;text-align:left;transition:background .15s; }
+            .btn-doc-individual:hover { background:#f1f5f9; }
+            .btn-doc-individual:disabled { opacity:.5;cursor:wait; }
+          </style>
 
           <button type="button" id="btnDescargarPlaneacionFinal" class="btn-siguiente">
             ⬇ Descargar expediente completo

@@ -1772,6 +1772,38 @@ def _validar_expediente(data: PlaneacionRequest) -> None:
         raise HTTPException(status_code=422, detail=errores)
 
 
+# ─── D#2: Descarga de documentos individuales ────────────────────────────────
+
+_GENERADORES_INDIVIDUALES = {
+    "01_Documento_de_Planeacion_EC0217":      lambda p, d: (generar_planeacion_docx(p.model_dump()), "docx"),
+    "02_Evaluacion_Diagnostica":              lambda p, d: (generar_evaluacion_diagnostica(p), "docx"),
+    "03_Evaluacion_Formativa_Cotejo":         lambda p, d: (generar_evaluacion_formativa_cotejo(p), "docx"),
+    "04_Evaluacion_Formativa_Guia":           lambda p, d: (generar_evaluacion_formativa_guia(p), "docx"),
+    "05_Evaluacion_Sumativa":                 lambda p, d: (generar_evaluacion_sumativa(p), "docx"),
+    "06_Evaluacion_Reaccion":                 lambda p, d: (generar_evaluacion_reaccion(p), "docx"),
+    "07_Lista_de_Asistencia":                 lambda p, d: (generar_lista_asistencia(p), "docx"),
+    "08_Contrato_de_Aprendizaje":             lambda p, d: (generar_contrato_aprendizaje(p), "docx"),
+    "09_Lista_de_Requerimientos":             lambda p, d: (generar_lista_requerimientos(p), "docx"),
+    "10_Guia_de_Presentacion_EC0217":         lambda p, d: (generar_presentacion_curso(p), "pptx"),
+}
+
+@app.post("/generate-doc/individual/{nombre_doc}")
+def generate_doc_individual(nombre_doc: str, data: PlaneacionRequest):
+    generador = _GENERADORES_INDIVIDUALES.get(nombre_doc)
+    if not generador:
+        raise HTTPException(status_code=404, detail=f"Documento '{nombre_doc}' no reconocido.")
+    try:
+        contenido, ext = generador(data, data.model_dump())
+        media = "application/vnd.openxmlformats-officedocument.wordprocessingml.document" if ext == "docx" \
+                else "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        return StreamingResponse(
+            io.BytesIO(contenido), media_type=media,
+            headers={"Content-Disposition": f"attachment; filename={nombre_doc}.{ext}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/generate-doc/planeacion")
 def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
     try:

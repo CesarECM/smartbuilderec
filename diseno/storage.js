@@ -39,6 +39,11 @@
   // Cada pestaña tiene el suyo. Se vacía al cerrar/refrescar la pestaña.
   const _cache = {};
 
+  // W#5: historial de versiones por clave (máx 3 versiones anteriores)
+  const _historial = {};
+  const HIST_MAX = 3;
+  const HIST_KEYS = ["ec0217_expositiva","ec0217_demostrativa","ec0217_dialogo","ec0217_cierre","ec0217_evaluaciones","ec0217_encuadre"];
+
   const _origSetItem    = localStorage.setItem.bind(localStorage);
   const _origGetItem    = localStorage.getItem.bind(localStorage);
   const _origRemoveItem = localStorage.removeItem.bind(localStorage);
@@ -58,6 +63,12 @@
 
   localStorage.setItem = function (key, value) {
     if (_esClaveCache(key)) {
+      // W#5: guardar versión anterior en historial antes de sobreescribir
+      if (HIST_KEYS.includes(key) && _cache[key] && _cache[key] !== value) {
+        if (!_historial[key]) _historial[key] = [];
+        _historial[key].push(_cache[key]);
+        if (_historial[key].length > HIST_MAX) _historial[key].shift();
+      }
       _cache[key] = value;
       if (!_initializing && key.startsWith("ec0217_")) scheduleSyncToSupabase();
       return;
@@ -298,10 +309,21 @@
   }
 
   // ── API pública ───────────────────────────────────────────────────────────
+  // W#5: restaurar versión anterior de una sección
+  function undo(key) {
+    if (!_historial[key] || _historial[key].length === 0) return false;
+    const version = _historial[key].pop();
+    _cache[key] = version;
+    scheduleSyncToSupabase();
+    return version;
+  }
+
   window.storageSync = {
     init,
     syncNow: syncToSupabase,
     limpiar,
+    undo,
+    historial: _historial,
   };
 
 })();
