@@ -2093,9 +2093,8 @@
             <!-- app.js usa este ID; lo mantenemos oculto para que no crashee -->
             <button type="button" id="btnDescargarPlaneacionFinal" style="display:none"></button>
             <button type="button" id="btnGenerarEC0301" class="btn-siguiente"
-              disabled title="Disponible en Sprint 3"
-              style="opacity:0.55;cursor:not-allowed;">
-              Generar Manuales (próximamente)
+              onclick="generarDocumentosEC0301()">
+              Generar Manuales EC0301
             </button>
             <button type="button" id="btnGuardarProgresoEC0301" class="btn-siguiente"
               style="background:var(--c-surface-2);color:var(--c-text);border:1.5px solid var(--c-border-s);"
@@ -2244,6 +2243,53 @@
       } catch(err) {
         if (btn) { btn.disabled = false; btn.textContent = "📥 Importar del EC0217"; }
         await showAlert("⚠️ Error al importar: " + err.message);
+      }
+    };
+
+    // ── Generar documentos EC0301 ─────────────────────────────────────────────
+    window.generarDocumentosEC0301 = async function() {
+      const btn    = document.getElementById("btnGenerarEC0301");
+      const loader = document.getElementById("loaderFormatos");
+      const msg    = document.getElementById("mensajeFormatos");
+
+      if (btn) { btn.disabled = true; btn.textContent = "Generando..."; }
+      if (loader) loader.style.display = "block";
+      if (msg)   { msg.style.display = "none"; msg.textContent = ""; }
+
+      try {
+        const payload = recolectarPayload();
+
+        const response = await fetchConTimeout(`${BACKEND_URL}/generate-doc/ec0301`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }, 90000);
+
+        if (!response.ok) {
+          let detalle = `HTTP ${response.status}`;
+          try { const err = await response.json(); detalle = err.detail || JSON.stringify(err); } catch(_) {}
+          throw new Error(detalle);
+        }
+
+        const blob = await response.blob();
+        const url  = URL.createObjectURL(blob);
+        const nombreCurso = (payload.datos?.nombreCurso || "EC0301").replace(/\s+/g, "_");
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `EC0301_${nombreCurso}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        if (msg) { msg.style.display = "block"; msg.style.color = "green"; msg.textContent = "✅ Manuales generados y descargados correctamente."; }
+
+      } catch(err) {
+        console.error("Error al generar EC0301:", err);
+        if (msg) { msg.style.display = "block"; msg.style.color = "red"; msg.textContent = `⚠️ Error al generar: ${err.message}`; }
+      } finally {
+        if (btn)    { btn.disabled = false; btn.textContent = "Generar Manuales EC0301"; }
+        if (loader) loader.style.display = "none";
       }
     };
 

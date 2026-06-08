@@ -1167,6 +1167,417 @@ def generar_lista_asistencia(data: "PlaneacionRequest") -> bytes:
 
     return _docx_bytes(doc)
 
+
+# ─── EC0301: Manual del Instructor ───────────────────────────────────────────
+
+def _seccion(doc: "Document", titulo: str) -> None:
+    """Agrega un encabezado de sección nivel 1 con estilo EC0301."""
+    h = doc.add_heading("", level=1)
+    r = h.add_run(titulo)
+    r.font.color.rgb = RGBColor(0x1F, 0x3B, 0x6D)
+    r.font.size = Pt(14)
+
+
+def _subseccion(doc: "Document", titulo: str) -> None:
+    h = doc.add_heading("", level=2)
+    r = h.add_run(titulo)
+    r.font.color.rgb = RGBColor(0x31, 0x4E, 0x7A)
+    r.font.size = Pt(12)
+
+
+def _parrafo(doc: "Document", texto: str) -> None:
+    if texto and texto.strip():
+        p = doc.add_paragraph()
+        p.add_run(texto.strip()).font.size = Pt(11)
+
+
+def _lista_items(doc: "Document", texto: str) -> None:
+    """Convierte texto (separado por saltos de línea) en lista de viñetas."""
+    for linea in (texto or "").split("\n"):
+        if linea.strip():
+            p = doc.add_paragraph(linea.strip(), style="List Bullet")
+            p.runs[0].font.size = Pt(11)
+
+
+def generar_manual_instructor(data: "PlaneacionRequest") -> bytes:
+    doc = Document()
+
+    # ── Portada ───────────────────────────────────────────────────────────────
+    _titulo(doc, "MANUAL DEL INSTRUCTOR", "EC0301.01 — Diseño de Cursos de Capital Humano")
+    doc.add_paragraph()
+    tabla_encabezado(doc, data.datos)
+    doc.add_page_break()
+
+    # ── 1. Objetivos de aprendizaje ───────────────────────────────────────────
+    _seccion(doc, "1. Objetivos de aprendizaje")
+    pares = [
+        ("Objetivo General",     data.objetivos.general),
+        ("Objetivo Cognitivo",   data.objetivos.cognitiva),
+        ("Objetivo Psicomotriz", data.objetivos.psicomotriz),
+        ("Objetivo Afectivo",    data.objetivos.afectiva),
+    ]
+    for lbl, txt in pares:
+        if txt and txt.strip():
+            _subseccion(doc, lbl)
+            _parrafo(doc, txt)
+    doc.add_paragraph()
+
+    # ── 2. Perfil del participante ────────────────────────────────────────────
+    _seccion(doc, "2. Perfil del participante")
+    _parrafo(doc, data.datos.perfil or "—")
+    doc.add_paragraph()
+
+    # ── 3. Beneficios del curso ───────────────────────────────────────────────
+    _seccion(doc, "3. Beneficios del curso")
+    _lista_items(doc, data.beneficios or "—")
+    doc.add_paragraph()
+
+    # ── 4. Temario ────────────────────────────────────────────────────────────
+    _seccion(doc, "4. Temario")
+    unidades = [("Unidad 1", data.temario.u1), ("Unidad 2", data.temario.u2), ("Unidad 3", data.temario.u3)]
+    for nombre_u, temas in unidades:
+        if temas:
+            _subseccion(doc, nombre_u)
+            for tema in temas:
+                if tema and tema.strip():
+                    p = doc.add_paragraph(tema.strip(), style="List Bullet")
+                    p.runs[0].font.size = Pt(11)
+    doc.add_paragraph()
+
+    # ── 5. Encuadre ───────────────────────────────────────────────────────────
+    _seccion(doc, "5. Encuadre")
+
+    _subseccion(doc, "5.1 Preguntas de experiencia")
+    _parrafo(doc, data.encuadre.preguntas or "—")
+
+    _subseccion(doc, "5.2 Técnica de integración grupal")
+    nombre_rh = data.tecnicas.rhNombre or data.tecnicas.rhSeleccion or "—"
+    p = doc.add_paragraph()
+    p.add_run("Técnica: ").bold = True
+    p.add_run(nombre_rh)
+    if data.tecnicas.rhObjetivo:
+        p2 = doc.add_paragraph()
+        p2.add_run("Objetivo: ").bold = True
+        p2.add_run(data.tecnicas.rhObjetivo)
+    _parrafo(doc, data.tecnicas.rhDetalle)
+
+    _subseccion(doc, "5.3 Reglas del curso")
+    reglas = list(data.encuadre.reglasTexto or [])
+    if data.encuadre.otraRegla:
+        reglas.append(data.encuadre.otraRegla)
+    for r_txt in reglas:
+        if r_txt and r_txt.strip():
+            p = doc.add_paragraph(r_txt.strip(), style="List Bullet")
+            p.runs[0].font.size = Pt(11)
+    if not reglas:
+        _parrafo(doc, "—")
+
+    _subseccion(doc, "5.4 Contrato de aprendizaje")
+    acuerdos = list(data.encuadre.acuerdosTexto or [])
+    if data.encuadre.otroAcuerdo:
+        acuerdos.append(data.encuadre.otroAcuerdo)
+    for a_txt in acuerdos:
+        if a_txt and a_txt.strip():
+            p = doc.add_paragraph(a_txt.strip(), style="List Bullet")
+            p.runs[0].font.size = Pt(11)
+    if not acuerdos:
+        _parrafo(doc, "—")
+    doc.add_page_break()
+
+    # ── 6. Desarrollo didáctico ───────────────────────────────────────────────
+    _seccion(doc, "6. Desarrollo didáctico")
+
+    _subseccion(doc, "6.1 Técnica expositiva")
+    exp = data.expositiva or {}
+    campos_exp = [
+        ("Objetivo",      exp.get("objetivo", "")),
+        ("Introducción",  exp.get("introduccion", "")),
+        ("Recuperación de experiencias", exp.get("experiencia", "")),
+        ("Desarrollo",    exp.get("desarrollo", "")),
+        ("Ejemplos",      exp.get("ejemplos", "")),
+        ("Síntesis",      exp.get("sintesis", "")),
+        ("Preguntas de verificación", exp.get("preguntas", "")),
+        ("Utilidad práctica", exp.get("utilidad", "")),
+    ]
+    for lbl, txt in campos_exp:
+        if txt and txt.strip():
+            p = doc.add_paragraph()
+            p.add_run(f"{lbl}: ").bold = True
+            p.add_run(txt.strip()).font.size = Pt(11)
+
+    _subseccion(doc, "6.2 Técnica demostrativa")
+    dem = data.demostrativa or {}
+    campos_dem = [
+        ("Objetivo",      dem.get("objetivo", "")),
+        ("Experiencia previa", dem.get("experiencia", "")),
+        ("Actividad",     dem.get("actividad", "")),
+        ("Ejemplos",      dem.get("ejemplos", "")),
+        ("Preguntas",     dem.get("preguntas", "")),
+    ]
+    for lbl, txt in campos_dem:
+        if txt and txt.strip():
+            p = doc.add_paragraph()
+            p.add_run(f"{lbl}: ").bold = True
+            p.add_run(txt.strip()).font.size = Pt(11)
+
+    _subseccion(doc, "6.3 Técnica energizante")
+    nombre_en = data.tecnicas.enNombre or data.tecnicas.enSeleccion or "—"
+    p = doc.add_paragraph()
+    p.add_run("Técnica: ").bold = True
+    p.add_run(nombre_en)
+    if data.tecnicas.enObjetivo:
+        p2 = doc.add_paragraph()
+        p2.add_run("Objetivo: ").bold = True
+        p2.add_run(data.tecnicas.enObjetivo)
+    _parrafo(doc, data.tecnicas.enDetalle)
+
+    _subseccion(doc, "6.4 Técnica de diálogo / discusión")
+    dial = data.dialogo or {}
+    campos_dial = [
+        ("Objetivo",      dial.get("objetivo", "")),
+        ("Actividad",     dial.get("actividad", "")),
+        ("Instrucciones", dial.get("instrucciones", "")),
+        ("Ejemplos",      dial.get("ejemplos", "")),
+        ("Conclusión",    dial.get("conclusion", "")),
+    ]
+    for lbl, txt in campos_dial:
+        if txt and txt.strip():
+            p = doc.add_paragraph()
+            p.add_run(f"{lbl}: ").bold = True
+            p.add_run(txt.strip()).font.size = Pt(11)
+    doc.add_page_break()
+
+    # ── 7. Cierre ─────────────────────────────────────────────────────────────
+    _seccion(doc, "7. Cierre")
+    ci = data.cierre or {}
+
+    _subseccion(doc, "7.1 Descripción general del cierre")
+    _parrafo(doc, ci.get("texto", "") or "—")
+
+    _subseccion(doc, "7.2 Resumen general del curso")
+    _parrafo(doc, ci.get("resumen", "") or "—")
+
+    _subseccion(doc, "7.3 Compromisos de aplicación")
+    _lista_items(doc, ci.get("compromisos", "") or "—")
+
+    _subseccion(doc, "7.4 Sugerencias de continuidad")
+    _parrafo(doc, ci.get("sugerencias", "") or "—")
+
+    _subseccion(doc, "7.5 Referencias bibliográficas")
+    _lista_items(doc, ci.get("referencias", "") or "—")
+    doc.add_page_break()
+
+    # ── 8. Sistema de evaluación ──────────────────────────────────────────────
+    _seccion(doc, "8. Sistema de evaluación")
+    ev = data.evaluaciones
+    pct_diag = ev.pctDiagnostica or ev.pctDiag or 0
+    pct_form = ev.pctFormativa  or ev.pctForm or 0
+    pct_suma = ev.pctSumativa   or ev.pctSuma or 0
+
+    t_ev = doc.add_table(rows=4, cols=3)
+    t_ev.style = "Table Grid"
+    encab = ["Tipo de evaluación", "Porcentaje", "Instrumento"]
+    for j, e in enumerate(encab):
+        t_ev.rows[0].cells[j].paragraphs[0].add_run(e).bold = True
+    filas_ev = [
+        ("Diagnóstica", f"{pct_diag}%", ev.instDiagnostica or ev.instDiag or "—"),
+        ("Formativa",   f"{pct_form}%", ev.instFormativa   or ev.instForm or "—"),
+        ("Sumativa",    f"{pct_suma}%", ev.instSumativa    or ev.instSuma or "—"),
+    ]
+    for i, (tipo, pct, inst) in enumerate(filas_ev, 1):
+        t_ev.rows[i].cells[0].text = tipo
+        t_ev.rows[i].cells[1].text = pct
+        t_ev.rows[i].cells[2].text = inst
+
+    if ci.get("descripcionGeneral"):
+        doc.add_paragraph()
+        _subseccion(doc, "Descripción general de la evaluación")
+        _parrafo(doc, ci["descripcionGeneral"])
+    doc.add_paragraph()
+
+    # ── 9. Distribución de tiempos ────────────────────────────────────────────
+    _seccion(doc, "9. Distribución de tiempos")
+    tiempos_list = data.tiempos or []
+    if tiempos_list:
+        for bloque in tiempos_list:
+            if bloque.seccion:
+                _subseccion(doc, bloque.seccion)
+            for fila in bloque.filas:
+                p = doc.add_paragraph()
+                p.add_run(f"{fila.titulo}: ").bold = True
+                p.add_run(f"{fila.tiempo} min").font.size = Pt(11)
+    else:
+        _parrafo(doc, "—")
+    doc.add_paragraph()
+
+    # ── 10. Lista de materiales y recursos ────────────────────────────────────
+    _seccion(doc, "10. Lista de materiales y recursos")
+    mat = data.materiales or {}
+    categorias_mat = [
+        ("Instalaciones y mobiliario",  mat.get("instalaciones", "")),
+        ("Equipo y tecnología",         mat.get("equipo", "")),
+        ("Materiales didácticos",       mat.get("materialesDidacticos", "")),
+        ("Recursos humanos",            mat.get("humanos", "")),
+        ("Medidas de seguridad",        mat.get("seguridad", "")),
+        ("Otros recursos",              mat.get("otros", "")),
+    ]
+    for cat, contenido in categorias_mat:
+        if contenido and contenido.strip():
+            _subseccion(doc, cat)
+            _lista_items(doc, contenido)
+
+    return _docx_bytes(doc)
+
+
+# ─── EC0301: Manual del Participante ─────────────────────────────────────────
+
+def generar_manual_participante(data: "PlaneacionRequest") -> bytes:
+    doc = Document()
+
+    # ── Portada ───────────────────────────────────────────────────────────────
+    _titulo(doc, "MANUAL DEL PARTICIPANTE", "EC0301.01 — Diseño de Cursos de Capital Humano")
+    doc.add_paragraph()
+    tabla_encabezado(doc, data.datos)
+    doc.add_page_break()
+
+    # ── Bienvenida ────────────────────────────────────────────────────────────
+    _seccion(doc, "Bienvenida")
+    nombre_curso = data.datos.nombreCurso or "este curso"
+    bienvenida = (
+        f"Estimado participante, bienvenido al curso \"{nombre_curso}\". "
+        "Este manual ha sido diseñado para acompañarte a lo largo de la sesión de capacitación, "
+        "proporcionándote los materiales de apoyo necesarios para alcanzar los objetivos de aprendizaje. "
+        "Te invitamos a participar activamente, compartir tus experiencias y aprovechar al máximo "
+        "cada actividad propuesta."
+    )
+    _parrafo(doc, bienvenida)
+    doc.add_paragraph()
+
+    # ── 1. Objetivos de aprendizaje ───────────────────────────────────────────
+    _seccion(doc, "1. Objetivos de aprendizaje")
+    _subseccion(doc, "Al finalizar el curso serás capaz de:")
+    pares = [
+        ("Cognitivo",    data.objetivos.cognitiva),
+        ("Psicomotriz",  data.objetivos.psicomotriz),
+        ("Afectivo",     data.objetivos.afectiva),
+    ]
+    for lbl, txt in pares:
+        if txt and txt.strip():
+            p = doc.add_paragraph()
+            p.add_run(f"{lbl}: ").bold = True
+            p.add_run(txt.strip()).font.size = Pt(11)
+
+    if data.objetivos.general:
+        doc.add_paragraph()
+        _subseccion(doc, "Objetivo general del curso")
+        _parrafo(doc, data.objetivos.general)
+    doc.add_paragraph()
+
+    # ── 2. Beneficios del curso ───────────────────────────────────────────────
+    _seccion(doc, "2. Beneficios del curso")
+    _lista_items(doc, data.beneficios or "—")
+    doc.add_paragraph()
+
+    # ── 3. Contenido del curso ────────────────────────────────────────────────
+    _seccion(doc, "3. Contenido del curso")
+    unidades = [("Unidad 1", data.temario.u1), ("Unidad 2", data.temario.u2), ("Unidad 3", data.temario.u3)]
+    for nombre_u, temas in unidades:
+        if temas:
+            _subseccion(doc, nombre_u)
+            for tema in temas:
+                if tema and tema.strip():
+                    p = doc.add_paragraph(tema.strip(), style="List Bullet")
+                    p.runs[0].font.size = Pt(11)
+            # Espacio para notas
+            doc.add_paragraph()
+            p_notas = doc.add_paragraph()
+            p_notas.add_run("Notas: ").bold = True
+            for _ in range(4):
+                doc.add_paragraph("_" * 80)
+    doc.add_page_break()
+
+    # ── 4. Actividades de aprendizaje ─────────────────────────────────────────
+    _seccion(doc, "4. Actividades de aprendizaje")
+
+    _subseccion(doc, "4.1 Actividad de integración grupal")
+    nombre_rh = data.tecnicas.rhNombre or data.tecnicas.rhSeleccion or "—"
+    _parrafo(doc, f"Nombre de la técnica: {nombre_rh}")
+    if data.tecnicas.rhObjetivo:
+        _parrafo(doc, f"Objetivo: {data.tecnicas.rhObjetivo}")
+    doc.add_paragraph()
+
+    _subseccion(doc, "4.2 Desarrollo del contenido")
+    exp = data.expositiva or {}
+    if exp.get("desarrollo"):
+        _parrafo(doc, exp["desarrollo"])
+    doc.add_paragraph()
+    p_notas2 = doc.add_paragraph()
+    p_notas2.add_run("Mis notas y aprendizajes: ").bold = True
+    for _ in range(5):
+        doc.add_paragraph("_" * 80)
+
+    _subseccion(doc, "4.3 Actividad práctica")
+    dem = data.demostrativa or {}
+    if dem.get("actividad"):
+        _parrafo(doc, dem["actividad"])
+    doc.add_paragraph()
+    p_notas3 = doc.add_paragraph()
+    p_notas3.add_run("Observaciones de la práctica: ").bold = True
+    for _ in range(4):
+        doc.add_paragraph("_" * 80)
+
+    _subseccion(doc, "4.4 Diálogo y discusión grupal")
+    dial = data.dialogo or {}
+    if dial.get("actividad"):
+        _parrafo(doc, dial["actividad"])
+    if dial.get("instrucciones"):
+        _parrafo(doc, dial["instrucciones"])
+    doc.add_paragraph()
+    doc.add_page_break()
+
+    # ── 5. Compromisos de aplicación ──────────────────────────────────────────
+    _seccion(doc, "5. Compromisos de aplicación")
+    ci = data.cierre or {}
+    if ci.get("compromisos"):
+        _lista_items(doc, ci["compromisos"])
+    else:
+        _parrafo(doc, "—")
+    doc.add_paragraph()
+    p_comp = doc.add_paragraph()
+    p_comp.add_run("Mis compromisos personales de aplicación:").bold = True
+    for _ in range(5):
+        doc.add_paragraph("_" * 80)
+    doc.add_paragraph()
+
+    # ── 6. Criterios de evaluación ────────────────────────────────────────────
+    _seccion(doc, "6. Criterios de evaluación")
+    ev = data.evaluaciones
+    pct_diag = ev.pctDiagnostica or ev.pctDiag or 0
+    pct_form = ev.pctFormativa  or ev.pctForm or 0
+    pct_suma = ev.pctSumativa   or ev.pctSuma or 0
+
+    t_ev = doc.add_table(rows=4, cols=3)
+    t_ev.style = "Table Grid"
+    for j, e in enumerate(["Evaluación", "Porcentaje", "Descripción"]):
+        t_ev.rows[0].cells[j].paragraphs[0].add_run(e).bold = True
+    filas_ev = [
+        ("Diagnóstica", f"{pct_diag}%", ev.instDiagnostica or ev.instDiag or "—"),
+        ("Formativa",   f"{pct_form}%", ev.instFormativa   or ev.instForm or "—"),
+        ("Sumativa",    f"{pct_suma}%", ev.instSumativa    or ev.instSuma or "—"),
+    ]
+    for i, (tipo, pct, inst) in enumerate(filas_ev, 1):
+        t_ev.rows[i].cells[0].text = tipo
+        t_ev.rows[i].cells[1].text = pct
+        t_ev.rows[i].cells[2].text = inst
+    doc.add_paragraph()
+
+    # ── 7. Referencias bibliográficas ─────────────────────────────────────────
+    _seccion(doc, "7. Referencias bibliográficas")
+    _lista_items(doc, ci.get("referencias", "") or "—")
+
+    return _docx_bytes(doc)
+
+
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -1852,8 +2263,45 @@ def generate_doc_planeacion(data: PlaneacionRequest):
     except Exception as e:
         print("ERROR EN /generate-doc/planeacion:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
-    
-    
+
+
+@app.post("/generate-doc/ec0301")
+def generate_doc_ec0301(data: PlaneacionRequest):
+    """Genera el ZIP con los 2 documentos EC0301: Manual del Instructor + Manual del Participante."""
+    try:
+        nombre_curso = limpiar_nombre_archivo(data.datos.nombreCurso or "EC0301")
+
+        documentos = [
+            ("01_Manual_del_Instructor.docx",  lambda: generar_manual_instructor(data)),
+            ("02_Manual_del_Participante.docx", lambda: generar_manual_participante(data)),
+        ]
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = {executor.submit(gen): nombre for nombre, gen in documentos}
+                resultados = {}
+                for future in as_completed(futures):
+                    nombre_archivo = futures[future]
+                    try:
+                        resultados[nombre_archivo] = future.result()
+                    except Exception as e_doc:
+                        print(f"⚠️ Error generando {nombre_archivo} (EC0301): {repr(e_doc)}")
+
+            for nombre_archivo, contenido in resultados.items():
+                zf.writestr(nombre_archivo, contenido)
+
+        zip_buffer.seek(0)
+        return StreamingResponse(
+            io.BytesIO(zip_buffer.read()),
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename=EC0301_{nombre_curso}.zip"}
+        )
+
+    except Exception as e:
+        print("ERROR EN /generate-doc/ec0301:", repr(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/generate-expositiva")
 def generate_expositiva(data: ExpositivaRequest):
