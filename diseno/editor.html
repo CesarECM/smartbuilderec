@@ -517,22 +517,26 @@
       const panel = document.getElementById("schemaEditorPanel");
       panel.style.display = "flex";
 
-      // Cargar schema desde backend
-      try {
-        const token = await _getToken();
-        const resp  = await fetch(`${API_BASE}/wizard/${normaId}/schema`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (resp.ok) {
-          const body = await resp.json();
-          _seSchema = body.esquema;
-        } else if (resp.status === 404) {
-          _seSchema = { meta: { codigo: normaId.toUpperCase(), nombre: "", color_header: "#1F3B6D" }, secciones: [], documentos: [] };
-        } else {
-          throw new Error("Error al cargar schema");
+      // Cargar schema directo desde Supabase
+      const { data: schemaRow, error: schemaErr } = await _supabase
+        .from("wizard_schemas")
+        .select("esquema")
+        .eq("norma_id", normaId)
+        .eq("activo", true)
+        .single();
+
+      if (schemaRow?.esquema) {
+        _seSchema = schemaRow.esquema;
+      } else {
+        // Schema nuevo vacío
+        _seSchema = {
+          meta: { codigo: normaId.toUpperCase(), nombre: "", color_header: "#1F3B6D",
+                  min_duracion: 120, min_participantes: 4 },
+          secciones: [], documentos: []
+        };
+        if (schemaErr && schemaErr.code !== "PGRST116") {
+          console.warn("Error cargando schema:", schemaErr.message);
         }
-      } catch (e) {
-        _seSchema = { meta: { codigo: normaId.toUpperCase(), nombre: "", color_header: "#1F3B6D" }, secciones: [], documentos: [] };
       }
 
       _seRenderTree();
@@ -799,18 +803,27 @@
       const msgEl  = document.getElementById("seJsonMsg");
 
       try {
-        // Upsert via backend (service role) — usamos Supabase directamente con service role en el frontend
-        // ya que el backend no expone un endpoint de escritura de schemas aún para super_admin
-        const { error } = await _supabase
+        // SELECT → UPDATE si existe, INSERT si no (evita problema con índices parciales)
+        const { data: existing } = await _supabase
           .from("wizard_schemas")
-          .upsert({
-            norma_id: _seNormaId,
-            esquema: _seSchema,
-            activo: true,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: "norma_id", ignoreDuplicates: false });
+          .select("id")
+          .eq("norma_id", _seNormaId)
+          .eq("activo", true)
+          .single();
 
-        if (error) throw error;
+        let saveError;
+        if (existing?.id) {
+          ({ error: saveError } = await _supabase
+            .from("wizard_schemas")
+            .update({ esquema: _seSchema, version: existing.version + 1 || 2 })
+            .eq("id", existing.id));
+        } else {
+          ({ error: saveError } = await _supabase
+            .from("wizard_schemas")
+            .insert({ norma_id: _seNormaId, esquema: _seSchema, activo: true, version: 1 }));
+        }
+
+        if (saveError) throw saveError;
         msgEl.innerHTML = `<div class="se-msg ok">✓ Schema guardado correctamente</div>`;
         setTimeout(() => { msgEl.innerHTML = ""; }, 3000);
       } catch (e) {
