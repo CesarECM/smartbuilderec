@@ -7,6 +7,12 @@
 const API = window.SBE_API || "https://smartbuilderec.onrender.com";
 const SAVE_DEBOUNCE_MS = 2000;
 
+// Endpoints de doc-generation que SÍ existen en el backend de producción
+const DOC_ENDPOINTS = {
+  ec0217: `${API}/generate-doc/planeacion`,
+  ec0301: `${API}/generate-doc/ec0301`,
+};
+
 const Engine = {
   schema:     null,
   normaId:    null,
@@ -19,7 +25,7 @@ const Engine = {
   // ── Entrada ──────────────────────────────────────────────────────────────
 
   async init() {
-    const session = await authGuard(["user", "admin", "super_admin"]);
+    const session = await authGuard(["user", "admin", "super_admin", "editor"]);
     if (!session) return;
 
     const params    = new URLSearchParams(location.search);
@@ -46,51 +52,60 @@ const Engine = {
     }
   },
 
-  // ── Schema y datos ───────────────────────────────────────────────────────
+  // ── Schema y datos (Supabase directo — sin depender del backend) ─────────
 
   async _cargarSchema() {
-    const token = await this._getToken();
-    const resp  = await fetch(`${API}/wizard/${this.normaId}/schema`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!resp.ok) throw new Error("Schema no encontrado para " + this.normaId);
-    const body  = await resp.json();
-    this.schema = body.esquema;
+    const { data, error } = await _supabase
+      .from("wizard_schemas")
+      .select("esquema")
+      .eq("norma_id", this.normaId)
+      .eq("activo", true)
+      .single();
+
+    if (error || !data) {
+      throw new Error(
+        `Schema no encontrado para "${this.normaId}". ` +
+        `Verifica que se ejecutó migration_motor_wizards.sql y seed_wizard_schemas.sql en Supabase.`
+      );
+    }
+    this.schema = data.esquema;
   },
 
   async _cargarOCrearInstancia() {
-    const token = await this._getToken();
-
     if (this.instanciaId) {
-      const resp = await fetch(
-        `${API}/wizard/${this.normaId}/instancias/${this.instanciaId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!resp.ok) throw new Error("Instancia no encontrada");
-      const inst    = await resp.json();
-      this.datos    = inst.datos || {};
-      this.datos._pasoActual = inst.paso_actual || "";
-      if (inst.assigned_by) {
+      const { data, error } = await _supabase
+        .from("wizard_instancias")
+        .select("*")
+        .eq("id", this.instanciaId)
+        .single();
+
+      if (error || !data) throw new Error("Instancia no encontrada");
+      this.datos             = data.datos || {};
+      this.datos._pasoActual = data.paso_actual || "";
+      if (data.assigned_by) {
         document.getElementById("wiz-assigned-banner").style.display = "block";
         document.getElementById("wiz-main").style.marginTop = "84px";
       }
     } else {
-      // Crear nueva instancia
-      const nombre  = this.schema.meta?.nombre || this.normaId;
-      const resp    = await fetch(
-        `${API}/wizard/${this.normaId}/instancias`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre: "Nueva planeación — " + nombre })
-        }
-      );
-      if (!resp.ok) throw new Error("No se pudo crear la instancia");
-      const inst       = await resp.json();
-      this.instanciaId = inst.id;
+      const { data: { user } } = await _supabase.auth.getUser();
+      const nombre = this.schema.meta?.nombre || this.normaId;
+
+      const { data, error } = await _supabase
+        .from("wizard_instancias")
+        .insert({
+          norma_id:   this.normaId,
+          user_id:    user.id,
+          nombre:     "Nueva planeación — " + nombre,
+          datos:      {},
+          paso_actual: "",
+        })
+        .select()
+        .single();
+
+      if (error) throw new Error("No se pudo crear la planeación: " + error.message);
+      this.instanciaId = data.id;
       this.datos       = {};
-      // Actualizar URL sin recargar
-      history.replaceState({}, "", `?norma=${this.normaId}&instancia=${inst.id}`);
+      history.replaceState({}, "", `?norma=${this.normaId}&instancia=${data.id}`);
     }
   },
 
@@ -685,12 +700,11 @@ const Engine = {
 
   async _guardarPatch(patch) {
     if (!this.instanciaId) return;
-    const token = await this._getToken();
-    await fetch(`${API}/wizard/${this.normaId}/instancias/${this.instanciaId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
-    });
+    const { error } = await _supabase
+      .from("wizard_instancias")
+      .update(patch)
+      .eq("id", this.instanciaId);
+    if (error) throw new Error(error.message);
   },
 
   // ── Generación de documentos ─────────────────────────────────────────────
@@ -701,22 +715,28 @@ const Engine = {
     this._mostrarLoading("Generando documentos...");
 
     try {
-      // Guardar primero
       await this._guardar();
 
-      const token = await this._getToken();
-      const resp  = await fetch(
-        `${API}/wizard/${this.normaId}/instancias/${this.instanciaId}/generar`,
-        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
-      );
+      const endpoint = DOC_ENDPOINTS[this.normaId];
+      if (!endpoint) {
+        throw new Error(`Generación no disponible aún para la norma "${this.normaId}".`);
+      }
+
+      const token    = await this._getToken();
+      const payload  = this._datosToPlaneacion();
+      const resp     = await fetch(endpoint, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!resp.ok) throw new Error(await resp.text());
 
-      const blob = await resp.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
+      const blob   = await resp.blob();
+      const url    = URL.createObjectURL(blob);
+      const a      = document.createElement("a");
       const nombre = (this.datos.nombreCurso || "planeacion").replace(/\s+/g, "_");
-      a.href     = url;
-      a.download = `SmartBuilder_${nombre}.zip`;
+      a.href       = url;
+      a.download   = `SmartBuilder_${nombre}.zip`;
       a.click();
       URL.revokeObjectURL(url);
       this._toast("✓ Documentos descargados");
@@ -726,6 +746,78 @@ const Engine = {
       this._ocultarLoading();
       if (btn) btn.disabled = false;
     }
+  },
+
+  // Convierte datos planos de wizard_instancias al PlaneacionRequest que espera el backend
+  _datosToPlaneacion() {
+    const d = this.datos;
+    return {
+      datos: {
+        nombreCurso:  d.nombreCurso  || "",
+        instructor:   d.instructor   || "",
+        disenador:    d.disenador    || "",
+        lugar:        d.lugar        || "",
+        fecha:        d.fecha        || "",
+        duracion:     d.duracion     || null,
+        participantes:d.participantes|| null,
+        perfil:       d.perfil       || "",
+      },
+      objetivos: {
+        general:    d.obj_general    || "",
+        cognitiva:  d.obj_cognitiva  || "",
+        psicomotriz:d.obj_psicomotriz|| "",
+        afectiva:   d.obj_afectiva   || "",
+      },
+      beneficios: d.beneficios || "",
+      temario: {
+        u1: d.temario_u1 || [],
+        u2: d.temario_u2 || [],
+        u3: d.temario_u3 || [],
+      },
+      encuadre: {
+        preguntas:    d.preguntas    || "",
+        reglasTexto:  d.reglasTexto  || [],
+        acuerdosTexto:[],
+        reglas: [], acuerdos: [], otraRegla: "", otroAcuerdo: "",
+      },
+      tecnicas: {
+        rhSeleccion:    d.rhSeleccion    || "",
+        rhObjetivo:     d.rhObjetivo     || "",
+        rhInstrucciones:d.rhInstrucciones|| "",
+        rhDuracion:     d.rhDuracion     || "",
+        rhMateriales:   d.rhMateriales   || "",
+        enSeleccion:    d.enSeleccion    || "",
+        enObjetivo:     d.enObjetivo     || "",
+        enInstrucciones:d.enInstrucciones|| "",
+        enDuracion:     d.enDuracion     || "",
+        enMateriales:   d.enMateriales   || "",
+        rompehielos: {}, energizante: {},
+      },
+      evaluaciones: {
+        pctDiagnostica:           d.pctDiagnostica            || 0,
+        instDiagnostica:          d.instDiagnostica            || "",
+        pctFormativa:             d.pctFormativa               || 0,
+        tipoInstrumentoFormativa: d.tipoInstrumentoFormativa   || "",
+        instFormativa:            d.instFormativa              || "",
+        pctSumativa:              d.pctSumativa                || 0,
+        instSumativa:             d.instSumativa               || "",
+        instReac:                 d.instReac                   || "",
+        descripcionGeneral:       d.descripcionGeneral         || "",
+      },
+      expositiva:   { campo: d.expositiva_descripcion  || "", duracion: d.expositiva_duracion  || "" },
+      demostrativa: { campo: d.demostrativa_descripcion|| "", duracion: d.demostrativa_duracion|| "" },
+      dialogo:      { preguntas: d.dialogo_preguntas || [], conclusion: d.dialogo_conclusion || "" },
+      cierre:       { resumen: d.cierre_resumen || "", compromisos: d.cierre_compromisos || [], bibliografias: d.cierre_bibliografias || [] },
+      materiales: {
+        didacticos:    d.mat_didacticos    || [],
+        fungibles:     d.mat_fungibles     || [],
+        instalaciones: d.mat_instalaciones || [],
+        herramientas:  d.mat_herramientas  || [],
+        tecnologicos:  d.mat_tecnologicos  || [],
+        otros:         d.mat_otros         || [],
+      },
+      tiempos: d.tiempos_bloques || [],
+    };
   },
 
   // ── Utilidades ───────────────────────────────────────────────────────────

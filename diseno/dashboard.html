@@ -542,6 +542,12 @@
           </div>
           <div id="listaPlaneaciones"><p class="loading-txt">Cargando...</p></div>
         </div>
+        <div class="dash-section" id="seccionWizardInstancias" style="display:none">
+          <div class="section-header">
+            <h2>📐 Mis planeaciones (motor nuevo)</h2>
+          </div>
+          <div id="listaWizardInstancias"><p class="loading-txt">Cargando...</p></div>
+        </div>
         <div class="dash-section" id="seccionPerfil">
           <div class="section-header">
             <h2>👤 Mi Perfil</h2>
@@ -562,6 +568,7 @@
       });
 
       await cargarPlaneaciones();
+      cargarWizardInstancias(); // no await — carga en paralelo sin bloquear
     }
 
     async function cargarPlaneaciones() {
@@ -665,6 +672,75 @@
             </div>
           </div>`;
       }).join("");
+    }
+
+    async function cargarWizardInstancias() {
+      const seccion = document.getElementById("seccionWizardInstancias");
+      const lista   = document.getElementById("listaWizardInstancias");
+      if (!seccion || !lista) return;
+
+      const { data, error } = await _supabase
+        .from("wizard_instancias")
+        .select("id, norma_id, nombre, status, paso_actual, updated_at, assigned_by")
+        .order("updated_at", { ascending: false });
+
+      if (error || !data?.length) return; // Sin instancias, no mostrar la sección
+
+      seccion.style.display = "";
+
+      // Agrupar por norma
+      const porNorma = {};
+      data.forEach(inst => {
+        if (!porNorma[inst.norma_id]) porNorma[inst.norma_id] = [];
+        porNorma[inst.norma_id].push(inst);
+      });
+
+      lista.innerHTML = Object.entries(porNorma).map(([norma, items]) => `
+        <div style="margin-bottom:20px">
+          <p style="font-size:12px;font-weight:700;color:var(--c-text-3);text-transform:uppercase;margin:0 0 10px">${norma.toUpperCase()}</p>
+          ${items.map(inst => {
+            const tiempo = tiempoRelativo(inst.updated_at);
+            const asig   = inst.assigned_by ? ' <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;font-weight:700">Pre-llenado</span>' : "";
+            return `
+              <div class="planeacion-card" id="winst-${inst.id}">
+                <div class="card-top">
+                  <div class="card-info">
+                    <div class="card-titulo-wrap">
+                      <span class="card-titulo">${inst.nombre || "(Sin título)"}</span>
+                      <span class="status-badge ${inst.status === 'completa' ? 'status-completa' : 'status-borrador'}">
+                        ${inst.status === 'completa' ? 'Completa' : 'Borrador'}
+                      </span>${asig}
+                    </div>
+                    <div class="card-meta">Editado ${tiempo}</div>
+                  </div>
+                  <div class="card-actions">
+                    <button class="btn-sm" onclick="continuarWizard('${norma}','${inst.id}')">Continuar →</button>
+                    <button class="btn-sm danger secondary" onclick="eliminarWizardInstancia('${inst.id}', this)" title="Eliminar">🗑️</button>
+                  </div>
+                </div>
+              </div>`;
+          }).join("")}
+        </div>`).join("");
+    }
+
+    function continuarWizard(norma, instanciaId) {
+      window.location.href = `wizard-engine.html?norma=${norma}&instancia=${instanciaId}`;
+    }
+
+    async function eliminarWizardInstancia(instanciaId, btn) {
+      if (!confirm("¿Eliminar esta planeación? Esta acción no se puede deshacer.")) return;
+      btn.disabled = true;
+      const { error } = await _supabase
+        .from("wizard_instancias")
+        .delete()
+        .eq("id", instanciaId);
+      if (error) { alert("Error: " + error.message); btn.disabled = false; return; }
+      document.getElementById("winst-" + instanciaId)?.remove();
+      // Ocultar sección si no quedan instancias
+      const lista = document.getElementById("listaWizardInstancias");
+      if (!lista.querySelector(".planeacion-card")) {
+        document.getElementById("seccionWizardInstancias").style.display = "none";
+      }
     }
 
     async function abrirPortalFacturacion() {
