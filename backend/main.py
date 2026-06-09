@@ -126,6 +126,7 @@ app.add_middleware(
         "https://smartbuilderec.vercel.app",
         "https://smartbuilderec.com",
         "https://www.smartbuilderec.com",
+        "https://start.smartbuilderec.com",
     ],
     allow_origin_regex=r"https://smartbuilderec.*\.vercel\.app",
     allow_credentials=True,
