@@ -688,48 +688,54 @@ const Engine = {
 
     try {
       const token = await this._getToken();
-      let resultado = null;
+      let resultado    = null;
       let tipoResultado = campo?.tipo || "textarea";
 
-      // ── Intento 1: endpoint genérico nuevo ───────────────────────
+      // ── Intento 1: endpoint genérico nuevo (/ai/generar-campo) ───
       if (campo?.ai?.prompt) {
-        const prompt = this._interpolar(campo.ai.prompt);
-        const resp   = await fetch(`${API}/ai/generar-campo`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, temperature: 0.4 }),
-        });
-
-        if (resp.ok) {
-          const body = await resp.json();
-          resultado = body.resultado;
-        } else if (resp.status !== 404) {
-          // Error real (500, 401…) — no es que falte el endpoint
-          throw new Error(`Error IA: ${resp.status}`);
-        }
-        // Si es 404 → endpoint nuevo no disponible, caemos al fallback
+        try {
+          const prompt = this._interpolar(campo.ai.prompt);
+          const resp   = await fetch(`${API}/ai/generar-campo`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt, temperature: 0.4 }),
+          });
+          if (resp.ok) resultado = (await resp.json()).resultado;
+          // 404 → no existe aún en backend; red/CORS → catch lo ignora
+        } catch { /* CORS u otro error de red → intentar fallback */ }
       }
 
-      // ── Intento 2: fallback a endpoint legacy en producción ───────
+      // ── Intento 2: endpoints legacy que ya existen en producción ─
       if (resultado === null) {
         const legacy = LEGACY_AI_MAP[fieldId];
         if (!legacy) {
-          throw new Error("La IA para este campo estará disponible cuando se actualice el backend. Por ahora puedes escribir manualmente.");
+          throw new Error(
+            "IA no disponible para este campo desde el preview. " +
+            "Funciona en producción cuando se despliegue el backend actualizado."
+          );
         }
-
-        const resp = await fetch(`${API}${legacy.ep}`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify(legacy.req(this.datos)),
-        });
-        if (!resp.ok) throw new Error(`Error IA (${legacy.ep}): ${resp.status}`);
-
-        const body = await resp.json();
-        resultado  = legacy.res(body);
-        if (legacy.tipo) tipoResultado = legacy.tipo;
+        try {
+          const resp = await fetch(`${API}${legacy.ep}`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify(legacy.req(this.datos)),
+          });
+          if (!resp.ok) throw new Error(`${resp.status}`);
+          resultado = legacy.res(await resp.json());
+          if (legacy.tipo) tipoResultado = legacy.tipo;
+        } catch (legacyErr) {
+          // Si ambos fallan por CORS, dar mensaje claro
+          const esCors = legacyErr instanceof TypeError;
+          throw new Error(
+            esCors
+              ? "El backend bloquea llamadas desde la URL de preview (CORS). " +
+                "Funciona desde www.smartbuilderec.com una vez que se despliegue."
+              : `Error IA: ${legacyErr.message}`
+          );
+        }
       }
 
-      // ── Aplicar resultado al campo ───────────────────────────────
+      // ── Aplicar resultado ────────────────────────────────────────
       this._aplicarResultadoIA(fieldId, campo, resultado, tipoResultado);
       this._toast("✓ Generado con IA");
 
