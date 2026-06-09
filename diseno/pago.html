@@ -6,6 +6,18 @@
   <title>SmartBuilderEC — Genera tu expediente EC0217.01 completo</title>
   <meta name="description" content="La herramienta que todo instructor necesita para cumplir con la norma EC0217.01 del CONOCER. Genera los 10 documentos de tu expediente didáctico en minutos con inteligencia artificial.">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+    (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init','3048349758817193');
+    fbq('track','PageView');
+    fbq('track','ViewContent',{content_name:'Landing SmartBuilderEC',currency:'MXN',value:1799});
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=3048349758817193&ev=PageView&noscript=1"/></noscript>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { background: #f8fafc; font-family: inherit; margin: 0; padding: 0; }
@@ -396,6 +408,7 @@
       btn.disabled = true;
       btn.textContent = "Redirigiendo al pago...";
       setMsg("", "");
+      if (typeof fbq !== 'undefined') fbq('track','InitiateCheckout',{currency:'MXN',value:1799});
 
       const base = window.location.origin;
       const success_url = `${base}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
