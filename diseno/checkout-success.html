@@ -12,6 +12,7 @@
     t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
     (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
     fbq('init','3048349758817193');
+    fbq('init','1306766721444198');
     fbq('track','PageView');
   </script>
   <noscript><img height="1" width="1" style="display:none"
@@ -124,7 +125,7 @@
 
           if (data.status === "paid" || data.status === "complete") {
             if (data.email) document.getElementById("emailUsuario").textContent = data.email;
-            if (typeof fbq !== 'undefined') fbq('track','Purchase',{currency:'MXN',value:1799});
+            if (typeof fbq !== 'undefined') fbq('track','Purchase',{currency:'MXN',value:1799},{eventID:sessionId});
             show("stateSuccess");
             return;
           } else {

@@ -3,9 +3,11 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from database import get_supabase
 from services.email_service import send_template
+from services.capi import send_purchase_event
 from datetime import datetime, timedelta, timezone
 import stripe
 import os
+import time
 
 router = APIRouter()
 
@@ -160,11 +162,14 @@ def _extract_session_data(session) -> dict:
 
     print(f"[checkout] metadata extraída — nombre: '{nombre}', email: '{email}'")
     return {
-        "email":  str(email),
-        "nombre": str(nombre),
-        "customer": str(customer),
-        "amount":   getattr(session, "amount_total", None) or 179900,
-        "pstatus":  getattr(session, "payment_status", None) or "",
+        "email":       str(email),
+        "nombre":      str(nombre),
+        "customer":    str(customer),
+        "amount":      getattr(session, "amount_total", None) or 179900,
+        "pstatus":     getattr(session, "payment_status", None) or "",
+        "session_id":  getattr(session, "id", None) or "",
+        "event_time":  getattr(session, "created", None) or int(time.time()),
+        "success_url": getattr(session, "success_url", None) or "",
     }
 
 
@@ -241,6 +246,17 @@ def _handle_checkout_completed(session):
                 pass
         else:
             print(f"⚠️ checkout_completed error: {err}")
+
+    # CAPI: siempre intentar, independiente del resultado del bloque anterior
+    frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+    send_purchase_event(
+        event_id=data.get("session_id") or email,
+        event_time=data.get("event_time", 0),
+        email=email,
+        value_centavos=monto_centavos,
+        currency="MXN",
+        event_source_url=f"{frontend_url}/checkout-success.html",
+    )
 
 
 def _handle_subscription_ended(subscription: dict):
