@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import os
 import time
 
@@ -9,6 +10,10 @@ _CAPI_BASE = "https://graph.facebook.com/v21.0/{pixel_id}/events"
 
 def _sha256(value: str) -> str:
     return hashlib.sha256(value.strip().lower().encode()).hexdigest()
+
+
+def _appsecret_proof(access_token: str, app_secret: str) -> str:
+    return hmac.new(app_secret.encode(), access_token.encode(), hashlib.sha256).hexdigest()
 
 
 def send_purchase_event(
@@ -26,6 +31,7 @@ def send_purchase_event(
     """
     pixel_id = os.getenv("FB_PIXEL_ID", "").strip()
     access_token = os.getenv("FB_ACCESS_TOKEN", "").strip()
+    app_secret = os.getenv("FB_APP_SECRET", "").strip()
 
     if not pixel_id or not access_token:
         print("[capi] FB_PIXEL_ID o FB_ACCESS_TOKEN no configurados — omitiendo")
@@ -58,10 +64,13 @@ def send_purchase_event(
         payload["test_event_code"] = test_code
 
     url = _CAPI_BASE.format(pixel_id=pixel_id)
+    params: dict = {"access_token": access_token}
+    if app_secret:
+        params["appsecret_proof"] = _appsecret_proof(access_token, app_secret)
 
     try:
         with httpx.Client(timeout=10) as client:
-            resp = client.post(url, json=payload, params={"access_token": access_token})
+            resp = client.post(url, json=payload, params=params)
             body = resp.json()
             if resp.status_code == 200:
                 events_received = body.get("events_received", "?")
