@@ -571,7 +571,7 @@
               <span class="integ-badge idle" id="badge-admins_sin_creditos">—</span>
             </div>
           </div>
-          <div class="integ-card" id="integ-usuarios_sin_plan">
+          <div class="integ-card" id="integ-usuarios_sin_plan" onclick="abrirSinPlan()" style="cursor:pointer" title="Ver usuarios sin planeación">
             <span class="led led-gray" id="led-usuarios_sin_plan"></span>
             <div class="integ-icon">👤</div>
             <div class="integ-body">
@@ -1143,6 +1143,16 @@
         <button class="btn-secondary" onclick="cerrarModalVigenciaUser()">Cancelar</button>
         <button class="btn-primary" id="btnConfirmarVigenciaUser" onclick="confirmarVigenciaUser()">Guardar vigencia</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal sin planeación -->
+  <div class="sa-modal-overlay" id="modalSinPlan" onclick="cerrarModalSinPlan(event)">
+    <div class="sa-modal-box" style="max-width:680px">
+      <button class="sa-modal-close" onclick="cerrarModalSinPlan()">✕</button>
+      <div class="sa-modal-title">👤 Usuarios sin planeación</div>
+      <div class="sa-modal-subtitle">Registrados hace más de 7 días y sin ninguna planeación creada.</div>
+      <div id="sinPlanLista"><p class="loading-txt">Cargando...</p></div>
     </div>
   </div>
 
@@ -1792,6 +1802,90 @@
         document.getElementById("modalReasignar").classList.remove("open");
         _reasignarUserId=null;
       }
+    }
+
+    // ── Sin planeación ────────────────────────────────────────────
+    async function abrirSinPlan() {
+      document.getElementById("modalSinPlan").classList.add("open");
+      const lista = document.getElementById("sinPlanLista");
+      lista.innerHTML = '<p class="loading-txt">Cargando...</p>';
+
+      // 1. Usuarios activos creados hace +7 días
+      const hace7 = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+      const { data: usuarios } = await _supabase
+        .from("profiles")
+        .select("id,nombre,apellido,email,created_at,admin_id,profiles!admin_id(nombre,apellido,email)")
+        .eq("rol","user").eq("activo",true).lt("created_at",hace7)
+        .order("created_at",{ascending:false}).limit(300);
+
+      if (!usuarios || !usuarios.length) {
+        lista.innerHTML = '<p class="empty-txt">No hay usuarios en esta condición.</p>';
+        return;
+      }
+
+      // 2. Filtrar los que NO tienen ninguna planeación
+      const ids = usuarios.map(u => u.id);
+      const { data: conPlan } = await _supabase
+        .from("planeaciones").select("user_id").in("user_id", ids);
+      const conPlanIds = new Set((conPlan||[]).map(p => p.user_id));
+      const sinPlan = usuarios.filter(u => !conPlanIds.has(u.id));
+
+      if (!sinPlan.length) {
+        lista.innerHTML = '<p class="empty-txt">Todos los usuarios ya tienen al menos una planeación. ✓</p>';
+        return;
+      }
+
+      lista.innerHTML = `
+        <p style="font-size:12px;color:var(--c-text-3);margin-bottom:12px">${sinPlan.length} usuario${sinPlan.length!==1?"s":""} encontrado${sinPlan.length!==1?"s":""}</p>
+        <div class="table-wrap"><table class="users-table">
+          <thead><tr><th>Nombre</th><th>Email</th><th>Admin</th><th>Registro</th><th></th></tr></thead>
+          <tbody>${sinPlan.map(u => {
+            const nombre = [u.nombre,u.apellido].filter(Boolean).join(" ")||"(Sin nombre)";
+            const a = u["profiles"]||null;
+            const adminNombre = a ? ([a.nombre,a.apellido].filter(Boolean).join(" ")||a.email) : "Sin admin";
+            const fecha = new Date(u.created_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
+            return `<tr>
+              <td style="font-weight:600;color:var(--c-text)">${nombre}</td>
+              <td style="color:var(--c-text-3);font-size:12px">${u.email}</td>
+              <td style="color:var(--c-text-3);font-size:12px">${adminNombre}</td>
+              <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
+              <td><button class="btn-sm purple" onclick="verEnUsuarios('${u.email}')">Ver perfil →</button></td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table></div>`;
+    }
+
+    function cerrarModalSinPlan(e) {
+      if (!e || e.target === document.getElementById("modalSinPlan"))
+        document.getElementById("modalSinPlan").classList.remove("open");
+    }
+
+    function verEnUsuarios(email) {
+      document.getElementById("modalSinPlan").classList.remove("open");
+      showTab("usuarios");
+      // Espera a que la tab cargue y luego filtra
+      const intentar = async () => {
+        if (!_tabsLoaded.usuarios) {
+          await cargarTodosUsuarios();
+        }
+        const input = document.getElementById("searchUsuarios");
+        if (input) {
+          input.value = email;
+          filtrarUsuarios(email);
+          // Resaltar la fila
+          setTimeout(() => {
+            const fila = [...document.querySelectorAll("#listaUsuariosTodos td")]
+              .find(td => td.textContent.trim() === email)?.closest("tr");
+            if (fila) {
+              fila.style.transition = "background 0.3s";
+              fila.style.background = "#ede9fe";
+              fila.scrollIntoView({ behavior: "smooth", block: "center" });
+              setTimeout(() => { fila.style.background = ""; }, 2200);
+            }
+          }, 300);
+        }
+      };
+      intentar();
     }
 
     // Eliminar usuario (super admin)
