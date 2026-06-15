@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP Académico — SmartBuilderEC</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--c-bg); }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    .dash-header {
+      background: #065f46; padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; height: 56px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(6,95,70,0.35);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .dash-header img { max-height: 34px; }
+    .header-title { color: white; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .erp-badge { background: rgba(255,255,255,0.18); font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-nombre { color: rgba(255,255,255,0.85); font-size: 13px; }
+    .header-btn { background: rgba(255,255,255,0.14); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; transition: background var(--t-fast); display: inline-flex; align-items: center; gap: 5px; }
+    .header-btn:hover { background: rgba(255,255,255,0.26); }
+
+    /* ── Tab bar ─────────────────────────────────────────────── */
+    .tab-bar { background: var(--c-surface); border-bottom: 2px solid var(--c-border); display: flex; padding: 0 20px; position: sticky; top: 56px; z-index: 90; overflow-x: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .tab-btn { background: none; border: none; border-bottom: 3px solid transparent; padding: 14px 22px; font-size: 13px; font-weight: 600; color: var(--c-text-3); cursor: pointer; font-family: inherit; transition: all 0.15s; margin-bottom: -2px; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .tab-btn:hover { color: var(--c-text); background: var(--c-surface-2); }
+    .tab-btn.active { color: #065f46; border-bottom-color: #065f46; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .panel-main { max-width: 1060px; margin: 0 auto; padding: 28px 24px 56px; }
+
+    /* ── Stats row ───────────────────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px,1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); padding: 18px 18px; }
+    .stat-card.verde { border-left: 3px solid #22c55e; }
+    .stat-num   { font-size: 28px; font-weight: 800; color: var(--c-blue-600); line-height: 1; }
+    .stat-label { font-size: 12px; color: var(--c-text-3); margin-top: 4px; }
+
+    /* ── Section header ──────────────────────────────────────── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--c-border); gap: 12px; flex-wrap: wrap; }
+    .section-header h2 { font-size: 16px; font-weight: 700; color: var(--c-text); margin: 0; }
+    .section-header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* ── Botones ─────────────────────────────────────────────── */
+    .btn-primary { background: #065f46; color: white; border: none; padding: 9px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background var(--t-fast); }
+    .btn-primary:hover:not(:disabled) { background: #047857; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-border-s); padding: 5px 11px; border-radius: var(--r-sm); font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all var(--t-fast); white-space: nowrap; }
+    .btn-sm:hover { background: #065f46; color: white; border-color: #065f46; }
+    .btn-sm.azul:hover { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+    .btn-sm.pago { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+    .btn-sm.pago:hover { background: #065f46; color: white; border-color: #065f46; }
+    .btn-sm.eval { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
+    .btn-sm.eval:hover { background: #1e40af; color: white; border-color: #1e40af; }
+    .btn-cancelar { background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-border-s); padding: 8px 16px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+
+    /* ── Búsqueda ────────────────────────────────────────────── */
+    .search-input { border: 1.5px solid var(--c-border); border-radius: var(--r-md); padding: 7px 12px; font-size: 13px; font-family: inherit; outline: none; background: var(--c-surface); width: 220px; transition: border-color 0.2s; }
+    .search-input:focus { border-color: #065f46; }
+
+    /* ── Tabla de alumnos ────────────────────────────────────── */
+    .table-wrap { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); overflow: hidden; overflow-x: auto; }
+    .erp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .erp-table th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-3); border-bottom: 2px solid var(--c-border); background: var(--c-surface-2); white-space: nowrap; }
+    .erp-table td { padding: 12px 16px; border-bottom: 1px solid var(--c-border); vertical-align: middle; color: var(--c-text-2); }
+    .erp-table tr:last-child td { border-bottom: none; }
+    .erp-table tr:hover td { background: rgba(0,0,0,0.016); }
+
+    .alumno-nombre { font-size: 13px; font-weight: 700; color: var(--c-text); }
+    .alumno-email  { font-size: 11px; color: var(--c-text-3); font-family: monospace; }
+
+    /* Semáforo de pagos */
+    .semaforo { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+    .sem-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .sem-dot.verde    { background: #22c55e; }
+    .sem-dot.gris     { background: #cbd5e1; }
+    .sem-dot.naranja  { background: #fb923c; }
+    .sem-label { font-size: 11px; color: var(--c-text-3); }
+
+    /* Normas chips */
+    .norma-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .norma-chip { background: #f0fdf4; color: #065f46; border: 1px solid #6ee7b7; border-radius: var(--r-sm); padding: 2px 8px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .norma-chip.sin-pago { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+
+    /* ── Modal ───────────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--c-surface); border-radius: var(--r-xl); box-shadow: 0 24px 64px rgba(0,0,0,0.22); width: 100%; max-width: 560px; padding: 28px 28px 24px; position: relative; margin: auto; }
+    .modal-box.wide { max-width: 720px; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: var(--c-surface-2); border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer; color: var(--c-text-3); transition: background var(--t-fast); }
+    .modal-close:hover { background: var(--c-border); }
+    .modal-title    { font-size: 17px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+    .modal-subtitle { font-size: 13px; color: var(--c-text-3); margin-bottom: 20px; }
+    .modal-actions  { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+
+    /* ── Formularios ─────────────────────────────────────────── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 6px; }
+    .form-grid.one { grid-template-columns: 1fr; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .form-field input, .form-field select, .form-field textarea {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
+      padding: 8px 11px; font-size: 13px; font-family: inherit;
+      background: var(--c-surface); transition: border-color 0.2s; outline: none;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #065f46; }
+    .form-field textarea { min-height: 70px; resize: vertical; }
+    .form-msg { font-size: 12px; margin-top: 4px; }
+    .form-msg.ok  { color: #059669; }
+    .form-msg.err { color: var(--c-danger); }
+
+    /* ── Detalle alumno (panel lateral en modal) ──────────────── */
+    .detalle-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--c-border); }
+    .detalle-section h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--c-text-3); margin-bottom: 12px; }
+    .pago-row-detalle { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--r-md); margin-bottom: 6px; border: 1px solid var(--c-border); background: var(--c-surface-2); }
+    .pago-row-detalle.pagado { background: #f0fdf4; border-color: #86efac; }
+    .pago-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .pago-row-detalle.pagado .pago-row-dot { background: #22c55e; }
+    .pago-row-detalle:not(.pagado) .pago-row-dot { background: #cbd5e1; }
+    .pago-row-concepto { font-size: 13px; font-weight: 600; color: var(--c-text); text-transform: capitalize; }
+    .pago-row-info { font-size: 11px; color: var(--c-text-3); margin-left: auto; }
+
+    /* Timeline en modal detalle */
+    .tl { padding-left: 22px; position: relative; }
+    .tl::before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--c-border); }
+    .tl-step { position: relative; padding: 0 0 14px 0; }
+    .tl-step:last-child { padding-bottom: 0; }
+    .tl-dot { position: absolute; left: -18px; top: 2px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--c-border); background: var(--c-surface); }
+    .tl-step.done .tl-dot { background: #22c55e; border-color: #22c55e; }
+    .tl-step.active .tl-dot { background: #2563eb; border-color: #2563eb; }
+    .tl-title { font-size: 12px; font-weight: 700; color: var(--c-text); }
+    .tl-step.pending .tl-title { color: var(--c-text-4); font-weight: 500; }
+    .tl-fecha { font-size: 11px; color: var(--c-text-3); }
+    .tl-btn { margin-top: 4px; }
+
+    /* ── Roles section ───────────────────────────────────────── */
+    .roles-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .role-chip { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #1e40af; border: 1px solid #93c5fd; border-radius: var(--r-sm); padding: 3px 10px; font-size: 11px; font-weight: 700; }
+    .role-chip.asesor { background: #fdf4ff; color: #7e22ce; border-color: #d8b4fe; }
+
+    /* ── Misc ────────────────────────────────────────────────── */
+    .empty-txt { color: var(--c-text-3); font-size: 13px; padding: 40px; text-align: center; }
+    .loading-txt { color: var(--c-text-3); font-size: 14px; padding: 32px; text-align: center; }
+    .error-txt { color: var(--c-danger); font-size: 13px; padding: 14px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 22px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 9999; }
+    .toast.visible { opacity: 1; }
+    .badge-count { background: #dc2626; color: #fff; border-radius: 9999px; font-size: 10px; font-weight: 700; padding: 1px 6px; margin-left: 4px; }
+    .badge-count:empty { display: none; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="dash-header">
+    <div class="header-left">
+      <img src="img/LogoECM.png" alt="SmartBuilderEC">
+      <div class="header-title">
+        ERP Académico
+        <span class="erp-badge" id="rolBadge">Admin</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="header-nombre" id="headerNombre"></span>
+      <a href="dashboard.html" class="header-btn">Panel principal</a>
+      <button class="header-btn" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- ── Tab bar ── -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('alumnos',this)">Alumnos</button>
+    <button class="tab-btn" onclick="switchTab('inscribir',this)">+ Inscribir alumno</button>
+    <button class="tab-btn" id="tabRoles" style="display:none" onclick="switchTab('roles',this)">
+      Roles evaluador/asesor
+    </button>
+    <button class="tab-btn" id="tabNormas" style="display:none" onclick="switchTab('normas',this)">
+      Catálogo de normas
+    </button>
+  </div>
+
+  <!-- ══ PANEL: Alumnos ══════════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="panel-alumnos">
+    <div class="panel-main">
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Alumnos</div></div>
+        <div class="stat-card verde"><div class="stat-num" id="statConPago">—</div><div class="stat-label">Con pagos registrados</div></div>
+        <div class="stat-card"><div class="stat-num" id="statPendientes">—</div><div class="stat-label">Sin pagos</div></div>
+        <div class="stat-card"><div class="stat-num" id="statEvaluados">—</div><div class="stat-label">Evaluados CONOCER</div></div>
+      </div>
+
+      <div class="section-header">
+        <h2>Mis alumnos</h2>
+        <div class="section-header-right">
+          <input class="search-input" type="search" placeholder="Buscar alumno..." id="searchAlumno" oninput="filtrarAlumnos()">
+          <select id="filtroNorma" onchange="filtrarAlumnos()" style="border:1.5px solid var(--c-border);border-radius:var(--r-md);padding:7px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);outline:none;cursor:pointer">
+            <option value="">Todas las normas</option>
+          </select>
+          <select id="filtroPago" onchange="filtrarAlumnos()" style="border:1.5px solid var(--c-border);border-radius:var(--r-md);padding:7px 10px;font-size:13px;font-family:inherit;background:var(--c-surface);outline:none;cursor:pointer">
+            <option value="">Todos</option>
+            <option value="pendientes">Sin pagos</option>
+            <option value="con-pago">Con pagos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="erp-table" id="tablaAlumnos">
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Normas inscritas</th>
+              <th>Pagos</th>
+              <th>Proceso CONOCER</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyAlumnos">
+            <tr><td colspan="5" class="loading-txt">Cargando alumnos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PANEL: Inscribir alumno ══════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-inscribir">
+    <div class="panel-main" style="max-width:640px">
+      <div class="section-header"><h2>Inscribir alumno en una norma</h2></div>
+
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-xl);padding:28px;">
+        <div class="form-grid">
+          <div class="form-field full">
+            <label>Alumno</label>
+            <select id="inscAlumno" class="form-field">
+              <option value="">— Selecciona un alumno —</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label>Norma</label>
+            <select id="inscNorma" class="form-field">
+              <option value="">— Selecciona una norma —</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Asesor (opcional)</label>
+            <select id="inscAsesor">
+              <option value="">— Sin asignar —</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Evaluador (opcional)</label>
+            <select id="inscEvaluador">
+              <option value="">— Sin asignar —</option>
+            </select>
+          </div>
+        </div>
+        <div id="inscMsg" class="form-msg" style="margin-top:12px"></div>
+        <div style="margin-top:18px;display:flex;gap:10px">
+          <button class="btn-primary" onclick="inscribirAlumno()" id="btnInscribir">Inscribir alumno</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PANEL: Roles ════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-roles">
+    <div class="panel-main">
+      <div class="section-header">
+        <h2>Asignar roles evaluador / asesor</h2>
+        <button class="btn-primary" onclick="abrirModalAsignarRol()">+ Asignar rol</button>
+      </div>
+      <div class="table-wrap">
+        <table class="erp-table">
+          <thead>
+            <tr><th>Usuario</th><th>Rol adicional</th><th>Asignado</th><th>Acción</th></tr>
+          </thead>
+          <tbody id="tbodyRoles">
+            <tr><td colspan="4" class="loading-txt">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PANEL: Normas ═══════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-normas">
+    <div class="panel-main">
+      <div class="section-header">
+        <h2>Catálogo de normas CONOCER</h2>
+        <button class="btn-primary" onclick="abrirModalNorma()">+ Nueva norma</button>
+      </div>
+      <div class="table-wrap">
+        <table class="erp-table">
+          <thead>
+            <tr><th>Código</th><th>Nombre</th><th>Días estimados</th><th>Wizard</th><th>Estado</th><th>Acción</th></tr>
+          </thead>
+          <tbody id="tbodyNormas">
+            <tr><td colspan="6" class="loading-txt">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Detalle alumno ═══════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalDetalle">
+    <div class="modal-box wide">
+      <button class="modal-close" onclick="cerrarModal('modalDetalle')">✕</button>
+      <div id="detalleContenido"><p class="loading-txt">Cargando...</p></div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Pago manual ══════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalPago">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModal('modalPago')">✕</button>
+      <div class="modal-title">Registrar pago manual</div>
+      <div class="modal-subtitle" id="pagoAlumnoNombre"></div>
+      <div class="form-grid one">
+        <div class="form-field">
+          <label>Norma</label>
+          <select id="pagoNormaId"></select>
+        </div>
+        <div class="form-field">
+          <label>Concepto</label>
+          <select id="pagoConcepto">
+            <option value="alineacion">Alineación (Wizard)</option>
+            <option value="evaluacion">Evaluación CONOCER</option>
+            <option value="certificacion">Emisión de certificado</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Monto (MXN, opcional)</label>
+          <input type="number" id="pagoMonto" placeholder="0" min="0">
+        </div>
+        <div class="form-field">
+          <label>Referencia (opcional)</label>
+          <input type="text" id="pagoReferencia" placeholder="Ej. TRANSF-001, recibo #123">
+        </div>
+        <div class="form-field full">
+          <label>Notas (opcional)</label>
+          <textarea id="pagoNotas" placeholder="Observaciones del pago..."></textarea>
+        </div>
+      </div>
+      <div id="pagoMsg" class="form-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancelar" onclick="cerrarModal('modalPago')">Cancelar</button>
+        <button class="btn-primary" onclick="registrarPago()" id="btnRegistrarPago">Registrar pago</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Evaluado ════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalEvaluado">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModal('modalEvaluado')">✕</button>
+      <div class="modal-title">Registrar evaluación exitosa</div>
+      <div class="modal-subtitle" id="evalAlumnoNombre"></div>
+      <div class="form-grid one">
+        <div class="form-field">
+          <label>Norma</label>
+          <select id="evalNormaId"></select>
+        </div>
+        <div class="form-field">
+          <label>Fecha de evaluación</label>
+          <input type="date" id="evalFecha">
+        </div>
+        <div class="form-field full">
+          <label>Notas (opcional)</label>
+          <textarea id="evalNotas" placeholder="Resultado, observaciones..."></textarea>
+        </div>
+      </div>
+      <div id="evalMsg" class="form-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancelar" onclick="cerrarModal('modalEvaluado')">Cancelar</button>
+        <button class="btn-primary" onclick="registrarEvaluado()" id="btnRegistrarEval">Registrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Lote enviado ════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalLote">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModal('modalLote')">✕</button>
+      <div class="modal-title">Registrar envío de lote al CONOCER</div>
+      <div class="modal-subtitle" id="loteAlumnoNombre"></div>
+      <div class="form-grid one">
+        <div class="form-field">
+          <label>Norma</label>
+          <select id="loteNormaId"></select>
+        </div>
+        <div class="form-field">
+          <label>Fecha de envío del lote</label>
+          <input type="date" id="loteFecha">
+        </div>
+        <div class="form-field full">
+          <label>Notas (opcional)</label>
+          <textarea id="loteNotas" placeholder="Número de lote, folio, observaciones..."></textarea>
+        </div>
+      </div>
+      <div id="loteMsg" class="form-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancelar" onclick="cerrarModal('modalLote')">Cancelar</button>
+        <button class="btn-primary" onclick="registrarLote()" id="btnRegistrarLote">Registrar envío</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Asignar rol ═════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalRol">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModal('modalRol')">✕</button>
+      <div class="modal-title">Asignar rol adicional</div>
+      <div class="modal-subtitle">El usuario mantiene su rol actual y además tendrá este nuevo rol.</div>
+      <div class="form-grid one">
+        <div class="form-field">
+          <label>Usuario</label>
+          <select id="rolUserId"></select>
+        </div>
+        <div class="form-field">
+          <label>Rol</label>
+          <select id="rolTipo">
+            <option value="evaluador">Evaluador CONOCER</option>
+            <option value="asesor">Asesor</option>
+          </select>
+        </div>
+      </div>
+      <div id="rolMsg" class="form-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancelar" onclick="cerrarModal('modalRol')">Cancelar</button>
+        <button class="btn-primary" onclick="asignarRol()" id="btnAsignarRol">Asignar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL: Norma ═══════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalNorma">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModal('modalNorma')">✕</button>
+      <div class="modal-title" id="normaModalTitulo">Nueva norma</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Código</label>
+          <input type="text" id="norCodigo" placeholder="Ej. EC0217.01">
+        </div>
+        <div class="form-field">
+          <label>Días estimados certificado</label>
+          <input type="number" id="norDias" value="45" min="1">
+        </div>
+        <div class="form-field full">
+          <label>Nombre</label>
+          <input type="text" id="norNombre" placeholder="Nombre completo de la norma">
+        </div>
+        <div class="form-field full">
+          <label>Descripción</label>
+          <textarea id="norDescripcion" placeholder="Descripción breve de la norma..."></textarea>
+        </div>
+        <div class="form-field">
+          <label>¿Tiene wizard de alineación?</label>
+          <select id="norWizard">
+            <option value="false">No</option>
+            <option value="true">Sí</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Estado</label>
+          <select id="norActivo">
+            <option value="true">Activa</option>
+            <option value="false">Inactiva</option>
+          </select>
+        </div>
+      </div>
+      <div id="norMsg" class="form-msg"></div>
+      <div class="modal-actions">
+        <button class="btn-cancelar" onclick="cerrarModal('modalNorma')">Cancelar</button>
+        <button class="btn-primary" onclick="guardarNorma()" id="btnGuardarNorma">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const BACKEND_URL = "https://smartbuilderec.onrender.com";
+
+    let _perfil     = null;
+    let _esSuper    = false;
+    let _alumnos    = [];
+    let _normas     = [];
+    let _asesores   = [];
+    let _evaluadores = [];
+    let _alumnoActual = null; // alumno seleccionado en modal
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function toast(msg, ms = 3000) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("visible");
+      setTimeout(() => t.classList.remove("visible"), ms);
+    }
+
+    // ── Tabs ──────────────────────────────────────────────────────────────────
+    function switchTab(id, btn) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("panel-" + id).classList.add("active");
+      btn.classList.add("active");
+
+      if (id === "roles")  cargarRoles();
+      if (id === "normas") cargarNormasTabla();
+    }
+
+    // ── Modal helpers ─────────────────────────────────────────────────────────
+    function abrirModal(id) {
+      document.getElementById(id).classList.add("open");
+    }
+    function cerrarModal(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+    document.querySelectorAll(".modal-overlay").forEach(m => {
+      m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+    });
+
+    // ── Utilidades ────────────────────────────────────────────────────────────
+    function fmtFechaCorta(iso) {
+      if (!iso) return "—";
+      return new Date(iso.includes("T") ? iso : iso + "T12:00:00")
+        .toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    function iniciales(n, a) {
+      return ((n?.[0] || "") + (a?.[0] || "")).toUpperCase() || "?";
+    }
+
+    async function apiFetch(path, opts = {}) {
+      const headers = await getAuthHeaders();
+      const res = await fetch(BACKEND_URL + path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Error ${res.status}`);
+      }
+      return res.json();
+    }
+
+    // ── Inicialización ────────────────────────────────────────────────────────
+    async function init() {
+      const session = await authGuard();
+      if (!session) return;
+
+      _perfil = await getUserProfile();
+      if (!_perfil) { window.location.href = "login.html"; return; }
+
+      const rolValido = _perfil.rol === "admin" || _perfil.rol === "super_admin";
+      if (!rolValido) {
+        // Puede ser evaluador/asesor con rol 'user' — verificar
+        // Por ahora redirigir a dashboard si no es admin
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      _esSuper = _perfil.rol === "super_admin";
+      const nombre = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
+      document.getElementById("headerNombre").textContent = nombre;
+      document.getElementById("rolBadge").textContent = _esSuper ? "Super Admin" : "Admin";
+
+      if (_esSuper) {
+        document.getElementById("tabRoles").style.display = "flex";
+        document.getElementById("tabNormas").style.display = "flex";
+      }
+
+      await Promise.all([cargarNormas(), cargarAlumnos(), cargarPersonas()]);
+      poblarSelectsInscripcion();
+    }
+
+    // ── Datos base ────────────────────────────────────────────────────────────
+    async function cargarNormas() {
+      try {
+        const data = await apiFetch("/erp/normas" + (_esSuper ? "?todas=true" : ""));
+        _normas = data.normas || [];
+        // Poblar filtro de normas
+        const filtro = document.getElementById("filtroNorma");
+        _normas.forEach(n => {
+          const opt = document.createElement("option");
+          opt.value = n.id;
+          opt.textContent = n.codigo;
+          filtro.appendChild(opt);
+        });
+      } catch (e) { console.warn("Error cargando normas:", e.message); }
+    }
+
+    async function cargarPersonas() {
+      // Cargar todos los profiles para selects de asesor/evaluador
+      try {
+        const { data } = await _supabase
+          .from("profiles")
+          .select("id, nombre, apellido, email, rol")
+          .order("nombre");
+        const todos = data || [];
+        _asesores    = todos;
+        _evaluadores = todos;
+      } catch (e) {}
+    }
+
+    async function cargarAlumnos() {
+      try {
+        const data = await apiFetch("/erp/admin/alumnos");
+        _alumnos = data.alumnos || [];
+        renderTablaAlumnos(_alumnos);
+        actualizarStats();
+      } catch (e) {
+        document.getElementById("tbodyAlumnos").innerHTML =
+          `<tr><td colspan="5" class="error-txt">Error: ${e.message}</td></tr>`;
+      }
+    }
+
+    function actualizarStats() {
+      const total = _alumnos.length;
+      const conPago = _alumnos.filter(a => a.pagos_count > 0).length;
+      const pendientes = _alumnos.filter(a => a.tiene_pendientes).length;
+      // Evaluados = alumnos con alguna asignacion que tenga proceso de evaluacion completado
+      // (no tenemos ese dato aquí, aproximamos con los que tienen normas pero usamos 0 por ahora)
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statConPago").textContent = conPago;
+      document.getElementById("statPendientes").textContent = pendientes;
+      // statEvaluados se puede calcular aparte, por ahora —
+      document.getElementById("statEvaluados").textContent = "—";
+    }
+
+    // ── Tabla de alumnos ──────────────────────────────────────────────────────
+    function renderTablaAlumnos(lista) {
+      const tbody = document.getElementById("tbodyAlumnos");
+      if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-txt">No hay alumnos registrados.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = lista.map(a => {
+        const normas = a.normas || [];
+        const sinPago = a.normas_sin_pago || [];
+
+        const normaChips = normas.map(n => {
+          const esSinPago = sinPago.some(s => s.norma_id === n.norma_id);
+          return `<span class="norma-chip ${esSinPago ? 'sin-pago' : ''}" title="${n.nombre}">${n.codigo || "?"}</span>`;
+        }).join("") || `<span style="font-size:11px;color:var(--c-text-4)">Sin normas</span>`;
+
+        // Semáforo de pagos
+        let semColor = "gris", semLabel = "Sin inscripción";
+        if (normas.length > 0) {
+          if (sinPago.length === 0) { semColor = "verde"; semLabel = "Al día"; }
+          else if (sinPago.length < normas.length) { semColor = "naranja"; semLabel = "Parcial"; }
+          else { semColor = "naranja"; semLabel = "Sin pagos"; }
+        }
+
+        return `
+          <tr>
+            <td>
+              <div class="alumno-nombre">${[a.nombre, a.apellido].filter(Boolean).join(" ") || "—"}</div>
+              <div class="alumno-email">${a.email || ""}</div>
+            </td>
+            <td>${normaChips}</td>
+            <td>
+              <div class="semaforo">
+                <span class="sem-dot ${semColor}"></span>
+                <span class="sem-label">${semLabel}</span>
+              </div>
+            </td>
+            <td>
+              <span style="font-size:12px;color:var(--c-text-3)">Ver detalle</span>
+            </td>
+            <td>
+              <div style="display:flex;gap:5px;flex-wrap:wrap">
+                <button class="btn-sm azul" onclick="verDetalle('${a.id}')">Ver detalle</button>
+                <button class="btn-sm pago" onclick="abrirModalPago('${a.id}','${(a.nombre||'')+' '+(a.apellido||'')}')">+ Pago</button>
+                <button class="btn-sm eval" onclick="abrirModalEvaluado('${a.id}','${(a.nombre||'')+' '+(a.apellido||'')}')">Evaluado</button>
+                <button class="btn-sm" onclick="abrirModalLote('${a.id}','${(a.nombre||'')+' '+(a.apellido||'')}')">Lote CONOCER</button>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+    }
+
+    function filtrarAlumnos() {
+      const q = document.getElementById("searchAlumno").value.toLowerCase();
+      const normaFiltro = document.getElementById("filtroNorma").value;
+      const pagoFiltro  = document.getElementById("filtroPago").value;
+
+      const filtrada = _alumnos.filter(a => {
+        const nombre = [a.nombre, a.apellido, a.email].filter(Boolean).join(" ").toLowerCase();
+        if (q && !nombre.includes(q)) return false;
+        if (normaFiltro && !a.normas.some(n => n.norma_id === normaFiltro)) return false;
+        if (pagoFiltro === "pendientes" && !a.tiene_pendientes) return false;
+        if (pagoFiltro === "con-pago"   && a.pagos_count === 0) return false;
+        return true;
+      });
+
+      renderTablaAlumnos(filtrada);
+    }
+
+    // ── Modal: Detalle alumno ─────────────────────────────────────────────────
+    async function verDetalle(alumnoId) {
+      abrirModal("modalDetalle");
+      document.getElementById("detalleContenido").innerHTML = `<p class="loading-txt">Cargando...</p>`;
+
+      try {
+        const data = await apiFetch(`/erp/admin/alumnos/${alumnoId}/detalle`);
+        const a = data.alumno || {};
+        const servicios = data.servicios || [];
+
+        const nombre = [a.nombre, a.apellido].filter(Boolean).join(" ") || a.email;
+
+        let html = `
+          <div class="modal-title">${nombre}</div>
+          <div class="modal-subtitle">${a.email || ""}</div>`;
+
+        if (!servicios.length) {
+          html += `<p style="color:var(--c-text-3);font-size:13px">Este alumno no tiene normas asignadas todavía.</p>`;
+        }
+
+        servicios.forEach(s => {
+          const norma = s.norma || {};
+          const pagos = s.pagos || {};
+          const cert  = s.certificacion || {};
+          const asesor = s.asesor;
+          const eval_  = s.evaluador;
+
+          const etapas = [
+            { titulo: "Evaluación realizada", done: !!cert.evaluado_at, fecha: cert.evaluado_at ? fmtFechaCorta(cert.evaluado_at) : null },
+            { titulo: "Lote enviado al CONOCER", done: !!cert.lote_enviado_at, fecha: cert.lote_enviado_at ? fmtFechaCorta(cert.lote_enviado_at) : null },
+            { titulo: "Certificado esperado", done: !!cert.certificado_esperado_at, fecha: cert.certificado_esperado_at ? fmtFechaCorta(cert.certificado_esperado_at) : null },
+            { titulo: "Certificado recibido", done: !!cert.certificado_recibido_at, fecha: cert.certificado_recibido_at ? fmtFechaCorta(cert.certificado_recibido_at) : null },
+          ];
+
+          let foundActive = false;
+          const tlHtml = etapas.map(e => {
+            let cls = "pending";
+            if (e.done) { cls = "done"; }
+            else if (!foundActive) { cls = "active"; foundActive = true; }
+            return `
+              <div class="tl-step ${cls}">
+                <div class="tl-dot"></div>
+                <div class="tl-title">${e.titulo}</div>
+                ${e.fecha ? `<div class="tl-fecha">${e.fecha}</div>` : ""}
+              </div>`;
+          }).join("");
+
+          const conceptos = ["alineacion", "evaluacion", "certificacion"];
+          const pagosHtml = conceptos.map(c => {
+            const p = pagos[c];
+            return `
+              <div class="pago-row-detalle ${p ? 'pagado' : ''}">
+                <div class="pago-row-dot"></div>
+                <span class="pago-row-concepto">${c.charAt(0).toUpperCase() + c.slice(1)}</span>
+                <span class="pago-row-info">${p ? `Pagado ${fmtFechaCorta(p.pagado_at)}` : "Pendiente"}</span>
+                ${!p ? `<button class="btn-sm pago" style="margin-left:8px;font-size:10px" onclick="cerrarModal('modalDetalle');abrirModalPago('${alumnoId}','${nombre}','${norma.id}','${c}')">+ Pagar</button>` : ""}
+              </div>`;
+          }).join("");
+
+          html += `
+            <div class="detalle-section">
+              <h4>${norma.codigo} · ${norma.nombre}</h4>
+              <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+                <span style="font-size:12px;color:var(--c-text-3)">Asesor: <strong style="color:var(--c-text)">${asesor ? [asesor.nombre,asesor.apellido].filter(Boolean).join(" ") : "No asignado"}</strong></span>
+                <span style="font-size:12px;color:var(--c-text-3)">Evaluador: <strong style="color:var(--c-text)">${eval_ ? [eval_.nombre,eval_.apellido].filter(Boolean).join(" ") : "No asignado"}</strong></span>
+              </div>
+              <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-text-3);margin-bottom:8px">Pagos</p>
+              ${pagosHtml}
+              <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-text-3);margin:14px 0 10px">Proceso CONOCER</p>
+              <div class="tl">${tlHtml}</div>
+            </div>`;
+        });
+
+        document.getElementById("detalleContenido").innerHTML = html;
+      } catch (e) {
+        document.getElementById("detalleContenido").innerHTML =
+          `<p class="error-txt">Error al cargar detalle: ${e.message}</p>`;
+      }
+    }
+
+    // ── Modal: Pago manual ────────────────────────────────────────────────────
+    function abrirModalPago(alumnoId, alumnoNombre, normaId = "", concepto = "") {
+      _alumnoActual = alumnoId;
+      document.getElementById("pagoAlumnoNombre").textContent = "Alumno: " + alumnoNombre.trim();
+      document.getElementById("pagoMsg").textContent = "";
+      document.getElementById("pagoMonto").value = "";
+      document.getElementById("pagoReferencia").value = "";
+      document.getElementById("pagoNotas").value = "";
+      if (concepto) document.getElementById("pagoConcepto").value = concepto;
+
+      // Poblar normas del alumno
+      const alumno = _alumnos.find(a => a.id === alumnoId);
+      const sel = document.getElementById("pagoNormaId");
+      sel.innerHTML = "";
+      const normasAlumno = alumno?.normas || [];
+      if (normasAlumno.length) {
+        normasAlumno.forEach(n => {
+          const opt = document.createElement("option");
+          opt.value = n.norma_id;
+          opt.textContent = `${n.codigo} — ${n.nombre}`;
+          if (n.norma_id === normaId) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } else {
+        // Fallback: usar todas las normas
+        _normas.forEach(n => {
+          const opt = document.createElement("option");
+          opt.value = n.id;
+          opt.textContent = `${n.codigo} — ${n.nombre}`;
+          if (n.id === normaId) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+
+      abrirModal("modalPago");
+    }
+
+    async function registrarPago() {
+      const btn = document.getElementById("btnRegistrarPago");
+      const msg = document.getElementById("pagoMsg");
+      btn.disabled = true;
+      msg.className = "form-msg";
+      msg.textContent = "Guardando...";
+
+      try {
+        await apiFetch("/erp/admin/pagos/manual", {
+          method: "POST",
+          body: JSON.stringify({
+            alumno_id:  _alumnoActual,
+            norma_id:   document.getElementById("pagoNormaId").value,
+            concepto:   document.getElementById("pagoConcepto").value,
+            monto:      parseInt(document.getElementById("pagoMonto").value || "0") * 100,
+            referencia: document.getElementById("pagoReferencia").value || null,
+            notas:      document.getElementById("pagoNotas").value || null,
+          }),
+        });
+        msg.className = "form-msg ok";
+        msg.textContent = "Pago registrado correctamente.";
+        toast("Pago registrado");
+        await cargarAlumnos();
+        setTimeout(() => cerrarModal("modalPago"), 1200);
+      } catch (e) {
+        msg.className = "form-msg err";
+        msg.textContent = "Error: " + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── Modal: Evaluado ───────────────────────────────────────────────────────
+    function abrirModalEvaluado(alumnoId, alumnoNombre) {
+      _alumnoActual = alumnoId;
+      document.getElementById("evalAlumnoNombre").textContent = "Alumno: " + alumnoNombre.trim();
+      document.getElementById("evalFecha").value = new Date().toISOString().split("T")[0];
+      document.getElementById("evalNotas").value = "";
+      document.getElementById("evalMsg").textContent = "";
+
+      const alumno = _alumnos.find(a => a.id === alumnoId);
+      const sel = document.getElementById("evalNormaId");
+      sel.innerHTML = "";
+      (alumno?.normas || _normas.map(n => ({norma_id: n.id, codigo: n.codigo, nombre: n.nombre}))).forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n.norma_id || n.id;
+        opt.textContent = `${n.codigo} — ${n.nombre}`;
+        sel.appendChild(opt);
+      });
+
+      abrirModal("modalEvaluado");
+    }
+
+    async function registrarEvaluado() {
+      const btn = document.getElementById("btnRegistrarEval");
+      const msg = document.getElementById("evalMsg");
+      btn.disabled = true;
+      msg.className = "form-msg";
+      msg.textContent = "Guardando...";
+
+      try {
+        await apiFetch("/erp/certificacion/evaluado", {
+          method: "POST",
+          body: JSON.stringify({
+            alumno_id:         _alumnoActual,
+            norma_id:          document.getElementById("evalNormaId").value,
+            evaluado_at:       document.getElementById("evalFecha").value,
+            evaluacion_notas:  document.getElementById("evalNotas").value || null,
+          }),
+        });
+        msg.className = "form-msg ok";
+        msg.textContent = "Evaluación registrada.";
+        toast("Evaluación registrada");
+        await cargarAlumnos();
+        setTimeout(() => cerrarModal("modalEvaluado"), 1200);
+      } catch (e) {
+        msg.className = "form-msg err";
+        msg.textContent = "Error: " + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── Modal: Lote enviado ───────────────────────────────────────────────────
+    function abrirModalLote(alumnoId, alumnoNombre) {
+      _alumnoActual = alumnoId;
+      document.getElementById("loteAlumnoNombre").textContent = "Alumno: " + alumnoNombre.trim();
+      document.getElementById("loteFecha").value = new Date().toISOString().split("T")[0];
+      document.getElementById("loteNotas").value = "";
+      document.getElementById("loteMsg").textContent = "";
+
+      const alumno = _alumnos.find(a => a.id === alumnoId);
+      const sel = document.getElementById("loteNormaId");
+      sel.innerHTML = "";
+      (alumno?.normas || _normas.map(n => ({norma_id: n.id, codigo: n.codigo, nombre: n.nombre}))).forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n.norma_id || n.id;
+        opt.textContent = `${n.codigo} — ${n.nombre}`;
+        sel.appendChild(opt);
+      });
+
+      abrirModal("modalLote");
+    }
+
+    async function registrarLote() {
+      const btn = document.getElementById("btnRegistrarLote");
+      const msg = document.getElementById("loteMsg");
+      btn.disabled = true;
+      msg.className = "form-msg";
+      msg.textContent = "Guardando...";
+
+      try {
+        const result = await apiFetch("/erp/certificacion/lote-enviado", {
+          method: "POST",
+          body: JSON.stringify({
+            alumno_id:       _alumnoActual,
+            norma_id:        document.getElementById("loteNormaId").value,
+            lote_enviado_at: document.getElementById("loteFecha").value,
+            notas:           document.getElementById("loteNotas").value || null,
+          }),
+        });
+        const esperado = result.certificado_esperado_at;
+        msg.className = "form-msg ok";
+        msg.textContent = `Lote registrado. Certificado esperado: ${esperado ? fmtFechaCorta(esperado) : "calculado"}`;
+        toast("Lote enviado registrado");
+        await cargarAlumnos();
+        setTimeout(() => cerrarModal("modalLote"), 1800);
+      } catch (e) {
+        msg.className = "form-msg err";
+        msg.textContent = "Error: " + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── Inscribir alumno ──────────────────────────────────────────────────────
+    function poblarSelectsInscripcion() {
+      // Alumnos
+      const selAlumno = document.getElementById("inscAlumno");
+      const selAlumnoRol = document.getElementById("rolUserId");
+      selAlumno.innerHTML = `<option value="">— Selecciona un alumno —</option>`;
+      if (selAlumnoRol) selAlumnoRol.innerHTML = `<option value="">— Selecciona un usuario —</option>`;
+
+      _alumnos.forEach(a => {
+        const label = [a.nombre, a.apellido].filter(Boolean).join(" ") + ` (${a.email})`;
+        [selAlumno].forEach(sel => {
+          const opt = document.createElement("option");
+          opt.value = a.id;
+          opt.textContent = label;
+          sel.appendChild(opt);
+        });
+      });
+
+      // Para rol: todos los usuarios (asesores, evaluadores)
+      if (selAlumnoRol) {
+        _asesores.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.textContent = [p.nombre, p.apellido].filter(Boolean).join(" ") + ` (${p.email})`;
+          selAlumnoRol.appendChild(opt);
+        });
+      }
+
+      // Normas
+      const selNorma = document.getElementById("inscNorma");
+      selNorma.innerHTML = `<option value="">— Selecciona una norma —</option>`;
+      _normas.forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n.id;
+        opt.textContent = `${n.codigo} — ${n.nombre}`;
+        selNorma.appendChild(opt);
+      });
+
+      // Asesor y evaluador
+      const selAsesor    = document.getElementById("inscAsesor");
+      const selEvaluador = document.getElementById("inscEvaluador");
+      selAsesor.innerHTML    = `<option value="">— Sin asignar —</option>`;
+      selEvaluador.innerHTML = `<option value="">— Sin asignar —</option>`;
+      _asesores.forEach(p => {
+        const label = [p.nombre, p.apellido].filter(Boolean).join(" ") + ` (${p.email})`;
+        [selAsesor, selEvaluador].forEach(sel => {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.textContent = label;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    async function inscribirAlumno() {
+      const btn = document.getElementById("btnInscribir");
+      const msg = document.getElementById("inscMsg");
+      const alumnoId    = document.getElementById("inscAlumno").value;
+      const normaId     = document.getElementById("inscNorma").value;
+      const asesorId    = document.getElementById("inscAsesor").value;
+      const evaluadorId = document.getElementById("inscEvaluador").value;
+
+      if (!alumnoId || !normaId) {
+        msg.className = "form-msg err";
+        msg.textContent = "Selecciona un alumno y una norma.";
+        return;
+      }
+
+      btn.disabled = true;
+      msg.className = "form-msg";
+      msg.textContent = "Guardando...";
+
+      try {
+        await apiFetch("/erp/admin/asignaciones", {
+          method: "POST",
+          body: JSON.stringify({
+            alumno_id:    alumnoId,
+            norma_id:     normaId,
+            asesor_id:    asesorId || null,
+            evaluador_id: evaluadorId || null,
+          }),
+        });
+        msg.className = "form-msg ok";
+        msg.textContent = "Alumno inscrito correctamente.";
+        toast("Alumno inscrito");
+        await cargarAlumnos();
+        poblarSelectsInscripcion();
+        setTimeout(() => { msg.textContent = ""; }, 3000);
+      } catch (e) {
+        msg.className = "form-msg err";
+        msg.textContent = "Error: " + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── Roles (solo super_admin) ──────────────────────────────────────────────
+    async function cargarRoles() {
+      if (!_esSuper) return;
+      try {
+        const data = await apiFetch("/erp/admin/roles");
+        const roles = data.roles || [];
+        const tbody = document.getElementById("tbodyRoles");
+        if (!roles.length) {
+          tbody.innerHTML = `<tr><td colspan="4" class="empty-txt">No hay roles asignados.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = roles.map(r => {
+          const p = r.profiles || {};
+          const nombre = [p.nombre, p.apellido].filter(Boolean).join(" ") || p.email || "—";
+          return `
+            <tr>
+              <td>
+                <div style="font-weight:600;color:var(--c-text)">${nombre}</div>
+                <div style="font-size:11px;color:var(--c-text-3)">${p.email || ""}</div>
+              </td>
+              <td><span class="role-chip ${r.role === 'asesor' ? 'asesor' : ''}">${r.role}</span></td>
+              <td style="font-size:12px;color:var(--c-text-3)">${fmtFechaCorta(r.created_at)}</td>
+              <td>
+                <button class="btn-sm" style="color:#991b1b;border-color:#fca5a5"
+                  onclick="quitarRol('${r.user_id}','${r.role}')">Quitar</button>
+              </td>
+            </tr>`;
+        }).join("");
+      } catch (e) {
+        document.getElementById("tbodyRoles").innerHTML =
+          `<tr><td colspan="4" class="error-txt">Error: ${e.message}</td></tr>`;
+      }
+    }
+
+    function abrirModalAsignarRol() {
+      document.getElementById("rolMsg").textContent = "";
+      abrirModal("modalRol");
+    }
+
+    async function asignarRol() {
+      const btn = document.getElementById("btnAsignarRol");
+      const msg = document.getElementById("rolMsg");
+      btn.disabled = true;
+      msg.className = "form-msg";
+      msg.textContent = "Guardando...";
+      try {
+        await apiFetch("/erp/admin/roles/asignar", {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: document.getElementById("rolUserId").value,
+            role:    document.getElementById("rolTipo").value,
+          }),
+        });
+        msg.className = "form-msg ok";
+        msg.textContent = "Rol asignado.";
+        toast("Rol asignado");
+        cargarRoles();
+        setTimeout(() => cerrarModal("modalRol"), 1200);
+      } catch (e) {
+        msg.className = "form-msg err";
+        msg.textContent = "Error: " + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function quitarRol(userId, role) {
+      if (!confirm(`¿Quitar rol "${role}" a este usuario?`)) return;
+      try {
+        await apiFetch(`/erp/admin/roles/quitar?user_id=${userId}&role=${role}`, { method: "DELETE" });
+        toast("Rol removido");
+        cargarRoles();
+      } catch (e) {
+        alert("Error: " + e.message);
+      }
+    }
+
+    // ── Normas (solo super_admin) ─────────────────────────────────────────────
+    let _normaEditando = null;
+
+    async function cargarNormasTabla() {
+      if (!_esSuper) return;
+      try {
+        const data = await apiFetch("/erp/normas?todas=true");
+        const normas = data.normas || [];
+        const tbody = document.getElementById("tbodyNormas");
+        if (!normas.length) {
+          tbody.innerHTML = `<tr><td colspan="6" class="empty-txt">No hay normas.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = normas.map(n => `
+          <tr>
+            <td style="font-weight:700;color:var(--c-blue-600)">${n.codigo}</td>
+            <td style="color:var(--c-text);font-size:13px">${n.nombre}</td>
+            <td style="font-size:12px">${n.dias_estimados_certificado} días</td>
+            <td>${n.tiene_wizard ? '<span style="color:#065f46;font-size:12px;font-weight:600">Sí</span>' : '<span style="color:var(--c-text-4);font-size:12px">No</span>'}</td>
+            <td><span class="status-badge" style="${n.activo ? 'background:#d1fae5;color:#065f46' : 'background:#fee2e2;color:#991b1b'}">${n.activo ? 'Activa' : 'Inactiva'}</span></td>
+            <td><button class="btn-sm" onclick="abrirModalNorma('${n.id}')">Editar</button></td>
+          </tr>`).join("");
+      } catch (e) {
+        document.getElementById("tbodyNormas").innerHTML =
+          `<tr><td colspan="6" class="error-txt">Error: ${e.message}</td></tr>`;
+      }
+    }
+
+    function abrirModalNorma(normaId = null) {
+      _normaEditando = normaId;
+      document.getElementById("normaModalTitulo").textContent = normaId ? "Editar norma" : "Nueva norma";
+      document.getElementById("norMsg").textContent = "";
+
+      if (normaId) {
+        const n = _normas.find(x => x.id === normaId) || {};
+        document.getElementById("norCodigo").value = n.codigo || "";
+        document.getElementById("norNombre").value = n.nombre || "";
+        document.getElementById("norDescripcion").value = n.descripcion || "";
+        document.getElementById("norDias").value = n.dias_estimados_certificado || 45;
+        document.getElementById("norWizard").value = String(!!n.tiene_wizard);
+        document.getElementById("norActivo").value = String(!!n.activo);
+      } else {
+        ["norCodigo","norNombre","norDescripcion"].forEach(id => document.getElementById(id).value = "");
+        document.getElementById("norDias").value = 45;
+        document.getElementById("norWizard").value = "false";
+        document.getElementById("norActivo").value = "true";
+      }
+
+      abrirModal("modalNorma");
+    }
+
+    async function guardarNorma() {
+      const btn = document.getElementById("btnGuardarNorma");
+      const msg = document.getElementById("norMsg");
+      btn.disabled = true;
+      msg.className = "form-msg";
+      msg.textContent = "Guardando...";
+
+      const payload = {
+        codigo:                     document.getElementById("norCodigo").value.trim(),
+        nombre:                     document.getElementById("norNombre").value.trim(),
+        descripcion:                document.getElementById("norDescripcion").value.trim(),
+        dias_estimados_certificado: parseInt(document.getElementById("norDias").value || "45"),
+        tiene_wizard:               document.getElementById("norWizard").value === "true",
+        activo:                     document.getElementById("norActivo").value === "true",
+      };
+
+      if (!payload.codigo || !payload.nombre) {
+        msg.className = "form-msg err";
+        msg.textContent = "Código y nombre son requeridos.";
+        btn.disabled = false;
+        return;
+      }
+
+      try {
+        if (_normaEditando) {
+          await apiFetch(`/erp/normas/${_normaEditando}`, { method: "PUT", body: JSON.stringify(payload) });
+        } else {
+          await apiFetch("/erp/normas", { method: "POST", body: JSON.stringify(payload) });
+        }
+        msg.className = "form-msg ok";
+        msg.textContent = "Norma guardada.";
+        toast("Norma guardada");
+        await cargarNormas();
+        cargarNormasTabla();
+        setTimeout(() => cerrarModal("modalNorma"), 1200);
+      } catch (e) {
+        msg.className = "form-msg err";
+        msg.textContent = "Error: " + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Agregar clase status-badge a los estilos usados en normasTabla
+    const _style = document.createElement("style");
+    _style.textContent = `.status-badge{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:20px;display:inline-block}`;
+    document.head.appendChild(_style);
+
+    init();
+  </script>
+  <script src="soporte-widget.js"></script>
+</body>
+</html>

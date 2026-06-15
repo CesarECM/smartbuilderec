@@ -141,11 +141,13 @@ from routers import stripe_router
 from routers import admin_router
 from routers import email_router
 from routers import soporte_router
+from routers import erp_router
 
 app.include_router(stripe_router.router,  tags=["stripe"])
 app.include_router(admin_router.router,   tags=["admin"])
 app.include_router(email_router.router,   tags=["email"])
 app.include_router(soporte_router.router, tags=["soporte"])
+app.include_router(erp_router.router,     tags=["erp"])
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
