@@ -1146,6 +1146,35 @@
     </div>
   </div>
 
+  <!-- Modal eliminar usuario -->
+  <div class="sa-modal-overlay" id="modalEliminarUsuario" onclick="cerrarModalEliminarUsuario(event)">
+    <div class="sa-modal-box narrow">
+      <button class="sa-modal-close" onclick="cerrarModalEliminarUsuario()">✕</button>
+      <div class="sa-modal-title" style="color:#dc2626">⚠️ Eliminar usuario</div>
+      <div class="sa-modal-subtitle" id="eliminarUsuarioNombre"></div>
+      <div style="background:#fff1f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#7f1d1d;line-height:1.5">
+        Esta acción es <strong>permanente e irreversible</strong>. Se eliminarán todos sus datos, planeaciones e historial.
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:var(--c-text-2);display:block;margin-bottom:6px">
+          Resuelve la operación: <strong id="eliminarOpTexto"></strong>
+        </label>
+        <input type="number" id="eliminarOpRespuesta" class="renovar-input" placeholder="Tu respuesta" style="width:100%;box-sizing:border-box" autocomplete="off">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:600;color:var(--c-text-2);display:block;margin-bottom:6px">
+          Escribe <strong style="color:#dc2626">BORRAR</strong> para confirmar:
+        </label>
+        <input type="text" id="eliminarConfirmTexto" class="renovar-input" placeholder="BORRAR" style="width:100%;box-sizing:border-box" autocomplete="off">
+      </div>
+      <p class="crear-msg" id="eliminarUsuarioMsg"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn-secondary" onclick="cerrarModalEliminarUsuario()">Cancelar</button>
+        <button class="btn-sm danger" id="btnConfirmarEliminarUsuario" style="padding:8px 16px;font-size:13px" onclick="confirmarEliminarUsuario()">Eliminar permanentemente</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1695,6 +1724,7 @@
               <button class="btn-sm purple" onclick="abrirEditVigenciaUser('${u.id}','${nombre.replace(/'/g,"\\'")}','${u.vigencia_hasta||""}')">Vigencia</button>
               <button class="btn-sm" onclick="abrirReasignar('${u.id}','${nombre.replace(/'/g,"\\'")}','${u.admin_id||""}')">Reasignar</button>
               <button class="btn-sm" onclick="resetPassword('${u.email}','${nombre.replace(/'/g,"\\'")}')">Reset pass</button>
+              <button class="btn-sm danger" onclick="abrirEliminarUsuario('${u.id}','${nombre.replace(/'/g,"\\'")}')">Eliminar</button>
             </div></td>
           </tr>`;
         }).join("")}</tbody>
@@ -1761,6 +1791,67 @@
       if (!e||e.target===document.getElementById("modalReasignar")) {
         document.getElementById("modalReasignar").classList.remove("open");
         _reasignarUserId=null;
+      }
+    }
+
+    // Eliminar usuario (super admin)
+    let _eliminarUserId = null;
+    let _eliminarOpA = 0, _eliminarOpB = 0;
+
+    function abrirEliminarUsuario(userId, nombre) {
+      _eliminarUserId = userId;
+      _eliminarOpA = Math.floor(Math.random()*9)+1;
+      _eliminarOpB = Math.floor(Math.random()*9)+1;
+      document.getElementById("eliminarUsuarioNombre").textContent = `Usuario: ${nombre}`;
+      document.getElementById("eliminarOpTexto").textContent = `${_eliminarOpA} + ${_eliminarOpB} = ?`;
+      document.getElementById("eliminarOpRespuesta").value = "";
+      document.getElementById("eliminarConfirmTexto").value = "";
+      document.getElementById("eliminarUsuarioMsg").textContent = "";
+      document.getElementById("eliminarUsuarioMsg").className = "crear-msg";
+      document.getElementById("modalEliminarUsuario").classList.add("open");
+    }
+
+    function cerrarModalEliminarUsuario(e) {
+      if (!e || e.target === document.getElementById("modalEliminarUsuario")) {
+        document.getElementById("modalEliminarUsuario").classList.remove("open");
+        _eliminarUserId = null;
+      }
+    }
+
+    async function confirmarEliminarUsuario() {
+      const msg = document.getElementById("eliminarUsuarioMsg");
+      const respuesta = parseInt(document.getElementById("eliminarOpRespuesta").value, 10);
+      const texto = document.getElementById("eliminarConfirmTexto").value.trim();
+      msg.className = "crear-msg error";
+
+      if (isNaN(respuesta) || respuesta !== (_eliminarOpA + _eliminarOpB)) {
+        msg.textContent = `La respuesta a ${_eliminarOpA} + ${_eliminarOpB} es incorrecta.`;
+        return;
+      }
+      if (texto !== "BORRAR") {
+        msg.textContent = 'Debes escribir exactamente la palabra BORRAR en mayúsculas.';
+        return;
+      }
+
+      const btn = document.getElementById("btnConfirmarEliminarUsuario");
+      btn.disabled = true; btn.textContent = "Eliminando...";
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${BACKEND_URL}/admin/users/${_eliminarUserId}`, {
+          method: "DELETE", headers
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(()=>({}));
+          throw new Error(d.detail || "Error al eliminar usuario.");
+        }
+        cerrarModalEliminarUsuario();
+        mostrarToast("Usuario eliminado permanentemente");
+        await cargarTodosUsuarios();
+        await cargarStats();
+      } catch(e) {
+        msg.textContent = e.message;
+      } finally {
+        btn.disabled = false; btn.textContent = "Eliminar permanentemente";
       }
     }
 
