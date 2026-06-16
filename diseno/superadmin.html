@@ -1157,6 +1157,25 @@
     </div>
   </div>
 
+  <!-- Modal transferir planeación (superadmin) -->
+  <div class="sa-modal-overlay" id="modalTransferirSA" onclick="cerrarModalTransferirSA(event)">
+    <div class="sa-modal-box narrow">
+      <button class="sa-modal-close" onclick="cerrarModalTransferirSA()">✕</button>
+      <div class="sa-modal-title">Transferir planeación</div>
+      <div class="sa-modal-subtitle" id="saTranCursoNombre"></div>
+      <label style="font-size:12px;font-weight:600;color:var(--c-text-2);display:block;margin-bottom:6px">Participante destinatario:</label>
+      <select id="selectAlumnoSA" class="sa-select" style="margin-bottom:12px">
+        <option value="">— Selecciona un participante —</option>
+      </select>
+      <p style="font-size:12px;color:var(--c-text-3);margin-bottom:16px">Al transferir, la planeación pasará a ser del participante y desaparecerá de tu lista.</p>
+      <p class="crear-msg" id="saTranMsg"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+        <button class="btn-secondary" onclick="cerrarModalTransferirSA()">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarTransferirSA" onclick="confirmarTransferirSA()">Transferir</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal eliminar usuario -->
   <div class="sa-modal-overlay" id="modalEliminarUsuario" onclick="cerrarModalEliminarUsuario(event)">
     <div class="sa-modal-box narrow">
@@ -1978,7 +1997,8 @@
             const pct=Math.round(((p.paso_actual-1)/15)*100);
             const fecha=new Date(p.updated_at).toLocaleDateString("es-MX",{day:"2-digit",month:"short",year:"numeric"});
             const completa=p.status==="completa";
-            return `<tr>
+            const nomSA=(p.nombre_curso||"(Sin título)").replace(/'/g,"\\'");
+            return `<tr id="samc-${p.id}">
               <td style="font-weight:600;color:var(--c-text)">${p.nombre_curso||"(Sin título)"}</td>
               <td>
                 <div style="display:flex;align-items:center;gap:8px">
@@ -1989,7 +2009,13 @@
               </td>
               <td><span class="status-badge ${completa?"badge-completa":"badge-borrador"}">${completa?"Completo":"Borrador"}</span></td>
               <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
-              <td><button class="btn-sm" onclick="window.open('index.html?planeacion_id=${p.id}','_blank')">Editar wizard</button></td>
+              <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn-sm" onclick="window.open('index.html?planeacion_id=${p.id}','_blank')">Editar wizard</button>
+                  <button class="btn-sm success" onclick="abrirTransferirSA('${p.id}','${nomSA}')">Transferir</button>
+                  <button class="btn-sm danger" id="samc-del-${p.id}" onclick="eliminarMiCursoSA('${p.id}',this)">Eliminar</button>
+                </div>
+              </td>
             </tr>`;
           }).join("")}</tbody>
         </table></div>`;
@@ -3518,6 +3544,74 @@
         await cargarSugerencias(estadoActual);
         _cargarBadges();
       } catch(e) { alert(e.message); }
+    }
+
+    // ── Transferir planeación propia (superadmin) ────────────────
+    let _transferirSAPlaneacionId = null;
+
+    async function abrirTransferirSA(planeacionId, nombreCurso) {
+      _transferirSAPlaneacionId = planeacionId;
+      document.getElementById("saTranCursoNombre").textContent = `"${nombreCurso}"`;
+      document.getElementById("saTranMsg").textContent = "";
+      const btn = document.getElementById("btnConfirmarTransferirSA");
+      btn.disabled = false; btn.textContent = "Transferir";
+
+      const select = document.getElementById("selectAlumnoSA");
+      select.innerHTML = '<option value="">Cargando participantes...</option>';
+      document.getElementById("modalTransferirSA").classList.add("open");
+
+      const { data: usuarios, error } = await _supabase.from("profiles")
+        .select("id, nombre, apellido, email")
+        .eq("rol", "user")
+        .eq("activo", true)
+        .order("nombre");
+
+      select.innerHTML = '<option value="">— Selecciona un participante —</option>';
+      if (error || !usuarios?.length) {
+        select.innerHTML = '<option value="">No hay participantes activos</option>';
+        return;
+      }
+      usuarios.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.id;
+        const nom = [u.nombre, u.apellido].filter(Boolean).join(" ") || u.email;
+        opt.textContent = `${nom} (${u.email})`;
+        select.appendChild(opt);
+      });
+    }
+
+    async function confirmarTransferirSA() {
+      const alumnoId = document.getElementById("selectAlumnoSA").value;
+      const msg      = document.getElementById("saTranMsg");
+      const btn      = document.getElementById("btnConfirmarTransferirSA");
+      if (!alumnoId) { msg.textContent = "Selecciona un participante."; msg.className = "crear-msg error"; return; }
+      btn.disabled = true; btn.textContent = "Transfiriendo...";
+      msg.textContent = "";
+      const { error } = await _supabase.rpc("transferir_planeacion", {
+        p_planeacion_id: _transferirSAPlaneacionId,
+        p_alumno_id: alumnoId
+      });
+      btn.disabled = false; btn.textContent = "Transferir";
+      if (error) { msg.textContent = error.message; msg.className = "crear-msg error"; return; }
+      cerrarModalTransferirSA();
+      mostrarToast("Planeación transferida correctamente.");
+      document.getElementById(`samc-${_transferirSAPlaneacionId}`)?.remove();
+    }
+
+    function cerrarModalTransferirSA(e) {
+      if (!e || e.target === document.getElementById("modalTransferirSA")) {
+        document.getElementById("modalTransferirSA").classList.remove("open");
+      }
+    }
+
+    async function eliminarMiCursoSA(planeacionId, btn) {
+      if (!confirm("¿Eliminar esta planeación? Esta acción no se puede deshacer.")) return;
+      btn.disabled = true; btn.textContent = "...";
+      const { error } = await _supabase.from("planeaciones")
+        .delete().eq("id", planeacionId).eq("user_id", _perfil.id);
+      if (error) { alert("Error al eliminar: " + error.message); btn.disabled = false; btn.textContent = "Eliminar"; return; }
+      document.getElementById("samc-" + planeacionId)?.remove();
+      mostrarToast("Planeación eliminada.");
     }
 
     init();
