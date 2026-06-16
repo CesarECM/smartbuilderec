@@ -1746,11 +1746,12 @@
             <td style="font-weight:600;color:var(--c-text)">${nombre}</td>
             <td style="color:var(--c-text-3)">${u.email}</td>
             <td style="color:var(--c-text-3)">${u.adminNombre}</td>
-            <td><span class="status-badge ${u.activo?'badge-activo':'badge-inactivo'}">${u.activo?"Activo":"Inactivo"}</span></td>
+            <td><span class="status-badge ${u.activo?'badge-activo':'badge-inactivo'}" id="sabadge-${u.id}">${u.activo?"Activo":"Inactivo"}</span></td>
             <td>${renderVigenciaBadge(u.vigencia_hasta, u.activo)}</td>
             <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
             <td><div style="display:flex;gap:5px;flex-wrap:wrap">
               <button class="btn-sm" onclick="abrirFichaContacto('${u.id}','sa')">Contacto</button>
+              <button class="btn-sm ${u.activo?'':'success'}" id="sabtoggle-${u.id}" onclick="toggleUsuarioSA('${u.id}',${u.activo})">${u.activo?"Desactivar":"Activar"}</button>
               <button class="btn-sm purple" onclick="abrirEditVigenciaUser('${u.id}','${nombre.replace(/'/g,"\\'")}','${u.vigencia_hasta||""}')">Vigencia</button>
               <button class="btn-sm" onclick="abrirReasignar('${u.id}','${nombre.replace(/'/g,"\\'")}','${u.admin_id||""}')">Reasignar</button>
               <button class="btn-sm" onclick="resetPassword('${u.email}','${nombre.replace(/'/g,"\\'")}')">Reset pass</button>
@@ -3544,6 +3545,23 @@
         await cargarSugerencias(estadoActual);
         _cargarBadges();
       } catch(e) { alert(e.message); }
+    }
+
+    // ── Toggle activo/inactivo de usuarios (superadmin) ──────────
+    async function toggleUsuarioSA(userId, estaActivo) {
+      const btn   = document.getElementById("sabtoggle-" + userId);
+      const badge = document.getElementById("sabadge-" + userId);
+      btn.disabled = true;
+      const nuevo = !estaActivo;
+      const { error } = await _supabase.from("profiles")
+        .update({ activo: nuevo }).eq("id", userId);
+      if (error) { alert("Error al actualizar el usuario."); btn.disabled = false; return; }
+      badge.textContent = nuevo ? "Activo" : "Inactivo";
+      badge.className   = `status-badge ${nuevo ? "badge-activo" : "badge-inactivo"}`;
+      btn.textContent   = nuevo ? "Desactivar" : "Activar";
+      btn.className     = `btn-sm ${nuevo ? "" : "success"}`;
+      btn.onclick       = () => toggleUsuarioSA(userId, nuevo);
+      btn.disabled      = false;
     }
 
     // ── Transferir planeación propia (superadmin) ────────────────
