@@ -444,6 +444,17 @@
       if (faltantes.length) {
         renderCardPI(document.getElementById("panel-resumen"), _perfil, () => showTab("mi-perfil"));
       }
+      // Banner si superadmin está en modo vista admin
+      const viewAs = localStorage.getItem("sbe_view_as");
+      if (viewAs === "admin" && _perfil.rol === "super_admin") _renderViewAsBanner();
+    }
+
+    function _renderViewAsBanner() {
+      const b = document.createElement("div");
+      b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:10000;background:#f59e0b;color:#78350f;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12)";
+      b.innerHTML = `<span>👁️ Vista simulada: <strong>Admin</strong></span><a href="superadmin.html" onclick="localStorage.removeItem('sbe_view_as')" style="color:#7c2d12;font-weight:700;text-decoration:none;background:#fde68a;padding:5px 14px;border-radius:6px;font-size:12px">← Volver a Super Admin</a>`;
+      document.body.prepend(b);
+      document.body.style.paddingTop = (parseInt(document.body.style.paddingTop||"0") + 44) + "px";
     }
 
     // ── Stats ─────────────────────────────────────────────────────

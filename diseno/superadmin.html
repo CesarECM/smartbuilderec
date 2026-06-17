@@ -406,6 +406,16 @@
     </div>
     <div class="header-right">
       <span class="header-nombre" id="headerNombre"></span>
+      <!-- Vista como -->
+      <div style="position:relative" id="vistaComoWrap">
+        <button class="header-btn" onclick="toggleVistaMenu()" id="btnVistaComo">👁️ Vista como ▾</button>
+        <div id="vistaComoMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);box-shadow:0 8px 24px rgba(0,0,0,0.15);min-width:180px;z-index:1000;overflow:hidden">
+          <button onclick="cambiarVista('admin')"     style="display:block;width:100%;text-align:left;padding:11px 16px;border:none;background:none;font-size:13px;font-family:inherit;cursor:pointer;color:var(--c-text);transition:background 0.1s" onmouseover="this.style.background='var(--c-surface-2)'" onmouseout="this.style.background='none'">👑 Admin</button>
+          <button onclick="cambiarVista('alumno')"    style="display:block;width:100%;text-align:left;padding:11px 16px;border:none;background:none;font-size:13px;font-family:inherit;cursor:pointer;color:var(--c-text);transition:background 0.1s" onmouseover="this.style.background='var(--c-surface-2)'" onmouseout="this.style.background='none'">🎓 Alumno</button>
+          <button onclick="cambiarVista('evaluador')" style="display:block;width:100%;text-align:left;padding:11px 16px;border:none;background:none;font-size:13px;font-family:inherit;cursor:pointer;color:var(--c-text);transition:background 0.1s" onmouseover="this.style.background='var(--c-surface-2)'" onmouseout="this.style.background='none'">📋 Evaluador</button>
+          <button onclick="cambiarVista('asesor')"    style="display:block;width:100%;text-align:left;padding:11px 16px;border:none;background:none;font-size:13px;font-family:inherit;cursor:pointer;color:var(--c-text);transition:background 0.1s" onmouseover="this.style.background='var(--c-surface-2)'" onmouseout="this.style.background='none'">🤝 Asesor</button>
+        </div>
+      </div>
       <button class="header-btn" onclick="logout()">Salir</button>
     </div>
   </header>
@@ -3545,6 +3555,23 @@
         await cargarSugerencias(estadoActual);
         _cargarBadges();
       } catch(e) { alert(e.message); }
+    }
+
+    // ── Vista como (simulación de rol) ───────────────────────────
+    function toggleVistaMenu() {
+      const m = document.getElementById("vistaComoMenu");
+      m.style.display = m.style.display === "none" ? "block" : "none";
+    }
+    document.addEventListener("click", e => {
+      if (!document.getElementById("vistaComoWrap")?.contains(e.target)) {
+        const m = document.getElementById("vistaComoMenu");
+        if (m) m.style.display = "none";
+      }
+    });
+    function cambiarVista(modo) {
+      const destinos = { admin: "admin.html", alumno: "dashboard.html", evaluador: "mi-expediente.html", asesor: "mi-expediente.html" };
+      localStorage.setItem("sbe_view_as", modo);
+      window.location.href = destinos[modo];
     }
 
     // ── Toggle activo/inactivo de usuarios (superadmin) ──────────
