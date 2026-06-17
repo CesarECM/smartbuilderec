@@ -173,7 +173,7 @@
     </div>
     <div class="header-right">
       <span class="header-nombre" id="headerNombre"></span>
-      <a href="dashboard" class="header-btn">Panel principal</a>
+      <a href="panel" class="header-btn">Panel principal</a>
       <button class="header-btn" onclick="logout()">Cerrar sesión</button>
     </div>
   </header>
@@ -571,7 +571,7 @@
       if (!rolValido) {
         // Puede ser evaluador/asesor con rol 'user' — verificar
         // Por ahora redirigir a dashboard si no es admin
-        window.location.href = "dashboard";
+        window.location.href = "panel";
         return;
       }
 
