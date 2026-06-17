@@ -205,9 +205,8 @@ def mis_servicios(request: Request):
     caller = _get_profile(sb, caller_id)
     extra_roles = _get_extra_roles(sb, caller_id)
 
-    # Si el caller es alumno, muestra sus propias asignaciones
-    # Si es evaluador/asesor, muestra las de sus alumnos asignados
-    if caller.get("rol") in ("admin", "super_admin"):
+    # Admin puro redirige al panel ERP; super_admin puede ver su propio expediente de alumno
+    if caller.get("rol") == "admin":
         raise HTTPException(
             status_code=400,
             detail="Los administradores usan /erp/admin/alumnos para ver servicios."
@@ -333,6 +332,27 @@ def listar_alumnos(request: Request, sin_pagos: bool = False):
     q = q.order("created_at", desc=True)
     alumnos_res = q.execute()
     alumnos = alumnos_res.data or []
+
+    # Super admin puede inscribirse como alumno en normas;
+    # si tiene asignaciones propias, incluir su perfil en la lista.
+    if caller.get("rol") == "super_admin":
+        sa_asig = (
+            sb.table("asignaciones")
+            .select("id")
+            .eq("alumno_id", caller_id)
+            .limit(1)
+            .execute()
+        )
+        if sa_asig.data:
+            sa_prof = (
+                sb.table("profiles")
+                .select("id, nombre, apellido, email, activo, created_at, vigencia_hasta")
+                .eq("id", caller_id)
+                .single()
+                .execute()
+            )
+            if sa_prof.data:
+                alumnos = [sa_prof.data] + alumnos
 
     if not alumnos:
         return {"alumnos": []}

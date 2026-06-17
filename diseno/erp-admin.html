@@ -973,7 +973,17 @@
       selAlumno.innerHTML = `<option value="">— Selecciona un alumno —</option>`;
       if (selAlumnoRol) selAlumnoRol.innerHTML = `<option value="">— Selecciona un usuario —</option>`;
 
+      // Super admin puede inscribirse a sí mismo como alumno en cualquier norma
+      if (_perfil.rol === "super_admin") {
+        const optSelf = document.createElement("option");
+        optSelf.value = _perfil.id;
+        const nomSelf = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || "Super Admin";
+        optSelf.textContent = `⭐ ${nomSelf} (yo — Super Admin)`;
+        selAlumno.appendChild(optSelf);
+      }
+
       _alumnos.forEach(a => {
+        if (a.id === _perfil.id) return; // evitar duplicado si ya apareció en la API
         const label = [a.nombre, a.apellido].filter(Boolean).join(" ") + ` (${a.email})`;
         [selAlumno].forEach(sel => {
           const opt = document.createElement("option");

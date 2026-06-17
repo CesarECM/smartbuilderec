@@ -469,11 +469,12 @@
 
       const totalUsuarios  = resUsr.data?.length ?? 0;
       const codigosActivos = resCod.data?.length ?? 0;
-      const creditos       = resCreds.data?.credits ?? _perfil.credits;
+      const esSA           = _perfil.rol === "super_admin";
+      const creditos       = esSA ? Infinity : (resCreds.data?.credits ?? _perfil.credits);
       const misCursos      = resMisCursos.count ?? 0;
 
       document.getElementById("statUsuarios").textContent       = totalUsuarios;
-      document.getElementById("statCreditos").textContent       = creditos;
+      document.getElementById("statCreditos").textContent       = esSA ? "∞" : creditos;
       document.getElementById("statCodigosActivos").textContent  = codigosActivos;
       document.getElementById("statMisCursos").textContent      = misCursos;
 
@@ -487,13 +488,14 @@
         document.getElementById("statCursosAlumnos").textContent = 0;
       }
 
-      if (creditos <= 2) document.getElementById("creditAlert").style.display = "flex";
+      if (!esSA && creditos <= 2) document.getElementById("creditAlert").style.display = "flex";
       _actualizarEstadoBtnCodigo(creditos, codigosActivos);
     }
 
     function _actualizarEstadoBtnCodigo(creditos, codigosActivos) {
       const btn = document.getElementById("btnGenerarCodigo");
       if (!btn) return;
+      if (_perfil.rol === "super_admin") { btn.disabled = false; btn.title = "Créditos ilimitados"; return; }
       const disponibles = creditos - codigosActivos;
       if (disponibles <= 0) {
         btn.disabled = true;
@@ -773,7 +775,8 @@
           .gt("expires_at", new Date().toISOString()),
       ]);
       const codigosActivos = codsActivos?.length ?? 0;
-      if (!perfil || perfil.credits <= codigosActivos) {
+      // Super admin tiene créditos ilimitados — saltar validación
+      if (_perfil.rol !== "super_admin" && (!perfil || perfil.credits <= codigosActivos)) {
         btn.disabled = false; btn.textContent = "🔑 Generar código";
         const msg = !perfil || perfil.credits <= 0
           ? "No tienes créditos disponibles. Contacta al administrador de la plataforma para recargar."
