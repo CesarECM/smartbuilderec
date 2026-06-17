@@ -1,5 +1,6 @@
 {
   "outputDirectory": "diseno",
   "buildCommand": "",
-  "framework": null
+  "framework": null,
+  "cleanUrls": true
 }

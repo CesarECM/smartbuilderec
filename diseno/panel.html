@@ -178,14 +178,14 @@
       <div class="sec-header">
         <h2>🎓 Mis planeaciones</h2>
         <div class="sec-actions">
-          <a href="index.html?new=1" class="btn-primary">+ Nuevo curso</a>
+          <a href="index?new=1" class="btn-primary">+ Nuevo curso</a>
         </div>
       </div>
       <div id="alumno-planeaciones"><p class="loading-txt">Cargando...</p></div>
 
       <div class="sec-header sec-gap">
         <h2>📄 Mi expediente CONOCER</h2>
-        <a href="mi-expediente.html" class="btn-sm">Ver completo →</a>
+        <a href="mi-expediente" class="btn-sm">Ver completo →</a>
       </div>
       <div id="alumno-normas"><p class="loading-txt">Cargando...</p></div>
     </div>
@@ -215,17 +215,17 @@
       <div class="stats-row" id="admin-stats"></div>
 
       <div class="cards-grid">
-        <a href="admin.html" class="action-card">
+        <a href="admin" class="action-card">
           <div class="action-card-icon">👥</div>
           <div class="action-card-title">Panel Admin completo</div>
           <div class="action-card-desc">Usuarios, códigos de acceso, mis cursos y perfil.</div>
         </a>
-        <a href="index.html?new=1" class="action-card">
+        <a href="index?new=1" class="action-card">
           <div class="action-card-icon">📋</div>
           <div class="action-card-title">Nueva planeación</div>
           <div class="action-card-desc">Crear expediente EC0217.01 con asistencia de IA.</div>
         </a>
-        <a href="erp-admin.html" class="action-card">
+        <a href="erp-admin" class="action-card">
           <div class="action-card-icon">🏫</div>
           <div class="action-card-title">ERP Académico</div>
           <div class="action-card-desc">Inscribir alumnos, pagos y proceso CONOCER.</div>
@@ -246,17 +246,17 @@
       <div class="stats-row" id="sa-stats"></div>
 
       <div class="cards-grid">
-        <a href="superadmin.html" class="action-card">
+        <a href="superadmin" class="action-card">
           <div class="action-card-icon">🛡️</div>
           <div class="action-card-title">Panel Super Admin</div>
           <div class="action-card-desc">Admins, créditos, KB soporte, vigencias y más.</div>
         </a>
-        <a href="admin.html" class="action-card">
+        <a href="admin" class="action-card">
           <div class="action-card-icon">👑</div>
           <div class="action-card-title">Vista Admin</div>
           <div class="action-card-desc">Gestión de usuarios y códigos de acceso.</div>
         </a>
-        <a href="erp-admin.html" class="action-card">
+        <a href="erp-admin" class="action-card">
           <div class="action-card-icon">🏫</div>
           <div class="action-card-title">ERP Académico</div>
           <div class="action-card-desc">Inscripciones, pagos y certificaciones CONOCER.</div>
@@ -415,7 +415,7 @@
           <div style="font-size:36px;margin-bottom:10px">📋</div>
           <h3 style="font-size:15px;font-weight:700;color:var(--c-text);margin-bottom:6px">Aún no tienes cursos</h3>
           <p style="font-size:13px;color:var(--c-text-3);margin-bottom:14px">Crea tu primer expediente didáctico EC0217.01.</p>
-          <a href="index.html?new=1" class="btn-primary" style="text-decoration:none">+ Crear primer curso</a>
+          <a href="index?new=1" class="btn-primary" style="text-decoration:none">+ Crear primer curso</a>
         </div>`;
         return;
       }
@@ -432,7 +432,7 @@
             </div>
             <div style="display:flex;gap:6px;align-items:center">
               <span class="status-badge ${completa ? 'badge-completa' : 'badge-borrador'}">${completa ? 'Completa' : 'Borrador'}</span>
-              <a href="index.html?planeacion_id=${p.id}" class="btn-sm">${completa ? 'Ver' : 'Continuar'}</a>
+              <a href="index?planeacion_id=${p.id}" class="btn-sm">${completa ? 'Ver' : 'Continuar'}</a>
             </div>
           </div>
           <div class="prog-wrap"><div class="prog-fill ${completa ? 'completa' : ''}" style="width:${pct}%"></div></div>
@@ -459,7 +459,7 @@
           <div class="norma-info">
             <div class="norma-nombre">${n.nombre || 'Norma sin nombre'}</div>
           </div>
-          <a href="mi-expediente.html" class="btn-sm">Ver expediente →</a>
+          <a href="mi-expediente" class="btn-sm">Ver expediente →</a>
         </div>`;
       }).join('');
     }
@@ -515,7 +515,7 @@
             <td style="color:var(--c-text-3)">${p.email || '—'}</td>
             <td><span class="norma-badge" style="font-size:9px">${n.codigo || '—'}</span></td>
             <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
-            <td><a href="erp-admin.html" class="btn-sm">Ver ERP →</a></td>
+            <td><a href="erp-admin" class="btn-sm">Ver ERP →</a></td>
           </tr>`;
         }).join('')}</tbody>
       </table></div>`;
@@ -817,7 +817,7 @@
       if (!session) return;
 
       _perfil = await getUserProfile();
-      if (!_perfil) { window.location.href = 'login.html'; return; }
+      if (!_perfil) { window.location.href = 'login'; return; }
 
       // Nombre en header
       const nom = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(' ') || _perfil.email;

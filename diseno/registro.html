@@ -128,10 +128,10 @@
     <hr class="divider">
 
     <div class="login-footer">
-      ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+      ¿Ya tienes cuenta? <a href="login">Inicia sesión</a>
     </div>
     <p class="link-pago">
-      ¿No tienes código? <a href="pago.html">Adquiere tu acceso aquí</a>
+      ¿No tienes código? <a href="pago">Adquiere tu acceso aquí</a>
     </p>
   </div>
 
@@ -176,7 +176,7 @@
         const { data } = await registroConCodigo(email, password, nombre, apellido, codigo);
         if (data?.session) {
           setMsg("¡Cuenta activada con éxito! Redirigiendo...", "ok");
-          setTimeout(() => { window.location.href = "panel.html"; }, 900);
+          setTimeout(() => { window.location.href = "panel"; }, 900);
         } else {
           setMsg("Cuenta creada. Revisa tu correo para confirmarla antes de iniciar sesión.", "ok");
           btn.textContent = "Cuenta activada ✓";

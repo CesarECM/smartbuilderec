@@ -220,7 +220,7 @@
       <img src="img/LogoECM.png" alt="SmartBuilderEC">
       <span>SmartBuilderEC</span>
     </div>
-    <a href="login.html" class="lp-nav-login">Iniciar sesión</a>
+    <a href="login" class="lp-nav-login">Iniciar sesión</a>
   </nav>
 
   <!-- Hero -->
@@ -386,8 +386,8 @@
   <footer class="lp-footer">
     <p>© 2025 SmartBuilderEC · Plataforma para instructores de capacitación empresarial</p>
     <p style="margin-top:6px">
-      <a href="login.html">Iniciar sesión</a> ·
-      <a href="registro.html">Activar código</a>
+      <a href="login">Iniciar sesión</a> ·
+      <a href="registro">Activar código</a>
     </p>
   </footer>
 
@@ -411,8 +411,8 @@
       if (typeof fbq !== 'undefined') fbq('track','InitiateCheckout',{currency:'MXN',value:1799});
 
       const base = window.location.origin;
-      const success_url = `${base}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
-      const cancel_url  = `${base}/pago.html`;
+      const success_url = `${base}/checkout-success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancel_url  = `${base}/pago`;
 
       try {
         const res = await fetch(`${BACKEND_URL}/checkout/session`, {

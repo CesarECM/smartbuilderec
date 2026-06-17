@@ -399,7 +399,7 @@
   <header class="dash-header">
     <div class="header-left">
       <img src="img/LogoECM.png" alt="CEECM">
-      <a href="dashboard.html" class="btn-back">← Dashboard</a>
+      <a href="dashboard" class="btn-back">← Dashboard</a>
       <div class="header-title">
         Panel de Control <span class="sa-badge">Super Admin</span>
       </div>
@@ -429,7 +429,7 @@
     <button class="tab-btn"        id="tab-soporte"    onclick="showTab('soporte')">🤖 Soporte KB</button>
     <button class="tab-btn"        id="tab-config"     onclick="showTab('config')">⚙️ Configuración</button>
     <button class="tab-btn"        id="tab-mi-perfil"  onclick="showTab('mi-perfil')">👤 Mi Perfil</button>
-    <button class="tab-btn"        onclick="window.location.href='erp-admin.html'">🏫 ERP Académico</button>
+    <button class="tab-btn"        onclick="window.location.href='erp-admin'">🏫 ERP Académico</button>
   </nav>
 
   <main class="panel-main">
@@ -700,7 +700,7 @@
     <div id="panel-plataforma" class="tab-panel">
       <div class="section-header">
         <h2>Mis planeaciones</h2>
-        <a href="index.html?new=1" class="btn-primary" style="text-decoration:none">+ Nueva planeación</a>
+        <a href="index?new=1" class="btn-primary" style="text-decoration:none">+ Nueva planeación</a>
       </div>
       <div id="misCursos"><p class="loading-txt">Cargando...</p></div>
 
@@ -1278,7 +1278,7 @@
       const session = await authGuard(["super_admin"]);
       if (!session) return;
       _perfil = await getUserProfile();
-      if (!_perfil) { window.location.href = "login.html"; return; }
+      if (!_perfil) { window.location.href = "login"; return; }
       document.getElementById("headerNombre").textContent =
         [_perfil.nombre, _perfil.apellido].filter(Boolean).join(" ") || _perfil.email;
       await Promise.all([cargarStats(), cargarAdmins()]);
@@ -1984,7 +1984,7 @@
     async function resetPassword(email, nombre) {
       if (!confirm(`¿Enviar correo de recuperación de contraseña a ${nombre} (${email})?`)) return;
       const {error}=await _supabase.auth.resetPasswordForEmail(email,{
-        redirectTo:`${window.location.origin}/reset-password.html`
+        redirectTo:`${window.location.origin}/reset-password`
       });
       if (error) { alert("Error: "+error.message); return; }
       mostrarToast(`Correo de recuperación enviado a ${email}`);
@@ -2022,7 +2022,7 @@
               <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
               <td>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn-sm" onclick="window.open('index.html?planeacion_id=${p.id}','_blank')">Editar wizard</button>
+                  <button class="btn-sm" onclick="window.open('index?planeacion_id=${p.id}','_blank')">Editar wizard</button>
                   <button class="btn-sm success" onclick="abrirTransferirSA('${p.id}','${nomSA}')">Transferir</button>
                   <button class="btn-sm danger" id="samc-del-${p.id}" onclick="eliminarMiCursoSA('${p.id}',this)">Eliminar</button>
                 </div>
@@ -2097,7 +2097,7 @@
                     </td>
                     <td><span class="status-badge ${completa?"badge-completa":"badge-borrador"}">${completa?"Completo":"Borrador"}</span></td>
                     <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
-                    <td><button class="btn-sm" onclick="window.open('index.html?planeacion_id=${p.id}','_blank')">Editar wizard</button></td>
+                    <td><button class="btn-sm" onclick="window.open('index?planeacion_id=${p.id}','_blank')">Editar wizard</button></td>
                   </tr>`;
                 }).join("")}</tbody>
               </table>
@@ -2155,7 +2155,7 @@
                     <td style="font-weight:600;color:var(--c-text)">${inst.nombre || "(Sin título)"}</td>
                     <td><span class="status-badge ${completa ? "badge-completa" : "badge-borrador"}">${completa ? "Completa" : "Borrador"}</span></td>
                     <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
-                    <td><button class="btn-sm purple" onclick="window.open('wizard-engine.html?norma=${inst.norma_id}&instancia=${inst.id}','_blank')">Ver wizard</button></td>
+                    <td><button class="btn-sm purple" onclick="window.open('wizard-engine?norma=${inst.norma_id}&instancia=${inst.id}','_blank')">Ver wizard</button></td>
                   </tr>`;
                 }).join("")}</tbody>
               </table>
@@ -3455,7 +3455,7 @@
             </div>
             <div style="font-size:12px;color:var(--c-text-2);line-height:1.5">${_esc(prop.contenido||"").slice(0,300)}${(prop.contenido||"").length>300?"…":""}</div>
             ${prop.causa_raiz?`<div style="font-size:11px;color:var(--c-text-3);margin-top:5px">Motivo: ${_esc(prop.causa_raiz)}</div>`:""}
-            <a href="/recursos.html" target="_blank" style="font-size:11px;color:var(--c-blue-600);margin-top:6px;display:inline-block">Ver blog de recursos →</a>`;
+            <a href="/recursos" target="_blank" style="font-size:11px;color:var(--c-blue-600);margin-top:6px;display:inline-block">Ver blog de recursos →</a>`;
 
         default:
           return `<div style="font-size:12px;color:var(--c-text-3)">${_esc(JSON.stringify(prop).slice(0,200))}</div>`;
@@ -3569,7 +3569,7 @@
       }
     });
     function cambiarVista(modo) {
-      const destinos = { admin: "admin.html", alumno: "dashboard.html", evaluador: "mi-expediente.html", asesor: "mi-expediente.html" };
+      const destinos = { admin: "admin", alumno: "dashboard", evaluador: "mi-expediente", asesor: "mi-expediente" };
       localStorage.setItem("sbe_view_as", modo);
       window.location.href = destinos[modo];
     }

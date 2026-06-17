@@ -135,9 +135,9 @@
     <span>SmartBuilderEC</span>
   </a>
   <nav class="header-nav">
-    <a class="nav-link" href="/landing.html">Inicio</a>
-    <a class="nav-link active" href="/recursos.html">Recursos</a>
-    <a class="nav-link" href="/login.html">Ingresar</a>
+    <a class="nav-link" href="/landing">Inicio</a>
+    <a class="nav-link active" href="/recursos">Recursos</a>
+    <a class="nav-link" href="/login">Ingresar</a>
   </nav>
 </header>
 
@@ -157,7 +157,7 @@
 <!-- ── Vista: Artículo individual ── -->
 <div id="view-article">
   <div class="container">
-    <a class="article-back" href="/recursos.html" onclick="volverLista(event)">← Volver a recursos</a>
+    <a class="article-back" href="/recursos" onclick="volverLista(event)">← Volver a recursos</a>
     <div id="articulo-contenido"></div>
   </div>
 </div>
@@ -165,7 +165,7 @@
 <div class="cta-strip">
   <h2>¿Tienes más dudas?</h2>
   <p>Nuestro asistente IA puede ayudarte en tiempo real desde cualquier página de la plataforma.</p>
-  <a class="btn-cta" href="/login.html">Acceder a la plataforma</a>
+  <a class="btn-cta" href="/login">Acceder a la plataforma</a>
 </div>
 
 <script>
@@ -272,7 +272,7 @@
       el.innerHTML = `<div class="grid">${recursos.map(r => {
         const fecha = new Date(r.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
         const ex    = excerpt(r.contenido || r.titulo);
-        return `<a class="card" href="/recursos.html?id=${r.id}" onclick="abrirArticulo(event,'${r.id}')">
+        return `<a class="card" href="/recursos?id=${r.id}" onclick="abrirArticulo(event,'${r.id}')">
           <span class="card-type">${tipoLabel(r.tipo)}</span>
           <h2>${r.titulo.replace(/</g,'&lt;')}</h2>
           ${ex ? `<p class="card-excerpt">${ex.replace(/</g,'&lt;')}</p>` : ''}
@@ -318,13 +318,13 @@
 
   function abrirArticulo(e, id) {
     e.preventDefault();
-    history.pushState({ id }, '', `/recursos.html?id=${id}`);
+    history.pushState({ id }, '', `/recursos?id=${id}`);
     cargarArticulo(id);
   }
 
   function volverLista(e) {
     e.preventDefault();
-    history.pushState({}, '', '/recursos.html');
+    history.pushState({}, '', '/recursos');
     document.getElementById('view-list').style.display    = 'block';
     document.getElementById('view-article').style.display = 'none';
     document.title = 'Recursos — SmartBuilderEC';

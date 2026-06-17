@@ -80,7 +80,7 @@ const datos = {
 };
 sessionStorage.setItem('ec0217_datos', JSON.stringify(datos));
 sessionStorage.setItem('ec0217_datos_completo', 'true');
-window.location.href = 'index.html';
+window.location.href = 'index';
 });
 // ─── Copiar instructor → diseñador ───────────────────────────────────────────────
 document.getElementById('btnCopiarInstructor').addEventListener('click', () => {

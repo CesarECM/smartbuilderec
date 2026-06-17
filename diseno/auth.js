@@ -37,7 +37,7 @@ async function login(email, password) {
 async function loginWithGoogle() {
   const { data, error } = await _supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${window.location.origin}/panel.html` }
+    options: { redirectTo: `${window.location.origin}/panel` }
   });
   if (error) throw error;
   return data;
@@ -46,7 +46,7 @@ async function loginWithGoogle() {
 async function loginWithMagicLink(email) {
   const { error } = await _supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${window.location.origin}/panel.html` }
+    options: { emailRedirectTo: `${window.location.origin}/panel` }
   });
   if (error) throw error;
 }
@@ -108,7 +108,7 @@ async function logout() {
   Object.keys(localStorage)
     .filter(k => k.startsWith("ec0217_") || k.startsWith("sbe_"))
     .forEach(k => localStorage.removeItem(k));
-  window.location.href = "login.html";
+  window.location.href = "login";
 }
 
 // ── Utilidades ────────────────────────────────────────────────────────────────
@@ -128,20 +128,20 @@ async function getAuthHeaders() {
 async function authGuard(rolesPermitidos = []) {
   const session = await getSession();
   if (!session) {
-    window.location.href = "login.html";
+    window.location.href = "login";
     return null;
   }
 
   const profile = await getUserProfile();
   if (!profile) {
-    window.location.href = "login.html";
+    window.location.href = "login";
     return null;
   }
 
   // Cuenta desactivada
   if (profile.activo === false) {
     await _supabase.auth.signOut();
-    window.location.href = "login.html?razon=inactivo";
+    window.location.href = "login?razon=inactivo";
     return null;
   }
 
@@ -150,7 +150,7 @@ async function authGuard(rolesPermitidos = []) {
     const vence = new Date(profile.vigencia_hasta);
     if (vence < new Date()) {
       await _supabase.auth.signOut();
-      window.location.href = "login.html?razon=vigencia_expirada";
+      window.location.href = "login?razon=vigencia_expirada";
       return null;
     }
   }
@@ -158,7 +158,7 @@ async function authGuard(rolesPermitidos = []) {
   if (rolesPermitidos.length > 0) {
     const rol = profile?.rol || "user";
     if (!rolesPermitidos.includes(rol)) {
-      window.location.href = "panel.html";
+      window.location.href = "panel";
       return null;
     }
   }

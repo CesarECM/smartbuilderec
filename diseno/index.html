@@ -95,7 +95,7 @@
 
   <!-- Navbar de navegación superior -->
   <nav id="wiz-nav">
-    <a href="dashboard.html" class="wiz-nav-back" id="wizNavBack">← Mi Panel</a>
+    <a href="dashboard" class="wiz-nav-back" id="wizNavBack">← Mi Panel</a>
     <span id="wiz-nav-curso" class="wiz-nav-curso"></span>
     <div class="wiz-nav-user">
       <span id="wiz-nav-nombre"></span>
@@ -2225,8 +2225,8 @@
           document.getElementById("wiz-nav-nombre").textContent = nombre;
           const back = document.getElementById("wizNavBack");
           if (back) {
-            if (perfil.rol === "super_admin") back.href = "superadmin.html";
-            else if (perfil.rol === "admin")  back.href = "admin.html";
+            if (perfil.rol === "super_admin") back.href = "superadmin";
+            else if (perfil.rol === "admin")  back.href = "admin";
           }
         }
       } catch (_) {}

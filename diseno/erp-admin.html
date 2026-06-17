@@ -173,7 +173,7 @@
     </div>
     <div class="header-right">
       <span class="header-nombre" id="headerNombre"></span>
-      <a href="dashboard.html" class="header-btn">Panel principal</a>
+      <a href="dashboard" class="header-btn">Panel principal</a>
       <button class="header-btn" onclick="logout()">Cerrar sesión</button>
     </div>
   </header>
@@ -565,13 +565,13 @@
       if (!session) return;
 
       _perfil = await getUserProfile();
-      if (!_perfil) { window.location.href = "login.html"; return; }
+      if (!_perfil) { window.location.href = "login"; return; }
 
       const rolValido = _perfil.rol === "admin" || _perfil.rol === "super_admin";
       if (!rolValido) {
         // Puede ser evaluador/asesor con rol 'user' — verificar
         // Por ahora redirigir a dashboard si no es admin
-        window.location.href = "dashboard.html";
+        window.location.href = "dashboard";
         return;
       }
 

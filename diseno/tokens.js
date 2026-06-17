@@ -78,7 +78,7 @@ button.addEventListener("click", async () => {
     sessionStorage.setItem("loggedIn", "true");
 
     setTimeout(() => {
-        window.location.href = "./index.html";
+        window.location.href = "./index";
     }, 1500);
 
     }else{

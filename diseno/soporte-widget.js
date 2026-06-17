@@ -39,22 +39,23 @@
 
   // ── Detección de contexto por página ────────────────────────────────────────
   const PAGE_MAP = {
-    'landing.html':          { contexto: 'ventas',        greeting: '¡Hola! ¿Tienes dudas sobre SmartBuilderEC? Puedo ayudarte a conocer la plataforma y orientarte en el proceso de registro.' },
-    'pago.html':             { contexto: 'checkout',      greeting: '¿Tienes preguntas sobre los planes o el pago? Estoy aquí para ayudarte.' },
-    'registro.html':         { contexto: 'onboarding',    greeting: '¡Bienvenido! ¿Tienes un código de acceso de tu empresa? Te guío en el registro paso a paso.' },
-    'login.html':            { contexto: 'acceso',        greeting: '¿Problemas para ingresar? Puedo ayudarte a recuperar tu acceso.' },
-    'index.html':            { contexto: 'wizard_ec0217', greeting: '¡Hola, instructor! Soy tu guía para el expediente EC0217.01. ¿En qué paso del wizard necesitas ayuda?' },
-    'dashboard.html':        { contexto: 'navegacion',    greeting: '¿Cómo puedo ayudarte? Puedo orientarte sobre cómo crear o abrir un curso.' },
-    'admin.html':            { contexto: 'admin',         greeting: '¿Necesitas ayuda con la gestión de usuarios o códigos de acceso?' },
-    'superadmin.html':       { contexto: 'superadmin',    greeting: '¿En qué puedo ayudarte con la gestión de la plataforma?' },
-    'checkout-success.html': { contexto: 'onboarding',    greeting: '¡Pago procesado! ¿Necesitas ayuda para comenzar a usar la plataforma?' },
+    'landing':          { contexto: 'ventas',        greeting: '¡Hola! ¿Tienes dudas sobre SmartBuilderEC? Puedo ayudarte a conocer la plataforma y orientarte en el proceso de registro.' },
+    'pago':             { contexto: 'checkout',      greeting: '¿Tienes preguntas sobre los planes o el pago? Estoy aquí para ayudarte.' },
+    'registro':         { contexto: 'onboarding',    greeting: '¡Bienvenido! ¿Tienes un código de acceso de tu empresa? Te guío en el registro paso a paso.' },
+    'login':            { contexto: 'acceso',        greeting: '¿Problemas para ingresar? Puedo ayudarte a recuperar tu acceso.' },
+    'index':            { contexto: 'wizard_ec0217', greeting: '¡Hola, instructor! Soy tu guía para el expediente EC0217.01. ¿En qué paso del wizard necesitas ayuda?' },
+    'dashboard':        { contexto: 'navegacion',    greeting: '¿Cómo puedo ayudarte? Puedo orientarte sobre cómo crear o abrir un curso.' },
+    'admin':            { contexto: 'admin',         greeting: '¿Necesitas ayuda con la gestión de usuarios o códigos de acceso?' },
+    'superadmin':       { contexto: 'superadmin',    greeting: '¿En qué puedo ayudarte con la gestión de la plataforma?' },
+    'checkout-success': { contexto: 'onboarding',    greeting: '¡Pago procesado! ¿Necesitas ayuda para comenzar a usar la plataforma?' },
   };
 
   const DEFAULT_CTX = { contexto: 'general', greeting: '¿En qué puedo ayudarte?' };
 
   function getPageCtx() {
-    const file = window.location.pathname.split('/').pop() || 'landing.html';
-    return PAGE_MAP[file] || DEFAULT_CTX;
+    const seg = window.location.pathname.split('/').filter(Boolean).pop() || 'landing';
+    const key = seg.replace(/\.html$/, '');
+    return PAGE_MAP[key] || DEFAULT_CTX;
   }
 
   // ── Gestión de sesión (localStorage) ────────────────────────────────────────
@@ -442,8 +443,8 @@
   };
 
   // ── Init ──────────────────────────────────────────────────────────────────────
-  const _currentPage = window.location.pathname.split('/').pop() || '';
-  if (_currentPage !== 'superadmin.html') {
+  const _currentPage = (window.location.pathname.split('/').filter(Boolean).pop() || '').replace(/\.html$/, '');
+  if (_currentPage !== 'superadmin') {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', buildWidget);
     } else {

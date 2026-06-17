@@ -244,8 +244,8 @@
   <header class="dash-header">
     <img src="img/LogoECM.png" alt="SmartBuilderEC">
     <nav class="header-nav" id="headerNav">
-      <a href="dashboard.html">Mis cursos</a>
-      <a href="mi-expediente.html" class="active">Mi expediente</a>
+      <a href="dashboard">Mis cursos</a>
+      <a href="mi-expediente" class="active">Mi expediente</a>
     </nav>
     <div class="header-right">
       <div class="header-avatar" id="headerAvatar"></div>
@@ -279,7 +279,7 @@
       const labels = { admin: "Admin", alumno: "Alumno", evaluador: "Evaluador", asesor: "Asesor" };
       const b = document.createElement("div");
       b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:10000;background:#f59e0b;color:#78350f;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.12)";
-      b.innerHTML = `<span>👁️ Vista simulada: <strong>${labels[modo] || modo}</strong></span><a href="superadmin.html" onclick="localStorage.removeItem('sbe_view_as')" style="color:#7c2d12;font-weight:700;text-decoration:none;background:#fde68a;padding:5px 14px;border-radius:6px;font-size:12px">← Volver a Super Admin</a>`;
+      b.innerHTML = `<span>👁️ Vista simulada: <strong>${labels[modo] || modo}</strong></span><a href="superadmin" onclick="localStorage.removeItem('sbe_view_as')" style="color:#7c2d12;font-weight:700;text-decoration:none;background:#fde68a;padding:5px 14px;border-radius:6px;font-size:12px">← Volver a Super Admin</a>`;
       document.body.prepend(b);
       document.body.style.paddingTop = (parseInt(document.body.style.paddingTop||"0") + 44) + "px";
     }
@@ -407,7 +407,7 @@
               <div style="font-size:13px;font-weight:600;color:var(--c-text)">No tienes cursos creados aún</div>
               <div style="font-size:12px;color:var(--c-text-3)">Ve a "Mis cursos" para comenzar tu expediente didáctico.</div>
             </div>
-            <a href="dashboard.html" class="btn-ir-wizard" style="margin-top:0;flex-shrink:0">Ir al asistente →</a>
+            <a href="dashboard" class="btn-ir-wizard" style="margin-top:0;flex-shrink:0">Ir al asistente →</a>
           </div>`;
       }
 
@@ -426,7 +426,7 @@
           <div class="progress-track">
             <div class="progress-fill ${esCompleta ? "completa" : ""}" style="width:${esCompleta ? 100 : pct}%"></div>
           </div>
-          <a href="dashboard.html" class="btn-ir-wizard">
+          <a href="dashboard" class="btn-ir-wizard">
             ${esCompleta ? "Ver expediente" : "Continuar asistente"} →
           </a>
         </div>`;
@@ -536,17 +536,17 @@
       if (!session) return;
 
       const perfil = await getUserProfile();
-      if (!perfil) { window.location.href = "login.html"; return; }
+      if (!perfil) { window.location.href = "login"; return; }
 
       // Redirigir si no es alumno (bypass si superadmin está en modo vista)
       if (perfil.rol === "super_admin") {
         const viewAs = localStorage.getItem("sbe_view_as");
         if (!viewAs || !["evaluador","asesor","alumno"].includes(viewAs)) {
-          window.location.href = "superadmin.html"; return;
+          window.location.href = "superadmin"; return;
         }
         _renderViewAsBanner(viewAs);
       }
-      if (perfil.rol === "admin")       { window.location.href = "admin.html"; return; }
+      if (perfil.rol === "admin")       { window.location.href = "admin"; return; }
 
       const nombre = [perfil.nombre, perfil.apellido].filter(Boolean).join(" ") || "usuario";
       document.getElementById("headerAvatar").textContent = iniciales(perfil.nombre, perfil.apellido);

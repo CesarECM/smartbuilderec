@@ -199,7 +199,7 @@
 
         if (error || !data) {
           alert("No tienes acceso a esta planeación o no existe.");
-          window.location.href = "dashboard.html";
+          window.location.href = "dashboard";
           return;
         }
 
