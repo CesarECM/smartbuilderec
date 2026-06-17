@@ -176,7 +176,7 @@
         const { data } = await registroConCodigo(email, password, nombre, apellido, codigo);
         if (data?.session) {
           setMsg("¡Cuenta activada con éxito! Redirigiendo...", "ok");
-          setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
+          setTimeout(() => { window.location.href = "panel.html"; }, 900);
         } else {
           setMsg("Cuenta creada. Revisa tu correo para confirmarla antes de iniciar sesión.", "ok");
           btn.textContent = "Cuenta activada ✓";

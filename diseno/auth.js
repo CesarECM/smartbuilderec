@@ -37,7 +37,7 @@ async function login(email, password) {
 async function loginWithGoogle() {
   const { data, error } = await _supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${window.location.origin}/dashboard.html` }
+    options: { redirectTo: `${window.location.origin}/panel.html` }
   });
   if (error) throw error;
   return data;
@@ -46,7 +46,7 @@ async function loginWithGoogle() {
 async function loginWithMagicLink(email) {
   const { error } = await _supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${window.location.origin}/dashboard.html` }
+    options: { emailRedirectTo: `${window.location.origin}/panel.html` }
   });
   if (error) throw error;
 }
@@ -158,7 +158,7 @@ async function authGuard(rolesPermitidos = []) {
   if (rolesPermitidos.length > 0) {
     const rol = profile?.rol || "user";
     if (!rolesPermitidos.includes(rol)) {
-      window.location.href = "dashboard.html";
+      window.location.href = "panel.html";
       return null;
     }
   }

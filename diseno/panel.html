@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Panel — SmartBuilderEC</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--c-bg); }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .panel-header {
+      background: var(--c-blue-700); padding: 0 24px;
+      display: flex; align-items: center; gap: 12px;
+      height: 56px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18); flex-wrap: nowrap;
+    }
+    .panel-header img { max-height: 32px; flex-shrink: 0; }
+    .header-title { color: white; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .role-switcher { display: flex; gap: 4px; flex: 1; justify-content: center; overflow-x: auto; padding: 0 8px; }
+    .role-pill {
+      background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8);
+      border: none; padding: 5px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; font-family: inherit;
+      cursor: pointer; white-space: nowrap; transition: all 0.15s;
+    }
+    .role-pill:hover { background: rgba(255,255,255,0.22); color: white; }
+    .role-pill.active { background: white; color: var(--c-blue-700); }
+    .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .header-nombre { color: rgba(255,255,255,0.85); font-size: 13px; }
+    .header-btn { background: rgba(255,255,255,0.14); color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; }
+    .header-btn:hover { background: rgba(255,255,255,0.26); }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .panel-main { max-width: 1000px; margin: 0 auto; padding: 28px 20px; }
+    .role-panel  { display: none; }
+    .role-panel.active { display: block; }
+
+    /* ── Section header ─────────────────────────────────────────── */
+    .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--c-border); gap: 10px; flex-wrap: wrap; }
+    .sec-header h2 { font-size: 15px; font-weight: 700; color: var(--c-text); margin: 0; }
+    .sec-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .sec-gap { margin-top: 32px; }
+
+    /* ── Stats ──────────────────────────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); padding: 18px 16px; display: flex; align-items: center; gap: 12px; }
+    .stat-icon { font-size: 20px; width: 40px; height: 40px; border-radius: var(--r-lg); background: var(--c-surface-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-num  { font-size: 24px; font-weight: 800; color: var(--c-blue-600); line-height: 1; }
+    .stat-label{ font-size: 11px; color: var(--c-text-3); margin-top: 3px; }
+
+    /* ── Cards grid ─────────────────────────────────────────────── */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .action-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: 18px 16px; cursor: pointer; text-decoration: none; display: block; transition: all 0.15s; }
+    .action-card:hover { box-shadow: var(--shadow-sm); border-color: var(--c-border-s); transform: translateY(-1px); }
+    .action-card-icon { font-size: 24px; margin-bottom: 8px; }
+    .action-card-title { font-size: 13px; font-weight: 700; color: var(--c-text); margin-bottom: 3px; }
+    .action-card-desc  { font-size: 11px; color: var(--c-text-3); line-height: 1.4; }
+
+    /* ── Tables ─────────────────────────────────────────────────── */
+    .table-wrap { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); overflow: hidden; overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-3); border-bottom: 2px solid var(--c-border); background: var(--c-surface-2); white-space: nowrap; }
+    .data-table td { padding: 11px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; color: var(--c-text-2); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(0,0,0,0.016); }
+
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn-primary { background: var(--c-blue-600); color: white; border: none; padding: 8px 16px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; text-decoration: none; }
+    .btn-primary:hover { background: var(--c-blue-700); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-border-s); padding: 4px 10px; border-radius: var(--r-sm); font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+    .btn-sm:hover { background: var(--c-blue-600); color: white; border-color: var(--c-blue-600); }
+    .btn-sm.danger { color: #991b1b; border-color: #fca5a5; background: #fef2f2; }
+    .btn-sm.danger:hover { background: #dc2626; color: white; border-color: #dc2626; }
+    .btn-sm.success { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+    .btn-sm.success:hover { background: #059669; color: white; }
+    .btn-secondary { background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-border-s); padding: 7px 14px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+
+    /* ── Role chips ─────────────────────────────────────────────── */
+    .role-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+    .rchip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+      cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; white-space: nowrap;
+      user-select: none;
+    }
+    .rchip.locked { cursor: default; }
+    .rchip.off { background: var(--c-surface-2); color: var(--c-text-4); border-color: var(--c-border); }
+    .rchip.off:not(.locked):hover { border-color: var(--c-blue-600); color: var(--c-blue-600); }
+    .rchip[data-role="alumno"]      { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+    .rchip[data-role="asesor"].on   { background: #fdf4ff; color: #7e22ce; border-color: #d8b4fe; }
+    .rchip[data-role="evaluador"].on{ background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
+    .rchip[data-role="admin"].on    { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+    .rchip[data-role="super_admin"].on { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+
+    /* ── Planeación cards (alumno) ──────────────────────────────── */
+    .plan-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 8px; transition: box-shadow 0.15s; }
+    .plan-card:hover { box-shadow: var(--shadow-sm); }
+    .plan-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .plan-title { font-size: 14px; font-weight: 600; color: var(--c-text); flex: 1; }
+    .plan-meta  { font-size: 11px; color: var(--c-text-3); margin-top: 3px; }
+    .prog-wrap  { height: 5px; background: var(--c-border); border-radius: 99px; margin-top: 10px; }
+    .prog-fill  { height: 5px; border-radius: 99px; background: var(--c-blue-600); transition: width 0.4s; }
+    .prog-fill.completa { background: #059669; }
+
+    /* ── Norma card (ERP expediente) ────────────────────────────── */
+    .norma-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; }
+    .norma-badge { background: var(--c-blue-700); color: white; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
+    .norma-info  { flex: 1; min-width: 0; }
+    .norma-nombre { font-size: 13px; font-weight: 600; color: var(--c-text); }
+    .norma-sub    { font-size: 11px; color: var(--c-text-3); }
+
+    /* ── Misc ───────────────────────────────────────────────────── */
+    .empty-txt   { color: var(--c-text-3); font-size: 13px; padding: 28px; text-align: center; }
+    .loading-txt { color: var(--c-text-3); font-size: 13px; padding: 20px; text-align: center; }
+    .status-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; }
+    .badge-activo   { background: #d1fae5; color: #065f46; }
+    .badge-inactivo { background: #fee2e2; color: #991b1b; }
+    .badge-completa { background: #d1fae5; color: #065f46; }
+    .badge-borrador { background: #fef3c7; color: #92400e; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 9999; }
+    .toast.visible { opacity: 1; }
+    .search-input { border: 1.5px solid var(--c-border); border-radius: var(--r-md); padding: 6px 12px; font-size: 13px; font-family: inherit; outline: none; background: var(--c-surface); width: 200px; }
+    .search-input:focus { border-color: var(--c-blue-600); }
+
+    /* ── Modal ──────────────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--c-surface); border-radius: var(--r-xl); box-shadow: 0 24px 64px rgba(0,0,0,0.22); width: 100%; max-width: 440px; padding: 28px 28px 24px; position: relative; margin: auto; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: var(--c-surface-2); border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer; color: var(--c-text-3); }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+    .modal-sub   { font-size: 13px; color: var(--c-text-3); margin-bottom: 18px; }
+    .form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .form-field  { display: flex; flex-direction: column; gap: 4px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { font-size: 11px; font-weight: 600; color: var(--c-text-2); }
+    .form-field input { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
+    .form-field input:focus { border-color: var(--c-blue-600); }
+    .form-msg { font-size: 12px; margin-top: 6px; }
+    .form-msg.ok  { color: #059669; }
+    .form-msg.err { color: var(--c-danger); }
+    .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+    /* ── Link panel completo ────────────────────────────────────── */
+    .panel-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--c-blue-600); text-decoration: none; }
+    .panel-link:hover { text-decoration: underline; }
+
+    /* ── User avatar ────────────────────────────────────────────── */
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--c-blue-100); color: var(--c-blue-700); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    @media (max-width: 600px) {
+      .panel-main { padding: 16px 14px; }
+      .header-title { display: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .search-input { width: 140px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="panel-header">
+    <img src="img/LogoECM.png" alt="CEECM">
+    <span class="header-title">SmartBuilderEC</span>
+    <nav class="role-switcher" id="roleSwitcher"></nav>
+    <div class="header-right">
+      <span class="header-nombre" id="headerNombre"></span>
+      <button class="header-btn" onclick="logout()">Salir</button>
+    </div>
+  </header>
+
+  <main class="panel-main">
+
+    <!-- ══ PANEL: ALUMNO ══════════════════════════════════════════ -->
+    <div id="rp-alumno" class="role-panel">
+      <div class="sec-header">
+        <h2>🎓 Mis planeaciones</h2>
+        <div class="sec-actions">
+          <a href="index.html?new=1" class="btn-primary">+ Nuevo curso</a>
+        </div>
+      </div>
+      <div id="alumno-planeaciones"><p class="loading-txt">Cargando...</p></div>
+
+      <div class="sec-header sec-gap">
+        <h2>📄 Mi expediente CONOCER</h2>
+        <a href="mi-expediente.html" class="btn-sm">Ver completo →</a>
+      </div>
+      <div id="alumno-normas"><p class="loading-txt">Cargando...</p></div>
+    </div>
+
+    <!-- ══ PANEL: ASESOR ══════════════════════════════════════════ -->
+    <div id="rp-asesor" class="role-panel">
+      <div class="sec-header">
+        <h2>🤝 Mis asesorados</h2>
+        <button class="btn-sm" onclick="cargarPanelAsesor()">↺ Actualizar</button>
+      </div>
+      <p style="font-size:12px;color:var(--c-text-3);margin:-6px 0 16px">Alumnos que tienes asignados para acompañar en su proceso de certificación.</p>
+      <div id="asesor-lista"><p class="loading-txt">Cargando...</p></div>
+    </div>
+
+    <!-- ══ PANEL: EVALUADOR ═══════════════════════════════════════ -->
+    <div id="rp-evaluador" class="role-panel">
+      <div class="sec-header">
+        <h2>📋 Mis evaluados</h2>
+        <button class="btn-sm" onclick="cargarPanelEvaluador()">↺ Actualizar</button>
+      </div>
+      <p style="font-size:12px;color:var(--c-text-3);margin:-6px 0 16px">Alumnos que tienes asignados para evaluar ante el CONOCER.</p>
+      <div id="evaluador-lista"><p class="loading-txt">Cargando...</p></div>
+    </div>
+
+    <!-- ══ PANEL: ADMIN ═══════════════════════════════════════════ -->
+    <div id="rp-admin" class="role-panel">
+      <div class="stats-row" id="admin-stats"></div>
+
+      <div class="cards-grid">
+        <a href="admin.html" class="action-card">
+          <div class="action-card-icon">👥</div>
+          <div class="action-card-title">Panel Admin completo</div>
+          <div class="action-card-desc">Usuarios, códigos de acceso, mis cursos y perfil.</div>
+        </a>
+        <a href="index.html?new=1" class="action-card">
+          <div class="action-card-icon">📋</div>
+          <div class="action-card-title">Nueva planeación</div>
+          <div class="action-card-desc">Crear expediente EC0217.01 con asistencia de IA.</div>
+        </a>
+        <a href="erp-admin.html" class="action-card">
+          <div class="action-card-icon">🏫</div>
+          <div class="action-card-title">ERP Académico</div>
+          <div class="action-card-desc">Inscribir alumnos, pagos y proceso CONOCER.</div>
+        </a>
+      </div>
+
+      <div class="sec-header">
+        <h2>👥 Mis usuarios</h2>
+        <div class="sec-actions">
+          <input type="text" id="adminSearchUser" class="search-input" placeholder="🔍 Buscar..." oninput="filtrarAdminUsuarios(this.value)">
+        </div>
+      </div>
+      <div id="admin-usuarios"><p class="loading-txt">Cargando...</p></div>
+    </div>
+
+    <!-- ══ PANEL: SUPER ADMIN ═════════════════════════════════════ -->
+    <div id="rp-super_admin" class="role-panel">
+      <div class="stats-row" id="sa-stats"></div>
+
+      <div class="cards-grid">
+        <a href="superadmin.html" class="action-card">
+          <div class="action-card-icon">🛡️</div>
+          <div class="action-card-title">Panel Super Admin</div>
+          <div class="action-card-desc">Admins, créditos, KB soporte, vigencias y más.</div>
+        </a>
+        <a href="admin.html" class="action-card">
+          <div class="action-card-icon">👑</div>
+          <div class="action-card-title">Vista Admin</div>
+          <div class="action-card-desc">Gestión de usuarios y códigos de acceso.</div>
+        </a>
+        <a href="erp-admin.html" class="action-card">
+          <div class="action-card-icon">🏫</div>
+          <div class="action-card-title">ERP Académico</div>
+          <div class="action-card-desc">Inscripciones, pagos y certificaciones CONOCER.</div>
+        </a>
+      </div>
+
+      <!-- Gestión de roles -->
+      <div class="sec-header sec-gap">
+        <h2>🎭 Gestión de roles</h2>
+        <div class="sec-actions">
+          <input type="text" id="saRolSearch" class="search-input" placeholder="🔍 Buscar usuario..." oninput="filtrarRoles(this.value)">
+          <button class="btn-sm" onclick="cargarGestionRoles()">↺ Actualizar</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--c-text-3);margin:-6px 0 14px">
+        Haz clic en un rol para activarlo o desactivarlo. <strong>Alumno</strong> siempre está activo.
+        Activar <strong>Admin</strong> abre un formulario para créditos y vigencia.
+      </p>
+      <div id="sa-roles"><p class="loading-txt">Cargando usuarios...</p></div>
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Modal: promover a admin -->
+  <div class="modal-overlay" id="modalPromover" onclick="cerrarModalPromover(event)">
+    <div class="modal-box">
+      <button class="modal-close" onclick="cerrarModalPromover()">✕</button>
+      <div class="modal-title">Promover a Admin</div>
+      <div class="modal-sub" id="promoverNombreLabel"></div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Créditos iniciales</label>
+          <input type="number" id="promoverCreditos" value="10" min="0" max="9999">
+        </div>
+        <div class="form-field">
+          <label>Vigencia hasta</label>
+          <input type="date" id="promoverVigencia">
+        </div>
+      </div>
+      <p class="form-msg" id="promoverMsg"></p>
+      <div class="modal-btns">
+        <button class="btn-secondary" onclick="cerrarModalPromover()">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarPromover" onclick="confirmarPromover()">Promover</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const BACKEND_URL = "https://smartbuilderec.onrender.com";
+
+    // ── Estado global ─────────────────────────────────────────────
+    let _perfil      = null;
+    let _extraRoles  = [];   // ['asesor', 'evaluador']
+    let _rolesDisp   = [];   // roles disponibles para este usuario
+    let _rolActivo   = null;
+    let _adminUsers  = [];   // cache usuarios del admin
+    let _saAllUsers  = [];   // cache todos los usuarios (SA)
+    let _saExtraMap  = {};   // userId → Set de extra roles
+    let _promoverUserId = null;
+
+    // ── API helper ───────────────────────────────────────────────
+    async function apiFetch(path, opts = {}) {
+      const headers = await getAuthHeaders();
+      if (opts.body && typeof opts.body !== 'string') {
+        opts.body = JSON.stringify(opts.body);
+        headers['Content-Type'] = 'application/json';
+      }
+      const res = await fetch(BACKEND_URL + path, { ...opts, headers });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Error ${res.status}`);
+      }
+      return res.json().catch(() => ({}));
+    }
+
+    // ── Toast ────────────────────────────────────────────────────
+    function toast(msg, ms = 2500) {
+      const t = document.getElementById('toast');
+      t.textContent = '✓ ' + msg;
+      t.classList.add('visible');
+      setTimeout(() => t.classList.remove('visible'), ms);
+    }
+
+    // ── Roles disponibles ────────────────────────────────────────
+    function determinarRoles(perfil, extraRoles) {
+      const roles = [{ id: 'alumno', label: '🎓 Alumno' }];
+      if (extraRoles.includes('asesor'))    roles.push({ id: 'asesor',      label: '🤝 Asesor' });
+      if (extraRoles.includes('evaluador')) roles.push({ id: 'evaluador',   label: '📋 Evaluador' });
+      if (perfil.rol === 'admin' || perfil.rol === 'super_admin')
+        roles.push({ id: 'admin', label: '👑 Admin' });
+      if (perfil.rol === 'super_admin')
+        roles.push({ id: 'super_admin', label: '🛡️ Super Admin' });
+      return roles;
+    }
+
+    function renderRoleSwitcher(roles) {
+      const nav = document.getElementById('roleSwitcher');
+      nav.innerHTML = roles.map(r =>
+        `<button class="role-pill" data-role="${r.id}" onclick="switchRol('${r.id}')">${r.label}</button>`
+      ).join('');
+    }
+
+    function switchRol(rol) {
+      if (_rolActivo === rol) return;
+      _rolActivo = rol;
+      localStorage.setItem('sbe_active_role', rol);
+
+      // Pills
+      document.querySelectorAll('.role-pill').forEach(p => p.classList.toggle('active', p.dataset.role === rol));
+      // Panels
+      document.querySelectorAll('.role-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('rp-' + rol)?.classList.add('active');
+
+      // Cargar contenido si no está cargado aún
+      cargarPanel(rol);
+    }
+
+    // ── Panel loaders ────────────────────────────────────────────
+    const _panelLoaded = {};
+
+    async function cargarPanel(rol) {
+      if (_panelLoaded[rol]) return;
+      _panelLoaded[rol] = true;
+      switch (rol) {
+        case 'alumno':     await cargarPanelAlumno();     break;
+        case 'asesor':     await cargarPanelAsesor();     break;
+        case 'evaluador':  await cargarPanelEvaluador();  break;
+        case 'admin':      await cargarPanelAdmin();      break;
+        case 'super_admin': await cargarPanelSuperAdmin(); break;
+      }
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // ALUMNO
+    // ────────────────────────────────────────────────────────────
+    async function cargarPanelAlumno() {
+      await Promise.all([cargarMisPlaneaciones(), cargarMisNormas()]);
+    }
+
+    async function cargarMisPlaneaciones() {
+      const el = document.getElementById('alumno-planeaciones');
+      const { data, error } = await _supabase
+        .from('planeaciones')
+        .select('id, nombre_curso, paso_actual, status, updated_at')
+        .eq('user_id', _perfil.id)
+        .order('updated_at', { ascending: false });
+
+      if (error || !data?.length) {
+        el.innerHTML = `<div style="text-align:center;padding:32px;background:var(--c-surface);border:2px dashed var(--c-border);border-radius:var(--r-xl)">
+          <div style="font-size:36px;margin-bottom:10px">📋</div>
+          <h3 style="font-size:15px;font-weight:700;color:var(--c-text);margin-bottom:6px">Aún no tienes cursos</h3>
+          <p style="font-size:13px;color:var(--c-text-3);margin-bottom:14px">Crea tu primer expediente didáctico EC0217.01.</p>
+          <a href="index.html?new=1" class="btn-primary" style="text-decoration:none">+ Crear primer curso</a>
+        </div>`;
+        return;
+      }
+
+      el.innerHTML = data.map(p => {
+        const pct = Math.round(((p.paso_actual - 1) / 15) * 100);
+        const completa = p.status === 'completa';
+        const tiempo = _tiempoRel(p.updated_at);
+        return `<div class="plan-card">
+          <div class="plan-card-top">
+            <div style="flex:1">
+              <div class="plan-title">${p.nombre_curso || '(Sin título)'}</div>
+              <div class="plan-meta">Editado ${tiempo} · Paso ${p.paso_actual}/16</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span class="status-badge ${completa ? 'badge-completa' : 'badge-borrador'}">${completa ? 'Completa' : 'Borrador'}</span>
+              <a href="index.html?planeacion_id=${p.id}" class="btn-sm">${completa ? 'Ver' : 'Continuar'}</a>
+            </div>
+          </div>
+          <div class="prog-wrap"><div class="prog-fill ${completa ? 'completa' : ''}" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    async function cargarMisNormas() {
+      const el = document.getElementById('alumno-normas');
+      const { data, error } = await _supabase
+        .from('asignaciones')
+        .select('id, norma_id, normas(codigo, nombre)')
+        .eq('alumno_id', _perfil.id)
+        .order('created_at', { ascending: false });
+
+      if (error || !data?.length) {
+        el.innerHTML = '<p class="empty-txt">No estás inscrito en ningún estándar de competencia todavía.</p>';
+        return;
+      }
+      el.innerHTML = data.map(a => {
+        const n = a.normas || {};
+        return `<div class="norma-card">
+          <span class="norma-badge">${n.codigo || '—'}</span>
+          <div class="norma-info">
+            <div class="norma-nombre">${n.nombre || 'Norma sin nombre'}</div>
+          </div>
+          <a href="mi-expediente.html" class="btn-sm">Ver expediente →</a>
+        </div>`;
+      }).join('');
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // ASESOR
+    // ────────────────────────────────────────────────────────────
+    async function cargarPanelAsesor() {
+      _panelLoaded['asesor'] = true;
+      const el = document.getElementById('asesor-lista');
+      const { data, error } = await _supabase
+        .from('asignaciones')
+        .select('id, norma_id, created_at, profiles!asignaciones_alumno_id_fkey(nombre, apellido, email), normas(codigo, nombre)')
+        .eq('asesor_id', _perfil.id)
+        .order('created_at', { ascending: false });
+
+      if (error || !data?.length) {
+        el.innerHTML = '<p class="empty-txt">No tienes alumnos asignados para asesorar todavía.</p>';
+        return;
+      }
+      el.innerHTML = _renderAsignadosTable(data, 'asesor');
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // EVALUADOR
+    // ────────────────────────────────────────────────────────────
+    async function cargarPanelEvaluador() {
+      _panelLoaded['evaluador'] = true;
+      const el = document.getElementById('evaluador-lista');
+      const { data, error } = await _supabase
+        .from('asignaciones')
+        .select('id, norma_id, created_at, profiles!asignaciones_alumno_id_fkey(nombre, apellido, email), normas(codigo, nombre)')
+        .eq('evaluador_id', _perfil.id)
+        .order('created_at', { ascending: false });
+
+      if (error || !data?.length) {
+        el.innerHTML = '<p class="empty-txt">No tienes alumnos asignados para evaluar todavía.</p>';
+        return;
+      }
+      el.innerHTML = _renderAsignadosTable(data, 'evaluador');
+    }
+
+    function _renderAsignadosTable(rows, tipo) {
+      return `<div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Alumno</th><th>Email</th><th>Norma</th><th>Inscrito</th><th>Acciones</th></tr></thead>
+        <tbody>${rows.map(a => {
+          const p = a['profiles!asignaciones_alumno_id_fkey'] || a.profiles || {};
+          const n = a.normas || {};
+          const nom = [p.nombre, p.apellido].filter(Boolean).join(' ') || '(Sin nombre)';
+          const fecha = new Date(a.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+          return `<tr>
+            <td style="font-weight:600;color:var(--c-text)">${nom}</td>
+            <td style="color:var(--c-text-3)">${p.email || '—'}</td>
+            <td><span class="norma-badge" style="font-size:9px">${n.codigo || '—'}</span></td>
+            <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
+            <td><a href="erp-admin.html" class="btn-sm">Ver ERP →</a></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // ADMIN
+    // ────────────────────────────────────────────────────────────
+    async function cargarPanelAdmin() {
+      const esSA = _perfil.rol === 'super_admin';
+
+      const [resUsr, resCod, resCreds] = await Promise.all([
+        _supabase.from('profiles').select('id, nombre, apellido, email, activo, created_at').eq('admin_id', _perfil.id).order('created_at', { ascending: false }),
+        _supabase.from('access_codes').select('id').eq('admin_id', _perfil.id).is('used_at', null).gt('expires_at', new Date().toISOString()),
+        esSA ? Promise.resolve({ data: { credits: Infinity } }) : _supabase.from('profiles').select('credits').eq('id', _perfil.id).single(),
+      ]);
+
+      const totalUsr  = resUsr.data?.length ?? 0;
+      const codAct    = resCod.data?.length ?? 0;
+      const creditos  = esSA ? '∞' : (resCreds.data?.credits ?? 0);
+
+      document.getElementById('admin-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-num">${totalUsr}</div><div class="stat-label">Usuarios registrados</div></div></div>
+        <div class="stat-card"><div class="stat-icon">🪙</div><div><div class="stat-num">${creditos}</div><div class="stat-label">Créditos disponibles</div></div></div>
+        <div class="stat-card"><div class="stat-icon">🔑</div><div><div class="stat-num">${codAct}</div><div class="stat-label">Códigos activos</div></div></div>`;
+
+      _adminUsers = resUsr.data || [];
+      renderAdminUsuarios(_adminUsers);
+    }
+
+    function filtrarAdminUsuarios(q) {
+      if (!q.trim()) { renderAdminUsuarios(_adminUsers); return; }
+      const lq = q.toLowerCase();
+      renderAdminUsuarios(_adminUsers.filter(u =>
+        ([u.nombre, u.apellido].filter(Boolean).join(' ')).toLowerCase().includes(lq) ||
+        u.email.toLowerCase().includes(lq)
+      ));
+    }
+
+    function renderAdminUsuarios(usuarios) {
+      const el = document.getElementById('admin-usuarios');
+      if (!usuarios.length) { el.innerHTML = '<p class="empty-txt">No hay usuarios registrados todavía.</p>'; return; }
+      el.innerHTML = `<div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Usuario</th><th>Email</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr></thead>
+        <tbody>${usuarios.map(u => {
+          const nom = [u.nombre, u.apellido].filter(Boolean).join(' ') || '(Sin nombre)';
+          const fecha = new Date(u.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+          return `<tr>
+            <td style="font-weight:600;color:var(--c-text)">${nom}</td>
+            <td style="color:var(--c-text-3)">${u.email}</td>
+            <td><span class="status-badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}" id="admin-badge-${u.id}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
+            <td style="color:var(--c-text-4);font-size:12px">${fecha}</td>
+            <td><div style="display:flex;gap:5px">
+              <button class="btn-sm ${u.activo ? '' : 'success'}" id="admin-toggle-${u.id}" onclick="toggleAdminUser('${u.id}',${u.activo})">${u.activo ? 'Desactivar' : 'Activar'}</button>
+            </div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    }
+
+    async function toggleAdminUser(userId, activo) {
+      const btn   = document.getElementById('admin-toggle-' + userId);
+      const badge = document.getElementById('admin-badge-' + userId);
+      btn.disabled = true;
+      const nuevo = !activo;
+      const { error } = await _supabase.from('profiles').update({ activo: nuevo }).eq('id', userId);
+      if (error) { alert('Error al actualizar.'); btn.disabled = false; return; }
+      badge.textContent = nuevo ? 'Activo' : 'Inactivo';
+      badge.className   = `status-badge ${nuevo ? 'badge-activo' : 'badge-inactivo'}`;
+      btn.textContent   = nuevo ? 'Desactivar' : 'Activar';
+      btn.className     = `btn-sm ${nuevo ? '' : 'success'}`;
+      btn.onclick       = () => toggleAdminUser(userId, nuevo);
+      btn.disabled      = false;
+      const u = _adminUsers.find(x => x.id === userId);
+      if (u) u.activo = nuevo;
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // SUPER ADMIN
+    // ────────────────────────────────────────────────────────────
+    async function cargarPanelSuperAdmin() {
+      const [rAdm, rUsr, rPlan] = await Promise.all([
+        _supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('rol', 'admin'),
+        _supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('rol', 'user'),
+        _supabase.from('planeaciones').select('id', { count: 'exact', head: true }),
+      ]);
+      document.getElementById('sa-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-icon">👑</div><div><div class="stat-num">${rAdm.count ?? '—'}</div><div class="stat-label">Admins activos</div></div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div><div class="stat-num">${rUsr.count ?? '—'}</div><div class="stat-label">Usuarios registrados</div></div></div>
+        <div class="stat-card"><div class="stat-icon">📋</div><div><div class="stat-num">${rPlan.count ?? '—'}</div><div class="stat-label">Planeaciones totales</div></div></div>`;
+      await cargarGestionRoles();
+    }
+
+    async function cargarGestionRoles() {
+      const el = document.getElementById('sa-roles');
+      el.innerHTML = '<p class="loading-txt">Cargando usuarios...</p>';
+
+      const [profRes, extraRes] = await Promise.all([
+        _supabase.from('profiles').select('id, nombre, apellido, email, rol, activo').neq('id', _perfil.id).order('nombre'),
+        _supabase.from('user_roles').select('user_id, role'),
+      ]);
+
+      _saAllUsers = profRes.data || [];
+      _saExtraMap = {};
+      (extraRes.data || []).forEach(r => {
+        if (!_saExtraMap[r.user_id]) _saExtraMap[r.user_id] = new Set();
+        _saExtraMap[r.user_id].add(r.role);
+      });
+
+      renderRolesTable(_saAllUsers);
+    }
+
+    function filtrarRoles(q) {
+      if (!q.trim()) { renderRolesTable(_saAllUsers); return; }
+      const lq = q.toLowerCase();
+      renderRolesTable(_saAllUsers.filter(u =>
+        ([u.nombre, u.apellido].filter(Boolean).join(' ')).toLowerCase().includes(lq) ||
+        u.email.toLowerCase().includes(lq)
+      ));
+    }
+
+    function _getUserRoles(u) {
+      const set = new Set(['alumno']);
+      if (_saExtraMap[u.id]?.has('asesor'))    set.add('asesor');
+      if (_saExtraMap[u.id]?.has('evaluador')) set.add('evaluador');
+      if (u.rol === 'admin' || u.rol === 'super_admin') set.add('admin');
+      if (u.rol === 'super_admin') set.add('super_admin');
+      return set;
+    }
+
+    function renderRolesTable(usuarios) {
+      const el = document.getElementById('sa-roles');
+      if (!usuarios.length) { el.innerHTML = '<p class="empty-txt">No hay usuarios.</p>'; return; }
+
+      const ALL_ROLES = [
+        { id: 'alumno',      label: '🎓 Alumno',      locked: true },
+        { id: 'asesor',      label: '🤝 Asesor',      locked: false },
+        { id: 'evaluador',   label: '📋 Evaluador',   locked: false },
+        { id: 'admin',       label: '👑 Admin',       locked: false },
+        { id: 'super_admin', label: '🛡️ Super Admin', locked: false },
+      ];
+
+      el.innerHTML = `<div class="table-wrap"><table class="data-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Roles activos</th>
+          </tr>
+        </thead>
+        <tbody>${usuarios.map(u => {
+          const rolesActivos = _getUserRoles(u);
+          const nom = [u.nombre, u.apellido].filter(Boolean).join(' ') || '(Sin nombre)';
+          const chips = ALL_ROLES.map(r => {
+            const on = rolesActivos.has(r.id);
+            const cls = r.locked ? 'rchip locked' : (on ? `rchip on` : 'rchip off');
+            const onclick = r.locked ? '' : `onclick="toggleRol('${u.id}','${u.rol}','${r.id}',${on})"`;
+            return `<span class="${cls}" data-role="${r.id}" ${onclick} title="${r.locked ? 'Rol base — siempre activo' : (on ? 'Clic para desactivar' : 'Clic para activar')}">${r.label}</span>`;
+          }).join('');
+          return `<tr id="rol-row-${u.id}">
+            <td style="font-weight:600;color:var(--c-text)">${nom}</td>
+            <td style="color:var(--c-text-3)">${u.email}</td>
+            <td><div class="role-chips">${chips}</div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    }
+
+    // ── Toggle de rol ────────────────────────────────────────────
+    async function toggleRol(userId, rolActualPerfil, role, estaActivo) {
+      try {
+        if (role === 'asesor' || role === 'evaluador') {
+          if (estaActivo) {
+            await apiFetch(`/erp/admin/roles/quitar?user_id=${userId}&role=${role}`, { method: 'DELETE' });
+            _saExtraMap[userId]?.delete(role);
+          } else {
+            await apiFetch('/erp/admin/roles/asignar', { method: 'POST', body: { user_id: userId, role } });
+            if (!_saExtraMap[userId]) _saExtraMap[userId] = new Set();
+            _saExtraMap[userId].add(role);
+          }
+          toast(estaActivo ? `Rol ${role} eliminado` : `Rol ${role} asignado`);
+          // Refrescar solo la fila
+          const u = _saAllUsers.find(x => x.id === userId);
+          if (u) _refrescarFilaRoles(u);
+          return;
+        }
+
+        if (role === 'admin') {
+          if (estaActivo) {
+            // Degradar de admin a user
+            if (!confirm('¿Quitar rol Admin? El usuario pasará a ser Alumno.')) return;
+            const { error } = await _supabase.from('profiles').update({ rol: 'user' }).eq('id', userId);
+            if (error) throw new Error(error.message);
+            const u = _saAllUsers.find(x => x.id === userId);
+            if (u) { u.rol = 'user'; _refrescarFilaRoles(u); }
+            toast('Rol Admin eliminado');
+          } else {
+            // Promover a admin — abrir modal
+            const u = _saAllUsers.find(x => x.id === userId);
+            _promoverUserId = userId;
+            const nom = [u?.nombre, u?.apellido].filter(Boolean).join(' ') || u?.email || '';
+            document.getElementById('promoverNombreLabel').textContent = nom;
+            document.getElementById('promoverMsg').textContent = '';
+            document.getElementById('btnConfirmarPromover').disabled = false;
+            document.getElementById('btnConfirmarPromover').textContent = 'Promover';
+            const hoy = new Date(); hoy.setFullYear(hoy.getFullYear() + 1);
+            document.getElementById('promoverVigencia').value = hoy.toISOString().split('T')[0];
+            document.getElementById('modalPromover').classList.add('open');
+          }
+          return;
+        }
+
+        if (role === 'super_admin') {
+          if (estaActivo) {
+            if (!confirm('¿Quitar Super Admin? El usuario pasará a ser Admin.')) return;
+            const { error } = await _supabase.from('profiles').update({ rol: 'admin' }).eq('id', userId);
+            if (error) throw new Error(error.message);
+            const u = _saAllUsers.find(x => x.id === userId);
+            if (u) { u.rol = 'admin'; _refrescarFilaRoles(u); }
+            toast('Super Admin eliminado');
+          } else {
+            if (!confirm('¿Promover a Super Admin? Tendrá acceso TOTAL a la plataforma.')) return;
+            const { error } = await _supabase.from('profiles').update({ rol: 'super_admin', admin_id: null }).eq('id', userId);
+            if (error) throw new Error(error.message);
+            const u = _saAllUsers.find(x => x.id === userId);
+            if (u) { u.rol = 'super_admin'; _refrescarFilaRoles(u); }
+            toast('Super Admin asignado');
+          }
+        }
+
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    function _refrescarFilaRoles(u) {
+      // Re-renderiza solo los chips de la fila sin recargar toda la tabla
+      const row = document.getElementById('rol-row-' + u.id);
+      if (!row) return;
+      const ALL_ROLES = [
+        { id: 'alumno',      label: '🎓 Alumno',      locked: true },
+        { id: 'asesor',      label: '🤝 Asesor',      locked: false },
+        { id: 'evaluador',   label: '📋 Evaluador',   locked: false },
+        { id: 'admin',       label: '👑 Admin',       locked: false },
+        { id: 'super_admin', label: '🛡️ Super Admin', locked: false },
+      ];
+      const rolesActivos = _getUserRoles(u);
+      const chipsCell = row.querySelector('.role-chips');
+      if (!chipsCell) return;
+      chipsCell.innerHTML = ALL_ROLES.map(r => {
+        const on = rolesActivos.has(r.id);
+        const cls = r.locked ? 'rchip locked' : (on ? 'rchip on' : 'rchip off');
+        const onclick = r.locked ? '' : `onclick="toggleRol('${u.id}','${u.rol}','${r.id}',${on})"`;
+        return `<span class="${cls}" data-role="${r.id}" ${onclick} title="${r.locked ? 'Rol base — siempre activo' : (on ? 'Clic para desactivar' : 'Clic para activar')}">${r.label}</span>`;
+      }).join('');
+    }
+
+    // ── Modal promover admin ──────────────────────────────────────
+    function cerrarModalPromover(e) {
+      if (!e || e.target === document.getElementById('modalPromover'))
+        document.getElementById('modalPromover').classList.remove('open');
+    }
+
+    async function confirmarPromover() {
+      const creditos  = parseInt(document.getElementById('promoverCreditos').value) || 0;
+      const vigencia  = document.getElementById('promoverVigencia').value;
+      const msg       = document.getElementById('promoverMsg');
+      const btn       = document.getElementById('btnConfirmarPromover');
+      if (!vigencia) { msg.textContent = 'Selecciona una fecha de vigencia.'; msg.className = 'form-msg err'; return; }
+      btn.disabled = true; btn.textContent = 'Promoviendo...'; msg.textContent = '';
+      const { error } = await _supabase.from('profiles').update({
+        rol: 'admin', credits: creditos, admin_id: null, vigencia_hasta: vigencia
+      }).eq('id', _promoverUserId);
+      btn.disabled = false; btn.textContent = 'Promover';
+      if (error) { msg.textContent = error.message; msg.className = 'form-msg err'; return; }
+      const u = _saAllUsers.find(x => x.id === _promoverUserId);
+      if (u) { u.rol = 'admin'; _refrescarFilaRoles(u); }
+      cerrarModalPromover();
+      toast('Usuario promovido a Admin');
+    }
+
+    // ── Utilidades ───────────────────────────────────────────────
+    function _tiempoRel(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const mins = Math.floor(diff / 60000);
+      const hs   = Math.floor(mins / 60);
+      const dias = Math.floor(hs / 24);
+      if (mins < 2)   return 'Ahora mismo';
+      if (mins < 60)  return `Hace ${mins} min`;
+      if (hs < 24)    return `Hace ${hs} h`;
+      if (dias === 1) return 'Ayer';
+      if (dias < 7)   return `Hace ${dias} días`;
+      return new Date(dateStr).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    // ── Inicialización ───────────────────────────────────────────
+    async function init() {
+      const session = await authGuard();
+      if (!session) return;
+
+      _perfil = await getUserProfile();
+      if (!_perfil) { window.location.href = 'login.html'; return; }
+
+      // Nombre en header
+      const nom = [_perfil.nombre, _perfil.apellido].filter(Boolean).join(' ') || _perfil.email;
+      document.getElementById('headerNombre').textContent = nom;
+
+      // Extra roles del usuario (asesor / evaluador)
+      const { data: erData } = await _supabase
+        .from('user_roles').select('role').eq('user_id', _perfil.id);
+      _extraRoles = (erData || []).map(r => r.role);
+
+      // Determinar y renderizar roles disponibles
+      _rolesDisp = determinarRoles(_perfil, _extraRoles);
+      renderRoleSwitcher(_rolesDisp);
+
+      // Rol por defecto: recordado, o el más alto disponible
+      const guardado = localStorage.getItem('sbe_active_role');
+      const rolesIds = _rolesDisp.map(r => r.id);
+      const rolDefecto = (guardado && rolesIds.includes(guardado))
+        ? guardado
+        : rolesIds[rolesIds.length - 1]; // el último = el más alto
+
+      switchRol(rolDefecto);
+    }
+
+    init();
+  </script>
+  <script src="soporte-widget.js"></script>
+</body>
+</html>
