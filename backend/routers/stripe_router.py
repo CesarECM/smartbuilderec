@@ -242,8 +242,31 @@ def _handle_checkout_completed(session):
                     "vigencia_hasta":     vigencia_hasta,
                 }).eq("email", email).execute()
                 print(f"[checkout] Usuario existente reactivado: {email}")
-            except Exception:
-                pass
+
+                # Generar link de acceso y enviar email igual que usuario nuevo
+                frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+                link_acceso = f"{frontend_url}/reset-password.html"
+                try:
+                    link_res = sb.auth.admin.generate_link({
+                        "type": "recovery",
+                        "email": email,
+                        "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
+                    })
+                    if hasattr(link_res, "properties") and link_res.properties:
+                        link_acceso = getattr(link_res.properties, "action_link", link_acceso) or link_acceso
+                except Exception as le:
+                    print(f"[checkout] generate_link (reactivación) error: {le}")
+
+                monto_str = f"${monto_centavos // 100:,.0f} MXN"
+                send_template("bienvenida_user_stripe", email, {
+                    "nombre":      nombre or email,
+                    "email":       email,
+                    "monto":       monto_str,
+                    "link_acceso": link_acceso,
+                })
+                print(f"[checkout] Email de bienvenida enviado a usuario reactivado: {email}")
+            except Exception as re:
+                print(f"⚠️ checkout reactivación error: {re}")
         else:
             print(f"⚠️ checkout_completed error: {err}")
 

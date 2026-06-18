@@ -51,8 +51,10 @@ def _es_publico(method: str, path: str) -> bool:
         return True
     if (method, path) in _SOPORTE_PUBLICOS:
         return True
-    # Blog de recursos: público para lectura
     if method == "GET" and (path == "/recursos" or path.startswith("/recursos/")):
+        return True
+    # ECMatic API: autenticación propia por X-Api-Key (no JWT)
+    if path.startswith("/api/v1/"):
         return True
     return False
 
@@ -143,6 +145,7 @@ from routers import email_router
 from routers import soporte_router
 from routers import erp_router
 from routers import alumno_router
+from routers.api_v1 import router as api_v1_module
 
 app.include_router(stripe_router.router,  tags=["stripe"])
 app.include_router(admin_router.router,   tags=["admin"])
@@ -150,6 +153,7 @@ app.include_router(email_router.router,   tags=["email"])
 app.include_router(soporte_router.router, tags=["soporte"])
 app.include_router(erp_router.router,     tags=["erp"])
 app.include_router(alumno_router.router,  tags=["alumno"])
+app.include_router(api_v1_module.router)
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
