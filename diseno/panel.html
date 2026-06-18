@@ -2190,13 +2190,12 @@
     };
     let _sa_vigenciaLoaded = false;
     let _sa_tplSlugActivo  = null;
-    let _contactoSA        = {};
 
     function saInit() {
       Promise.all([saCargarStats(), saCargarAdmins()]);
-      const faltantes = _camposFaltantesPerfil(_perfil);
+      const faltantes = typeof _camposFaltantesPerfil === 'function' ? _camposFaltantesPerfil(_perfil) : [];
       if (faltantes.length) {
-        renderCardPI(document.getElementById('sa-panel-resumen'), _perfil, () => saShowTab('mi-perfil'));
+        typeof renderCardPI === 'function' && renderCardPI(document.getElementById('sa-panel-resumen'), _perfil, () => saShowTab('mi-perfil'));
       }
       setTimeout(verificarIntegraciones, 800);
     }
