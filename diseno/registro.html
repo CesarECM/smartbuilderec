@@ -139,6 +139,11 @@
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script>
+    (async () => {
+      const session = await getSession();
+      if (session) window.location.replace('panel');
+    })();
+
     const msg = document.getElementById("msg");
 
     function setMsg(text, type) {

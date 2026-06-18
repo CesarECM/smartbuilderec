@@ -81,6 +81,7 @@ async function registroConCodigo(email, password, nombre, apellido, codigo) {
     email,
     password,
     options: {
+      emailRedirectTo: `${window.location.origin}/panel`,
       data: { nombre, apellido, rol: "user", admin_id: verificacion.admin_id }
     }
   });

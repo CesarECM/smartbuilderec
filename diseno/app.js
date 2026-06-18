@@ -24,6 +24,10 @@ function abrirGrupoActivo() {
 }
 
 (async () => {
+  if (window.location.pathname === '/') {
+    const _s = await getSession();
+    if (_s) { window.location.replace('/panel'); return; }
+  }
   if (!await authGuard()) return;
   await storageSync.init();
 
