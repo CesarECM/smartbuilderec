@@ -142,12 +142,14 @@ from routers import admin_router
 from routers import email_router
 from routers import soporte_router
 from routers import erp_router
+from routers import alumno_router
 
 app.include_router(stripe_router.router,  tags=["stripe"])
 app.include_router(admin_router.router,   tags=["admin"])
 app.include_router(email_router.router,   tags=["email"])
 app.include_router(soporte_router.router, tags=["soporte"])
 app.include_router(erp_router.router,     tags=["erp"])
+app.include_router(alumno_router.router,  tags=["alumno"])
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
@@ -284,6 +286,9 @@ class PlaneacionRequest(BaseModel):
     dialogo: dict = {}
     cierre: dict = {}
     materiales: dict = {}
+    # Campos para control de descargas desde el panel alumno (opcionales, backward-compat)
+    planeacion_id: Optional[str] = None
+    confirm_new_course: bool = False
 
 
 class ExpositivaRequest(BaseModel):
@@ -390,6 +395,24 @@ def crear_docx_objetivos(data: ObjetivosRequest) -> bytes:
     return buffer.read()
 
 
+
+
+def _calc_content_len(data: "PlaneacionRequest") -> int:
+    """Longitud total de campos clave para comparar versiones del mismo curso."""
+    try:
+        parts = [
+            data.datos.instructor or "",
+            data.datos.nombreCurso or "",
+            data.beneficios or "",
+            json.dumps(data.objetivos.model_dump()),
+            json.dumps(data.temario.model_dump()),
+            json.dumps(data.expositiva or {}),
+            json.dumps(data.demostrativa or {}),
+            json.dumps(data.dialogo or {}),
+        ]
+        return sum(len(p) for p in parts)
+    except Exception:
+        return 0
 
 
 def crear_zip_con_docx(docx_bytes: bytes, nombre: str = "objetivos_EC0217.docx") -> bytes:
@@ -1762,8 +1785,77 @@ def limpiar_nombre_archivo(texto: str) -> str:
 
 
 @app.post("/generate-doc/planeacion")
-def generate_doc_planeacion(data: PlaneacionRequest):
+def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
     try:
+        # ── Control de descargas (solo cuando el panel envía planeacion_id) ──
+        _is_minor_mod = False
+        _should_log   = False
+        user_id = getattr(getattr(request, "state", None), "user", {}).get("sub", "")
+
+        if data.planeacion_id and user_id:
+            from database import get_supabase as _gsb_dl
+            _sb = _gsb_dl()
+
+            # Modo degradado: más de 5 planeaciones activas
+            _cnt = _sb.table("planeaciones") \
+                .select("id", count="exact", head=True) \
+                .eq("user_id", user_id).execute()
+            if (_cnt.count or 0) > 5:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Tienes más de 5 planeaciones activas. Elimina una para poder descargar.",
+                    headers={"X-Limite": "planeaciones"}
+                )
+
+            # Comparar con la última descarga registrada de esta planeación
+            _prev_res = _sb.table("descargas") \
+                .select("snapshot_instructor, snapshot_nombre_curso, snapshot_content_len") \
+                .eq("planeacion_id", data.planeacion_id) \
+                .eq("user_id", user_id) \
+                .eq("es_slot", True) \
+                .order("created_at", desc=True) \
+                .limit(1).execute()
+            _prev = _prev_res.data[0] if _prev_res.data else None
+
+            _cur_instructor = (data.datos.instructor or "").strip().lower()
+            _cur_nombre     = (data.datos.nombreCurso or "").strip().lower()
+            _cur_len        = _calc_content_len(data)
+
+            if _prev:
+                _prev_instructor = (_prev.get("snapshot_instructor") or "").strip().lower()
+                _prev_nombre     = (_prev.get("snapshot_nombre_curso") or "").strip().lower()
+                _prev_len        = _prev.get("snapshot_content_len") or 0
+                _diff_ratio      = abs(_cur_len - _prev_len) / max(_cur_len, _prev_len, 1)
+                _is_minor_mod    = (
+                    _cur_instructor == _prev_instructor and
+                    _cur_nombre     == _prev_nombre     and
+                    _diff_ratio     < 0.20
+                )
+
+            if not _is_minor_mod:
+                # Verificar slots disponibles
+                _slots_res = _sb.table("descargas") \
+                    .select("id", count="exact", head=True) \
+                    .eq("user_id", user_id) \
+                    .eq("es_slot", True).execute()
+                _slots_usados = _slots_res.count or 0
+
+                if _slots_usados >= 5:
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Límite de 5 descargas alcanzado. Contacta a tu administrador para continuar."
+                    )
+
+                # Si es cambio mayor y el frontend no confirmó aún → pedir confirmación
+                if _prev and not data.confirm_new_course:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Se detectaron cambios significativos en el curso. Confirma para usar una descarga.",
+                        headers={"X-Slots-Disponibles": str(5 - _slots_usados)}
+                    )
+
+            _should_log = True
+
         payload = data.model_dump()
         nombre_curso = (data.datos.nombreCurso or "EC0217").replace(" ", "_")
 
@@ -1844,15 +1936,34 @@ def generate_doc_planeacion(data: PlaneacionRequest):
                 zf.writestr(nombre_archivo, contenido)
 
         zip_buffer.seek(0)
+        zip_bytes_final = zip_buffer.read()
+
+        # ── Registrar descarga ────────────────────────────────────────
+        if _should_log:
+            try:
+                from database import get_supabase as _gsb_log
+                _gsb_log().table("descargas").insert({
+                    "planeacion_id": data.planeacion_id,
+                    "user_id":       user_id,
+                    "num_docs":      len(documentos),
+                    "snapshot_instructor":   data.datos.instructor or "",
+                    "snapshot_nombre_curso": data.datos.nombreCurso or "",
+                    "snapshot_content_len":  _calc_content_len(data),
+                    "es_slot":               not _is_minor_mod,
+                }).execute()
+            except Exception as e_log:
+                print(f"[descargas] Error al registrar: {repr(e_log)}")
 
         return StreamingResponse(
-            io.BytesIO(zip_buffer.read()),
+            io.BytesIO(zip_bytes_final),
             media_type="application/zip",
             headers={
                 "Content-Disposition": f"attachment; filename=Expediente_{nombre_curso}.zip"
             }
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         print("ERROR EN /generate-doc/planeacion:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
