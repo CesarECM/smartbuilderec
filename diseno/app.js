@@ -24,7 +24,7 @@ function abrirGrupoActivo() {
 }
 
 (async () => {
-  if (window.location.pathname === '/') {
+  if (window.location.pathname === '/' && !window.location.search) {
     const _s = await getSession();
     if (_s) { window.location.replace('/panel'); return; }
   }
