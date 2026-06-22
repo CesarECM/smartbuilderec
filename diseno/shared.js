@@ -368,9 +368,10 @@ function _cmDetectTitle(msg) {
         }, 800);
 
         try {
+        const _authHeaders = await getAuthHeaders();
         const response = await fetchConTimeout(`${BACKEND_URL}/generate-doc/planeacion`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { ..._authHeaders, "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         }, 90000);
         if (!response.ok) {
