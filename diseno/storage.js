@@ -113,6 +113,39 @@
     });
   }
 
+  // ── Toast de estado de guardado ──────────────────────────────────────────
+  // Elemento fijo en esquina inferior-derecha; no usa el modal para no bloquear al usuario.
+
+  function _toastSync(tipo, mensaje) {
+    let el = document.getElementById("_sbe-save-toast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "_sbe-save-toast";
+      el.style.cssText = [
+        "position:fixed", "bottom:24px", "right:80px", "z-index:8000",
+        "padding:7px 14px", "border-radius:8px", "font-size:12px",
+        "font-weight:600", "color:#fff", "pointer-events:none",
+        "box-shadow:0 2px 8px rgba(0,0,0,0.20)", "transition:opacity 0.35s",
+        "opacity:0"
+      ].join(";");
+      document.body.appendChild(el);
+    }
+    clearTimeout(el._t);
+    el.style.opacity = "1";
+    if (tipo === "saving") {
+      el.style.background = "#374151";
+      el.textContent = "⏳ Guardando...";
+    } else if (tipo === "ok") {
+      el.style.background = "#2e7d32";
+      el.textContent = "✓ Guardado";
+      el._t = setTimeout(() => { el.style.opacity = "0"; }, 2500);
+    } else if (tipo === "error") {
+      el.style.background = "#b91c1c";
+      el.textContent = mensaje || "⚠️ Error al guardar";
+      el._t = setTimeout(() => { el.style.opacity = "0"; }, 7000);
+    }
+  }
+
   // ── Sincronización a Supabase ─────────────────────────────────────────────
 
   function scheduleSyncToSupabase() {
@@ -121,18 +154,29 @@
   }
 
   async function syncToSupabase() {
-    if (_syncing) return;
+    // Si ya hay una sync en vuelo, reprogramar para no perder los últimos cambios
+    if (_syncing) {
+      _syncTimer = setTimeout(syncToSupabase, DEBOUNCE_MS);
+      return;
+    }
     _syncing = true;
+    _toastSync("saving");
     try {
       const session = await getSession();
-      if (!session) return;
+      if (!session) {
+        _toastSync("error", "⚠️ Sesión expirada — vuelve a iniciar sesión");
+        return;
+      }
 
       const estado = recolectarEstado();
-      if (!estado.datos || typeof estado.datos !== "object") return;
+      if (!estado.datos || typeof estado.datos !== "object") {
+        // Aún no hay datos del curso; no es un error, simplemente no hay nada que guardar
+        _toastSync("ok");
+        return;
+      }
 
       const nombreCurso  = estado.datos?.nombreCurso || "Sin título";
       const pasoActual   = calcularPasoActual(estado);
-      // getItem ya va al cache cuando corresponde
       const planeacionId = localStorage.getItem("sbe_planeacion_id");
 
       if (planeacionId) {
@@ -141,7 +185,11 @@
           .from("planeaciones")
           .update({ datos: estado, nombre_curso: nombreCurso, paso_actual: pasoActual })
           .eq("id", planeacionId);
-        if (error) console.warn("[storage] Error al actualizar:", error.message);
+        if (error) {
+          console.warn("[storage] Error al actualizar:", error.message);
+          _toastSync("error", "⚠️ No se pudo guardar. Revisa tu conexión.");
+          return;
+        }
 
       } else if (!_adminMode) {
         // INSERT solo en modo normal (nunca crear planeación en modo admin-edit)
@@ -153,17 +201,32 @@
             .from("planeaciones")
             .select("id", { count: "exact", head: true })
             .eq("user_id", session.user.id);
-          if (total >= 3) { console.warn("[storage] Límite de 3 cursos."); return; }
+          if (total >= 5) {
+            _toastSync("error", "⚠️ Límite de 5 cursos alcanzado — elimina uno desde tu panel");
+            if (typeof showAlert === "function") {
+              showAlert(
+                "Has alcanzado el límite de 5 cursos activos.\n\nPara guardar este nuevo curso, elimina uno desde tu panel de alumno.",
+                { title: "Límite de cursos", icon: "⚠️" }
+              );
+            }
+            return;
+          }
         }
 
         const { data, error } = await _supabase
           .from("planeaciones")
           .insert({ user_id: session.user.id, nombre_curso: nombreCurso, datos: estado, paso_actual: pasoActual })
           .select("id").single();
-        if (error) console.warn("[storage] Error al crear:", error.message);
-        // Guardar el nuevo ID: en cache (admin) o localStorage (normal)
+
+        if (error) {
+          console.warn("[storage] Error al crear:", error.message);
+          _toastSync("error", "⚠️ No se pudo crear el curso. Intenta de nuevo.");
+          return;
+        }
         if (data?.id) localStorage.setItem("sbe_planeacion_id", data.id);
       }
+
+      _toastSync("ok");
     } finally {
       _syncing = false;
     }
