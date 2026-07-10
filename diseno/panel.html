@@ -919,6 +919,7 @@
         <button class="role-tab-btn"        id="sa-tab-plataforma" onclick="saShowTab('plataforma')">📚 Plataforma</button>
         <button class="role-tab-btn"        id="sa-tab-soporte"    onclick="saShowTab('soporte')">🤖 Soporte KB</button>
         <button class="role-tab-btn"        id="sa-tab-config"     onclick="saShowTab('config')">⚙️ Config</button>
+        <button class="role-tab-btn"        id="sa-tab-logs"       onclick="saShowTab('logs')">📋 Logs</button>
         <button class="role-tab-btn"        onclick="window.location.href='erp-admin'">🏫 ERP →</button>
         <button class="role-tab-btn"        id="sa-tab-mi-perfil"  onclick="saShowTab('mi-perfil')">👤 Mi Perfil</button>
       </nav>
@@ -1433,6 +1434,45 @@
         </div>
 
       </div><!-- /sa-panel-soporte -->
+
+      <!-- ── Logs ──────────────────────────────────────────────────── -->
+      <div id="sa-panel-logs" class="role-tab-panel">
+        <div class="sec-header">
+          <h2>📋 Logs de actividad</h2>
+          <div class="sec-header-actions">
+            <button class="btn-sm" onclick="saCargarLogs()">↻ Actualizar</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding:14px;background:var(--c-surface-2);border-radius:var(--r-lg);border:1px solid var(--c-border)">
+          <div>
+            <div class="form-label" style="font-size:11px;margin-bottom:3px">Evento</div>
+            <select id="sa-logs-filtro-tipo" class="form-control" style="font-size:12px;padding:5px 8px">
+              <option value="">Todos</option>
+              <option value="wizard.curso.creado">🆕 Curso creado</option>
+              <option value="wizard.paso.completado">✅ Paso completado</option>
+              <option value="wizard.sync.error">⚠️ Error sync</option>
+              <option value="wizard.descarga.ok">⬇️ Descarga OK</option>
+              <option value="wizard.descarga.error">❌ Error descarga</option>
+            </select>
+          </div>
+          <div>
+            <div class="form-label" style="font-size:11px;margin-bottom:3px">Usuario</div>
+            <input id="sa-logs-filtro-usuario" class="form-control" type="text" placeholder="Nombre o email" style="font-size:12px;padding:5px 8px;width:170px">
+          </div>
+          <div>
+            <div class="form-label" style="font-size:11px;margin-bottom:3px">Desde</div>
+            <input id="sa-logs-filtro-desde" class="form-control" type="date" style="font-size:12px;padding:5px 8px">
+          </div>
+          <div>
+            <div class="form-label" style="font-size:11px;margin-bottom:3px">Hasta</div>
+            <input id="sa-logs-filtro-hasta" class="form-control" type="date" style="font-size:12px;padding:5px 8px">
+          </div>
+          <button class="btn-primary" style="font-size:12px;padding:7px 16px" onclick="saCargarLogs()">Buscar</button>
+        </div>
+
+        <div id="sa-logs-tabla"><p class="loading-txt">Cargando logs...</p></div>
+      </div><!-- /sa-panel-logs -->
 
       <!-- ── Mi Perfil SA ──────────────────────────────────────────── -->
       <div id="sa-panel-mi-perfil" class="role-tab-panel">
@@ -2596,7 +2636,7 @@
     let _sa_renovarAdminId  = null;
     let _sa_tabsLoaded = {
       resumen: true, usuarios: false,
-      plataforma: false, config: false, soporte: false, 'mi-perfil': false
+      plataforma: false, config: false, soporte: false, logs: false, 'mi-perfil': false
     };
     let _sa_vigenciaLoaded = false;
     let _sa_tplSlugActivo  = null;
@@ -2621,6 +2661,7 @@
       if (name === 'plataforma'&& !_sa_tabsLoaded.plataforma){ _sa_tabsLoaded.plataforma = true; saCargarCursos(); saCargarAuditLog(); }
       if (name === 'config'    && !_sa_tabsLoaded.config)    { _sa_tabsLoaded.config    = true; saCargarPlantillas(); }
       if (name === 'soporte'   && !_sa_tabsLoaded.soporte)   { _sa_tabsLoaded.soporte   = true; saCargarKB(); }
+      if (name === 'logs'      && !_sa_tabsLoaded.logs)      { _sa_tabsLoaded.logs      = true; saCargarLogs(); }
       if (name === 'mi-perfil' && !_sa_tabsLoaded['mi-perfil']) {
         _sa_tabsLoaded['mi-perfil'] = true;
         const saPerfilContainer = document.getElementById('sa-perfilFormContainer');
@@ -4242,6 +4283,92 @@
       if (name === 'kb'               && !_sa_soporteLoaded.kb)               { _sa_soporteLoaded.kb               = true; saCargarFaqs(); saCargarRecursos(); }
       if (name === 'bajo-rendimiento' && !_sa_soporteLoaded['bajo-rendimiento']) { _sa_soporteLoaded['bajo-rendimiento'] = true; saCargarBajoRendimiento(); }
     }
+
+    // ── Logs de actividad ─────────────────────────────────────────────────────
+
+    const _LOG_BADGES = {
+      'wizard.curso.creado':    ['#15803d', '🆕 Curso creado'],
+      'wizard.paso.completado': ['#1d4ed8', '✅ Paso completado'],
+      'wizard.sync.error':      ['#b45309', '⚠️ Error sync'],
+      'wizard.descarga.ok':     ['#0f766e', '⬇️ Descarga OK'],
+      'wizard.descarga.error':  ['#b91c1c', '❌ Error descarga'],
+    };
+
+    function _saLogBadge(eventType) {
+      const [color, label] = _LOG_BADGES[eventType] || ['#6b7280', eventType];
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;background:${color}">${label}</span>`;
+    }
+
+    function _saLogMeta(metadata) {
+      if (!metadata || !Object.keys(metadata).length) return '—';
+      return Object.entries(metadata)
+        .map(([k, v]) => `<span style="color:var(--c-text-3)">${k}:</span> ${String(v).slice(0, 80)}`)
+        .join(' &nbsp;·&nbsp; ');
+    }
+
+    async function saCargarLogs() {
+      const el    = document.getElementById('sa-logs-tabla');
+      const tipo  = document.getElementById('sa-logs-filtro-tipo')?.value  || '';
+      const desde = document.getElementById('sa-logs-filtro-desde')?.value || '';
+      const hasta = document.getElementById('sa-logs-filtro-hasta')?.value || '';
+      const usFilt = (document.getElementById('sa-logs-filtro-usuario')?.value || '').trim().toLowerCase();
+
+      el.innerHTML = '<p class="loading-txt">Cargando...</p>';
+
+      let q = _supabase
+        .from('event_logs')
+        .select('id, event_type, metadata, created_at, profiles(nombre, apellido, email)')
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (tipo)  q = q.eq('event_type', tipo);
+      if (desde) q = q.gte('created_at', desde + 'T00:00:00');
+      if (hasta) q = q.lte('created_at', hasta + 'T23:59:59');
+
+      const { data, error } = await q;
+      if (error) { el.innerHTML = `<p class="error-txt">Error: ${error.message}</p>`; return; }
+
+      let rows = data || [];
+      if (usFilt) {
+        rows = rows.filter(r => {
+          const p = r.profiles;
+          return p && (
+            (p.nombre   || '').toLowerCase().includes(usFilt) ||
+            (p.apellido || '').toLowerCase().includes(usFilt) ||
+            (p.email    || '').toLowerCase().includes(usFilt)
+          );
+        });
+      }
+
+      if (!rows.length) {
+        el.innerHTML = '<p class="empty-txt" style="padding:24px 0">Sin registros con estos filtros.</p>';
+        return;
+      }
+
+      el.innerHTML = `<div class="table-wrap"><table class="data-table">
+        <thead><tr>
+          <th>Fecha</th><th>Usuario</th><th>Evento</th><th>Detalle</th>
+        </tr></thead>
+        <tbody>${rows.map(r => {
+          const p      = r.profiles;
+          const nombre = p
+            ? ([p.nombre, p.apellido].filter(Boolean).join(' ') || p.email || '—')
+            : '<span style="color:var(--c-text-3);font-size:11px">(usuario eliminado)</span>';
+          const fecha  = new Date(r.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+          return `<tr>
+            <td style="white-space:nowrap;font-size:11px;color:var(--c-text-3)">${fecha}</td>
+            <td style="font-size:12px">${nombre}</td>
+            <td>${_saLogBadge(r.event_type)}</td>
+            <td style="font-size:11px">${_saLogMeta(r.metadata)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+      <p style="font-size:11px;color:var(--c-text-3);margin-top:8px;text-align:right">
+        ${rows.length} registro${rows.length !== 1 ? 's' : ''}
+      </p>`;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     async function saCargarKB() {
       // Carga inicial al abrir el tab Soporte: tickets + badges

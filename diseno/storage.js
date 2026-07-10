@@ -58,8 +58,15 @@
 
   localStorage.setItem = function (key, value) {
     if (_esClaveCache(key)) {
+      const yaCompleto = _cache[key] === 'true';
       _cache[key] = value;
       if (!_initializing && key.startsWith("ec0217_")) scheduleSyncToSupabase();
+      // Registrar la primera vez que se completa cada paso del wizard
+      if (!_initializing && !yaCompleto && key.endsWith('_completo') && value === 'true') {
+        const paso = key.slice(7, -9); // "ec0217_datos_completo" → "datos"
+        if (typeof window.logEvento === 'function')
+          window.logEvento('wizard.paso.completado', { paso });
+      }
       return;
     }
     _origSetItem(key, value);
@@ -188,6 +195,8 @@
         if (error) {
           console.warn("[storage] Error al actualizar:", error.message);
           _toastSync("error", "⚠️ No se pudo guardar. Revisa tu conexión.");
+          if (typeof window.logEvento === 'function')
+            window.logEvento('wizard.sync.error', { tipo: 'update', error: error.message, planeacion_id: planeacionId });
           return;
         }
 
@@ -221,9 +230,15 @@
         if (error) {
           console.warn("[storage] Error al crear:", error.message);
           _toastSync("error", "⚠️ No se pudo crear el curso. Intenta de nuevo.");
+          if (typeof window.logEvento === 'function')
+            window.logEvento('wizard.sync.error', { tipo: 'insert', error: error.message });
           return;
         }
-        if (data?.id) localStorage.setItem("sbe_planeacion_id", data.id);
+        if (data?.id) {
+          localStorage.setItem("sbe_planeacion_id", data.id);
+          if (typeof window.logEvento === 'function')
+            window.logEvento('wizard.curso.creado', { planeacion_id: data.id, nombre_curso: nombreCurso });
+        }
       }
 
       _toastSync("ok");

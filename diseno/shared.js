@@ -390,20 +390,12 @@ function _cmDetectTitle(msg) {
         a.remove();
         URL.revokeObjectURL(url);
 
-        // Guardar planeación en Supabase (best-effort, no bloquea la descarga)
-        // try {
-        //   const session = await getSession();
-        //   if (session) {
-        //     const titulo = payload.datos?.nombreCurso || "Sin título";
-        //     fetch(`${BACKEND_URL}/planeaciones`, {
-        //       method: "POST",
-        //       headers: await getAuthHeaders(),
-        //       body: JSON.stringify({ titulo, datos: payload }),
-        //     }).catch(() => {});
-        //   }
-        // } catch (_) {}
+        if (typeof logEvento === 'function')
+          logEvento('wizard.descarga.ok', { nombre_curso: payload.datos?.nombreCurso || '' });
 
         } catch (err) {
+        if (typeof logEvento === 'function')
+          logEvento('wizard.descarga.error', { error: String(err?.message || err) });
         showAlert(`⚠️ ${mensajeAmigable(err)}`);
         console.error(err);
         } finally {
@@ -547,3 +539,19 @@ function _cmDetectTitle(msg) {
     function cerrarModalLimpiar() { modalOverlay.classList.remove("visible"); }
 
     })();
+
+// ─── logEvento — Registro de actividad en Supabase ───────────────────────────
+// Escribe un evento en la tabla event_logs. No lanza excepciones (best-effort).
+// Requiere: supabase-client.js y auth.js cargados antes.
+async function logEvento(eventType, metadata = {}) {
+  try {
+    const session = await getSession();
+    if (!session) return;
+    await _supabase.from('event_logs').insert({
+      user_id:    session.user.id,
+      event_type: eventType,
+      metadata
+    });
+  } catch (_) {}
+}
+window.logEvento = logEvento;

@@ -4631,6 +4631,9 @@ async function descargarPlaneacionFinal() {
 
     URL.revokeObjectURL(url);
 
+    if (typeof logEvento === 'function')
+      logEvento('wizard.descarga.ok', { nombre_curso: payload.datos?.nombreCurso || '' });
+
     if (mensajeFormatos) {
       mensajeFormatos.style.display = "block";
       mensajeFormatos.style.color = "green";
@@ -4638,6 +4641,8 @@ async function descargarPlaneacionFinal() {
     }
 
   } catch (err) {
+    if (typeof logEvento === 'function')
+      logEvento('wizard.descarga.error', { error: String(err?.message || err) });
     console.error("Error al generar formatos:", err);
 
     if (mensajeFormatos) {
