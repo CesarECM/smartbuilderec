@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime, timezone
 from database import get_supabase
 from services.email_service import send_template
+from auth_middleware import admin_sign_out
 import os
 
 router = APIRouter()
@@ -179,6 +180,7 @@ def _procesar_vigencias(sb) -> dict:
 
         if dias < 0 and admin.get("activo"):
             sb.table("profiles").update({"activo": False}).eq("id", admin["id"]).execute()
+            admin_sign_out(admin["id"])
             send_template("vigencia_admin_expirada", admin["email"], {
                 "nombre": admin["nombre"] or admin["email"],
                 "email": admin["email"],

@@ -5,6 +5,7 @@ from typing import Optional
 from database import get_supabase
 from .auth import require_api_key, _ok, _err
 from .webhooks import dispatch_event
+from auth_middleware import admin_sign_out
 import os
 
 router = APIRouter(prefix="/api/v1/users", tags=["ecmatic-users"])
@@ -137,6 +138,10 @@ def update_user(user_id: str, data: UserUpdate, background_tasks: BackgroundTask
 
     sb.table("profiles").update(payload).eq("id", user_id).execute()
 
+    # Revocar tokens si el usuario fue desactivado
+    if payload.get("activo") is False:
+        admin_sign_out(user_id)
+
     updated = sb.table("profiles").select(_PROFILE_FIELDS).eq("id", user_id).single().execute()
 
     if "activo" in payload or "rol" in payload or "credits" in payload:
@@ -154,6 +159,7 @@ def deactivate_user(user_id: str):
         _err("Usuario no encontrado.", 404)
 
     sb.table("profiles").update({"activo": False}).eq("id", user_id).execute()
+    admin_sign_out(user_id)
     return _ok({"deactivated": user_id})
 
 

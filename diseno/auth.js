@@ -53,17 +53,6 @@ async function loginWithMagicLink(email) {
 
 // ── Registro ──────────────────────────────────────────────────────────────────
 
-// Registro estándar — rol 'user'. El acceso por Stripe se activa en Bloque 8.
-async function registro(email, password, nombre, apellido) {
-  const { data, error } = await _supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { nombre, apellido, rol: "user" } }
-  });
-  if (error) throw error;
-  return data;
-}
-
 // Registro con código de acceso generado por un admin.
 // Flujo: verificar código → crear cuenta con admin_id → marcar código como usado.
 async function registroConCodigo(email, password, nombre, apellido, codigo) {
@@ -180,7 +169,6 @@ window.getUserProfile           = getUserProfile;
 window.login                    = login;
 window.loginWithGoogle          = loginWithGoogle;
 window.loginWithMagicLink       = loginWithMagicLink;
-window.registro                 = registro;
 window.registroConCodigo        = registroConCodigo;
 window.logout                   = logout;
 window.getAuthHeaders           = getAuthHeaders;
