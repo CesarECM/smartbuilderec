@@ -155,8 +155,13 @@
 
   // ── Sincronización a Supabase ─────────────────────────────────────────────
 
+  function _emitir(nombre, detalle) {
+    window.dispatchEvent(new CustomEvent(nombre, { detail: detalle }));
+  }
+
   function scheduleSyncToSupabase() {
     clearTimeout(_syncTimer);
+    _emitir("sbe:sync-pending");
     _syncTimer = setTimeout(syncToSupabase, DEBOUNCE_MS);
   }
 
@@ -167,6 +172,7 @@
       return;
     }
     _syncing = true;
+    _emitir("sbe:sync-start");
     _toastSync("saving");
     try {
       const session = await getSession();
@@ -184,6 +190,7 @@
 
       const nombreCurso  = estado.datos?.nombreCurso || "Sin título";
       const pasoActual   = calcularPasoActual(estado);
+      _emitir("sbe:progress", { paso: pasoActual, total: 16 });
       const planeacionId = localStorage.getItem("sbe_planeacion_id");
 
       if (planeacionId) {
@@ -194,6 +201,7 @@
           .eq("id", planeacionId);
         if (error) {
           console.warn("[storage] Error al actualizar:", error.message);
+          _emitir("sbe:sync-error");
           _toastSync("error", "⚠️ No se pudo guardar. Revisa tu conexión.");
           if (typeof window.logEvento === 'function')
             window.logEvento('wizard.sync.error', { tipo: 'update', error: error.message, planeacion_id: planeacionId });
@@ -229,6 +237,7 @@
 
         if (error) {
           console.warn("[storage] Error al crear:", error.message);
+          _emitir("sbe:sync-error");
           _toastSync("error", "⚠️ No se pudo crear el curso. Intenta de nuevo.");
           if (typeof window.logEvento === 'function')
             window.logEvento('wizard.sync.error', { tipo: 'insert', error: error.message });
@@ -241,6 +250,7 @@
         }
       }
 
+      _emitir("sbe:sync-ok");
       _toastSync("ok");
     } finally {
       _syncing = false;

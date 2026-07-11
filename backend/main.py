@@ -1788,9 +1788,42 @@ def limpiar_nombre_archivo(texto: str) -> str:
     return texto or "Archivo"
 
 
+def _validar_expediente(data: PlaneacionRequest) -> None:
+    errores = []
+
+    if not (data.datos.nombreCurso or "").strip():
+        errores.append("Nombre del curso es obligatorio (Paso 1).")
+    if not (data.datos.instructor or "").strip():
+        errores.append("Nombre del instructor es obligatorio (Paso 1).")
+    if not data.datos.duracion or data.datos.duracion < 120:
+        errores.append("La duración debe ser mínimo 120 minutos según la norma EC0217 (Paso 1).")
+    if not data.datos.participantes or data.datos.participantes < 1:
+        errores.append("El número de participantes es obligatorio (Paso 1).")
+
+    pct_diag = data.evaluaciones.pctDiagnostica or data.evaluaciones.pctDiag or 0
+    pct_form = data.evaluaciones.pctFormativa  or data.evaluaciones.pctForm or 0
+    pct_suma = data.evaluaciones.pctSumativa   or data.evaluaciones.pctSuma or 0
+    total_pct = pct_diag + pct_form + pct_suma
+    if total_pct != 100:
+        errores.append(f"Los porcentajes de evaluación deben sumar 100% (actualmente suman {total_pct}%) (Paso 14).")
+
+    temas_totales = len(data.temario.u1) + len(data.temario.u2) + len(data.temario.u3)
+    if temas_totales == 0:
+        errores.append("El temario debe tener al menos un tema en alguna unidad (Paso 4).")
+
+    obj = data.objetivos
+    if not any([obj.general, obj.cognitiva, obj.psicomotriz, obj.afectiva]):
+        errores.append("Debes completar al menos un objetivo de aprendizaje (Paso 2).")
+
+    if errores:
+        raise HTTPException(status_code=422, detail=errores)
+
+
 @app.post("/generate-doc/planeacion")
 def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
     try:
+        _validar_expediente(data)
+
         # ── Control de descargas (solo cuando el panel envía planeacion_id) ──
         _is_minor_mod = False
         _should_log   = False
