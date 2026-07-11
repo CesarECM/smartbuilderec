@@ -352,10 +352,25 @@
     }
   }
 
+  // ── Flush garantizado: cancela timer, espera sync en vuelo, guarda ────────
+  // Usar antes de operaciones que destruyen la sesión (logout).
+
+  async function flushSync() {
+    clearTimeout(_syncTimer);
+    _syncTimer = null;
+    if (_syncing) {
+      await new Promise(resolve => {
+        const id = setInterval(() => { if (!_syncing) { clearInterval(id); resolve(); } }, 50);
+      });
+    }
+    await syncToSupabase();
+  }
+
   // ── API pública ───────────────────────────────────────────────────────────
   window.storageSync = {
     init,
     syncNow: syncToSupabase,
+    flushSync,
     limpiar,
   };
 

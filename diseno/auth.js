@@ -94,6 +94,9 @@ async function registroConCodigo(email, password, nombre, apellido, codigo) {
 // ── Logout ────────────────────────────────────────────────────────────────────
 
 async function logout() {
+  if (window.storageSync?.flushSync) {
+    try { await window.storageSync.flushSync(); } catch (_) {}
+  }
   await _supabase.auth.signOut();
   Object.keys(localStorage)
     .filter(k => k.startsWith("ec0217_") || k.startsWith("sbe_"))
