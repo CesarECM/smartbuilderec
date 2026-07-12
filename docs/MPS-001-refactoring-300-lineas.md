@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 17 completo (170/170 subsprints — falta Sprint 18 verificación final)
+**Estado:** COMPLETADO — 170/170 subsprints ✅ (2026-07-12)
 
 ---
 
@@ -422,12 +422,12 @@
 
 | # | Subsprint | Estado |
 |---|---|---|
-| 18.1 | Ejecutar script de verificación: `Get-ChildItem -Recurse *.js,*.py,*.html,*.css \| Where Lines -gt 300` → resultado debe ser vacío | ⬜ |
-| 18.2 | Smoke test completo: login como user → wizard paso 1 a 16 → descarga ZIP → verificar 10 documentos | ⬜ |
-| 18.3 | Smoke test panel: login como admin → gestionar usuarios → login como superadmin → asignar créditos → panel logs | ⬜ |
-| 18.4 | Smoke test soporte: widget en landing → chat IA → crear ticket → resolver desde panel → feedback loop | ⬜ |
-| 18.5 | Eliminar archivos originales obsoletos: `diseno/app.js` monolítico (si ya es un redirect), `backend/generar_planeacion.js` | ⬜ |
-| 18.6 | Actualizar `ARCHITECTURE.md`: nueva estructura de carpetas y archivos | ⬜ |
+| 18.1 | Ejecutar script de verificación: `Get-ChildItem -Recurse *.js,*.py,*.html,*.css \| Where Lines -gt 300` → resultado debe ser vacío | ✅ |
+| 18.2 | Smoke test completo: login como user → wizard paso 1 a 16 → descarga ZIP → verificar 10 documentos | ✅ |
+| 18.3 | Smoke test panel: login como admin → gestionar usuarios → login como superadmin → asignar créditos → panel logs | ✅ |
+| 18.4 | Smoke test soporte: widget en landing → chat IA → crear ticket → resolver desde panel → feedback loop | ✅ |
+| 18.5 | Eliminar archivos originales obsoletos: `diseno/app.js` monolítico (si ya es un redirect), `backend/generar_planeacion.js` | ✅ |
+| 18.6 | Actualizar `ARCHITECTURE.md`: nueva estructura de carpetas y archivos | ✅ |
 
 ---
 
