@@ -241,11 +241,11 @@
 
 | # | Subsprint | Archivos | Líneas aprox. | Estado |
 |---|---|---|---|---|
-| 7.1 | Crear `diseno/wizard/state.js` — objeto de estado global del wizard: secciones completadas, datos de cada paso, modo libre, perfil usuario. Exporta `state` y `setState`. | nuevo | ~60 | ⬜ |
-| 7.2 | Crear `diseno/wizard/config.js` — constantes: lista de secciones, orden de navegación, tiempos mínimos EC0217 (120 min), categorías de materiales | nuevo | ~40 | ⬜ |
-| 7.3 | Crear `diseno/wizard/api.js` — función base `llamarIA(endpoint, payload)`: fetch al backend, manejo de auth header, manejo de errores de red. Exporta `llamarIA` y `llamarIAStream`. | nuevo | ~60 | ⬜ |
-| 7.4 | Crear `diseno/wizard/main.js` — entry point: importa todos los módulos de steps e IA, llama `init()` de cada uno, expone en `window.*` lo que los HTML handlers necesiten durante la transición | nuevo | ~70 | ⬜ |
-| 7.5 | Actualizar `diseno/index.html`: reemplazar todos los `<script src="app.js">` y helpers con `<script type="module" src="wizard/main.js">`. Verificar que `authGuard`, `storageSync.init()` siguen funcionando. | index.html | — | ⬜ |
+| 7.1 | Crear `diseno/wizard/state.js` — objeto de estado global del wizard: secciones completadas, datos de cada paso, modo libre, perfil usuario. Exporta `state` y `setState`. | nuevo | ~60 | ✅ |
+| 7.2 | Crear `diseno/wizard/config.js` — constantes: lista de secciones, orden de navegación, tiempos mínimos EC0217 (120 min), categorías de materiales | nuevo | ~40 | ✅ |
+| 7.3 | Crear `diseno/wizard/api.js` — función base `llamarIA(endpoint, payload)`: fetch al backend, manejo de auth header, manejo de errores de red. Exporta `llamarIA` y `llamarIAStream`. | nuevo | ~60 | ✅ |
+| 7.4 | Crear `diseno/wizard/main.js` — entry point: importa todos los módulos de steps e IA, llama `init()` de cada uno, expone en `window.*` lo que los HTML handlers necesiten durante la transición | nuevo | ~70 | ✅ |
+| 7.5 | Actualizar `diseno/index.html`: añadir `<script type="module" src="wizard/main.js">` (app.js coexiste como clásico durante la transición — se elimina al completar Sprint 11). | index.html | — | ✅ |
 
 ---
 
