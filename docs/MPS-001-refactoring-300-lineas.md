@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 6 completado (77/170 subsprints)
+**Estado:** EN PROGRESO — Sprint 10 completado (112/170 subsprints)
 
 ---
 
@@ -287,16 +287,16 @@
 
 | # | Subsprint | Funciones que contiene | Líneas aprox. | Estado |
 |---|---|---|---|---|
-| 10.1 | Crear `diseno/wizard/ia-objetivos.js` — `evaluateText`, `generarGeneral` (genera objetivo general con IA a partir de los 3 objetivos) | ~130 | ⬜ |
-| 10.2 | Crear `diseno/wizard/ia-temario.js` — `generarTemarioIA` | ~80 | ⬜ |
-| 10.3 | Crear `diseno/wizard/ia-encuadre.js` — `generarPreguntasEncuadreIA` (la función más grande del bloque de encuadre, ~337 líneas en app.js — dividir en dos partes si supera 300) | ~290 | ⬜ |
-| 10.4 | Crear `diseno/wizard/ia-tecnicas.js` — `generarExpositivaIA`, `generarDemostrativaIA` | ~170 | ⬜ |
-| 10.5 | Crear `diseno/wizard/ia-dialogo.js` — `generarDialogoIA` | ~70 | ⬜ |
-| 10.6 | Crear `diseno/wizard/ia-cierre.js` — `generarCierreIA`, `generarDescripcionGeneralIA` | ~160 | ⬜ |
-| 10.7 | Crear `diseno/wizard/ia-resumen.js` — `generarResumenIA`, `generarCompromisosIA` | ~200 | ⬜ |
-| 10.8 | Crear `diseno/wizard/ia-evaluacion.js` — `generarEvaluacionIA`, `generarFormativaIA` | ~200 | ⬜ |
-| 10.9 | Crear `diseno/wizard/ia-materiales.js` — `generarMaterialesIA` (por técnica individual), `generarClasificacionIA` (clasifica texto en 6 categorías EC0217) | ~265 | ⬜ |
-| 10.10 | Actualizar `diseno/wizard/main.js`: importar todos los módulos de IA creados en este sprint | wizard/main.js | — | ⬜ |
+| 10.1 | Crear `diseno/wizard/ia-objetivos.js` — `evaluateText`, `generarGeneral` (genera objetivo general con IA a partir de los 3 objetivos) | ~130 | ✅ |
+| 10.2 | Crear `diseno/wizard/ia-temario.js` — `generarTemarioIA` | ~80 | ✅ |
+| 10.3 | Crear `diseno/wizard/ia-encuadre.js` — `generarPreguntasEncuadreIA` (la función más grande del bloque de encuadre, ~337 líneas en app.js — dividir en dos partes si supera 300) | ~290 | ✅ |
+| 10.4 | Crear `diseno/wizard/ia-tecnicas.js` — `generarExpositivaIA`, `generarDemostrativaIA` | ~170 | ✅ |
+| 10.5 | Crear `diseno/wizard/ia-dialogo.js` — `generarDialogoIA` | ~70 | ✅ |
+| 10.6 | Crear `diseno/wizard/ia-cierre.js` — `generarCierreIA`, `generarDescripcionGeneralIA` | ~160 | ✅ |
+| 10.7 | Crear `diseno/wizard/ia-resumen.js` — `generarResumenIA`, `generarCompromisosIA` | ~200 | ✅ |
+| 10.8 | Crear `diseno/wizard/ia-evaluacion.js` — `generarEvaluacionIA`, `generarFormativaIA` | ~200 | ✅ |
+| 10.9 | Crear `diseno/wizard/ia-materiales.js` — `generarMaterialesIA` (por técnica individual), `generarClasificacionIA` (clasifica texto en 6 categorías EC0217) | ~265 | ✅ |
+| 10.10 | Actualizar `diseno/wizard/main.js`: importar todos los módulos de IA creados en este sprint | wizard/main.js | — | ✅ |
 
 ---
 
@@ -433,7 +433,7 @@
 | 7 | Preparación ES Modules | 5 | Medio |
 | 8 | `app.js`: UI y navegación | 5 | Alto |
 | 9 | `app.js`: Steps del wizard | 15 | Alto |
-| 10 | `app.js`: Módulos de IA | 10 | Alto |
+| 10 | `app.js`: Módulos de IA | 10 | Alto ✅ |
 | 11 | `app.js`: Export y cierre | 4 | Alto |
 | 12 | Split `shared.js` | 5 | Medio |
 | 13 | Split `storage.js` | 4 | Medio |

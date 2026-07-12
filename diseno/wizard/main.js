@@ -3,8 +3,9 @@
 // después de parsear todo el HTML y después de los scripts clásicos.
 //
 // Orden de init:
-//   sidebar → navigation → ui-helpers → sync        (Sprint 8)
-//   step-datos → step-objetivos → … → step-formatos (Sprint 9)
+//   sidebar → navigation → ui-helpers → sync              (Sprint 8)
+//   step-datos → step-objetivos → … → step-formatos       (Sprint 9)
+//   ia-objetivos → ia-temario → … → ia-materiales         (Sprint 10)
 
 import { state, setState, getSeccionCompleta, setSeccionCompleta, getDatos, setDatos } from "./state.js";
 import { BACKEND_URL, FLUJO_SECCIONES, NAV_A_SECCION, DURACION_MINIMA_MIN, CATEGORIAS_MATERIALES, TECNICAS_MATERIALES } from "./config.js";
@@ -14,6 +15,17 @@ import { initSidebar }              from "./ui-sidebar.js";
 import { initUIHelpers }            from "./ui-helpers.js";
 import { escribirConDelay, escribirConDelayCancelable } from "./ui-writing.js";
 import { mostrarSeccionPrincipal, desbloquear, initNavigation } from "./navigation.js";
+
+// Sprint 10: Módulos de IA
+import { initIAObjetivos }   from "./ia-objetivos.js";
+import { initIATemario }     from "./ia-temario.js";
+import { initIAEncuadre }    from "./ia-encuadre.js";
+import { initIATecnicas }    from "./ia-tecnicas.js";
+import { initIADialogo }     from "./ia-dialogo.js";
+import { initIACierre }      from "./ia-cierre.js";
+import { initIAResumen }     from "./ia-resumen.js";
+import { initIAEvaluacion }  from "./ia-evaluacion.js";
+import { initIAMateriales }  from "./ia-materiales.js";
 
 // Sprint 9: Steps del wizard
 import { initStepDatos }            from "./step-datos.js";
@@ -54,6 +66,17 @@ initStepEvaluaciones();
 initStepTiempos();
 initStepMateriales();
 initStepFormatos();
+
+// ─── Sprint 10: Módulos de IA ─────────────────────────────────────────────────
+initIAObjetivos();
+initIATemario();
+initIAEncuadre();
+initIATecnicas();
+initIADialogo();
+initIACierre();
+initIAResumen();
+initIAEvaluacion();
+initIAMateriales();
 
 // ─── Exponer API de módulos en window.* ──────────────────────────────────────
 window.wizardState  = { state, setState, getSeccionCompleta, setSeccionCompleta, getDatos, setDatos };
