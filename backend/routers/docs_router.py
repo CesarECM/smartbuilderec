@@ -1,11 +1,7 @@
-import base64
 import io
 import json
-import os
-import subprocess
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -22,69 +18,9 @@ from services.doc_evaluaciones import (
 )
 from services.doc_planeacion import generar_presentacion_curso
 from services.doc_generales import generar_contrato_aprendizaje, generar_lista_requerimientos
+from services.doc_planeacion_docx import generar_planeacion_docx
 
 router = APIRouter()
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-def _generar_planeacion_docx(payload: dict) -> bytes:
-    script_path = BASE_DIR / "generators" / "index.js"
-    if not script_path.exists():
-        raise FileNotFoundError("No se encontró generators/index.js en el backend")
-
-    ev = payload.get("evaluaciones", {})
-    payload["evaluaciones"] = {
-        "pctDiagnostica":           ev.get("pctDiagnostica", ev.get("pctDiag", 0)),
-        "instDiagnostica":          ev.get("instDiagnostica", ev.get("instDiag", "")),
-        "pctFormativa":             ev.get("pctFormativa",    ev.get("pctForm", 0)),
-        "instFormativa":            ev.get("instFormativa",   ev.get("instForm", "")),
-        "pctSumativa":              ev.get("pctSumativa",     ev.get("pctSuma", 0)),
-        "instSumativa":             ev.get("instSumativa",    ev.get("instSuma", "")),
-        "instReac":                 ev.get("instReac", ""),
-        "descripcionGeneral":       ev.get("descripcionGeneral", ""),
-        "tipoInstrumentoFormativa": ev.get("tipoInstrumentoFormativa", ""),
-    }
-
-    tc = payload.get("tecnicas", {})
-    rh_objetivo      = tc.get("rhObjetivo", "")
-    rh_instrucciones = tc.get("rhInstrucciones", "")
-    en_objetivo      = tc.get("enObjetivo", "")
-    en_instrucciones = tc.get("enInstrucciones", "")
-
-    if not tc.get("rhDetalle") and (rh_objetivo or rh_instrucciones):
-        tc["rhDetalle"] = (
-            f"a) Explicará objetivo de la técnica:\n{rh_objetivo}\n\n"
-            f"b) Dará las instrucciones de la técnica:\n{rh_instrucciones}\n\n"
-            f"c) Mencionará el tiempo para realizarla.\n\n"
-            f"d) Propiciará la participación del grupo.\n\n"
-            f"e) Integrará al grupo.\n\n"
-            f"f) Controlará el tiempo."
-        )
-    if not tc.get("enDetalle") and (en_objetivo or en_instrucciones):
-        tc["enDetalle"] = (
-            f"a) Explicará objetivo de la técnica:\n{en_objetivo}\n\n"
-            f"b) Dará las instrucciones de la técnica:\n{en_instrucciones}"
-        )
-    if not tc.get("enObjetivo") and en_objetivo:
-        tc["enObjetivo"] = en_objetivo
-    payload["tecnicas"] = tc
-
-    payload_json = json.dumps(payload, ensure_ascii=False)
-    result = subprocess.run(
-        ["node", str(script_path)],
-        input=payload_json.encode("utf-8"),
-        capture_output=True,
-        cwd=str(BASE_DIR),
-        timeout=30,
-    )
-    stderr_msg = result.stderr.decode("utf-8", errors="replace").strip()
-    if result.returncode != 0 or not result.stdout:
-        raise RuntimeError(f"Error al generar el documento: {stderr_msg or 'stdout vacío'}")
-    try:
-        return base64.b64decode(result.stdout)
-    except Exception as e:
-        raise RuntimeError(f"Error al decodificar base64: {e}. stderr: {stderr_msg}")
 
 
 @router.post("/generate-doc/objetivos")
@@ -175,7 +111,7 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
         tipo_form = (data.evaluaciones.tipoInstrumentoFormativa or "").lower().strip()
 
         documentos = [
-            ("01_Documento_de_Planeacion_EC0217.docx", lambda: _generar_planeacion_docx(payload)),
+            ("01_Documento_de_Planeacion_EC0217.docx", lambda: generar_planeacion_docx(payload)),
             ("02_Evaluacion_Diagnostica.docx",          lambda: generar_evaluacion_diagnostica(data)),
             ("05_Evaluacion_Sumativa.docx",             lambda: generar_evaluacion_sumativa(data)),
             ("06_Evaluacion_Reaccion.docx",             lambda: generar_evaluacion_reaccion(data)),
