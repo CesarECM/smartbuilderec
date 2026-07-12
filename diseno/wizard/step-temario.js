@@ -104,6 +104,8 @@ export function cargarTemario() {
 }
 
 export function initStepTemario() {
+  if (!window.sbeTemario) window.sbeTemario = { u1: [], u2: [], u3: [] };
+
   window.temarioTieneDatos    = temarioTieneDatos;
   window.guardarTemarioTemporal = guardarTemarioTemporal;
   window.renderListaTemas     = renderListaTemas;

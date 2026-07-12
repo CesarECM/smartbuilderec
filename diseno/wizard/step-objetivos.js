@@ -177,6 +177,16 @@ export function cargarObjetivos() {
 }
 
 export function initStepObjetivos() {
+  if (!window.sbeEstadoObjetivos) {
+    window.sbeEstadoObjetivos = {
+      actual:      "cognitiva",
+      cognitiva:   { texto: "", completa: false },
+      psicomotriz: { texto: "", completa: false },
+      afectiva:    { texto: "", completa: false },
+      general:     { texto: "", completa: false },
+    };
+  }
+
   window.guardarObjetivos                 = guardarObjetivos;
   window.habilitarBeneficios              = habilitarBeneficios;
   window.aplicarModoObjetivos             = aplicarModoObjetivos;

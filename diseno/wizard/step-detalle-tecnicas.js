@@ -1,8 +1,9 @@
 // ─── wizard/step-detalle-tecnicas.js — Renderizado de detalles de técnicas ───
-// Depende de step-tecnicas.js para acceder a tecnicasRompehielos/Energizantes.
 
-const _tecRH  = () => window.sbeTecnicasRompehielos  || [];
-const _tecEN  = () => window.sbeTecnicasEnergizantes || [];
+import { tecnicasRompehielos, tecnicasEnergizantes } from "./tecnicas-data.js";
+
+const _tecRH  = () => window.sbeTecnicasRompehielos  || tecnicasRompehielos;
+const _tecEN  = () => window.sbeTecnicasEnergizantes || tecnicasEnergizantes;
 const _cargando = () => window.cargandoTecnicas;
 
 function _buscarTecnica(lista, id) {

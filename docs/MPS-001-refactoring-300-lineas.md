@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 10 completado (112/170 subsprints)
+**Estado:** EN PROGRESO — Sprint 11 completado (116/170 subsprints)
 
 ---
 
@@ -304,10 +304,10 @@
 
 | # | Subsprint | Archivos | Estado |
 |---|---|---|---|
-| 11.1 | Crear `diseno/wizard/export.js` — `descargarPlaneacionFinal`: arma el payload completo del wizard, llama `/generate-doc/planeacion`, maneja el ZIP, `mostrarCelebracion` | nuevo | ⬜ |
-| 11.2 | Crear `diseno/wizard/validators.js` — validaciones normativas EC0217: tiempo mínimo 120 minutos, taxonomías de objetivos de Bloom, categorías de materiales. Exporta `validarTiempos`, `validarTaxonomia` | nuevo | ⬜ |
-| 11.3 | Actualizar `diseno/wizard/main.js` con todos los imports finales + `init()` global | wizard/main.js | ⬜ |
-| 11.4 | Eliminar (o vaciar) `diseno/app.js` original — reemplazar por un comentario de redirección al módulo `wizard/main.js` | app.js | ⬜ |
+| 11.1 | Crear `diseno/wizard/export.js` — `descargarPlaneacionFinal`: arma el payload completo del wizard, llama `/generate-doc/planeacion`, maneja el ZIP, `mostrarCelebracion` | nuevo | ✅ |
+| 11.2 | Crear `diseno/wizard/validators.js` — validaciones normativas EC0217: tiempo mínimo 120 minutos, taxonomías de objetivos de Bloom, categorías de materiales. Exporta `validarTiempos`, `validarTaxonomia` | nuevo | ✅ |
+| 11.3 | Actualizar `diseno/wizard/main.js` con todos los imports finales + bootstrap `initWizardApp` async | wizard/main.js | ✅ |
+| 11.4 | Vaciar `diseno/app.js` — reemplazado por comentario de redirección. Datos de técnicas → `wizard/tecnicas-data.js`. Globales `sbeX` inicializados en cada `initX()`. Bootstrap IIFE movido a `main.js`. `index.html` eliminó `<script src="app.js">`. | app.js | ✅ |
 
 ---
 
@@ -434,7 +434,7 @@
 | 8 | `app.js`: UI y navegación | 5 | Alto |
 | 9 | `app.js`: Steps del wizard | 15 | Alto |
 | 10 | `app.js`: Módulos de IA | 10 | Alto ✅ |
-| 11 | `app.js`: Export y cierre | 4 | Alto |
+| 11 | `app.js`: Export y cierre | 4 | Alto ✅ |
 | 12 | Split `shared.js` | 5 | Medio |
 | 13 | Split `storage.js` | 4 | Medio |
 | 14 | Split `soporte-widget.js` | 5 | Medio |

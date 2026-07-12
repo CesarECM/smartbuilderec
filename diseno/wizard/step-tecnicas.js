@@ -1,12 +1,12 @@
 // ─── wizard/step-tecnicas.js — Pasos 5/11: Técnicas Grupales ────────────────
-// Usa window.sbeTemario/Rompehielos/Energizantes expuestos por app.js.
 
 import { mostrarDetalleIntegracion, mostrarDetalleEnergizante } from "./step-detalle-tecnicas.js";
+import { tecnicasRompehielos, tecnicasEnergizantes } from "./tecnicas-data.js";
 
 let _cargando = false;
 
-const _rh  = () => window.sbeTecnicasRompehielos  || [];
-const _en  = () => window.sbeTecnicasEnergizantes || [];
+const _rh  = () => window.sbeTecnicasRompehielos  || tecnicasRompehielos;
+const _en  = () => window.sbeTecnicasEnergizantes || tecnicasEnergizantes;
 
 export function obtenerRadioSeleccionado(name) {
   return document.querySelector(`input[name="${name}"]:checked`);
@@ -196,6 +196,11 @@ export function cargarTecnicas() {
 }
 
 export function initStepTecnicas() {
+  // Inicializar globals compartidos
+  window.sbeTecnicasRompehielos  = tecnicasRompehielos;
+  window.sbeTecnicasEnergizantes = tecnicasEnergizantes;
+  window.cargandoTecnicas        = false;
+
   window.obtenerRadioSeleccionado             = obtenerRadioSeleccionado;
   window.buscarTecnica                        = buscarTecnica;
   window.recolectarTecnicas                   = recolectarTecnicas;

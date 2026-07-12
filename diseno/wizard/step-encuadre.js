@@ -194,6 +194,8 @@ export function cargarEncuadre() {
 }
 
 export function initStepEncuadre() {
+  if (!window.sbeAcuerdosPersonalizados) window.sbeAcuerdosPersonalizados = [];
+
   window.obtenerChecksSeleccionados       = obtenerChecksSeleccionados;
   window.copiarReglasSeleccionadasATextarea = copiarReglasSeleccionadasATextarea;
   window.inicializarContratoPorDefecto    = inicializarContratoPorDefecto;
