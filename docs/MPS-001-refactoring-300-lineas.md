@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 11 completado (116/170 subsprints)
+**Estado:** EN PROGRESO — Sprint 14 completado (130/170 subsprints)
 
 ---
 
@@ -315,34 +315,36 @@
 
 | # | Subsprint | Archivos | Líneas aprox. | Estado |
 |---|---|---|---|---|
-| 12.1 | Leer `shared.js` completo para mapear exactamente las secciones (líneas 151–542 no catalogadas aún) | — | — | ⬜ |
-| 12.2 | Crear `diseno/shared/modals.js` — `_cmGetModal`, `_cmSetContent`, `showAlert`, `showConfirm`, `_cmDetectIcon`, `_cmDetectTitle` + CSS inline del modal | nuevo | ~150 | ⬜ |
-| 12.3 | Crear `diseno/shared/validators.js` — lógica de validación de tiempos EC0217, taxonomías, otras validaciones normativas de shared.js | nuevo | ~200 | ⬜ |
-| 12.4 | Crear `diseno/shared/events.js` — `logEvento` (registro en Supabase event_logs) | nuevo | ~60 | ⬜ |
-| 12.5 | Actualizar todos los HTML que cargan `<script src="shared.js">`: cambiar a 3 scripts o un barrel | index.html, panel.html, erp-admin.html, mi-expediente.html, pago.html, recursos.html, catalogo.html | ⬜ |
+| 12.1 | Leer `shared.js` completo — secciones: modales (7–155), fetch+utils (157–260), speed-dial (261–541), logEvento (543–557). Sin validadores (ya están en `wizard/validators.js` del S11.2) | — | — | ✅ |
+| 12.2 | Crear `diseno/shared/modals.js` — `initCustomModals`, `_cmGetModal`, `_cmSetContent`, `showAlert`, `showConfirm`, `_cmDetectIcon`, `_cmDetectTitle` | nuevo | 145 | ✅ |
+| 12.3 | Crear `diseno/shared/utils.js` — `BACKEND_URL`, `FETCH_TIMEOUT_MS`, `mensajeAmigable`, `fetchConTimeout`, `authGuard` stub, `migrarALocalStorage`, `getData`, `saveData`, `recolectarPayload` (no había validators en shared.js) | nuevo | 95 | ✅ |
+| 12.4 | Crear `diseno/shared/events.js` — `logEvento` (registro en Supabase event_logs) | nuevo | 15 | ✅ |
+| 12.4b | Crear `diseno/shared/speed-dial.js` — `initSpeedDial` IIFE completo (botón 🧪, descargar, importar, limpiar) | nuevo | 250 | ✅ |
+| 12.5 | Actualizar HTML que cargan `shared.js`: solo `index.html` y `datos.html` (los demás no lo usaban). Reemplazado por 4 scripts en orden correcto. `shared.js` vaciado con comentario redirect. | index.html, datos.html | — | ✅ |
 
 ---
 
-### SPRINT 13 — Split `diseno/storage.js` (336 líneas)
+### SPRINT 13 — Split `diseno/storage.js` (387 líneas)
 
 | # | Subsprint | Archivos | Líneas aprox. | Estado |
 |---|---|---|---|---|
-| 13.1 | Leer `storage.js` completo para mapear sus secciones exactas | — | — | ⬜ |
-| 13.2 | Crear `diseno/storage/local.js` — funciones de lectura/escritura en localStorage, versionado, `getData`, `setData`, `clearData` | nuevo | ~150 | ⬜ |
-| 13.3 | Crear `diseno/storage/sync.js` — sincronización bidireccional con Supabase (`planeaciones`), debounce de escritura, emisión de eventos `sbe:sync-*` | nuevo | ~150 | ⬜ |
-| 13.4 | Actualizar `diseno/index.html`: reemplazar `<script src="storage.js">` con los dos nuevos scripts | index.html | ⬜ |
+| 13.1 | Mapear `storage.js`: único IIFE, secciones — cache/interceptores (1–155), helpers estado (87–121), toast (123–154), sync (156–258), init (260–348), limpiar/flushSync/API (350–387). `getData`/`setData` no están aquí (ya estaban en `shared/utils.js`). | — | — | ✅ |
+| 13.2 | Crear `diseno/storage/core.js` — IIFE: DEBOUNCE_MS, PASOS, estado privado (_cache, _adminMode, _syncing…), interceptores localStorage, helpers (recolectarEstado, restaurarEstado, calcularPasoActual, _limpiarCache), toast, emitir. Expone `window._sbeCore` con getters/setters. Llama `window._sbeSync?.schedule()` en setItem. | nuevo | 164 | ✅ |
+| 13.3 | Crear `diseno/storage/sync.js` — IIFE: usa `_c = window._sbeCore`, implementa scheduleSyncToSupabase, syncToSupabase, init, limpiar, flushSync. Expone `window._sbeSync` (puente interno) y `window.storageSync` (API pública). | nuevo | 229 | ✅ |
+| 13.4 | Actualizar `diseno/index.html`: `<script src="storage.js">` → dos scripts en orden (core.js → sync.js). `storage.js` vaciado con comentario redirect. Solo index.html usaba storage.js. | index.html | — | ✅ |
 
 ---
 
-### SPRINT 14 — Split `diseno/soporte-widget.js` (408 líneas)
+### SPRINT 14 — Split `diseno/soporte-widget.js` (454 líneas)
 
-| # | Subsprint | Archivos | Líneas aprox. | Estado |
+| # | Subsprint | Archivos | Líneas | Estado |
 |---|---|---|---|---|
-| 14.1 | Crear `diseno/soporte/widget-ui.js` — renderizado del botón flotante, apertura/cierre del panel, minimizar, inyección del widget en la página | nuevo | ~130 | ⬜ |
-| 14.2 | Crear `diseno/soporte/widget-chat.js` — SSE streaming de respuestas, historial de mensajes, votación de FAQs (👍/👎 vía header `x-faq-ids`), límite de 20 mensajes | nuevo | ~150 | ⬜ |
-| 14.3 | Crear `diseno/soporte/widget-tickets.js` — formulario de ticket, validación de email (soft gate), envío a `/soporte/tickets` | nuevo | ~100 | ⬜ |
-| 14.4 | Crear `diseno/soporte/widget-main.js` — barrel: importa los 3 anteriores, exporta función `initWidget`. Reemplaza `soporte-widget.js` | nuevo | ~30 | ⬜ |
-| 14.5 | Actualizar todos los HTML que cargan `<script src="soporte-widget.js">`: cambiar a los 3 scripts nuevos + `widget-main.js` | index.html, panel.html, erp-admin.html, landing.html, pago.html, mi-expediente.html, recursos.html, catalogo.html | ⬜ |
+| 14.1 | Mapear soporte-widget.js: md() (1–35), PAGE_MAP/session (37–102), estado+DOM (104–190), toggle (192–207), mensajes (209–241), chat SSE (242–332), tickets (334–414), votación (416–443), init (445–454). Estado compartido → `window._sbeW`. | — | — | ✅ |
+| 14.2 | Crear `diseno/soporte/widget-main.js` — IIFE: BACKEND, SESSION_TTL, md(), PAGE_MAP, getPageCtx, session management, inicializa `window._sbeW` con estado compartido y utilidades | nuevo | 111 | ✅ |
+| 14.3 | Crear `diseno/soporte/widget-ui.js` — IIFE: injectCSS, buildWidget (event listeners via `_w.*` para late binding), toggleWidget, _startConversation. Registra en `_sbeW`. | nuevo | 105 | ✅ |
+| 14.4 | Crear `diseno/soporte/widget-chat.js` — IIFE: _addMsg, _showTyping, _hideTyping, setSendDisabled, sendMsg (SSE), _addVoteRow, window._sbVote. Registra en `_sbeW`. | nuevo | 161 | ✅ |
+| 14.5 | Crear `diseno/soporte/widget-tickets.js` — IIFE: _offerTicket, window._sbeOpenTicket, closeTicketForm, submitTicket. Registra en `_sbeW`. Init al final (todos los módulos listos). | nuevo | 100 | ✅ |
+| 14.6 | Actualizar 11 HTML que cargaban soporte-widget.js: index, landing, login, pago, registro, checkout-success, reset-password, recursos (sin indent) + erp-admin, mi-expediente, panel (2 espacios). soporte-widget.js vaciado. | 11 archivos | — | ✅ |
 
 ---
 
