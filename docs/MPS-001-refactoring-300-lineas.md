@@ -253,11 +253,11 @@
 
 | # | Subsprint | Funciones que contiene | Líneas aprox. | Estado |
 |---|---|---|---|---|
-| 8.1 | Crear `diseno/wizard/ui-sync.js` — IIFE `initSyncUI`: indicador guardado (W#1), barra de progreso global (W#2), escucha eventos `sbe:sync-*` | ~35 | ⬜ |
-| 8.2 | Crear `diseno/wizard/ui-sidebar.js` — grupos colapsables del sidebar, `abrirGrupoActivo`, menú hamburguesa | ~50 | ⬜ |
-| 8.3 | Crear `diseno/wizard/ui-helpers.js` — `showToast`, `mostrarCelebracion`, `setFocusMode`, `inyectarBotonesCopiar`, `actualizarProgressBar`, botones Regresar, toast autoguardado, validación blur sección Datos, clase `btn-ia` | ~200 | ⬜ |
-| 8.4 | Crear `diseno/wizard/ui-writing.js` — escritura con delay (efecto typewriter para sugerencias IA) | ~35 | ⬜ |
-| 8.5 | Crear `diseno/wizard/navigation.js` — `mostrarSeccionPrincipal`, `obtenerSiguiente`, `cambiarSeccion`, `desbloquear`, modo libre de navegación (W#4), navegación teclado Alt+←/→ (W#8) | ~120 | ⬜ |
+| 8.1 | Crear `diseno/wizard/ui-sync.js` — IIFE `initSyncUI`: indicador guardado (W#1), barra de progreso global (W#2), escucha eventos `sbe:sync-*` | ~35 | ✅ |
+| 8.2 | Crear `diseno/wizard/ui-sidebar.js` — grupos colapsables del sidebar, `abrirGrupoActivo`, menú hamburguesa | ~50 | ✅ |
+| 8.3 | Crear `diseno/wizard/ui-helpers.js` — `showToast`, `mostrarCelebracion`, `setFocusMode`, `inyectarBotonesCopiar`, `actualizarProgressBar`, botones Regresar, toast autoguardado, validación blur sección Datos, clase `btn-ia` | ~200 | ✅ |
+| 8.4 | Crear `diseno/wizard/ui-writing.js` — escritura con delay (efecto typewriter para sugerencias IA) | ~35 | ✅ |
+| 8.5 | Crear `diseno/wizard/navigation.js` — `mostrarSeccionPrincipal`, `obtenerSiguiente`, `cambiarSeccion`, `desbloquear`, modo libre de navegación (W#4), navegación teclado Alt+←/→ (W#8) | ~120 | ✅ |
 
 ---
 

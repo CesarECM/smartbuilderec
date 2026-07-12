@@ -1,50 +1,4 @@
-// ─── W#1: Indicador de guardado automático | W#2: Progreso global ────────────
-(function initSyncUI() {
-  const icon  = document.getElementById("sbe-sync-icon");
-  const text  = document.getElementById("sbe-sync-text");
-  const bar   = document.getElementById("sbe-progress-bar");
-  const label = document.getElementById("sbe-progress-label");
-  if (!icon) return;
-
-  let _okTimer = null;
-
-  window.addEventListener("sbe:sync-pending", () => {
-    icon.textContent = "🔄"; text.textContent = "Guardando...";
-    text.style.color = "rgba(255,255,255,0.5)";
-  });
-  window.addEventListener("sbe:sync-start", () => {
-    icon.textContent = "🔄"; text.textContent = "Guardando...";
-  });
-  window.addEventListener("sbe:sync-ok", () => {
-    clearTimeout(_okTimer);
-    icon.textContent = "☁️"; text.textContent = "Guardado";
-    text.style.color = "rgba(255,255,255,0.5)";
-    _okTimer = setTimeout(() => { text.textContent = "Sincronizado"; }, 3000);
-  });
-  window.addEventListener("sbe:sync-error", () => {
-    icon.textContent = "⚠️"; text.textContent = "Error al guardar";
-    text.style.color = "#f87171";
-  });
-  window.addEventListener("sbe:progress", (e) => {
-    const { paso, total } = e.detail;
-    const pct = Math.round((paso / total) * 100);
-    if (bar)   bar.style.width   = pct + "%";
-    if (label) label.textContent = `${paso} / ${total}`;
-  });
-})();
-
-// ─── Sidebar grupos colapsables ──────────────────────────────────────────────
-document.querySelectorAll(".nav-grupo-header").forEach(header => {
-  header.addEventListener("click", () => {
-    const items = header.nextElementSibling;
-    const arrow = header.querySelector(".nav-grupo-arrow");
-    const isOpen = items.classList.contains("open");
-    items.classList.toggle("open", !isOpen);
-    items.classList.toggle("closed", isOpen);
-    arrow.textContent = isOpen ? "▸" : "▾";
-  });
-});
-
+// W#1/W#2 → wizard/ui-sync.js | Sidebar → wizard/ui-sidebar.js
 // Abrir automáticamente el grupo que contiene el item activo
 function abrirGrupoActivo() {
   const activo = document.querySelector(".nav-item.active");
@@ -138,76 +92,7 @@ function abrirGrupoActivo() {
 
 
 
-// ─── W#4: Modo libre de navegación ───────────────────────────────────────────
-const NAV_A_SECCION = {
-  "nav-datos":        "seccionDatos",
-  "nav-objetivos":    "seccionObjetivos",
-  "nav-beneficios":   "seccionBeneficios",
-  "nav-temario":      "seccionTemario",
-  "nav-integracion":  "seccionIntegracion",
-  "nav-preguntas":    "seccionPreguntas",
-  "nav-reglas":       "seccionReglas",
-  "nav-contrato":     "seccionContrato",
-  "nav-expositiva":   "seccionExpositiva",
-  "nav-demostrativa": "seccionDemostrativa",
-  "nav-energizante":  "seccionEnergizante",
-  "nav-dialogo":      "seccionDialogo",
-  "nav-cierre":       "seccionCierre",
-  "nav-evaluaciones": "seccionEvaluaciones",
-  "nav-tiempos":      "seccionTiempos",
-  "nav-materiales":   "seccionMateriales",
-  "nav-formatos":     "seccionFormatos",
-};
-
-(function initModoLibre() {
-  const btn = document.getElementById("btnModoLibre");
-  if (!btn) return;
-
-  let activo = false;
-
-  function actualizar() {
-    btn.textContent = activo ? "ON" : "OFF";
-    btn.style.background    = activo ? "rgba(74,222,128,0.2)" : "rgba(255,255,255,0.05)";
-    btn.style.color         = activo ? "#4ade80" : "rgba(255,255,255,0.4)";
-    btn.style.borderColor   = activo ? "rgba(74,222,128,0.4)" : "rgba(255,255,255,0.2)";
-  }
-
-  btn.addEventListener("click", () => {
-    activo = !activo;
-    actualizar();
-  });
-
-  document.querySelector(".nav-grupos")?.addEventListener("click", (e) => {
-    if (!activo) return;
-    const item = e.target.closest(".nav-item");
-    if (!item || !item.classList.contains("disabled")) return;
-    const seccion = NAV_A_SECCION[item.id];
-    if (seccion) { e.stopPropagation(); mostrarSeccionPrincipal(seccion); }
-  }, true);
-})();
-
-// ─── W#8: Navegación con teclado Alt+← / Alt+→ ───────────────────────────────
-(function initNavTeclado() {
-  document.addEventListener("keydown", (e) => {
-    if (!e.altKey || !["ArrowLeft", "ArrowRight"].test(e.key)) return;
-    const tag = document.activeElement?.tagName;
-    if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
-
-    const visible = flujoSecciones.find(id => {
-      const el = document.getElementById(id);
-      return el && !el.classList.contains("hidden");
-    });
-    const idx = flujoSecciones.indexOf(visible);
-    if (idx === -1) return;
-
-    e.preventDefault();
-    const destino = e.key === "ArrowRight"
-      ? flujoSecciones[idx + 1]
-      : flujoSecciones[idx - 1];
-    if (destino) mostrarSeccionPrincipal(destino);
-  });
-})();
-
+// W#4/W#8 → wizard/navigation.js
 const flujoSecciones = [
   "seccionDatos",
   "seccionObjetivos",
@@ -5182,31 +5067,7 @@ if (localStorage.getItem("ec0217_materiales_completo") === "true") {
   document.getElementById("nav-formatos")?.classList.remove("disabled");
 }
 
-// ─── MENÚ HAMBURGUESA ─────────────────────────────────────────────────────────
-
-const menuToggle = document.getElementById("menuToggle");
-const sidebar = document.getElementById("sidebar");
-
-if (menuToggle && sidebar) {
-  menuToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("active");
-  });
-}
-
-
-// ═══════════════════════════════════════════════════════════
-//  REDISEÑO v2 — Funcionalidades visuales y de UX
-// ═══════════════════════════════════════════════════════════
-
-// ─── 1. Clase btn-ia en todos los botones de IA ──────────────
-(function marcarBotonesIA() {
-  document.querySelectorAll("button").forEach(btn => {
-    const txt = btn.textContent || "";
-    if (txt.includes("✨") && (txt.includes("IA") || txt.includes("Generar"))) {
-      btn.classList.add("btn-ia");
-    }
-  });
-})();
+// Hamburguesa + Rediseño v2 → wizard/ui-sidebar.js y wizard/ui-helpers.js
 
 
 // ─── 2. Progress bar ─────────────────────────────────────────
@@ -5246,55 +5107,7 @@ function actualizarProgressBar(seccionActual) {
   }
 }
 
-// Parchear mostrarSeccionPrincipal para actualizar el progress bar cada vez que cambia de sección
-const _mostrarSeccionOriginal = window.mostrarSeccionPrincipal || mostrarSeccionPrincipal;
-window.mostrarSeccionPrincipal = function(id) {
-  _mostrarSeccionOriginal(id);
-  const seccion = id.replace("seccion", "").toLowerCase();
-  actualizarProgressBar(seccion);
-};
-
-// Inicializar al cargar
-actualizarProgressBar("datos");
-
-
-// ─── 3. Focus Mode ───────────────────────────────────────────
-const btnFocusMode = document.getElementById("btnFocusMode");
-const btnFocusExit = document.getElementById("btnFocusExit");
-const layoutEl     = document.querySelector(".layout");
-
-function setFocusMode(activo) {
-  if (!layoutEl) return;
-  layoutEl.classList.toggle("focus-mode", activo);
-  if (btnFocusMode) {
-    btnFocusMode.textContent = activo ? "→ Mostrar sidebar" : "⬅ Modo Focus";
-  }
-  localStorage.setItem("ec0217_focus_mode", activo ? "1" : "0");
-}
-
-// Botón dentro del sidebar
-if (btnFocusMode) {
-  btnFocusMode.addEventListener("click", () => {
-    setFocusMode(!layoutEl?.classList.contains("focus-mode"));
-  });
-}
-
-// Pestaña lateral siempre visible cuando el sidebar está oculto
-if (btnFocusExit) {
-  btnFocusExit.addEventListener("click", () => setFocusMode(false));
-}
-
-// Tecla Escape para salir del modo Focus
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && layoutEl?.classList.contains("focus-mode")) {
-    setFocusMode(false);
-  }
-});
-
-// Restaurar preferencia al cargar (defer para que el DOM esté listo)
-if (localStorage.getItem("ec0217_focus_mode") === "1") {
-  requestAnimationFrame(() => setFocusMode(true));
-}
+// Progress bar patch + Focus mode listeners → wizard/ui-helpers.js (initUIHelpers)
 
 
 // ─── 4. Sistema de Toasts ────────────────────────────────────
@@ -5360,13 +5173,7 @@ function inyectarBotonesCopiar() {
   });
 }
 
-// Inyectar al cargar y cada vez que se navega a una sección nueva
-inyectarBotonesCopiar();
-const _mostrarConCopiar = window.mostrarSeccionPrincipal;
-window.mostrarSeccionPrincipal = function(id) {
-  _mostrarConCopiar(id);
-  setTimeout(inyectarBotonesCopiar, 100);
-};
+// Inyección inicial + patch mostrarSeccionPrincipal → wizard/ui-helpers.js (initUIHelpers)
 
 
 // ─── 6. Celebración al descargar ─────────────────────────────
@@ -5377,111 +5184,4 @@ function mostrarCelebracion() {
   setTimeout(() => overlay.classList.remove("show"), 3200);
 }
 
-// Parchear descargarPlaneacionFinal para mostrar celebración
-const _descargarOriginal = window.descargarPlaneacionFinal;
-if (typeof _descargarOriginal === "function") {
-  window.descargarPlaneacionFinal = async function() {
-    await _descargarOriginal.apply(this, arguments);
-    mostrarCelebracion();
-  };
-}
-
-// También parchear el botón de descarga directamente como respaldo
-const btnDescargarFinalCeleb = document.getElementById("btnDescargarPlaneacionFinal");
-if (btnDescargarFinalCeleb) {
-  btnDescargarFinalCeleb.addEventListener("click", () => {
-    setTimeout(mostrarCelebracion, 800);
-  });
-}
-
-
-// ─── 7. Toast de autoguardado cada vez que se salva ─────────
-let _toastGuardadoTimer = null;
-const _origSetItem = localStorage.setItem.bind(localStorage);
-localStorage.setItem = function(key, value) {
-  _origSetItem(key, value);
-  if (key.startsWith("ec0217_") && !key.endsWith("_completo") && !key.endsWith("_resumen")) {
-    clearTimeout(_toastGuardadoTimer);
-    _toastGuardadoTimer = setTimeout(() => {
-      const label = document.getElementById("progress-step-label");
-      if (label) {
-        const original = label.textContent;
-        label.textContent = "✓ Guardado automáticamente";
-        label.style.color = "var(--c-success)";
-        setTimeout(() => {
-          label.textContent = original;
-          label.style.color = "";
-        }, 1800);
-      }
-    }, 600);
-  }
-};
-
-
-// ─── 8. Botones Regresar ─────────────────────────────────────
-(function inyectarBotonesRegresar() {
-  for (let i = 1; i < flujoSecciones.length; i++) {
-    const seccionId  = flujoSecciones[i];
-    const anteriorId = flujoSecciones[i - 1];
-
-    // Objetivos tiene navegación propia interna (pestañas)
-    if (seccionId === "seccionObjetivos") continue;
-
-    const seccion = document.getElementById(seccionId);
-    if (!seccion) continue;
-
-    // El último .btn-siguiente en la sección es el botón "Siguiente / Guardar"
-    const btns = [...seccion.querySelectorAll(".btn-siguiente")];
-    const btnSiguiente = btns[btns.length - 1];
-    if (!btnSiguiente) continue;
-
-    const btnRegresar = document.createElement("button");
-    btnRegresar.type = "button";
-    btnRegresar.className = "btn-regresar";
-    btnRegresar.textContent = "← Regresar";
-    btnRegresar.setAttribute("aria-label", "Ir a la sección anterior");
-    btnRegresar.addEventListener("click", () => {
-      mostrarSeccionPrincipal(anteriorId);
-    });
-
-    btnSiguiente.parentNode.insertBefore(btnRegresar, btnSiguiente);
-  }
-})();
-
-
-// ─── 9. Validación blur en sección Datos ─────────────────────
-(function agregarValidacionBlur() {
-  camposDatos.forEach(({ id, errId, tipo, min }) => {
-    const el  = document.getElementById(id);
-    const err = document.getElementById(errId);
-    if (!el || !err) return;
-
-    el.addEventListener("blur", () => {
-      const valor = el.value.trim();
-      if (!valor) {
-        el.classList.add("error");
-        err.style.display = "block";
-      } else if (tipo === "numero") {
-        const num = parseInt(valor, 10);
-        if (isNaN(num) || num < min) {
-          el.classList.add("error");
-          err.style.display = "block";
-        } else {
-          el.classList.remove("error");
-          err.style.display = "none";
-        }
-      } else {
-        el.classList.remove("error");
-        err.style.display = "none";
-      }
-    });
-
-    // Limpiar error mientras el usuario escribe
-    el.addEventListener("input", () => {
-      if (el.classList.contains("error") && el.value.trim()) {
-        el.classList.remove("error");
-        err.style.display = "none";
-      }
-    });
-  });
-})();
+// Celebración + autoguardado + botones regresar + validación blur → wizard/ui-helpers.js (initUIHelpers)
