@@ -86,20 +86,35 @@
     mainBtn.disabled = true;
     mainBtn.textContent = "⏳";
 
-    let progreso = 0;
+    const planeacionId = localStorage.getItem("sbe_planeacion_id");
+    if (planeacionId) payload.planeacion_id = planeacionId;
+
     const barraId = "sd-progreso-bar";
     let barraEl = document.getElementById(barraId);
     if (!barraEl) {
       barraEl = document.createElement("div");
       barraEl.id = barraId;
-      barraEl.style.cssText = "position:fixed;bottom:0;left:0;width:0%;height:4px;background:#1F3B6D;transition:width 0.5s;z-index:9999;";
+      barraEl.style.cssText = "position:fixed;bottom:0;left:0;width:0%;height:4px;background:#1F3B6D;transition:width 0.4s;z-index:9999;";
       document.body.appendChild(barraEl);
     }
     barraEl.style.width = "0%";
-    const progTimer = setInterval(() => {
-      progreso = Math.min(progreso + 3, 88);
-      barraEl.style.width = progreso + "%";
-    }, 800);
+
+    let sse = null; let progTimer = null;
+    if (planeacionId) {
+      try {
+        const _hdrs = await getAuthHeaders();
+        const token = (_hdrs["Authorization"] || "").replace("Bearer ", "");
+        if (token) {
+          sse = new EventSource(`${BACKEND_URL}/generate-doc/progreso/${encodeURIComponent(planeacionId)}?token=${encodeURIComponent(token)}`);
+          sse.onmessage = (e) => { try { const { pct } = JSON.parse(e.data); barraEl.style.width = Math.min(pct, 95) + "%"; } catch(_) {} };
+          sse.onerror = () => { sse.close(); sse = null; };
+        }
+      } catch(_) {}
+    }
+    if (!sse) {
+      let p = 0;
+      progTimer = setInterval(() => { p = Math.min(p + 3, 88); barraEl.style.width = p + "%"; }, 800);
+    }
 
     try {
       const _authHeaders = await getAuthHeaders();
@@ -133,7 +148,8 @@
       showAlert(`⚠️ ${mensajeAmigable(err)}`);
       console.error(err);
     } finally {
-      clearInterval(progTimer);
+      if (sse) { sse.close(); sse = null; }
+      if (progTimer) clearInterval(progTimer);
       setTimeout(() => { barraEl.style.width = "0%"; }, 600);
       mainBtn.disabled = false;
       mainBtn.textContent = "🧪";

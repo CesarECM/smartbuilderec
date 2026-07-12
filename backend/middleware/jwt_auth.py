@@ -26,6 +26,8 @@ def _es_publico(method: str, path: str) -> bool:
         return True
     if method == "GET" and (path == "/recursos" or path.startswith("/recursos/")):
         return True
+    if method == "GET" and path.startswith("/generate-doc/progreso/"):
+        return True
     if path.startswith("/api/v1/"):
         return True
     return False

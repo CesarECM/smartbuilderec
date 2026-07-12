@@ -1,3 +1,4 @@
+import asyncio
 import io
 import json
 import zipfile
@@ -21,6 +22,31 @@ from services.doc_generales import generar_contrato_aprendizaje, generar_lista_r
 from services.doc_planeacion_docx import generar_planeacion_docx
 
 router = APIRouter()
+
+_progreso_jobs: dict = {}
+
+
+@router.get("/generate-doc/progreso/{job_id}")
+async def progreso_generacion(job_id: str):
+    async def _stream():
+        for _ in range(60):
+            estado = _progreso_jobs.get(job_id)
+            if estado:
+                completados = estado.get("completados", 0)
+                total       = estado.get("total", 10)
+                pct         = round(completados / total * 100) if total else 0
+                yield f"data: {json.dumps({'pct': pct, 'completados': completados, 'total': total})}\n\n"
+                if completados >= total:
+                    _progreso_jobs.pop(job_id, None)
+                    break
+            else:
+                yield f"data: {json.dumps({'pct': 0, 'completados': 0, 'total': 10})}\n\n"
+            await asyncio.sleep(1)
+    return StreamingResponse(
+        _stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post("/generate-doc/objetivos")
@@ -155,8 +181,18 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
             fecha      = limpiar_nombre_archivo(payload_exportable.get("datos", {}).get("fecha", "Sin_fecha"))
             zf.writestr(f"{instructor}_{fecha}.json", payload_json_bytes)
 
+            _job_id = data.planeacion_id or ""
+            if _job_id:
+                _progreso_jobs[_job_id] = {"total": len(documentos), "completados": 0}
+
+            def _wrap(nombre, gen):
+                resultado = gen()
+                if _job_id:
+                    _progreso_jobs[_job_id]["completados"] += 1
+                return resultado
+
             with ThreadPoolExecutor(max_workers=5) as executor:
-                futures = {executor.submit(gen): name for name, gen in documentos}
+                futures = {executor.submit(_wrap, name, gen): name for name, gen in documentos}
                 resultados = {}
                 for future in as_completed(futures):
                     name = futures[future]
