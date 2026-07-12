@@ -68,6 +68,8 @@ export function getTemplate() {
       <section id="seccionDemostrativa" class="wizard-section hidden">
         <p class="paso-titulo">Paso 11 de 16</p>
         <h1>Técnica Demostrativa</h1>
+        <button type="button" id="btnGenerarTodoDemostrativa" class="btn-ia" style="margin-bottom:8px;">✨ Generar todo con IA</button>
+        <p style="font-size:13px;color:#666;margin:0 0 20px;">Solo rellena los campos vacíos. Si alguno ya tiene contenido te preguntará antes de continuar.</p>
 
         <div class="card" style="max-width: 950px;">
           <p>

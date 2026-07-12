@@ -46,4 +46,48 @@ export async function generarDialogoIA(campo, boton) {
 
 export function initIADialogo() {
   window.generarDialogoIA = generarDialogoIA;
+
+  // ── Diálogo: botones individuales ─────────────────────────────────────────
+  document.querySelectorAll(".btn-ia-dialogo").forEach(btn => {
+    btn.addEventListener("click", () => generarDialogoIA(btn.dataset.campo, btn));
+  });
+
+  // ── Diálogo: botón Generar todo ───────────────────────────────────────────
+  const btnTodo = document.getElementById("btnGenerarTodoDialogo");
+  if (btnTodo) {
+    btnTodo.addEventListener("click", () => {
+      const vacios = Object.entries(IDS_DIALOGO)
+        .filter(([, id]) => !document.getElementById(id)?.value.trim())
+        .map(([campo]) => campo);
+      if (!vacios.length) {
+        if (typeof showAlert === "function") showAlert("Todos los campos ya tienen contenido.");
+        return;
+      }
+      if (vacios.length < Object.keys(IDS_DIALOGO).length &&
+          !confirm("Algunos campos ya tienen contenido. ¿Generar solo los vacíos?")) return;
+      _generarTodoDialogo(vacios, btnTodo);
+    });
+  }
+}
+
+async function _generarTodoDialogo(campos, btnTodo) {
+  btnTodo.disabled = true;
+  const original = btnTodo.textContent;
+  let completados = 0;
+  btnTodo.textContent = `Generando 0/${campos.length}...`;
+  try {
+    await Promise.all(campos.map(async campo => {
+      const fb = { disabled: false, textContent: "" };
+      await generarDialogoIA(campo, fb);
+      completados++;
+      btnTodo.textContent = `Generando ${completados}/${campos.length}...`;
+    }));
+    window.guardarDialogoFinal?.();
+  } catch (err) {
+    const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
+    if (typeof showAlert === "function") showAlert(`⚠️ Error al generar:\n${msg}`);
+  } finally {
+    btnTodo.disabled = false;
+    btnTodo.textContent = original;
+  }
 }

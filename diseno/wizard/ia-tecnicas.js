@@ -96,7 +96,82 @@ export async function generarDemostrativaIA(campo, boton) {
   }
 }
 
+async function _generarSeccionCompleta(campos, generadorFn, btnTodo, guardarFn) {
+  btnTodo.disabled = true;
+  const original = btnTodo.textContent;
+  let completados = 0;
+  btnTodo.textContent = `Generando 0/${campos.length}...`;
+  try {
+    await Promise.all(campos.map(async campo => {
+      await generadorFn(campo);
+      completados++;
+      btnTodo.textContent = `Generando ${completados}/${campos.length}...`;
+    }));
+    guardarFn();
+  } catch (err) {
+    const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
+    if (typeof showAlert === "function") showAlert(`⚠️ Error al generar:\n${msg}`);
+  } finally {
+    btnTodo.disabled = false;
+    btnTodo.textContent = original;
+  }
+}
+
 export function initIATecnicas() {
   window.generarExpositivaIA   = generarExpositivaIA;
   window.generarDemostrativaIA = generarDemostrativaIA;
+
+  // ── Expositiva: botones individuales ─────────────────────────────────────
+  document.querySelectorAll(".btn-ia-expositiva").forEach(btn => {
+    btn.addEventListener("click", () => generarExpositivaIA(btn.dataset.campo, btn));
+  });
+
+  // ── Expositiva: botón Generar todo ────────────────────────────────────────
+  const btnTodoExp = document.getElementById("btnGenerarTodoExpositiva");
+  if (btnTodoExp) {
+    btnTodoExp.addEventListener("click", () => {
+      const vacios = Object.entries(IDS_EXPOSITIVA)
+        .filter(([, id]) => !document.getElementById(id)?.value.trim())
+        .map(([campo]) => campo);
+      if (!vacios.length) {
+        if (typeof showAlert === "function") showAlert("Todos los campos ya tienen contenido.");
+        return;
+      }
+      if (vacios.length < Object.keys(IDS_EXPOSITIVA).length &&
+          !confirm("Algunos campos ya tienen contenido. ¿Generar solo los vacíos?")) return;
+      _generarSeccionCompleta(
+        vacios,
+        async campo => { const fb = { disabled: false, textContent: "" }; await generarExpositivaIA(campo, fb); },
+        btnTodoExp,
+        () => window.guardarExpositivaFinal?.()
+      );
+    });
+  }
+
+  // ── Demostrativa: botones individuales ────────────────────────────────────
+  document.querySelectorAll(".btn-ia-demostrativa").forEach(btn => {
+    btn.addEventListener("click", () => generarDemostrativaIA(btn.dataset.campo, btn));
+  });
+
+  // ── Demostrativa: botón Generar todo ─────────────────────────────────────
+  const btnTodoDem = document.getElementById("btnGenerarTodoDemostrativa");
+  if (btnTodoDem) {
+    btnTodoDem.addEventListener("click", () => {
+      const vacios = Object.entries(IDS_DEMOSTRATIVA)
+        .filter(([, id]) => !document.getElementById(id)?.value.trim())
+        .map(([campo]) => campo);
+      if (!vacios.length) {
+        if (typeof showAlert === "function") showAlert("Todos los campos ya tienen contenido.");
+        return;
+      }
+      if (vacios.length < Object.keys(IDS_DEMOSTRATIVA).length &&
+          !confirm("Algunos campos ya tienen contenido. ¿Generar solo los vacíos?")) return;
+      _generarSeccionCompleta(
+        vacios,
+        async campo => { const fb = { disabled: false, textContent: "" }; await generarDemostrativaIA(campo, fb); },
+        btnTodoDem,
+        () => window.guardarDemostrativaFinal?.()
+      );
+    });
+  }
 }
