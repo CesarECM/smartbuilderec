@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 16 completado (148/170 subsprints)
+**Estado:** EN PROGRESO — Sprint 17 parcial (163/170 subsprints — solo falta 17.16 panel.html)
 
 ---
 
@@ -399,21 +399,21 @@
 
 | # | Subsprint | Descripción | Estado |
 |---|---|---|---|
-| 17.1 | Mover HTML de Paso 1 (Datos del Curso) de `index.html` a template literal en `step-datos.js`, inyectado con `innerHTML` al activar el paso | ⬜ |
-| 17.2 | Mover HTML de Paso 2 (Objetivos) → `step-objetivos.js` | ⬜ |
-| 17.3 | Mover HTML de Paso 3 (Beneficios) → `step-beneficios.js` | ⬜ |
-| 17.4 | Mover HTML de Paso 4 (Temario) → `step-temario.js` | ⬜ |
-| 17.5 | Mover HTML de Pasos 5–8 (Encuadre) → `step-encuadre.js` | ⬜ |
-| 17.6 | Mover HTML de Paso 9 (Expositiva) → `step-expositiva.js` | ⬜ |
-| 17.7 | Mover HTML de Paso 10 (Demostrativa) → `step-demostrativa.js` | ⬜ |
-| 17.8 | Mover HTML de Paso 11 (Técnicas grupales) → `step-tecnicas.js` | ⬜ |
-| 17.9 | Mover HTML de Paso 12 (Diálogo) → `step-dialogo.js` | ⬜ |
-| 17.10 | Mover HTML de Paso 13–14 (Cierre) → `step-cierre.js` | ⬜ |
-| 17.11 | Mover HTML de Paso 15 (Evaluaciones) → `step-evaluaciones.js` | ⬜ |
-| 17.12 | Mover HTML de Paso 16 (Tiempos) → `step-tiempos.js` | ⬜ |
-| 17.13 | Mover HTML sección Materiales → `step-materiales.js` | ⬜ |
-| 17.14 | Mover HTML sección Formatos/Resumen → `step-formatos.js` | ⬜ |
-| 17.15 | `index.html` queda: `<head>`, nav, `<div id="wizard">` vacío, scripts → ~80 líneas | ⬜ |
+| 17.1 | `getTemplate()` en `step-datos.js` + seccionDatos movida | ✅ |
+| 17.2 | `getTemplate()` en `step-objetivos.js` + seccionObjetivos movida | ✅ |
+| 17.3 | `getTemplate()` en `step-beneficios.js` + seccionBeneficios movida | ✅ |
+| 17.4 | `getTemplate()` en `step-temario.js` + seccionTemario movida | ✅ |
+| 17.5 | `getTemplate()` en `step-encuadre.js` (seccionPreguntas). seccionReglas → `html-reglas.js`. seccionContrato → `html-contrato.js`. seccionIntegracion → `html-integracion.js` | ✅ |
+| 17.6 | `getTemplate()` en `step-expositiva.js` + seccionExpositiva movida | ✅ |
+| 17.7 | `getTemplate()` en `step-demostrativa.js` + seccionDemostrativa movida | ✅ |
+| 17.8 | `getTemplate()` en `step-detalle-tecnicas.js` + seccionEnergizante movida | ✅ |
+| 17.9 | `getTemplate()` en `step-dialogo.js` + seccionDialogo movida | ✅ |
+| 17.10 | `getTemplate()` en `step-cierre.js` + seccionCierre movida | ✅ |
+| 17.11 | `getTemplate()` en `step-evaluaciones.js` + seccionEvaluaciones movida | ✅ |
+| 17.12 | `getTemplate()` en `step-tiempos.js` + seccionTiempos movida | ✅ |
+| 17.13 | `getTemplate()` en `step-materiales.js` + seccionMateriales movida | ✅ |
+| 17.14 | `getTemplate()` en `step-formatos.js` + seccionFormatos movida | ✅ |
+| 17.15 | `getSidebarHTML()` en `ui-sidebar.js`. `main.js` inyecta sidebar + 17 secciones. `index.html` → 77 líneas ✅ | ✅ |
 | 17.16 | `panel.html` — mover HTML de cada sección (usuarios, planeaciones, soporte, admins, logs, ERP) a templates en `panel/` → panel.html queda ~80 líneas | ⬜ |
 
 ---

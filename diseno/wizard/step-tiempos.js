@@ -127,3 +127,43 @@ export function initStepTiempos() {
   window.renderTiempos             = renderTiempos;
   window.cargarTiempos             = cargarTiempos;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionTiempos" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 15 de 16</p>
+        <h1>Distribución de Tiempos</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Ajusta los minutos de cada actividad para que el total sea exactamente <strong>120 minutos</strong>.
+            Todos los campos son editables — modifica los valores hasta que el contador llegue a 120.
+          </p>
+          <p class="hint">
+            💡 <strong>Sugerencia:</strong> Si te sobran o faltan minutos, ajusta primero las técnicas grupales
+            (Rompe Hielo, Energizante) o los descansos, ya que son las actividades más flexibles en duración.
+          </p>
+
+          <div id="tablaTiempos"></div>
+
+          <hr>
+
+          <div id="totalTiemposCard" class="total-tiempos-card">
+            <h3>Total general</h3>
+            <div>
+              <span id="totalTiempos" class="total-tiempos-numero">0</span>
+              <span>minutos</span>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-tiempos">
+            La suma total debe ser exactamente 120 minutos.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarTiempos">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

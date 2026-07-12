@@ -197,3 +197,72 @@ export function initStepObjetivos() {
   window.guardarObjetivoLibre             = guardarObjetivoLibre;
   window.cargarObjetivos                  = cargarObjetivos;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionObjetivos" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 2 de 16</p>
+
+        <div class="modo-objetivos">
+          <p><strong>Modo estricto:</strong></p>
+          <button type="button" id="btnModoEstrictoOn" class="btn-modo active">On</button>
+          <button type="button" id="btnModoEstrictoOff" class="btn-modo">Off</button>
+        </div>
+
+        <div class="objetivos-tabs">
+          <button id="nav-cognitiva" class="nav-item active" type="button">Cognitiva</button>
+          <button id="nav-psicomotriz" class="nav-item disabled" type="button">Psicomotriz</button>
+          <button id="nav-afectiva" class="nav-item disabled" type="button">Afectiva</button>
+          <button id="nav-general" class="nav-item disabled" type="button">General</button>
+        </div>
+        <h1 id="sectionTitle">Objetivo Cognitivo</h1>
+
+        <div class="card input-card">
+          <textarea spellcheck="true" lang="es" id="objectiveInput"
+            placeholder="Redacta el objetivo cognitivo..."></textarea>
+          <button type="button" id="btnGenerarObjetivoGeneral" class="btn-siguiente" style="display:none;">
+            ✨ Generar objetivo general con IA
+          </button>
+          <button type="button" id="btnGuardarObjetivoLibre" class="btn-siguiente" style="display:none;">
+            Guardar objetivo
+          </button>
+          <button class="send-btn" id="sendBtn">Revisar con IA</button>
+        </div>
+
+        <div class="results">
+          <div class="card">
+            <div id="observacionesBox">
+              <h3>Observaciones</h3>
+              <ul class="checks" id="checksList">
+                <li id="chk-quien">❌ Quién</li>
+                <li id="chk-cuando">❌ Cuándo</li>
+                <li id="chk-accion">❌ Acción</li>
+                <li id="chk-objeto">❌ Objeto</li>
+                <li id="chk-condicion">❌ Condición</li>
+                <li id="chk-finalidad">❌ Finalidad</li>
+              </ul>
+            </div>
+            <div id="contenedorLoader1">
+              <div class="contenedor-loader"><div class="rueda"></div></div>
+              <div class="cargando">Cargando...</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Resumen</h3>
+            <p id="summary">Aquí aparecerá el análisis automático.</p>
+            <button id="nextBtn" class="next-btn">Siguiente →</button>
+            <button id="btnGenerarGeneral" class="next-btn" style="display:none;">
+              ✨ Generar Objetivo General con IA
+            </button>
+            <button id="btnIrBeneficios" class="next-btn" style="display:none;">Siguiente</button>
+            <p id="mensajeDescarga" style="display: none; margin-top: 10px;"></p>
+            <div id="contenedorLoader2">
+              <div class="contenedor-loader"><div class="rueda"></div></div>
+              <div class="cargando">Cargando...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+  `;
+}

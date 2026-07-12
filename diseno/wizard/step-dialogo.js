@@ -62,3 +62,77 @@ export function initStepDialogo() {
   window.validarDialogo      = validarDialogo;
   window.guardarDialogoFinal = guardarDialogoFinal;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionDialogo" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 12 de 16</p>
+        <h1>Técnica Diálogo/Discusión</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Completa la estructura de la técnica diálogo/discusión. Puedes generar sugerencias con IA y editarlas manualmente.
+          </p>
+
+          <h3>El instructor aplicará la técnica diálogo/discusión:</h3>
+
+          <div class="form-group full-width">
+            <label for="dialogoObjetivo">
+              a) Mencionará el objetivo de la técnica.
+            </label>
+            <textarea spellcheck="true" lang="es" id="dialogoObjetivo" rows="4" readonly
+              placeholder="Aquí aparecerá automáticamente el objetivo afectivo."></textarea>
+            <small>Este campo se toma del objetivo afectivo y no se puede editar aquí.</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoActividad">
+              b) Presentará la actividad a desarrollar.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoActividad" rows="5" placeholder="Redactar beneficio/propósito."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="actividad">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoInstrucciones">
+              d) Indicará las instrucciones de la actividad.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoInstrucciones" rows="6" placeholder="Redactar las instrucciones."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="instrucciones">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoEjemplos">
+              h) Utilizará ejemplos relacionados con los temas y las situaciones cotidianas.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoEjemplos" rows="5" placeholder="Redactar aquí 2 ejemplos relacionados con las situaciones cotidianas."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="ejemplos">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="dialogoConclusion">
+              i) Desarrollará junto con el grupo las conclusiones acerca del tema discutido y su utilidad.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="dialogoConclusion" rows="5" placeholder="Redactar una breve conclusión del tema."></textarea>
+              <button type="button" class="btn-ia-dialogo" data-campo="conclusion">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-dialogo">
+            Completa todos los apartados de la técnica diálogo/discusión para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarDialogo">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

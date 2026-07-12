@@ -210,3 +210,42 @@ export function initStepEncuadre() {
   window.guardarEncuadreFinal             = guardarEncuadreFinal;
   window.cargarEncuadre                   = cargarEncuadre;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionPreguntas" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 5 de 16</p>
+        <h1>Preguntas de Experiencia</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Las preguntas de experiencia se hacen al grupo al inicio del curso para conectar los temas con
+            la vida laboral de los participantes y crear un ambiente de participación.
+          </p>
+          <p class="hint">
+            💡 <strong>Ejemplo:</strong> "¿Alguna vez han visto o vivido un accidente con montacargas en su área de trabajo?
+            ¿Qué creen que lo causó?" — Deben ser abiertas, relacionadas con el tema y fáciles de responder.
+          </p>
+
+          <div class="form-group full-width">
+            <button type="button" id="btnGenerarPreguntas" class="btn-siguiente">
+              ✨ Generar preguntas con IA
+            </button>
+            <div id="loaderPreguntas" style="display:none; margin-top:15px;">
+              Generando preguntas...
+            </div>
+            <textarea spellcheck="true" lang="es" id="preguntasEncuadre" rows="6"
+              placeholder="Aquí aparecerán 4 preguntas sugeridas por IA. También puedes escribirlas manualmente."></textarea>
+          </div>
+
+          <span class="error-msg" id="err-preguntas">
+            Escribe o genera al menos una pregunta para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarPreguntas">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

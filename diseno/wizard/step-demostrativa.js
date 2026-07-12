@@ -62,3 +62,77 @@ export function initStepDemostrativa() {
   window.validarDemostrativa      = validarDemostrativa;
   window.guardarDemostrativaFinal = guardarDemostrativaFinal;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionDemostrativa" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 11 de 16</p>
+        <h1>Técnica Demostrativa</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Completa la estructura de la técnica demostrativa. Puedes generar sugerencias con IA y editarlas manualmente.
+          </p>
+
+          <h3>El instructor aplicará la técnica demostrativa:</h3>
+
+          <div class="form-group full-width">
+            <label for="demoObjetivo">
+              a) Presentará objetivo de la actividad a desarrollar:
+            </label>
+            <textarea spellcheck="true" lang="es" id="demoObjetivo" rows="4" readonly
+              placeholder="Aquí aparecerá automáticamente el objetivo psicomotriz."></textarea>
+            <small>Este campo se toma del objetivo psicomotriz y no se puede editar aquí.</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoExperiencia">
+              b) Recuperará la experiencia previa de los participantes.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoExperiencia" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="experiencia">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoActividad">
+              c) Presentará la actividad a desarrollar y mencionará el propósito de la misma.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoActividad" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="actividad">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoEjemplos">
+              h) Usará ejemplos relacionados con los temas y situaciones cotidianas.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoEjemplos" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="ejemplos">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="demoPreguntas">
+              i) Preguntará por los conocimientos adquiridos y la utilidad de lo aprendido en su actividad.
+            </label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="demoPreguntas" rows="5"></textarea>
+              <button type="button" class="btn-ia-demostrativa" data-campo="preguntas">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-demostrativa">
+            Completa todos los apartados de la técnica demostrativa para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarDemostrativa">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

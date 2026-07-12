@@ -82,3 +82,71 @@ export function initStepFormatos() {
   window.validarExpedienteCompleto = validarExpedienteCompleto;
   window.poblarResumenExpediente   = poblarResumenExpediente;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionFormatos" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 16 de 16</p>
+        <h1>Resumen y descarga</h1>
+
+        <div class="card" style="max-width: 950px;">
+
+          <h3 style="margin-top:0;margin-bottom:16px;color:var(--c-primary);">Resumen del expediente</h3>
+
+          <div id="resumen-expediente" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+
+            <div style="background:var(--c-bg-soft,#f8fafc);border-radius:8px;padding:14px;">
+              <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:600;">Datos del curso</p>
+              <p style="margin:2px 0;font-size:13px;"><strong id="res-nombre">—</strong></p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Instructor: <span id="res-instructor">—</span></p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Duración: <span id="res-duracion">—</span> min</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Participantes: <span id="res-participantes">—</span></p>
+            </div>
+
+            <div style="background:var(--c-bg-soft,#f8fafc);border-radius:8px;padding:14px;">
+              <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:600;">Evaluación</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Diagnóstica: <strong id="res-pct-diag">0</strong>%</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Formativa: <strong id="res-pct-form">0</strong>%</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Sumativa: <strong id="res-pct-suma">0</strong>%</p>
+              <p style="margin:4px 0 0;font-size:12px;" id="res-pct-total-wrap">
+                Total: <strong id="res-pct-total">0</strong>%
+              </p>
+            </div>
+
+            <div style="background:var(--c-bg-soft,#f8fafc);border-radius:8px;padding:14px;">
+              <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:600;">Temario</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Unidad 1: <strong id="res-u1">0</strong> temas</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Unidad 2: <strong id="res-u2">0</strong> temas</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Unidad 3: <strong id="res-u3">0</strong> temas</p>
+            </div>
+
+            <div style="background:var(--c-bg-soft,#f8fafc);border-radius:8px;padding:14px;">
+              <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:600;">Distribución de tiempos</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Registrados: <strong id="res-tiempos-total">0</strong> min</p>
+              <p style="margin:2px 0;font-size:12px;color:#64748b;">Duración del curso: <strong id="res-tiempos-duracion">0</strong> min</p>
+              <p style="margin:4px 0 0;font-size:12px;" id="res-tiempos-diff-wrap"></p>
+            </div>
+
+          </div>
+
+          <div id="res-alertas" style="display:none;background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+            <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#854d0e;">⚠️ Inconsistencias detectadas</p>
+            <ul id="res-alertas-lista" style="margin:0;padding-left:16px;font-size:12px;color:#854d0e;"></ul>
+          </div>
+
+          <p style="font-size:12px;color:#64748b;margin-bottom:16px;">
+            Se generarán <strong>10 documentos</strong> en formato Word y PowerPoint empaquetados en un archivo ZIP.
+          </p>
+
+          <button type="button" id="btnDescargarPlaneacionFinal" class="btn-siguiente">
+            ⬇ Descargar expediente completo
+          </button>
+
+          <div id="loaderFormatos" style="display:none;margin-top:15px;">
+            Generando formatos...
+          </div>
+          <p id="mensajeFormatos" style="display:none;margin-top:15px;"></p>
+        </div>
+      </section>
+  `;
+}

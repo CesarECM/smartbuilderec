@@ -116,3 +116,73 @@ export function initStepTemario() {
   window.guardarTemarioFinal  = guardarTemarioFinal;
   window.cargarTemario        = cargarTemario;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionTemario" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 4 de 16</p>
+        <h1>Temario del Curso</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Puedes usar la IA para generar un temario inicial a partir del objetivo general, o escribirlo completamente desde cero. Recuerda que el temario debe estar organizado en unidades y cada unidad debe contener al menos un tema.
+          </p>
+
+          <button type="button" id="btnGenerarTemario" class="btn-siguiente">
+            ✨ Generar temas con IA
+          </button>
+
+          <strong>"Los temas generados son unicamente sugerencia"</strong>
+          <div id="loaderTemario" style="display:none; margin-top:15px;">
+            Generando temario...
+          </div>
+
+          <p>
+            Organiza los temas del curso en tres unidades. Cada unidad se relaciona con un tipo de objetivo:
+            cognitivo, psicomotriz y afectivo.
+          </p>
+
+          <div class="form-group full-width">
+            <h3>Unidad 1 — Técnica Expositiva</h3>
+            <p><strong>Relacionado con:</strong> Objetivo Cognitivo</p>
+            <div id="listaTemasU1" class="temas-lista"></div>
+            <div class="tema-input-row">
+              <input type="text" id="temaU1Input" placeholder="Escribe un tema para la unidad 1">
+              <button type="button" id="btnAgregarTemaU1" class="btn-siguiente">Agregar temas</button>
+            </div>
+            <span class="error-msg" id="err-u1">Agrega al menos un tema en la unidad 1.</span>
+          </div>
+
+          <hr>
+
+          <div class="form-group full-width">
+            <h3>Unidad 2 — Técnica Demostrativa</h3>
+            <p><strong>Relacionado con:</strong> Objetivo Psicomotriz</p>
+            <div id="listaTemasU2" class="temas-lista"></div>
+            <div class="tema-input-row">
+              <input type="text" id="temaU2Input" placeholder="Escribe un tema para la unidad 2">
+              <button type="button" id="btnAgregarTemaU2" class="btn-siguiente">Agregar temas</button>
+            </div>
+            <span class="error-msg" id="err-u2">Agrega al menos un tema en la unidad 2.</span>
+          </div>
+
+          <hr>
+
+          <div class="form-group full-width">
+            <h3>Unidad 3 — Técnica Diálogo/Discusión</h3>
+            <p><strong>Relacionado con:</strong> Objetivo Afectivo</p>
+            <div id="listaTemasU3" class="temas-lista"></div>
+            <div class="tema-input-row">
+              <input type="text" id="temaU3Input" placeholder="Escribe un tema para la unidad 3">
+              <button type="button" id="btnAgregarTemaU3" class="btn-siguiente">Agregar temas</button>
+            </div>
+            <span class="error-msg" id="err-u3">Agrega al menos un tema en la unidad 3.</span>
+          </div>
+
+          <button class="btn-siguiente" id="btnGuardarTemario">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

@@ -68,3 +68,57 @@ export function initStepDetalleTecnicas() {
   window.mostrarDetalleIntegracion = mostrarDetalleIntegracion;
   window.mostrarDetalleEnergizante = mostrarDetalleEnergizante;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionEnergizante" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 9 de 16</p>
+        <h1>Técnica Energizante</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Selecciona una técnica energizante para recuperar la atención, movimiento y participación del grupo.
+          </p>
+
+          <div id="detalleEnergizante" class="tecnica-detalle">
+            <input type="text" id="detalleEnergizanteNombre" class="tecnica-nombre-editable"
+              placeholder="Nombre de la técnica" />
+            <div class="form-group full-width">
+              <label for="detalleEnergizanteObjetivo">a) Explicará objetivo de la técnica:</label>
+              <textarea spellcheck="true" lang="es" id="detalleEnergizanteObjetivo" rows="4"
+                placeholder="Aquí aparecerá o podrás escribir el objetivo de la técnica energizante."></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label for="detalleEnergizanteInstrucciones">b) Dará las instrucciones de la técnica:</label>
+              <textarea spellcheck="true" lang="es" id="detalleEnergizanteInstrucciones" rows="10"
+                placeholder="Aquí aparecerán o podrás escribir las instrucciones de la técnica energizante."></textarea>
+            </div>
+          </div>
+
+          <h3>Técnica energizante</h3>
+
+          <div class="radio-card-group">
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="memorama"><div><h4>Memorama</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="nudo-humano"><div><h4>El Nudo Humano</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="zip-zap-boing"><div><h4>Zip Zap Boing</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="respiracion-478"><div><h4>Respiración 4-7-8</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="espejo"><div><h4>El Espejo</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="palabras-encadenadas"><div><h4>Palabras Encadenadas por Categoría</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="palmadas-ritmo"><div><h4>Palmadas con Ritmo (Body Percussion)</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="secuencia-simon"><div><h4>La Secuencia Simón</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="numero-prohibido"><div><h4>El Número Prohibido</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="caminata-intenciones"><div><h4>Caminata de Intenciones</h4></div></label>
+            <label class="radio-card"><input type="radio" name="tecnicaEnergizante" value="personalizada"><div><h4>Personalizada</h4></div></label>
+          </div>
+
+          <span class="error-msg" id="err-energizante">
+            Selecciona una técnica energizante y completa el objetivo e instrucciones para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarEnergizante">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

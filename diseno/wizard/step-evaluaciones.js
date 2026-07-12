@@ -110,3 +110,112 @@ export function initStepEvaluaciones() {
   window.guardarEvaluacionesFinal         = guardarEvaluacionesFinal;
   window.actualizarBotonDescripcionGeneral = actualizarBotonDescripcionGeneral;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionEvaluaciones" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 14 de 16</p>
+        <h1>Evaluaciones</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Define los instrumentos y porcentajes de evaluación que se utilizarán durante el curso.
+          </p>
+
+          <h3>Porcentajes de evaluación</h3>
+
+          <div class="evaluacion-porcentajes-card">
+            <div class="evaluacion-diagnostica-card">
+              <span>Evaluación diagnóstica</span>
+              <strong id="pctDiagnosticaLabel">0%</strong>
+              <small>La evaluación diagnóstica no tiene valor ponderado.</small>
+            </div>
+            <div class="evaluacion-valores">
+              <div class="evaluacion-valor-card">
+                <span class="evaluacion-label">Formativa</span>
+                <strong id="pctFormativaValor">50%</strong>
+              </div>
+              <div class="evaluacion-valor-card">
+                <span class="evaluacion-label">Sumativa</span>
+                <strong id="pctSumativaValor">50%</strong>
+              </div>
+            </div>
+            <div class="slider-contenedor">
+              <label for="sliderEvaluaciones">
+                Ajusta la distribución entre evaluación formativa y sumativa
+              </label>
+              <input type="range" id="sliderEvaluaciones" min="0" max="100" step="5" value="50">
+              <div class="slider-extremos">
+                <span>Formativa</span>
+                <span>Equilibrado</span>
+                <span>Sumativa</span>
+              </div>
+            </div>
+            <input type="hidden" id="pctDiagnostica" value="0">
+            <input type="hidden" id="pctFormativa" value="50">
+            <input type="hidden" id="pctSumativa" value="50">
+          </div>
+
+          <span class="hint">
+            La suma de evaluación formativa y sumativa debe ser 100%. La diagnóstica puede ser 0% porque normalmente solo identifica conocimientos previos.
+          </span>
+
+          <hr>
+
+          <h3>Instrumentos de evaluación</h3>
+
+          <div class="form-group full-width">
+            <label for="instDiagnostica">Evaluación diagnóstica</label>
+            <button type="button" id="btnGenerarDiagnostica" class="btn-siguiente">
+              ✨ Generar evaluación diagnóstica con IA
+            </button>
+            <div id="loaderDiagnostica" style="display:none; margin-top:15px;">
+              Generando evaluación diagnóstica...
+            </div>
+            <textarea spellcheck="true" lang="es" id="instDiagnostica" rows="12"
+              placeholder="Aquí aparecerán 5 preguntas de opción múltiple."></textarea>
+          </div><br>
+
+          <div class="form-group full-width">
+            <label for="instFormativa">Instrumento de evaluación formativa</label>
+            <button type="button" id="btnGenerarFormativa" class="btn-siguiente">
+              ✨ Generar evaluación formativa con IA
+            </button>
+            <div id="loaderFormativa" style="display:none; margin-top:15px;">
+              Generando evaluación formativa...
+            </div>
+            <textarea spellcheck="true" lang="es" id="instFormativa" rows="12"
+              placeholder="Aquí aparecerá una lista de cotejo o guía de observación generada con IA."></textarea>
+          </div>
+
+          <br>
+          <div class="form-group full-width">
+            <label for="instSumativa">Evaluación sumativa</label>
+            <button type="button" id="btnGenerarSumativa" class="btn-siguiente">
+              ✨ Generar evaluación sumativa con IA
+            </button>
+            <div id="loaderSumativa" style="display:none; margin-top:15px;">
+              Generando evaluación sumativa...
+            </div>
+            <textarea spellcheck="true" lang="es" id="instSumativa" rows="12"
+              placeholder="Aquí aparecerán 5 preguntas de opción múltiple."></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="instReac">Preguntas adicionales de evaluación de reacción <span class="hint">(opcional)</span></label>
+            <span class="hint">Agrega preguntas personalizadas que aparecerán al final de la encuesta de satisfacción.</span>
+            <textarea spellcheck="true" lang="es" id="instReac" rows="5"
+              placeholder="Escribe aquí preguntas adicionales para la evaluación de reacción, una por línea."></textarea>
+          </div>
+
+          <span class="error-msg" id="err-evaluaciones">
+            Completa los porcentajes e instrumentos de evaluación. La suma de formativa y sumativa debe ser 100%.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarEvaluaciones">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

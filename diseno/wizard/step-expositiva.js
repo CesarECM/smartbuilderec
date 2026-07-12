@@ -67,3 +67,91 @@ export function initStepExpositiva() {
   window.validarExpositiva     = validarExpositiva;
   window.guardarExpositivaFinal = guardarExpositivaFinal;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionExpositiva" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 10 de 16</p>
+        <h1>Técnica Expositiva</h1>
+
+        <div class="card" style="max-width: 950px;">
+          <p>
+            Completa la estructura de la técnica expositiva. Puedes generar sugerencias con IA y editarlas manualmente.
+          </p>
+
+          <h3>El instructor aplicará la técnica expositiva:</h3>
+
+          <div class="form-group full-width">
+            <label for="expObjetivo">a) Presentará el objetivo del tema:</label>
+            <textarea spellcheck="true" lang="es" id="expObjetivo" rows="4" readonly
+              placeholder="Aquí aparecerá automáticamente el objetivo cognitivo."></textarea>
+            <small>Este campo se toma del objetivo cognitivo y no se puede editar aquí.</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expIntroduccion">b) Realizará una introducción general al contenido temático.</label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expIntroduccion" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="introduccion">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expExperiencia">c) Recuperará la experiencia previa de los participantes, preguntando sobre sus conocimientos previos del contenido temático:</label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expExperiencia" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="experiencia">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expDesarrollo">d) Desarrollará el contenido.</label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expDesarrollo" rows="6"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="desarrollo">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expEjemplos">e) Utilizará ejemplos relacionados con los temas y las situaciones cotidianas.</label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expEjemplos" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="ejemplos">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expSintesis">f) Realizará la síntesis haciendo énfasis en los aspectos sobresalientes, invitando a los participantes a participar.</label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expSintesis" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="sintesis">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expPreguntas">g) Planteará preguntas dirigidas que verifiquen la comprensión del tema.</label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expPreguntas" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="preguntas">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="expUtilidad">h) Promoverá comentarios sobre la utilidad y aplicación de los temas en su vida profesional y personal.</label>
+            <div class="textarea-ia-row">
+              <textarea spellcheck="true" lang="es" id="expUtilidad" rows="5"></textarea>
+              <button type="button" class="btn-ia-expositiva" data-campo="utilidad">✨ Generar con IA</button>
+            </div>
+          </div>
+
+          <span class="error-msg" id="err-expositiva">
+            Completa todos los apartados de la técnica expositiva para continuar.
+          </span>
+
+          <button class="btn-siguiente" id="btnGuardarExpositiva">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

@@ -44,3 +44,44 @@ export function initStepBeneficios() {
   window.validarBeneficios = validarBeneficios;
   window.guardarBeneficios = guardarBeneficios;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionBeneficios" class="wizard-section hidden">
+        <p class="paso-titulo">Paso 3 de 16</p>
+        <h1>Beneficios del Curso</h1>
+
+        <div class="card" style="max-width: 900px;">
+          <p>
+            Los beneficios describen el valor práctico que obtendrán los participantes al terminar el curso.
+            Se presentan al grupo durante el encuadre para motivar su participación.
+          </p>
+          <p class="hint">
+            💡 <strong>Ejemplo:</strong> "Aplicarás técnicas seguras de operación de montacargas que reducen el riesgo de accidentes en el almacén."
+            Usa lenguaje directo y orientado a resultados concretos del trabajo diario.
+          </p>
+
+          <button class="btn-siguiente" id="btnGenerarBeneficios">
+            ✨ Generar beneficios con IA
+          </button>
+
+          <div id="loaderBeneficios" style="display:none; margin-top:15px;">
+            Generando beneficios...
+          </div>
+
+          <div class="form-group full-width" style="margin-top:20px;">
+            <label for="beneficiosTexto">Beneficios del curso *</label>
+            <textarea spellcheck="true" lang="es" id="beneficiosTexto" rows="12"
+              placeholder="Aquí aparecerán los beneficios generados. También puedes escribirlos manualmente."></textarea>
+            <span class="error-msg" id="err-beneficiosTexto">
+              Escribe al menos 3 beneficios.
+            </span>
+          </div>
+
+          <button class="btn-siguiente" id="btnGuardarBeneficios">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}

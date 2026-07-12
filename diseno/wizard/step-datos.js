@@ -94,3 +94,103 @@ export function initStepDatos() {
   window.cargarDatosCurso    = cargarDatosCurso;
   window.guardarDatosCurso   = guardarDatosCurso;
 }
+
+export function getTemplate() {
+  return `
+      <section id="seccionDatos" class="wizard-section">
+        <p class="paso-titulo">Paso 1 de 16</p>
+        <h1>Datos del Curso</h1>
+
+        <div class="card" style="max-width:800px; margin-bottom:20px; border: 2px dashed #1F3B6D; background:#f0f4fb;">
+          <div style="display:flex; align-items:flex-start; gap:16px;">
+            <span style="font-size:36px; line-height:1;">📂</span>
+            <div style="flex:1;">
+              <h3 style="margin:0 0 6px 0; color:#1F3B6D;">¿Ya tienes una planeación guardada?</h3>
+              <p style="margin:0 0 14px 0; color:#444; font-size:14px;">
+                Si descargaste anteriormente el paquete completo, puedes importar el archivo
+                <strong>datos_planeacion_*.json</strong> que viene dentro del ZIP para
+                rellenar automáticamente todos los campos del sistema.
+              </p>
+              <label for="inputImportarJSON" class="btn-siguiente" style="display:inline-block; cursor:pointer; margin:0;">
+                📂 Importar planeación (.json)
+              </label>
+              <input type="file" id="inputImportarJSON" accept=".json" style="display:none;">
+              <span id="importarStatus" style="display:none; margin-left:14px; font-size:13px; color:#2e7d32; font-weight:600;"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="max-width: 800px;">
+          <div class="form-grid">
+
+            <div class="form-group full-width">
+              <label for="nombreCurso">Nombre del curso *</label>
+              <input type="text" id="nombreCurso" placeholder="Ej. Manejo de Extintores">
+              <span class="error-msg" id="err-nombreCurso">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="instructor">Instructor *</label>
+              <input type="text" id="instructor" placeholder="Nombre completo del instructor">
+              <span class="error-msg" id="err-instructor">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="disenador" style="display:flex; align-items:center; gap:8px;">
+                Diseñador *
+                <button type="button" id="btnCopiarInstructor" title="Copiar nombre del instructor"
+                  style="background:none; border:1.5px solid #1f3b6d; border-radius:6px; padding:2px 8px; font-size:11px; color:#1f3b6d; cursor:pointer; line-height:1.6;">
+                  <i class="fa fa-copy"></i> Usar el mismo nombre de instructor
+                </button>
+              </label>
+              <input type="text" id="disenador" placeholder="Nombre completo del diseñador">
+              <span class="error-msg" id="err-disenador">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="lugar">Lugar *</label>
+              <input type="text" id="lugar" placeholder="Ciudad o instalación">
+              <span class="error-msg" id="err-lugar">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="fecha">Fecha *</label>
+              <input type="date" id="fecha">
+              <span class="error-msg" id="err-fecha">Este campo es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="duracion">Duración (minutos) *</label>
+              <input type="number" id="duracion" placeholder="Mínimo 120" min="120">
+              <span class="hint">Mínimo 120 minutos según EC0217.01</span>
+              <span class="error-msg" id="err-duracion">Mínimo 120 minutos.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="participantes">Número de participantes *</label>
+              <input type="number" id="participantes" placeholder="Mínimo 4" min="4">
+              <span class="hint">Mínimo 4 participantes según EC0217.01</span>
+              <span class="error-msg" id="err-participantes">Mínimo 4 participantes.</span>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="perfil">Perfil del participante *</label>
+              <textarea spellcheck="true" lang="es" id="perfil"
+                placeholder="Describe el perfil: puesto, experiencia previa, nivel educativo, etc.">
+                Conocimientos:
+                AHV:
+                Habilidades:
+                Valores:
+              </textarea>
+              <span class="error-msg" id="err-perfil">Este campo es requerido.</span>
+            </div>
+
+          </div>
+
+          <button class="btn-siguiente" id="btnSiguienteDatos">
+            Siguiente
+          </button>
+        </div>
+      </section>
+  `;
+}
