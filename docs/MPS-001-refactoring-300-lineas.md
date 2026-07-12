@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 15 completado (141/170 subsprints)
+**Estado:** EN PROGRESO — Sprint 16 completado (148/170 subsprints)
 
 ---
 
@@ -380,15 +380,16 @@
 
 > **Prerequisito:** Sprint 6.4 completado.
 
-| # | Subsprint | Archivos | Líneas aprox. | Estado |
+| # | Subsprint | Archivos | Líneas | Estado |
 |---|---|---|---|---|
-| 16.1 | Mapear secciones de `erp-admin.js` | — | — | ⬜ |
-| 16.2 | Crear `diseno/erp/erp-auth.js` — authGuard, obtener perfil, verificar roles | nuevo | ~50 | ⬜ |
-| 16.3 | Crear `diseno/erp/erp-normas.js` — CRUD normas (catálogo) | nuevo | ~150 | ⬜ |
-| 16.4 | Crear `diseno/erp/erp-alumnos.js` — listar alumnos, búsqueda, detalle | nuevo | ~200 | ⬜ |
-| 16.5 | Crear `diseno/erp/erp-asignaciones.js` — asignaciones y pagos | nuevo | ~200 | ⬜ |
-| 16.6 | Crear `diseno/erp/erp-certificacion.js` — flujo evaluado → lote → certificado | nuevo | ~150 | ⬜ |
-| 16.7 | Actualizar `diseno/erp-admin.html`: referencias a los nuevos scripts | erp-admin.html | ⬜ |
+| 16.1 | Mapear secciones de `erp-admin.js` — 8 secciones identificadas | — | — | ✅ |
+| 16.2 | Crear `diseno/erp/erp-shared.js` — BACKEND_URL, globals, toast, switchTab, modal helpers, fmtFechaCorta, iniciales, apiFetch | nuevo | 52 | ✅ |
+| 16.3 | Crear `diseno/erp/erp-init.js` — init(), cargarNormas, cargarPersonas, cargarAlumnos, actualizarStats | nuevo | 67 | ✅ |
+| 16.4 | Crear `diseno/erp/erp-alumnos.js` — renderTablaAlumnos, filtrarAlumnos, verDetalle | nuevo | 130 | ✅ |
+| 16.5 | Crear `diseno/erp/erp-asignaciones.js` — abrirModalPago/registrarPago, abrirModalEvaluado/registrarEvaluado, abrirModalLote/registrarLote, poblarSelectsInscripcion, inscribirAlumno | nuevo | 246 | ✅ |
+| 16.6 | Crear `diseno/erp/erp-roles.js` — cargarRoles, abrirModalAsignarRol, asignarRol, quitarRol | nuevo | 73 | ✅ |
+| 16.7 | Crear `diseno/erp/erp-normas.js` — cargarNormasTabla, abrirModalNorma, guardarNorma, _style injection. `erp-main.js` — entry point `init()` | nuevo | 88+1 | ✅ |
+| 16.8 | Actualizar `diseno/erp-admin.html`: 7 scripts de `erp/`. Vaciar `erp-admin.js` con redirect. | erp-admin.html | — | ✅ |
 
 ---
 
