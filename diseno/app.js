@@ -788,6 +788,7 @@ let temario = {
   u2: [],
   u3: []
 };
+window.sbeTemario = temario; // referencia compartida para step-temario.js
 
 let tiemposCurso = [
   {
@@ -838,7 +839,9 @@ let tiemposCurso = [
 ];
 
 let acuerdosPersonalizados = [];
-let cargandoTecnicas = false;
+window.sbeAcuerdosPersonalizados = acuerdosPersonalizados; // referencia compartida para step-encuadre.js
+window.cargandoTecnicas = false; // flag compartido para step-tecnicas.js
+let cargandoTecnicas = window.cargandoTecnicas; // alias local (se sincroniza vía window)
 
 const criteria = ["quien", "cuando", "accion", "objeto", "condicion", "finalidad"];
 
@@ -849,6 +852,7 @@ let estado = {
   afectiva:     { texto: "", completa: false },
   general:      { texto: "", completa: false }
 };
+window.sbeEstadoObjetivos = estado; // referencia compartida para step-objetivos.js
 
 
 
@@ -2222,6 +2226,10 @@ const tecnicasEnergizantes = [
 5. Para cerrar, el instructor da la instrucción final: "Camina como alguien que está listo para aprender algo que va a cambiar su trabajo" y detiene al grupo en ese estado, haciendo la transición directa hacia el siguiente bloque del programa.`
   }
 ];
+
+// Exponer arrays de técnicas para step-detalle-tecnicas.js y step-tecnicas.js
+window.sbeTecnicasRompehielos  = tecnicasRompehielos;
+window.sbeTecnicasEnergizantes = tecnicasEnergizantes;
 
 function obtenerChecksSeleccionados(selector) {
   return Array.from(document.querySelectorAll(selector))

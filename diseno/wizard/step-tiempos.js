@@ -1,0 +1,129 @@
+// ─── wizard/step-tiempos.js — Paso 15: Distribución de Tiempos ───────────────
+// Usa window.sbeTiemposCurso (expuesto por app.js) para compartir el array.
+// La norma EC0217 exige exactamente 120 minutos de duración del curso.
+
+import { DURACION_MINIMA_MIN } from "./config.js";
+
+const _tiempos = () => window.sbeTiemposCurso || [];
+
+export function guardarTiemposTemporal() {
+  localStorage.setItem("ec0217_tiempos", JSON.stringify(_tiempos()));
+}
+
+export function actualizarSubtotalesTiempos() {
+  document.querySelectorAll(".tiempo-bloque").forEach((bloqueDiv, bloqueIndex) => {
+    const subtotal = _tiempos()[bloqueIndex]?.filas.reduce((acc, f) => acc + Number(f.tiempo || 0), 0) ?? 0;
+    const span = bloqueDiv.querySelector(".tiempo-subtotal");
+    if (span) span.textContent = `${subtotal} minutos`;
+  });
+}
+
+export function actualizarTotalTiempos() {
+  const total = _tiempos().reduce((acc, b) => acc + b.filas.reduce((s, f) => s + Number(f.tiempo || 0), 0), 0);
+
+  const totalEl = document.getElementById("totalTiempos");
+  if (totalEl) totalEl.textContent = total;
+
+  const totalCard = document.getElementById("totalTiemposCard");
+  if (totalCard) {
+    totalCard.classList.remove("total-correcto", "total-error");
+    totalCard.classList.add(total === DURACION_MINIMA_MIN ? "total-correcto" : "total-error");
+  }
+
+  const errEl = document.getElementById("err-tiempos");
+  if (errEl) {
+    if (total === DURACION_MINIMA_MIN) {
+      errEl.style.display = "none";
+    } else {
+      const diff = total - DURACION_MINIMA_MIN;
+      errEl.textContent = diff > 0
+        ? `El total es ${total} min — necesitas reducir ${diff} minuto${diff !== 1 ? "s" : ""} en alguna actividad.`
+        : `El total es ${total} min — necesitas agregar ${Math.abs(diff)} minuto${Math.abs(diff) !== 1 ? "s" : ""} en alguna actividad.`;
+      errEl.style.display = "block";
+    }
+  }
+
+  const btnGuardarTiempos = document.getElementById("btnGuardarTiempos");
+  if (btnGuardarTiempos) btnGuardarTiempos.disabled = total !== DURACION_MINIMA_MIN;
+
+  return total;
+}
+
+export function renderTiempos() {
+  const tablaTiempos = document.getElementById("tablaTiempos");
+  if (!tablaTiempos) return;
+
+  tablaTiempos.innerHTML = "";
+  tablaTiempos.className = "tiempos-wrapper";
+
+  _tiempos().forEach((bloque, bloqueIndex) => {
+    const subtotal = bloque.filas.reduce((acc, f) => acc + Number(f.tiempo || 0), 0);
+    const div = document.createElement("div");
+    div.className = "tiempo-bloque";
+    const subtotalColor = subtotal === 0 ? "#999" : "#1F3B6D";
+    div.innerHTML = `
+      <div class="tiempo-bloque-header">
+        <h3>${bloque.seccion}</h3>
+        <span class="tiempo-subtotal" style="color:${subtotalColor}">${subtotal} min</span>
+      </div>
+      <table class="tabla-tiempos">
+        <thead><tr><th>Actividad</th><th class="col-tiempo">Tiempo</th></tr></thead>
+        <tbody>
+          ${bloque.filas.map((fila, filaIndex) => `
+            <tr>
+              <td>${fila.titulo}</td>
+              <td class="col-tiempo">
+                <div class="input-tiempo-wrapper">
+                  <input type="number" min="0" value="${fila.tiempo}"
+                    data-bloque="${bloqueIndex}" data-fila="${filaIndex}" class="input-tiempo">
+                  <span class="min-label">min</span>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+    tablaTiempos.appendChild(div);
+  });
+
+  tablaTiempos.querySelectorAll(".input-tiempo").forEach(input => {
+    input.addEventListener("input", () => {
+      const bi = Number(input.dataset.bloque);
+      const fi = Number(input.dataset.fila);
+      _tiempos()[bi].filas[fi].tiempo = Number(input.value || 0);
+      guardarTiemposTemporal();
+      actualizarTotalTiempos();
+      actualizarSubtotalesTiempos();
+    });
+  });
+
+  actualizarTotalTiempos();
+}
+
+export function cargarTiempos() {
+  const raw = localStorage.getItem("ec0217_tiempos");
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data) && data.length > 0) {
+        const t = _tiempos();
+        t.length = 0;
+        t.push(...data);
+      }
+    } catch (_) {}
+  }
+  renderTiempos();
+  if (localStorage.getItem("ec0217_tiempos_completo") === "true") {
+    document.getElementById("nav-tiempos")?.classList.add("completed");
+    document.getElementById("nav-materiales")?.classList.remove("disabled");
+  }
+}
+
+export function initStepTiempos() {
+  window.guardarTiemposTemporal    = guardarTiemposTemporal;
+  window.actualizarSubtotalesTiempos = actualizarSubtotalesTiempos;
+  window.actualizarTotalTiempos    = actualizarTotalTiempos;
+  window.renderTiempos             = renderTiempos;
+  window.cargarTiempos             = cargarTiempos;
+}

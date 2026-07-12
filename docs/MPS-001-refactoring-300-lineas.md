@@ -265,21 +265,21 @@
 
 | # | Subsprint | Funciones que contiene | Líneas aprox. | Estado |
 |---|---|---|---|---|
-| 9.1 | Crear `diseno/wizard/step-datos.js` — `cargarDatosCurso`, `guardarDatosCurso`, `validarDatosCurso`, `limpiarErroresDatos`, `mostrarErrorDatos` + autocompletar perfil instructor (W#7) | ~220 | ⬜ |
-| 9.2 | Crear `diseno/wizard/step-objetivos.js` — `cargarObjetivos`, `guardarObjetivos`, `guardarObjetivoLibre`, `validar` (cognitivo/psicomotriz/afectivo), `marcarCompleta`, `aplicarModoObjetivos`, `reiniciarAvanceObjetivosEstricto`, `intentarGenerarGeneral`, `objetivosTienenTextoMinimo`, `habilitarBeneficios` | ~250 | ⬜ |
-| 9.3 | Crear `diseno/wizard/step-beneficios.js` — `cargarBeneficios`, `guardarBeneficios`, `validarBeneficios` | ~130 | ⬜ |
-| 9.4 | Crear `diseno/wizard/step-temario.js` — `cargarTemario`, `guardarTemarioTemporal`, `guardarTemarioFinal`, `renderTemario`, `renderListaTemas`, `agregarTema`, `validarTemario`, `limpiarErroresTemario`, `temarioTieneDatos` | ~265 | ⬜ |
-| 9.5 | Crear `diseno/wizard/step-encuadre.js` — `cargarEncuadre`, `recolectarEncuadre`, `inicializarContratoPorDefecto`, `obtenerChecksSeleccionados`, `copiarReglasSeleccionadasATextarea`, `renderAcuerdosPersonalizados`, `agregarAcuerdoPersonalizado`, `guardarEncuadreTemporal`, `guardarEncuadreFinal`, `validarPreguntas`, `validarReglas`, `validarContrato`, `guardarPreguntasFinal` | ~290 | ⬜ |
-| 9.6 | Crear `diseno/wizard/step-tecnicas.js` — `recolectarTecnicas`, `cargarTecnicas`, `validarIntegracion`, `validarEnergizante`, `guardarTecnicasFinal`, `guardarTecnicasTemporal`, `restaurarDetalleIntegracionGuardado`, `restaurarNavegacionTecnicas`, `actualizarCamposPersonalizadosTecnicas`, `inicializarTecnicasPersonalizadasPorDefecto`, `obtenerRadioSeleccionado`, `buscarTecnica` | ~280 | ⬜ |
-| 9.7 | Crear `diseno/wizard/step-detalle-tecnicas.js` — `mostrarDetalleIntegracion`, `mostrarDetalleEnergizante` (renderizado de tablas de técnicas grupales) | ~100 | ⬜ |
-| 9.8 | Crear `diseno/wizard/step-expositiva.js` — `cargarExpositiva`, `recolectarExpositiva`, `guardarExpositivaTemporal`, `guardarExpositivaFinal`, `validarExpositiva`, `cargarObjetivoCognitivoExpositiva` | ~140 | ⬜ |
-| 9.9 | Crear `diseno/wizard/step-demostrativa.js` — `cargarDemostrativa`, `recolectarDemostrativa`, `guardarDemostrativaTemporal`, `guardarDemostrativaFinal`, `validarDemostrativa`, `cargarObjetivoPsicomotrizDemostrativa` | ~120 | ⬜ |
-| 9.10 | Crear `diseno/wizard/step-dialogo.js` — `cargarDialogo`, `recolectarDialogo`, `guardarDialogoTemporal`, `guardarDialogoFinal`, `validarDialogo`, `cargarObjetivoAfectivoDialogo` | ~110 | ⬜ |
-| 9.11 | Crear `diseno/wizard/step-cierre.js` — `cargarCierre`, `recolectarCierre`, `guardarCierreTemporal`, `guardarCierreFinal`, `validarCierre` | ~100 | ⬜ |
-| 9.12 | Crear `diseno/wizard/step-evaluaciones.js` — `cargarEvaluaciones`, `recolectarEvaluaciones`, `guardarEvaluacionesTemporal`, `guardarEvaluacionesFinal`, `validarEvaluaciones`, `actualizarPorcentajesEvaluacion`, `actualizarBotonDescripcionGeneral` | ~150 | ⬜ |
-| 9.13 | Crear `diseno/wizard/step-tiempos.js` — `cargarTiempos`, `guardarTiemposTemporal`, `renderTiempos`, `actualizarSubtotalesTiempos`, `actualizarTotalTiempos` | ~150 | ⬜ |
-| 9.14 | Crear `diseno/wizard/step-materiales.js` — `cargarMateriales`, `guardarMateriales`, `mensajeError`, `resetChecks` | ~100 | ⬜ |
-| 9.15 | Crear `diseno/wizard/step-formatos.js` — `poblarResumenExpediente` (W#9), `validarExpedienteCompleto` | ~85 | ⬜ |
+| 9.1 | Crear `diseno/wizard/step-datos.js` — `cargarDatosCurso`, `guardarDatosCurso`, `validarDatosCurso`, `limpiarErroresDatos`, `mostrarErrorDatos` + autocompletar perfil instructor (W#7) | ~220 | ✅ |
+| 9.2 | Crear `diseno/wizard/step-objetivos.js` — `cargarObjetivos`, `guardarObjetivos`, `guardarObjetivoLibre`, `validar` (cognitivo/psicomotriz/afectivo), `marcarCompleta`, `aplicarModoObjetivos`, `reiniciarAvanceObjetivosEstricto`, `intentarGenerarGeneral`, `objetivosTienenTextoMinimo`, `habilitarBeneficios` | ~250 | ✅ |
+| 9.3 | Crear `diseno/wizard/step-beneficios.js` — `cargarBeneficios`, `guardarBeneficios`, `validarBeneficios` | ~130 | ✅ |
+| 9.4 | Crear `diseno/wizard/step-temario.js` — `cargarTemario`, `guardarTemarioTemporal`, `guardarTemarioFinal`, `renderTemario`, `renderListaTemas`, `agregarTema`, `validarTemario`, `limpiarErroresTemario`, `temarioTieneDatos` | ~265 | ✅ |
+| 9.5 | Crear `diseno/wizard/step-encuadre.js` — `cargarEncuadre`, `recolectarEncuadre`, `inicializarContratoPorDefecto`, `obtenerChecksSeleccionados`, `copiarReglasSeleccionadasATextarea`, `renderAcuerdosPersonalizados`, `agregarAcuerdoPersonalizado`, `guardarEncuadreTemporal`, `guardarEncuadreFinal`, `validarPreguntas`, `validarReglas`, `validarContrato`, `guardarPreguntasFinal` | ~290 | ✅ |
+| 9.6 | Crear `diseno/wizard/step-tecnicas.js` — `recolectarTecnicas`, `cargarTecnicas`, `validarIntegracion`, `validarEnergizante`, `guardarTecnicasFinal`, `guardarTecnicasTemporal`, `restaurarDetalleIntegracionGuardado`, `restaurarNavegacionTecnicas`, `actualizarCamposPersonalizadosTecnicas`, `inicializarTecnicasPersonalizadasPorDefecto`, `obtenerRadioSeleccionado`, `buscarTecnica` | ~280 | ✅ |
+| 9.7 | Crear `diseno/wizard/step-detalle-tecnicas.js` — `mostrarDetalleIntegracion`, `mostrarDetalleEnergizante` (renderizado de tablas de técnicas grupales) | ~100 | ✅ |
+| 9.8 | Crear `diseno/wizard/step-expositiva.js` — `cargarExpositiva`, `recolectarExpositiva`, `guardarExpositivaTemporal`, `guardarExpositivaFinal`, `validarExpositiva`, `cargarObjetivoCognitivoExpositiva` | ~140 | ✅ |
+| 9.9 | Crear `diseno/wizard/step-demostrativa.js` — `cargarDemostrativa`, `recolectarDemostrativa`, `guardarDemostrativaTemporal`, `guardarDemostrativaFinal`, `validarDemostrativa`, `cargarObjetivoPsicomotrizDemostrativa` | ~120 | ✅ |
+| 9.10 | Crear `diseno/wizard/step-dialogo.js` — `cargarDialogo`, `recolectarDialogo`, `guardarDialogoTemporal`, `guardarDialogoFinal`, `validarDialogo`, `cargarObjetivoAfectivoDialogo` | ~110 | ✅ |
+| 9.11 | Crear `diseno/wizard/step-cierre.js` — `cargarCierre`, `recolectarCierre`, `guardarCierreTemporal`, `guardarCierreFinal`, `validarCierre` | ~100 | ✅ |
+| 9.12 | Crear `diseno/wizard/step-evaluaciones.js` — `cargarEvaluaciones`, `recolectarEvaluaciones`, `guardarEvaluacionesTemporal`, `guardarEvaluacionesFinal`, `validarEvaluaciones`, `actualizarPorcentajesEvaluacion`, `actualizarBotonDescripcionGeneral` | ~150 | ✅ |
+| 9.13 | Crear `diseno/wizard/step-tiempos.js` — `cargarTiempos`, `guardarTiemposTemporal`, `renderTiempos`, `actualizarSubtotalesTiempos`, `actualizarTotalTiempos` | ~150 | ✅ |
+| 9.14 | Crear `diseno/wizard/step-materiales.js` — `cargarMateriales`, `guardarMateriales`, `mensajeError`, `resetChecks` | ~100 | ✅ |
+| 9.15 | Crear `diseno/wizard/step-formatos.js` — `poblarResumenExpediente` (W#9), `validarExpedienteCompleto` | ~85 | ✅ |
 
 ---
 
