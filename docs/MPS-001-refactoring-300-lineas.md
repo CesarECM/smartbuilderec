@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 17 parcial (163/170 subsprints — solo falta 17.16 panel.html)
+**Estado:** EN PROGRESO — Sprint 17 completo (170/170 subsprints — falta Sprint 18 verificación final)
 
 ---
 
@@ -414,7 +414,7 @@
 | 17.13 | `getTemplate()` en `step-materiales.js` + seccionMateriales movida | ✅ |
 | 17.14 | `getTemplate()` en `step-formatos.js` + seccionFormatos movida | ✅ |
 | 17.15 | `getSidebarHTML()` en `ui-sidebar.js`. `main.js` inyecta sidebar + 17 secciones. `index.html` → 77 líneas ✅ | ✅ |
-| 17.16 | `panel.html` — mover HTML de cada sección (usuarios, planeaciones, soporte, admins, logs, ERP) a templates en `panel/` → panel.html queda ~80 líneas | ⬜ |
+| 17.16 | `panel.html` — mover HTML de cada sección (usuarios, planeaciones, soporte, admins, logs, ERP) a templates en `panel/` → panel.html queda ~80 líneas | ✅ |
 
 ---
 
