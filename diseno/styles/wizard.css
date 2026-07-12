@@ -1,0 +1,188 @@
+/* ════════════════════════════════════════════════════════════
+   SmartBuilder EC — Wizard EC0217: progreso y pasos
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Barra de progreso superior ────────────────────────── */
+#progress-bar-container {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+  padding: 12px 0 0;
+  margin: 0 -36px 28px;
+  box-shadow: var(--shadow-xs);
+}
+
+#progress-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 28px 11px;
+}
+
+#progress-step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-2);
+  white-space: nowrap;
+  min-width: 160px;
+}
+
+#progress-track {
+  flex: 1;
+  height: 5px;
+  background: var(--c-border);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-blue-600), var(--c-blue-400));
+  border-radius: var(--r-full);
+  transition: width 0.55s cubic-bezier(.4,0,.2,1);
+  width: 0%;
+}
+
+#progress-pct {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-blue-600);
+  white-space: nowrap;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ─── Secciones del wizard ───────────────────────────────── */
+.wizard-section { width: 100%; animation: sectionEnter 0.22s ease both; }
+
+@keyframes sectionEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hidden { display: none !important; }
+
+.paso-titulo {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-blue-400);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: var(--c-blue-50);
+  padding: 3px 10px;
+  border-radius: var(--r-full);
+  margin-bottom: 8px;
+}
+
+/* ─── Paso: Objetivos (tabs) ─────────────────────────────── */
+.objetivos-tabs { display: flex; gap: 10px; margin: 14px 0 22px; flex-wrap: wrap; }
+
+.objetivos-tabs .nav-item {
+  border: 1.5px solid var(--c-border-s);
+  background: var(--c-surface);
+  color: var(--c-text-2);
+  padding: 9px 18px;
+  border-radius: var(--r-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  box-shadow: var(--shadow-xs);
+}
+.objetivos-tabs .nav-item:hover:not(.disabled) { border-color: var(--c-blue-600); background: var(--c-blue-50); color: var(--c-blue-600); transform: translateY(-1px); }
+.objetivos-tabs .nav-item.active    { background: var(--c-blue-600); border-color: var(--c-blue-600); color: white; box-shadow: 0 4px 12px rgba(31,59,109,0.26); }
+.objetivos-tabs .nav-item.completed { background: var(--c-success); border-color: var(--c-success); color: white; }
+.objetivos-tabs .nav-item.disabled  { background: var(--c-surface-2); border-color: var(--c-border); color: var(--c-text-4); cursor: not-allowed; opacity: 0.7; }
+
+/* ─── Paso: Temario ──────────────────────────────────────── */
+.temas-lista { display: flex; flex-direction: column; gap: 7px; margin: 12px 0; }
+
+.tema-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--c-blue-50);
+  border: 1px solid var(--c-blue-100);
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  color: var(--c-blue-600);
+  font-weight: 500;
+  font-size: 14px;
+  transition: background var(--t-fast);
+}
+.tema-item:hover { background: var(--c-blue-100); }
+.tema-item button { background: var(--c-danger); color: white; border: none; border-radius: var(--r-xs); padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background var(--t-fast); }
+.tema-item button:hover { background: #b91c1c; }
+
+.tema-input-row { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+.tema-input-row input { flex: 1; }
+
+/* ─── Paso: Tabla de tiempos ─────────────────────────────── */
+.tiempos-wrapper { display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
+
+.tiempo-bloque { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow var(--t-base); }
+.tiempo-bloque:hover { box-shadow: var(--shadow-md); }
+
+.tiempo-bloque-header { background: linear-gradient(90deg, var(--c-blue-700), var(--c-blue-600)); color: white; padding: 13px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.tiempo-bloque-header h3 { margin: 0; font-size: 15px; font-weight: 700; }
+
+.tiempo-subtotal { background: rgba(255,255,255,0.17); padding: 5px 12px; border-radius: var(--r-full); font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+.tabla-tiempos { width: 100%; border-collapse: collapse; }
+.tabla-tiempos thead { background: var(--c-surface-2); }
+.tabla-tiempos th { padding: 11px 16px; color: var(--c-text-2); text-align: left; font-size: 12.5px; font-weight: 700; border-bottom: 1px solid var(--c-border); text-transform: uppercase; letter-spacing: 0.05em; }
+.tabla-tiempos td { padding: 11px 16px; border-bottom: 1px solid var(--c-border); vertical-align: middle; font-size: 14px; color: var(--c-text); }
+.tabla-tiempos tbody tr:last-child td { border-bottom: none; }
+.tabla-tiempos tbody tr:hover { background: var(--c-blue-50); }
+
+.col-tiempo { width: 156px; }
+.input-tiempo-wrapper { display: flex; align-items: center; gap: 8px; }
+.input-tiempo { width: 78px; padding: 8px 10px; border: 1.5px solid var(--c-border-s); border-radius: var(--r-sm); font-size: 15px; font-family: inherit; text-align: center; outline: none; transition: border-color var(--t-fast), box-shadow var(--t-fast); }
+.input-tiempo:focus { border-color: var(--c-blue-600); box-shadow: 0 0 0 3px rgba(31,59,109,0.11); }
+.min-label { color: var(--c-text-3); font-size: 13px; }
+
+.total-tiempos-card { margin-top: 18px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: 17px 22px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm); }
+.total-tiempos-card h3 { margin: 0; color: var(--c-text-2); font-size: 15px; }
+.total-tiempos-numero { font-size: 30px; font-weight: 800; color: var(--c-blue-600); }
+
+.total-correcto { background: var(--c-success-light); border-color: #6EE7B7; }
+.total-correcto .total-tiempos-numero { color: var(--c-success); }
+.total-error    { background: var(--c-danger-light);  border-color: #FCA5A5; }
+.total-error .total-tiempos-numero    { color: var(--c-danger); }
+
+#err-tiempos { display: none; margin-top: 14px; padding: 13px 18px; border-radius: var(--r-md); background: var(--c-danger-light); border: 1px solid #FCA5A5; color: var(--c-danger); font-size: 15px; font-weight: 600; text-align: center; }
+
+/* ─── Paso: Evaluaciones ─────────────────────────────────── */
+.evaluacion-porcentajes-card { margin: 20px 0 24px; padding: 22px; border-radius: var(--r-xl); background: var(--c-surface); border: 1px solid var(--c-border); box-shadow: var(--shadow-sm); }
+
+.evaluacion-diagnostica-card { margin-bottom: 18px; padding: 16px; border-radius: var(--r-lg); background: var(--c-surface-2); border: 1px solid var(--c-border); text-align: center; }
+.evaluacion-diagnostica-card span   { display: block; color: var(--c-text-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.evaluacion-diagnostica-card strong { display: block; margin: 8px 0; color: var(--c-blue-600); font-size: 36px; line-height: 1; }
+.evaluacion-diagnostica-card small  { color: var(--c-text-3); font-size: 13px; }
+
+.evaluacion-valores { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.evaluacion-valor-card { padding: 16px; border-radius: var(--r-lg); background: var(--c-surface-2); border: 1px solid var(--c-border); text-align: center; }
+.evaluacion-label { display: block; margin-bottom: 8px; color: var(--c-text-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.evaluacion-valor-card strong { display: block; color: var(--c-blue-600); font-size: 36px; line-height: 1; font-weight: 800; }
+
+.valor-fijo-evaluacion { margin-top: 8px; padding: 12px 16px; border-radius: var(--r-md); background: var(--c-blue-50); border: 1px solid var(--c-blue-100); color: var(--c-blue-600); font-size: 20px; font-weight: 700; text-align: center; }
+
+.slider-contenedor label { display: block; margin-bottom: 12px; color: var(--c-text-2); font-size: 15px; font-weight: 700; }
+
+#sliderEvaluaciones { width: 100%; height: 12px; border-radius: var(--r-full); outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background: var(--c-border); }
+#sliderEvaluaciones::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: white; border: 3px solid var(--c-blue-600); box-shadow: 0 2px 10px rgba(31,59,109,0.28); cursor: grab; transition: transform var(--t-fast); }
+#sliderEvaluaciones::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.12); }
+#sliderEvaluaciones::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: white; border: 3px solid var(--c-blue-600); box-shadow: 0 2px 10px rgba(31,59,109,0.28); cursor: grab; }
+
+.slider-extremos { display: flex; justify-content: space-between; margin-top: 10px; color: var(--c-text-3); font-size: 12px; font-weight: 600; }
+
+/* ─── Paso: Formatos / descarga ──────────────────────────── */
+.formatos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 15px; margin-top: 20px; }
+
+.formato-card { border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: 18px 20px; background: var(--c-surface); box-shadow: var(--shadow-sm); transition: box-shadow var(--t-base), transform var(--t-base); border-left: 4px solid var(--c-blue-600); }
+.formato-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.formato-card h3 { margin-top: 0; color: var(--c-text); font-size: 14.5px; }
+.formato-card p  { color: var(--c-text-3); font-size: 13px; margin-bottom: 0; }

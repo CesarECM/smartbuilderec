@@ -1,0 +1,11 @@
+/* ════════════════════════════════════════════════════════════
+   SmartBuilder EC — Sistema de Diseño v2.0 (entrada)
+   ════════════════════════════════════════════════════════════ */
+
+@import url('variables.css');
+@import url('base.css');
+@import url('layout.css');
+@import url('forms.css');
+@import url('components.css');
+@import url('wizard.css');
+@import url('responsive.css');

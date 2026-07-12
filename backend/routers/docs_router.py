@@ -29,9 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def _generar_planeacion_docx(payload: dict) -> bytes:
-    script_path = BASE_DIR / "generar_planeacion.js"
+    script_path = BASE_DIR / "generators" / "index.js"
     if not script_path.exists():
-        raise FileNotFoundError("No se encontró generar_planeacion.js en el backend")
+        raise FileNotFoundError("No se encontró generators/index.js en el backend")
 
     ev = payload.get("evaluaciones", {})
     payload["evaluaciones"] = {

@@ -1,0 +1,57 @@
+/* ════════════════════════════════════════════════════════════
+   SmartBuilder EC — Tokens del sistema (variables)
+   ════════════════════════════════════════════════════════════ */
+
+:root {
+  --c-blue-900: #0f1e3c;
+  --c-blue-800: #162d58;
+  --c-blue-700: #1a3464;
+  --c-blue-600: #1F3B6D;
+  --c-blue-500: #2952a3;
+  --c-blue-400: #4B8EF5;
+  --c-blue-100: #DBEAFE;
+  --c-blue-50:  #EFF6FF;
+
+  --c-ai:       #7C3AED;
+  --c-ai-dark:  #5B21B6;
+  --c-ai-light: #EDE9FE;
+
+  --c-success:       #059669;
+  --c-success-light: #D1FAE5;
+  --c-danger:        #DC2626;
+  --c-danger-light:  #FEE2E2;
+  --c-warning:       #D97706;
+  --c-warning-light: #FEF3C7;
+
+  --c-bg:        #EFF3FB;
+  --c-surface:   #FFFFFF;
+  --c-surface-2: #F8FAFD;
+  --c-border:    #DDE5F0;
+  --c-border-s:  #C4D0E5;
+
+  --c-text:   #0D1B35;
+  --c-text-2: #2D4470;
+  --c-text-3: #5E78A0;
+  --c-text-4: #8FA5C8;
+
+  --sb-width:  260px;
+  --sb-bg:     linear-gradient(180deg, #1a3464 0%, #0f1e3c 100%);
+  --sb-text:   rgba(255,255,255,0.68);
+  --sb-active: #ffffff;
+  --sb-accent: #60A5FA;
+  --sb-done:   #34D399;
+  --sb-hover:  rgba(255,255,255,0.07);
+
+  --r-xs: 4px;  --r-sm: 8px;  --r-md: 12px;
+  --r-lg: 16px; --r-xl: 22px; --r-full: 9999px;
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm: 0 2px 8px rgba(31,59,109,0.09);
+  --shadow-md: 0 4px 16px rgba(31,59,109,0.13);
+  --shadow-lg: 0 10px 32px rgba(31,59,109,0.18);
+  --shadow-ai: 0 4px 20px rgba(124,58,237,0.32);
+
+  --t-fast: 120ms ease;
+  --t-base: 200ms ease;
+  --t-slow: 320ms ease;
+}
