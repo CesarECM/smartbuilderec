@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-11  
 **Objetivo:** Ningún archivo del proyecto supera 300 líneas. Mejorar mantenibilidad y coherencia arquitectónica sin romper funcionalidad.  
-**Estado:** EN PROGRESO — Sprint 14 completado (130/170 subsprints)
+**Estado:** EN PROGRESO — Sprint 15 completado (141/170 subsprints)
 
 ---
 
@@ -354,17 +354,25 @@
 
 | # | Subsprint | Archivos | Líneas aprox. | Estado |
 |---|---|---|---|---|
-| 15.1 | Mapear secciones de `panel.js`: identificar funciones por pestaña del panel | — | — | ⬜ |
-| 15.2 | Crear `diseno/panel/panel-auth.js` — `authGuard`, `getUserProfile`, detección de rol, banner "Editando planeación de..." | nuevo | ~100 | ⬜ |
-| 15.3 | Crear `diseno/panel/panel-nav.js` — navegación entre pestañas, hash URL, apertura por defecto | nuevo | ~80 | ⬜ |
-| 15.4 | Crear `diseno/panel/panel-usuarios.js` — CRUD usuarios (crear, listar, activar/desactivar, eliminar), tabla con dropdowns, códigos de acceso | nuevo | ~280 | ⬜ |
-| 15.5 | Crear `diseno/panel/panel-planeaciones.js` — listado de planeaciones, transferencia entre usuarios, abrir en wizard, ver detalle | nuevo | ~250 | ⬜ |
-| 15.6 | Crear `diseno/panel/panel-soporte.js` — tickets (listar, resolver), FAQs (CRUD, votos), KB, bajo rendimiento, análisis IA | nuevo | ~280 | ⬜ |
-| 15.7 | Crear `diseno/panel/panel-admins.js` — gestión de admins (superadmin), asignación de créditos, resumen global | nuevo | ~200 | ⬜ |
-| 15.8 | Crear `diseno/panel/panel-logs.js` — pestaña 📋 Logs, tabla event_logs, filtros | nuevo | ~100 | ⬜ |
-| 15.9 | Crear `diseno/panel/panel-erp.js` — alumnos, asignaciones, pagos, proceso de certificación, roles | nuevo | ~280 | ⬜ |
-| 15.10 | Crear `diseno/panel/panel-main.js` — entry point: importa todos, init, expone en `window.*` lo necesario para handlers HTML | nuevo | ~60 | ⬜ |
-| 15.11 | Actualizar `diseno/panel.html`: reemplazar el `<script src="panel.js">` por los scripts de `panel/` o por `<script type="module" src="panel/panel-main.js">` | panel.html | ⬜ |
+| 15.1 | Mapear secciones de `panel.js`: identificar funciones por pestaña del panel | — | — | ✅ |
+| 15.2 | Crear `diseno/panel/panel-shared.js` — BACKEND_URL, globals var, apiFetch, mostrarToast, role switcher (determinarRoles, renderRoleSwitcher, switchRol, cargarPanel) | nuevo | 74 | ✅ |
+| 15.3 | Crear `diseno/panel/panel-alumno.js` — Panel alumno completo + asesor + evaluador + _tiempoRel | nuevo | 342 | ✅ |
+| 15.4 | Crear `diseno/panel/panel-admin-usuarios.js` — admInit, admShowTab, admCargarStats, admCargarUsuarios, admRenderTablaUsuarios, admToggleUsuario, admEliminarUsuario | nuevo | 216 | ✅ |
+| 15.5 | Crear `diseno/panel/panel-admin-codigos.js` — admCargarCodigos, admGenerarCodigo, admEliminarCodigo, admCopiarCodigo | nuevo | 168 | ✅ |
+| 15.6 | Crear `diseno/panel/panel-admin-planeaciones.js` — admCargarMisCursos, modals de transferir/user-cursos/promover, ficha de contacto | nuevo | 225 | ✅ |
+| 15.7 | Crear `diseno/panel/panel-sa-init.js` — saInit, saShowTab, saCargarStats, saVerDetalleAdmin, saEditarCreditos, vigencia utils | nuevo | 229 | ✅ |
+| 15.8 | Crear `diseno/panel/panel-sa-vigencias.js` — saVerDetalleAlumno, saBuscarUsuario, saCargarVigencia, saAbrirModalRenovar, saConfirmarCrearAdmin | nuevo | 274 | ✅ |
+| 15.9 | Crear `diseno/panel/panel-sa-integraciones.js` — _SA_INTEG_META, _sa_classifyError, verificarIntegraciones | nuevo | 135 | ✅ |
+| 15.9b | Crear `diseno/panel/panel-sa-usuarios.js` — saCrearUsuario, saToggleUsuarioSA, saAbrirReasignar, saAbrirEliminarUsuario, saResetPassword | nuevo | 229 | ✅ |
+| 15.9c | Crear `diseno/panel/panel-sa-plataforma.js` — saCargarCursos, saCargarCursosPorAdmin, saAbrirTransferirSA, saCargarAuditLog | nuevo | 274 | ✅ |
+| 15.9d | Crear `diseno/panel/panel-sa-tabla.js` — saCargarTablaUnificada, saRenderTablaUnificada, saToggleRol, sa_RefrescarFilaRoles | nuevo | 340 | ✅ |
+| 15.9e | Crear `diseno/panel/panel-sa-templates.js` — saCargarPlantillas, saEditarTemplate, saGuardarTemplate, saTestearTemplate | nuevo | 143 | ✅ |
+| 15.9f | Crear `diseno/panel/panel-sa-logs.js` — _esc, saShowSoporteTab, saCargarLogs, saCargarKB, sa_CargarBadges | nuevo | 129 | ✅ |
+| 15.9g | Crear `diseno/panel/panel-sa-tickets.js` — saCargarTicketsSA, saAbrirTicketSA, saResolverTicketSA | nuevo | 176 | ✅ |
+| 15.9h | Crear `diseno/panel/panel-sa-kb.js` — saCargarFaqs, saGuardarFaq, saCargarRecursos, saGuardarRecurso | nuevo | 253 | ✅ |
+| 15.9i | Crear `diseno/panel/panel-sa-sugerencias.js` — saCargarBajoRendimiento, saCargarSugerencias, sa_RenderSugerencias, saAccionSugerencia | nuevo | 270 | ✅ |
+| 15.10 | Crear `diseno/panel/panel-main.js` — init() + init() call (entry point) | nuevo | 27 | ✅ |
+| 15.11 | Actualizar `diseno/panel.html`: reemplazar `<script src="panel.js">` por 17 scripts de `panel/`. Vaciar `panel.js` con comentario redirect. | panel.html | ✅ |
 
 ---
 
