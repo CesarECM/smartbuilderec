@@ -1,0 +1,172 @@
+    /* ── Plantillas de email ─────────────────────────────────────── */
+    .tpl-list           { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .tpl-card           { background: var(--c-surface); border: 1.5px solid var(--c-border); border-radius: var(--r-lg); padding: 18px 20px; cursor: pointer; transition: all 0.15s; }
+    .tpl-card:hover     { border-color: #7c3aed; box-shadow: 0 2px 12px rgba(124,58,237,0.1); }
+    .tpl-card.active    { border-color: #7c3aed; background: #faf5ff; }
+    .tpl-slug           { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #7c3aed; margin-bottom: 4px; }
+    .tpl-nombre         { font-size: 13px; font-weight: 700; color: var(--c-text); margin-bottom: 2px; }
+    .tpl-updated        { font-size: 11px; color: var(--c-text-3); }
+    .tpl-editor         { background: var(--c-surface); border: 1.5px solid #c4b5fd; border-radius: var(--r-xl); padding: 24px 26px; display: none; }
+    .tpl-editor.visible { display: block; }
+    .tpl-editor-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 10px; flex-wrap: wrap; }
+    .tpl-editor-title   { font-size: 15px; font-weight: 700; color: var(--c-text); }
+    .tpl-editor-actions { display: flex; gap: 8px; }
+    .tpl-field          { margin-bottom: 14px; }
+    .tpl-field label    { display: block; font-size: 12px; font-weight: 600; color: var(--c-text-2); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 5px; }
+    .tpl-field input, .tpl-field textarea { width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1.5px solid var(--c-border); border-radius: var(--r-sm); font-size: 13px; font-family: monospace; background: var(--c-surface-2); color: var(--c-text); outline: none; transition: border-color 0.2s; resize: vertical; }
+    .tpl-field input    { font-family: inherit; }
+    .tpl-field input:focus, .tpl-field textarea:focus { border-color: #7c3aed; }
+    .tpl-vars           { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .tpl-var-chip       { background: #ede9fe; color: #5b21b6; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; cursor: pointer; font-family: monospace; border: none; transition: background 0.15s; }
+    .tpl-var-chip:hover { background: #7c3aed; color: white; }
+    .tpl-preview        { border: 1.5px solid var(--c-border); border-radius: var(--r-md); min-height: 200px; overflow: auto; background: white; }
+    .tpl-preview iframe { width: 100%; min-height: 300px; border: none; display: block; }
+
+    /* ── Soporte: inner tabs ────────────────────────────────────── */
+    .sp-tab-bar        { display: flex; gap: 4px; flex-wrap: wrap; margin: -28px -20px 20px; padding: 0 12px; background: var(--c-surface-2); border-bottom: 1.5px solid var(--c-border); position: sticky; top: 56px; z-index: 10; }
+    .sp-tab-btn        { padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--c-text-3); background: transparent; border: none; border-bottom: 2.5px solid transparent; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s; display: flex; align-items: center; gap: 5px; }
+    .sp-tab-btn:hover  { color: var(--c-text); }
+    .sp-tab-btn.active { color: var(--c-blue-600); border-bottom-color: var(--c-blue-600); }
+    .sp-panel          { display: none; padding-top: 4px; }
+    .sp-panel.active   { display: block; }
+    .sp-badge          { background: #dc2626; color: #fff; border-radius: 9999px; font-size: 10px; font-weight: 700; padding: 1px 6px; display: inline-block; }
+    .sp-badge:empty    { display: none; }
+    .sp-badge-gray     { background: #6b7280; }
+
+    /* ── Media queries base ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .panel-main      { padding: 16px 14px; }
+      .header-title    { display: none; }
+      .search-input    { width: 140px; }
+      .stats-row       { grid-template-columns: 1fr 1fr; }
+      .integ-grid      { grid-template-columns: 1fr 1fr; }
+      .semaforo-stats  { grid-template-columns: 1fr; }
+      .crear-admin-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PANEL ALUMNO — estilos exclusivos
+    ═══════════════════════════════════════════════════════════════ */
+
+    /* ── Datos personales ───────────────────────────────────────── */
+    .alm-datos-card {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-xl); padding: 20px 22px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .alm-dato { display: flex; flex-direction: column; gap: 3px; }
+    .alm-dato-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--c-text-3);
+    }
+    .alm-dato-val { font-size: 13px; font-weight: 500; color: var(--c-text); }
+    .alm-dato-empty { color: var(--c-text-4); font-style: italic; }
+    .alm-dato-curric { grid-column: 1 / -1; }
+    .alm-dato-curric .alm-dato-val {
+      white-space: pre-wrap; word-break: break-word;
+      max-height: 80px; overflow: hidden; position: relative;
+    }
+
+    /* ── Formulario de edición ──────────────────────────────────── */
+    .alm-form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-xl); padding: 20px 22px;
+    }
+    .alm-field { display: flex; flex-direction: column; gap: 5px; }
+    .alm-field label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: var(--c-text-2);
+    }
+    .alm-input {
+      border: 1.5px solid var(--c-border); border-radius: var(--r-sm);
+      padding: 8px 11px; font-size: 13px; font-family: inherit;
+      background: var(--c-surface-2); color: var(--c-text);
+      outline: none; transition: border-color 0.15s; resize: vertical;
+    }
+    .alm-input:focus  { border-color: var(--c-blue-600); }
+    .alm-hint { font-size: 11px; color: var(--c-text-3); }
+    .alm-form-actions {
+      display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px;
+    }
+    @media (max-width: 600px) {
+      .alm-form-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Slots counter ──────────────────────────────────────────── */
+    .alm-slots-counter {
+      font-size: 11px; font-weight: 700; color: var(--c-text-3);
+      background: var(--c-surface-2); border: 1px solid var(--c-border);
+      border-radius: 20px; padding: 4px 12px; white-space: nowrap;
+    }
+    .alm-slots-counter.warn { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+    .alm-slots-counter.full { color: #991b1b; background: #fee2e2; border-color: #fca5a5; }
+
+    /* ── Banner de modo degradado ───────────────────────────────── */
+    .alm-degradado-banner {
+      background: #fef3c7; border: 1px solid #fde68a; color: #92400e;
+      border-radius: var(--r-lg); padding: 10px 16px;
+      font-size: 13px; font-weight: 600; margin-bottom: 14px;
+    }
+
+    /* ── Tarjetas de planeación ─────────────────────────────────── */
+    .alm-plan-card {
+      background: var(--c-surface); border: 1px solid var(--c-border);
+      border-radius: var(--r-xl); padding: 16px 18px; margin-bottom: 10px;
+      transition: box-shadow 0.15s;
+    }
+    .alm-plan-card:hover { box-shadow: var(--shadow-sm); }
+    .alm-plan-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    .alm-plan-info { flex: 1; min-width: 0; }
+    .alm-plan-title { font-size: 14px; font-weight: 700; color: var(--c-text); margin-bottom: 3px; }
+    .alm-plan-meta  { font-size: 12px; color: var(--c-text-3); }
+    .alm-plan-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+    .alm-prog-wrap {
+      height: 5px; background: var(--c-border); border-radius: 99px; overflow: hidden;
+    }
+    .alm-prog-fill {
+      height: 100%; background: linear-gradient(90deg, var(--c-blue-500), var(--c-blue-400));
+      border-radius: 99px; transition: width 0.4s ease;
+    }
+    .alm-prog-fill.completa { background: linear-gradient(90deg, #059669, #34d399); }
+
+    /* ── Stepper de certificación ───────────────────────────────── */
+    .alm-stepper {
+      display: flex; gap: 0; background: var(--c-surface);
+      border: 1px solid var(--c-border); border-radius: var(--r-xl);
+      padding: 24px 20px; overflow-x: auto;
+    }
+    .alm-step {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; min-width: 120px; position: relative; text-align: center;
+    }
+    .alm-step-line {
+      position: absolute; top: 20px; left: 50%; right: -50%;
+      height: 2px; background: var(--c-border); z-index: 0;
+    }
+    .alm-step-last .alm-step-line { display: none; }
+    .alm-step-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--c-surface-2); border: 2px solid var(--c-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; position: relative; z-index: 1; margin-bottom: 10px;
+    }
+    .alm-step-active .alm-step-icon {
+      background: var(--c-blue-600); border-color: var(--c-blue-600);
+    }
+    .alm-icon-pending { filter: grayscale(1); opacity: 0.5; }
+    .alm-step-label {
+      font-size: 12px; font-weight: 700; color: var(--c-text); margin-bottom: 4px;
+    }
+    .alm-step-status {
+      font-size: 11px; font-weight: 600; color: var(--c-text-3);
+      background: var(--c-surface-2); border: 1px solid var(--c-border);
+      padding: 2px 8px; border-radius: 20px; margin-bottom: 2px;
+    }
+    .alm-status-active { background: #dbeafe; color: var(--c-blue-600); border-color: #93c5fd; }
+    .alm-step-note { font-size: 10px; color: var(--c-text-4); margin-top: 4px; }
+    @media (max-width: 600px) {
+      .alm-stepper  { flex-direction: column; gap: 20px; }
+      .alm-step-line { display: none; }
+    }

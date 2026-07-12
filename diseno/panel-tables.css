@@ -1,0 +1,164 @@
+    /* ── Tablas genéricas ───────────────────────────────────────── */
+    .table-wrap { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); overflow: hidden; overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-3); border-bottom: 2px solid var(--c-border); background: var(--c-surface-2); white-space: nowrap; }
+    .data-table td { padding: 11px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; color: var(--c-text-2); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td      { background: rgba(0,0,0,0.016); }
+
+    /* ── Credits alert ─────────────────────────────────────────── */
+    .credits-alert { background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--r-md); padding: 12px 16px; font-size: 13px; color: #92400e; display: none; align-items: center; gap: 8px; margin-top: 12px; }
+    .credits-alert.visible { display: flex; }
+
+    /* ── Panel crear usuario ────────────────────────────────────── */
+    .crear-panel { background: var(--c-surface); border: 1.5px solid #bfdbfe; border-radius: var(--r-xl); padding: 20px 22px; margin-bottom: 20px; display: none; }
+    .crear-panel.visible { display: block; }
+    .crear-panel > p { font-size: 13px; color: var(--c-text-2); margin-bottom: 14px; }
+    .crear-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .crear-field { display: flex; flex-direction: column; gap: 4px; }
+    .crear-field.full { grid-column: 1 / -1; }
+    .crear-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .crear-field input { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 8px 10px; font-size: 13px; font-family: inherit; background: var(--c-surface); outline: none; transition: border-color 0.2s; }
+    .crear-field input:focus { border-color: var(--c-blue-600); }
+    .crear-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .crear-msg { font-size: 12px; margin-top: 8px; }
+    .crear-msg.error { color: var(--c-danger); }
+    .crear-msg.ok    { color: #059669; }
+
+    /* ── Code cards ─────────────────────────────────────────────── */
+    .code-grid     { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .code-card     { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); padding: 16px 18px; transition: box-shadow 0.15s; }
+    .code-card:hover { box-shadow: var(--shadow-sm); }
+    .code-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .code-text     { font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700; color: var(--c-blue-700); letter-spacing: 3px; background: var(--c-blue-50); padding: 5px 12px; border-radius: var(--r-sm); }
+    .code-meta     { font-size: 11px; color: var(--c-text-3); margin-bottom: 12px; line-height: 1.6; }
+    .code-actions  { display: flex; gap: 6px; }
+    .badge-disponible { background: #dbeafe; color: #1e40af; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+    .badge-usado      { background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+    .badge-expirado   { background: #fee2e2; color: #991b1b; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+
+    /* ── Empty state ────────────────────────────────────────────── */
+    .empty-state      { text-align: center; padding: 40px 20px; background: var(--c-surface); border: 2px dashed var(--c-border); border-radius: var(--r-xl); }
+    .empty-state-icon { font-size: 38px; margin-bottom: 12px; }
+    .empty-state h3   { font-size: 15px; font-weight: 700; color: var(--c-text); margin-bottom: 6px; }
+    .empty-state p    { font-size: 13px; color: var(--c-text-3); margin-bottom: 18px; }
+
+    /* ── Historial colapsable ───────────────────────────────────── */
+    .historial-section  { margin-top: 20px; }
+    .historial-summary  {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 700; color: var(--c-text-2);
+      padding: 10px 14px; background: var(--c-surface-2);
+      border-radius: var(--r-md); border: 1px solid var(--c-border);
+      list-style: none; user-select: none;
+    }
+    .historial-summary::-webkit-details-marker { display: none; }
+    .historial-summary::before { content: "▶"; font-size: 10px; transition: transform 0.2s; color: var(--c-text-3); margin-right: 2px; }
+    details[open] .historial-summary::before { transform: rotate(90deg); }
+    .vigencia-select { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 6px 10px; font-size: 12px; font-family: inherit; background: var(--c-surface); color: var(--c-text-2); cursor: pointer; outline: none; transition: border-color 0.2s; }
+    .vigencia-select:focus { border-color: var(--c-blue-600); }
+
+    /* ── Progress bar (admin) ───────────────────────────────────── */
+    .prog-bar-wrap { width: 72px; background: var(--c-border); border-radius: 4px; height: 6px; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+    .prog-bar-fill { height: 6px; border-radius: 4px; background: var(--c-blue-600); }
+    .prog-bar-fill.completa { background: #059669; }
+
+    /* ── Ticket badges ──────────────────────────────────────────── */
+    .badge-nuevo      { background: #fee2e2; color: #991b1b; }
+    .badge-en_revision{ background: #fef9c3; color: #92400e; }
+    .badge-resuelto   { background: #d1fae5; color: #065f46; }
+    .badge-count      { background: #dc2626; color: #fff; border-radius: 9999px; font-size: 10px; font-weight: 700; padding: 1px 6px; margin-left: 4px; display: inline-block; }
+    .badge-count:empty { display: none; }
+
+    /* ── Chat transcript (ticket) ───────────────────────────────── */
+    .chat-transcript  { max-height: 320px; overflow-y: auto; padding: 14px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--c-border); display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .ct-msg           { display: flex; max-width: 90%; }
+    .ct-msg--user     { align-self: flex-end; }
+    .ct-msg--assistant{ align-self: flex-start; }
+    .ct-bubble        { padding: 8px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; }
+    .ct-msg--user .ct-bubble      { background: #1F3B6D; color: #fff; border-bottom-right-radius: 3px; }
+    .ct-msg--assistant .ct-bubble { background: #fff; color: #1a1a1a; border: 1px solid var(--c-border); border-bottom-left-radius: 3px; }
+    .ct-role-label    { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--c-text-3); margin-bottom: 2px; }
+
+    /* ── Tarjeta perfil incompleto ──────────────────────────────── */
+    .card-pi       { background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--r-lg); padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+    .card-pi-icon  { font-size: 20px; flex-shrink: 0; }
+    .card-pi-body  { flex: 1; min-width: 0; }
+    .card-pi-title { font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 2px; }
+    .card-pi-desc  { font-size: 13px; color: #b45309; }
+    .card-pi-btn   { background: #d97706; color: white; border: none; padding: 8px 14px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
+    .card-pi-btn:hover { background: #b45309; }
+
+    /* ── Perfil form ────────────────────────────────────────────── */
+    .perfil-card  { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); padding: 24px 28px; }
+    .perfil-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .perfil-field { display: flex; flex-direction: column; gap: 5px; }
+    .perfil-field.full  { grid-column: 1 / -1; }
+    .perfil-field label { font-size: 12px; font-weight: 600; color: var(--c-text-2); }
+    .perfil-field input { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 9px 11px; font-size: 14px; font-family: inherit; background: var(--c-surface); outline: none; transition: border-color 0.2s; }
+    .perfil-field input:focus    { border-color: var(--c-blue-600); }
+    .perfil-field input:disabled { background: var(--c-surface-2); color: var(--c-text-3); cursor: not-allowed; }
+    .perfil-field input.valid    { border-color: #059669; }
+    .perfil-field input.invalid  { border-color: #dc2626; }
+    .email-wrap       { position: relative; display: flex; align-items: center; }
+    .email-wrap input { padding-right: 36px; width: 100%; box-sizing: border-box; }
+    .email-wrap .lock-icon { position: absolute; right: 10px; font-size: 13px; color: var(--c-text-3); pointer-events: none; }
+    .perfil-hint    { font-size: 11px; margin-top: 3px; }
+    .perfil-hint.ok { color: #059669; }
+    .perfil-hint.err{ color: #dc2626; }
+    .perfil-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .perfil-msg     { font-size: 13px; }
+    .perfil-msg.ok  { color: #059669; }
+    .perfil-msg.err { color: #dc2626; }
+    .btn-guardar-perfil { background: var(--c-blue-600); color: white; border: none; padding: 9px 18px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
+    .btn-guardar-perfil:hover { background: var(--c-blue-700); }
+
+    /* ── Modal base (shared admin + SA) ────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal-box   { background: var(--c-surface); border-radius: var(--r-xl); box-shadow: 0 24px 64px rgba(0,0,0,0.22); width: 100%; max-width: 440px; padding: 28px 28px 24px; position: relative; margin: auto; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: var(--c-surface-2); border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer; color: var(--c-text-3); }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+    .modal-sub   { font-size: 13px; color: var(--c-text-3); margin-bottom: 18px; }
+    .modal-btns  { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .form-field  { display: flex; flex-direction: column; gap: 4px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { font-size: 11px; font-weight: 600; color: var(--c-text-2); }
+    .form-field input { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
+    .form-field input:focus { border-color: var(--c-blue-600); }
+    .form-msg    { font-size: 12px; margin-top: 6px; }
+    .form-msg.ok { color: #059669; }
+    .form-msg.err{ color: var(--c-danger); }
+
+    /* ── Modal ticket (tk-) ────────────────────────────────────── */
+    .tk-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: none; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
+    .tk-modal-overlay.open { display: flex; }
+    .tk-modal-box   { background: var(--c-surface); border-radius: var(--r-xl); box-shadow: 0 24px 64px rgba(0,0,0,0.22); width: 100%; max-width: 680px; padding: 28px 32px; position: relative; margin: auto; }
+    .tk-modal-close { position: absolute; top: 14px; right: 14px; background: var(--c-surface-2); border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 13px; cursor: pointer; color: var(--c-text-3); }
+    .tk-label    { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-3); margin-bottom: 6px; display: block; }
+    .tk-textarea { width: 100%; box-sizing: border-box; border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 9px 12px; font-size: 13px; font-family: inherit; background: var(--c-surface); resize: vertical; outline: none; transition: border-color 0.15s; }
+    .tk-textarea:focus { border-color: var(--c-blue-600); }
+
+    /* ── SA: stat-card variante purple ─────────────────────────── */
+    .stat-card.purple .stat-num { color: #7c3aed; }
+    .stat-card.purple .stat-icon { background: #ede9fe; }
+
+    /* ── SA: admin avatar + info ────────────────────────────────── */
+    .admin-avatar  { width: 34px; height: 34px; border-radius: 50%; background: #ede9fe; color: #7c3aed; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .admin-nombre  { font-size: 13px; font-weight: 600; color: var(--c-text); }
+    .admin-email   { font-size: 11px; color: var(--c-text-3); }
+
+    /* ── SA: créditos en modal detalle ─────────────────────────── */
+    .credits-display { font-size: 28px; font-weight: 800; color: var(--c-blue-600); line-height: 1; }
+    .credits-input   { border: 1.5px solid var(--c-border); border-radius: var(--r-sm); padding: 7px 10px; font-size: 14px; font-family: inherit; width: 100%; box-sizing: border-box; outline: none; transition: border-color 0.2s; }
+    .credits-input:focus { border-color: var(--c-blue-600); }
+    .credits-used  { font-size: 12px; color: var(--c-text-3); margin-top: 4px; }
+    .credits-hint  { font-size: 11px; color: var(--c-text-3); margin-top: 6px; }
+
+    /* ── SA: vigencia badge ─────────────────────────────────────── */
+    .vigencia-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+    .vb-verde       { background: #d1fae5; color: #065f46; }
+    .vb-amarillo    { background: #fef3c7; color: #92400e; }
+    .vb-rojo        { background: #fee2e2; color: #991b1b; }
+
