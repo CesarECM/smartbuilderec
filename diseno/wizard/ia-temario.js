@@ -2,6 +2,7 @@
 // generarTemarioIA: sugiere temas para las 3 unidades con IA
 
 import { llamarIA } from "./api.js";
+import { guardarUndo, mostrarUndo } from "./undo.js";
 
 const _temario = () => window.sbeTemario || { u1: [], u2: [], u3: [] };
 
@@ -31,6 +32,7 @@ export async function generarTemarioIA() {
   const loaderTemario   = document.getElementById("loaderTemario");
   const btnGenerarTemario = document.getElementById("btnGenerarTemario");
 
+  guardarUndo("ec0217_temario", "cargarTemario");
   try {
     if (loaderTemario) loaderTemario.style.display = "block";
     if (btnGenerarTemario) btnGenerarTemario.disabled = true;
@@ -52,6 +54,7 @@ export async function generarTemarioIA() {
     if (typeof window.guardarTemarioTemporal  === "function") window.guardarTemarioTemporal();
     if (typeof window.renderTemario           === "function") window.renderTemario();
     if (typeof window.limpiarErroresTemario   === "function") window.limpiarErroresTemario();
+    mostrarUndo("Temario");
 
   } catch (err) {
     console.error("Error al generar temario:", err);

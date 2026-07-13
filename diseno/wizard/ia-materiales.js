@@ -4,6 +4,7 @@
 
 import { llamarIA } from "./api.js";
 import { BACKEND_URL } from "./config.js";
+import { guardarUndo, mostrarUndo, iniciarBatch, finalizarBatch } from "./undo.js";
 
 // fetchConTimeout con fallback a fetch nativo (igual que api.js)
 function _fetchIA() {
@@ -36,6 +37,7 @@ export async function generarMaterialesIA(tecnica) {
   const demostrativa = getData("ec0217_demostrativa") || {};
   const dialogo      = getData("ec0217_dialogo")      || {};
 
+  guardarUndo("ec0217_materiales", "cargarMateriales");
   if (btn) { btn.disabled = true; btn.textContent = "Generando…"; }
   loader.style.display = "block";
 
@@ -55,6 +57,7 @@ export async function generarMaterialesIA(tecnica) {
 
     textareaEl.value = data.texto || "";
     if (typeof window.guardarMateriales === "function") window.guardarMateriales();
+    mostrarUndo(`Materiales — ${tecnica}`);
 
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -108,6 +111,7 @@ export async function generarClasificacionIA() {
 
     if (typeof window.guardarMateriales === "function") window.guardarMateriales();
     if (typeof showToast === "function") showToast("Materiales clasificados correctamente", "success");
+    mostrarUndo("Clasificación de materiales");
 
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -120,6 +124,7 @@ export async function generarClasificacionIA() {
 }
 
 async function _generarTodoMateriales(btnTodo) {
+  iniciarBatch("ec0217_materiales", "cargarMateriales");
   const vacias = TECNICAS_MAT.filter(t => !document.getElementById(`mat-${t}`)?.value.trim());
   if (vacias.length === 0) {
     if (typeof showAlert === "function") showAlert("Todas las técnicas ya tienen materiales.");
@@ -142,6 +147,7 @@ async function _generarTodoMateriales(btnTodo) {
       await generarMaterialesIA(vacias[i]);
     }
     btnTodo.textContent = "✅ ¡Todo generado!";
+    finalizarBatch("Materiales completos");
     setTimeout(() => { btnTodo.textContent = original; }, 2500);
   } catch (_) {
     btnTodo.textContent = original;

@@ -2,6 +2,7 @@
 // generarPreguntasEncuadreIA: genera preguntas de experiencia previa con IA
 
 import { llamarIA } from "./api.js";
+import { guardarUndo, mostrarUndo } from "./undo.js";
 
 export async function generarPreguntasEncuadreIA() {
   const datos = getData("ec0217_datos") || {};
@@ -26,6 +27,7 @@ export async function generarPreguntasEncuadreIA() {
   const loaderPreguntas   = document.getElementById("loaderPreguntas");
   const btnGenerarPreguntas = document.getElementById("btnGenerarPreguntas");
 
+  guardarUndo("ec0217_encuadre", "cargarEncuadre");
   try {
     if (loaderPreguntas) loaderPreguntas.style.display = "block";
     if (btnGenerarPreguntas) btnGenerarPreguntas.disabled = true;
@@ -50,6 +52,7 @@ export async function generarPreguntasEncuadreIA() {
     }
 
     if (typeof window.guardarEncuadreTemporal === "function") window.guardarEncuadreTemporal();
+    mostrarUndo("Preguntas de encuadre");
 
   } catch (err) {
     console.error("Error al generar preguntas:", err);

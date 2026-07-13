@@ -3,6 +3,7 @@
 // generarFormativaIA:  genera el instrumento de evaluación formativa
 
 import { llamarIA } from "./api.js";
+import { guardarUndo, mostrarUndo, iniciarBatch, finalizarBatch } from "./undo.js";
 
 let tipoInstrumentoFormativa = "";
 
@@ -15,6 +16,7 @@ export async function generarEvaluacionIA(tipo) {
   const loader  = document.getElementById(esDiagnostica ? "loaderDiagnostica"     : "loaderSumativa");
   const destino = document.getElementById(esDiagnostica ? "instDiagnostica"       : "instSumativa");
 
+  guardarUndo("ec0217_evaluaciones", "cargarEvaluaciones");
   try {
     if (loader) loader.style.display = "block";
     if (boton)  boton.disabled       = true;
@@ -39,6 +41,7 @@ export async function generarEvaluacionIA(tipo) {
     }
 
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
+    mostrarUndo(`Evaluación ${tipo}`);
 
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -81,6 +84,7 @@ export async function generarFormativaIA() {
   const loaderFormativa   = document.getElementById("loaderFormativa");
   const btnGenerarFormativa = document.getElementById("btnGenerarFormativa");
 
+  guardarUndo("ec0217_evaluaciones", "cargarEvaluaciones");
   try {
     if (loaderFormativa)     loaderFormativa.style.display = "block";
     if (btnGenerarFormativa) { btnGenerarFormativa.disabled = true; btnGenerarFormativa.textContent = "Generando..."; }
@@ -120,6 +124,7 @@ export async function generarFormativaIA() {
 
     if (instFormativa) instFormativa.value = textoGenerado;
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
+    mostrarUndo("Evaluación formativa");
 
   } catch (err) {
     console.error("Error al generar evaluación formativa:", err);
@@ -135,6 +140,7 @@ export async function generarFormativaIA() {
 }
 
 async function _generarTodoEvaluaciones(btnTodo) {
+  iniciarBatch("ec0217_evaluaciones", "cargarEvaluaciones");
   const campos = [
     { id: "instDiagnostica", fn: () => generarEvaluacionIA("diagnostica") },
     { id: "instFormativa",   fn: generarFormativaIA },
@@ -163,6 +169,7 @@ async function _generarTodoEvaluaciones(btnTodo) {
       await vacios[i].fn();
     }
     btnTodo.textContent = "✅ ¡Todo generado!";
+    finalizarBatch("Evaluaciones completas");
     setTimeout(() => { btnTodo.textContent = original; }, 2500);
   } catch (_) {
     btnTodo.textContent = original;

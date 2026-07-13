@@ -3,6 +3,7 @@
 // generarDemostrativaIA: genera un campo individual de la técnica demostrativa
 
 import { llamarIA } from "./api.js";
+import { guardarUndo, mostrarUndo, iniciarBatch, finalizarBatch } from "./undo.js";
 
 const IDS_EXPOSITIVA = {
   introduccion: "expIntroduccion",
@@ -29,6 +30,7 @@ export async function generarExpositivaIA(campo, boton) {
   const textareaDestino = document.getElementById(IDS_EXPOSITIVA[campo]);
   if (!textareaDestino) return;
 
+  guardarUndo("ec0217_expositiva", "cargarExpositiva");
   try {
     boton.disabled     = true;
     boton.textContent  = "Generando...";
@@ -44,6 +46,7 @@ export async function generarExpositivaIA(campo, boton) {
 
     textareaDestino.value = data.texto || "";
     if (typeof window.guardarExpositivaTemporal === "function") window.guardarExpositivaTemporal();
+    mostrarUndo("Técnica Expositiva");
 
   } catch (err) {
     console.error("Error al generar técnica expositiva:", err);
@@ -63,6 +66,7 @@ export async function generarDemostrativaIA(campo, boton) {
   const textareaDestino = document.getElementById(IDS_DEMOSTRATIVA[campo]);
   if (!textareaDestino) return;
 
+  guardarUndo("ec0217_demostrativa", "cargarDemostrativa");
   try {
     boton.disabled    = true;
     boton.textContent = "Generando...";
@@ -85,6 +89,7 @@ export async function generarDemostrativaIA(campo, boton) {
 
     textareaDestino.value = textoGenerado;
     if (typeof window.guardarDemostrativaTemporal === "function") window.guardarDemostrativaTemporal();
+    mostrarUndo("Técnica Demostrativa");
 
   } catch (err) {
     console.error("Error al generar técnica demostrativa:", err);
@@ -96,7 +101,7 @@ export async function generarDemostrativaIA(campo, boton) {
   }
 }
 
-async function _generarSeccionCompleta(campos, generadorFn, btnTodo, guardarFn) {
+async function _generarSeccionCompleta(campos, generadorFn, btnTodo, guardarFn, onComplete) {
   btnTodo.disabled = true;
   const original = btnTodo.textContent;
   let completados = 0;
@@ -108,6 +113,7 @@ async function _generarSeccionCompleta(campos, generadorFn, btnTodo, guardarFn) 
       btnTodo.textContent = `Generando ${completados}/${campos.length}...`;
     }));
     guardarFn();
+    onComplete?.();
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
     if (typeof showAlert === "function") showAlert(`⚠️ Error al generar:\n${msg}`);
@@ -139,11 +145,13 @@ export function initIATecnicas() {
       }
       if (vacios.length < Object.keys(IDS_EXPOSITIVA).length &&
           !confirm("Algunos campos ya tienen contenido. ¿Generar solo los vacíos?")) return;
+      iniciarBatch("ec0217_expositiva", "cargarExpositiva");
       _generarSeccionCompleta(
         vacios,
         async campo => { const fb = { disabled: false, textContent: "" }; await generarExpositivaIA(campo, fb); },
         btnTodoExp,
-        () => window.guardarExpositivaFinal?.()
+        () => window.guardarExpositivaFinal?.(),
+        () => finalizarBatch("Técnica Expositiva completa")
       );
     });
   }
@@ -166,11 +174,13 @@ export function initIATecnicas() {
       }
       if (vacios.length < Object.keys(IDS_DEMOSTRATIVA).length &&
           !confirm("Algunos campos ya tienen contenido. ¿Generar solo los vacíos?")) return;
+      iniciarBatch("ec0217_demostrativa", "cargarDemostrativa");
       _generarSeccionCompleta(
         vacios,
         async campo => { const fb = { disabled: false, textContent: "" }; await generarDemostrativaIA(campo, fb); },
         btnTodoDem,
-        () => window.guardarDemostrativaFinal?.()
+        () => window.guardarDemostrativaFinal?.(),
+        () => finalizarBatch("Técnica Demostrativa completa")
       );
     });
   }

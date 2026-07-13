@@ -2,6 +2,7 @@
 // generarDialogoIA: genera un campo individual de la técnica diálogo/discusión
 
 import { llamarIA } from "./api.js";
+import { guardarUndo, mostrarUndo, iniciarBatch, finalizarBatch } from "./undo.js";
 
 const IDS_DIALOGO = {
   actividad:     "dialogoActividad",
@@ -18,6 +19,7 @@ export async function generarDialogoIA(campo, boton) {
   const textareaDestino = document.getElementById(IDS_DIALOGO[campo]);
   if (!textareaDestino) return;
 
+  guardarUndo("ec0217_dialogo", "cargarDialogo");
   try {
     boton.disabled    = true;
     boton.textContent = "Generando...";
@@ -33,6 +35,7 @@ export async function generarDialogoIA(campo, boton) {
 
     textareaDestino.value = data.texto || "";
     if (typeof window.guardarDialogoTemporal === "function") window.guardarDialogoTemporal();
+    mostrarUndo("Técnica Diálogo");
 
   } catch (err) {
     console.error("Error al generar técnica diálogo/discusión:", err);
@@ -71,6 +74,7 @@ export function initIADialogo() {
 }
 
 async function _generarTodoDialogo(campos, btnTodo) {
+  iniciarBatch("ec0217_dialogo", "cargarDialogo");
   btnTodo.disabled = true;
   const original = btnTodo.textContent;
   let completados = 0;
@@ -83,6 +87,7 @@ async function _generarTodoDialogo(campos, btnTodo) {
       btnTodo.textContent = `Generando ${completados}/${campos.length}...`;
     }));
     window.guardarDialogoFinal?.();
+    finalizarBatch("Técnica Diálogo completa");
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
     if (typeof showAlert === "function") showAlert(`⚠️ Error al generar:\n${msg}`);

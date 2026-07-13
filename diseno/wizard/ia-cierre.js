@@ -3,6 +3,7 @@
 // generarDescripcionGeneralIA: genera la descripción general a partir del cierre
 
 import { llamarIA } from "./api.js";
+import { guardarUndo, mostrarUndo } from "./undo.js";
 
 export async function generarCierreIA() {
   const datos        = getData("ec0217_datos")        || {};
@@ -31,6 +32,7 @@ export async function generarCierreIA() {
   const compromisosTexto        = document.getElementById("compromisosTexto");
   const cierreResumen           = document.getElementById("cierreResumen");
 
+  guardarUndo("ec0217_cierre", "cargarCierre");
   try {
     if (loaderCierre)     loaderCierre.style.display  = "block";
     if (btnGenerarCierre) btnGenerarCierre.disabled   = true;
@@ -48,6 +50,7 @@ export async function generarCierreIA() {
 
     if (cierreTexto) cierreTexto.value = data.texto || "";
     if (typeof window.guardarCierreTemporal === "function") window.guardarCierreTemporal();
+    mostrarUndo("Cierre");
 
     // Generar resumen automáticamente junto al cierre
     try {
@@ -98,6 +101,7 @@ export async function generarDescripcionGeneralIA() {
   const btnGenerarDescripcionGeneral = document.getElementById("btnGenerarDescripcionGeneral");
   const descripcionGeneralEvaluacion = document.getElementById("descripcionGeneralEvaluacion");
 
+  guardarUndo("ec0217_evaluaciones", "cargarEvaluaciones");
   try {
     if (loaderDescripcionGeneral)    loaderDescripcionGeneral.style.display   = "block";
     if (btnGenerarDescripcionGeneral) btnGenerarDescripcionGeneral.disabled   = true;
@@ -106,6 +110,7 @@ export async function generarDescripcionGeneralIA() {
 
     if (descripcionGeneralEvaluacion) descripcionGeneralEvaluacion.value = data.texto || "";
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
+    mostrarUndo("Descripción general");
 
   } catch (err) {
     console.error("Error al generar descripción general:", err);

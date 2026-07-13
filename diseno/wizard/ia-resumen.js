@@ -3,6 +3,7 @@
 // generarCompromisosIA: genera compromisos de aplicación del aprendizaje
 
 import { llamarIA } from "./api.js";
+import { guardarUndo, mostrarUndo, iniciarBatch, finalizarBatch } from "./undo.js";
 
 export async function generarResumenIA() {
   const expositiva   = getData("ec0217_expositiva")   || {};
@@ -18,6 +19,7 @@ export async function generarResumenIA() {
   const referenciasBibliograficas = document.getElementById("referenciasBibliograficas");
   const compromisosTexto          = document.getElementById("compromisosTexto");
 
+  guardarUndo("ec0217_cierre", "cargarCierre");
   try {
     if (loaderResumen)     loaderResumen.style.display   = "block";
     if (btnGenerarResumen) btnGenerarResumen.disabled    = true;
@@ -41,6 +43,7 @@ export async function generarResumenIA() {
       if (cierreResumen) cierreResumen.value = texto;
       localStorage.setItem("ec0217_cierre_resumen", texto);
       if (typeof window.guardarCierreTemporal === "function") window.guardarCierreTemporal();
+      mostrarUndo("Resumen");
     }
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -60,6 +63,7 @@ export async function generarCompromisosIA() {
   const btnGenerarCompromisos = document.getElementById("btnGenerarCompromisos");
   const compromisosTexto    = document.getElementById("compromisosTexto");
 
+  guardarUndo("ec0217_cierre", "cargarCierre");
   try {
     if (loaderCompromisos)     loaderCompromisos.style.display  = "block";
     if (btnGenerarCompromisos) btnGenerarCompromisos.disabled   = true;
@@ -76,6 +80,7 @@ export async function generarCompromisosIA() {
     if (texto && compromisosTexto) {
       compromisosTexto.value = texto;
       if (typeof window.guardarCierreTemporal === "function") window.guardarCierreTemporal();
+      mostrarUndo("Compromisos");
     }
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -92,6 +97,7 @@ async function _generarTodoCierre(btnTodo) {
   const cierreTexto   = document.getElementById("cierreTexto");
   const cierreResumen = document.getElementById("cierreResumen");
 
+  iniciarBatch("ec0217_cierre", "cargarCierre");
   const tareas = [];
   if (!compromisos?.value.trim())  tareas.push({ fn: generarCompromisosIA });
   const cierreVacio = !cierreTexto?.value.trim();
@@ -123,6 +129,7 @@ async function _generarTodoCierre(btnTodo) {
       await tareas[i].fn();
     }
     btnTodo.textContent = "✅ ¡Todo generado!";
+    finalizarBatch("Cierre completo");
     setTimeout(() => { btnTodo.textContent = original; }, 2500);
   } catch (_) {
     btnTodo.textContent = original;
