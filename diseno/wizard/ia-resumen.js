@@ -87,7 +87,54 @@ export async function generarCompromisosIA() {
   }
 }
 
+async function _generarTodoCierre(btnTodo) {
+  const compromisos   = document.getElementById("compromisosTexto");
+  const cierreTexto   = document.getElementById("cierreTexto");
+  const cierreResumen = document.getElementById("cierreResumen");
+
+  const tareas = [];
+  if (!compromisos?.value.trim())  tareas.push({ fn: generarCompromisosIA });
+  const cierreVacio = !cierreTexto?.value.trim();
+  if (cierreVacio) {
+    tareas.push({ fn: () => window.generarCierreIA?.() });
+  } else if (!cierreResumen?.value.trim()) {
+    tareas.push({ fn: generarResumenIA });
+  }
+
+  if (tareas.length === 0) {
+    if (typeof showAlert === "function") showAlert("Todos los campos ya tienen contenido.");
+    return;
+  }
+
+  const hayLlenos = !!(compromisos?.value.trim() || cierreTexto?.value.trim() || cierreResumen?.value.trim());
+  if (hayLlenos) {
+    const ok = typeof showConfirm === "function"
+      ? await showConfirm("Algunos campos ya tienen contenido. ¿Generar solo los vacíos?",
+          { title: "Generar todo", confirmText: "Sí, solo los vacíos" })
+      : confirm("Algunos campos ya tienen contenido. ¿Generar solo los vacíos?");
+    if (!ok) return;
+  }
+
+  btnTodo.disabled = true;
+  const original = btnTodo.textContent;
+  try {
+    for (let i = 0; i < tareas.length; i++) {
+      btnTodo.textContent = `⏳ Generando ${i + 1}/${tareas.length}…`;
+      await tareas[i].fn();
+    }
+    btnTodo.textContent = "✅ ¡Todo generado!";
+    setTimeout(() => { btnTodo.textContent = original; }, 2500);
+  } catch (_) {
+    btnTodo.textContent = original;
+  } finally {
+    btnTodo.disabled = false;
+  }
+}
+
 export function initIAResumen() {
   window.generarResumenIA     = generarResumenIA;
   window.generarCompromisosIA = generarCompromisosIA;
+
+  const btnTodo = document.getElementById("btnGenerarTodoCierre");
+  if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoCierre(btnTodo));
 }

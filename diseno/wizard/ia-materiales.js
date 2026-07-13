@@ -119,7 +119,45 @@ export async function generarClasificacionIA() {
   }
 }
 
+async function _generarTodoMateriales(btnTodo) {
+  const vacias = TECNICAS_MAT.filter(t => !document.getElementById(`mat-${t}`)?.value.trim());
+  if (vacias.length === 0) {
+    if (typeof showAlert === "function") showAlert("Todas las técnicas ya tienen materiales.");
+    return;
+  }
+
+  if (vacias.length < TECNICAS_MAT.length) {
+    const ok = typeof showConfirm === "function"
+      ? await showConfirm("Algunas técnicas ya tienen materiales. ¿Generar solo los vacíos?",
+          { title: "Generar todo", confirmText: "Sí, solo los vacíos" })
+      : confirm("Algunas técnicas ya tienen materiales. ¿Generar solo los vacíos?");
+    if (!ok) return;
+  }
+
+  btnTodo.disabled = true;
+  const original = btnTodo.textContent;
+  try {
+    for (let i = 0; i < vacias.length; i++) {
+      btnTodo.textContent = `⏳ Generando ${i + 1}/${vacias.length}…`;
+      await generarMaterialesIA(vacias[i]);
+    }
+    btnTodo.textContent = "✅ ¡Todo generado!";
+    setTimeout(() => { btnTodo.textContent = original; }, 2500);
+  } catch (_) {
+    btnTodo.textContent = original;
+  } finally {
+    btnTodo.disabled = false;
+  }
+}
+
 export function initIAMateriales() {
   window.generarMaterialesIA    = generarMaterialesIA;
   window.generarClasificacionIA = generarClasificacionIA;
+
+  document.querySelectorAll(".btn-generar-materiales").forEach(btn => {
+    btn.addEventListener("click", () => generarMaterialesIA(btn.dataset.tecnica));
+  });
+
+  const btnTodo = document.getElementById("btnGenerarTodosMateriales");
+  if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoMateriales(btnTodo));
 }

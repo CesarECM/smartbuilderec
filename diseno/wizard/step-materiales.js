@@ -52,6 +52,8 @@ export function getTemplate() {
       <section id="seccionMateriales" class="wizard-section hidden">
         <p class="paso-titulo">Paso 15B de 16</p>
         <h1>Revisión Final: Materiales</h1>
+        <button type="button" id="btnGenerarTodosMateriales" class="btn-ia" style="margin-bottom:8px;">✨ Generar todo con IA</button>
+        <p style="font-size:13px;color:#666;margin:0 0 20px;">Solo rellena los campos vacíos. Si alguno ya tiene contenido te preguntará antes de continuar.</p>
 
         <div class="card" style="max-width: 950px;">
           <p>
@@ -59,21 +61,17 @@ export function getTemplate() {
             Puedes editarlos manualmente o usar los botones de IA para generarlos.
           </p>
           <p class="hint">
-            💡 <strong>Paso 1:</strong> Usa el botón de abajo para generar los materiales de cada técnica.
-            <strong>Paso 2:</strong> En la sección de clasificación, clasifícalos automáticamente en las categorías del EC0217.
+            💡 Genera los materiales de cada técnica individualmente o usa el botón de arriba para generarlos todos.
+            Luego clasifícalos automáticamente en las categorías del EC0217.
           </p>
-
-          <button type="button" id="btnGenerarTodosMateriales" class="btn-siguiente btn-ia" style="margin-bottom:8px;">
-            ✨ Generar materiales de todas las técnicas
-          </button>
-          <div id="loaderTodosMateriales" style="display:none; margin-bottom:16px; font-size:13px; color:var(--c-text-3);">
-            ⏳ Generando materiales con IA…
-          </div>
 
           <hr style="margin:20px 0;">
 
           <div class="materiales-bloque">
-            <div class="materiales-bloque-header"><h3>Técnica de Integración</h3></div>
+            <div class="materiales-bloque-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3>Técnica de Integración</h3>
+              <button type="button" class="btn-generar-materiales btn-ia" data-tecnica="integracion">✨ Generar con IA</button>
+            </div>
             <div class="loader-materiales" id="loaderMat-integracion" style="display:none;">Generando materiales…</div>
             <textarea spellcheck="true" lang="es" id="mat-integracion" class="materiales-textarea" rows="5"
               placeholder="Los materiales de la técnica de integración aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
@@ -82,7 +80,10 @@ export function getTemplate() {
           <hr>
 
           <div class="materiales-bloque">
-            <div class="materiales-bloque-header"><h3>Técnica Expositiva</h3></div>
+            <div class="materiales-bloque-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3>Técnica Expositiva</h3>
+              <button type="button" class="btn-generar-materiales btn-ia" data-tecnica="expositiva">✨ Generar con IA</button>
+            </div>
             <div class="loader-materiales" id="loaderMat-expositiva" style="display:none;">Generando materiales…</div>
             <textarea spellcheck="true" lang="es" id="mat-expositiva" class="materiales-textarea" rows="5"
               placeholder="Los materiales de la técnica expositiva aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
@@ -91,7 +92,10 @@ export function getTemplate() {
           <hr>
 
           <div class="materiales-bloque">
-            <div class="materiales-bloque-header"><h3>Técnica Demostrativa</h3></div>
+            <div class="materiales-bloque-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3>Técnica Demostrativa</h3>
+              <button type="button" class="btn-generar-materiales btn-ia" data-tecnica="demostrativa">✨ Generar con IA</button>
+            </div>
             <div class="loader-materiales" id="loaderMat-demostrativa" style="display:none;">Generando materiales…</div>
             <textarea spellcheck="true" lang="es" id="mat-demostrativa" class="materiales-textarea" rows="5"
               placeholder="Los materiales de la técnica demostrativa aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
@@ -100,7 +104,10 @@ export function getTemplate() {
           <hr>
 
           <div class="materiales-bloque">
-            <div class="materiales-bloque-header"><h3>Técnica Energizante</h3></div>
+            <div class="materiales-bloque-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3>Técnica Energizante</h3>
+              <button type="button" class="btn-generar-materiales btn-ia" data-tecnica="energizante">✨ Generar con IA</button>
+            </div>
             <div class="loader-materiales" id="loaderMat-energizante" style="display:none;">Generando materiales…</div>
             <textarea spellcheck="true" lang="es" id="mat-energizante" class="materiales-textarea" rows="5"
               placeholder="Los materiales de la técnica energizante aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>
@@ -109,7 +116,10 @@ export function getTemplate() {
           <hr>
 
           <div class="materiales-bloque">
-            <div class="materiales-bloque-header"><h3>Técnica Diálogo/Discusión</h3></div>
+            <div class="materiales-bloque-header" style="display:flex;justify-content:space-between;align-items:center;">
+              <h3>Técnica Diálogo/Discusión</h3>
+              <button type="button" class="btn-generar-materiales btn-ia" data-tecnica="dialogo">✨ Generar con IA</button>
+            </div>
             <div class="loader-materiales" id="loaderMat-dialogo" style="display:none;">Generando materiales…</div>
             <textarea spellcheck="true" lang="es" id="mat-dialogo" class="materiales-textarea" rows="5"
               placeholder="Los materiales de la técnica diálogo/discusión aparecerán aquí tras la generación automática. También puedes escribirlos manualmente."></textarea>

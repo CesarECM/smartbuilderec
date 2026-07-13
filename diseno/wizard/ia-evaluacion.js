@@ -134,8 +134,48 @@ export async function generarFormativaIA() {
   }
 }
 
+async function _generarTodoEvaluaciones(btnTodo) {
+  const campos = [
+    { id: "instDiagnostica", fn: () => generarEvaluacionIA("diagnostica") },
+    { id: "instFormativa",   fn: generarFormativaIA },
+    { id: "instSumativa",    fn: () => generarEvaluacionIA("sumativa") },
+  ];
+
+  const vacios  = campos.filter(c => !document.getElementById(c.id)?.value.trim());
+  if (vacios.length === 0) {
+    if (typeof showAlert === "function") showAlert("Todos los instrumentos ya tienen contenido.");
+    return;
+  }
+
+  if (vacios.length < campos.length) {
+    const ok = typeof showConfirm === "function"
+      ? await showConfirm("Algunos instrumentos ya tienen contenido. ¿Generar solo los vacíos?",
+          { title: "Generar todo", confirmText: "Sí, solo los vacíos" })
+      : confirm("Algunos instrumentos ya tienen contenido. ¿Generar solo los vacíos?");
+    if (!ok) return;
+  }
+
+  btnTodo.disabled = true;
+  const original = btnTodo.textContent;
+  try {
+    for (let i = 0; i < vacios.length; i++) {
+      btnTodo.textContent = `⏳ Generando ${i + 1}/${vacios.length}…`;
+      await vacios[i].fn();
+    }
+    btnTodo.textContent = "✅ ¡Todo generado!";
+    setTimeout(() => { btnTodo.textContent = original; }, 2500);
+  } catch (_) {
+    btnTodo.textContent = original;
+  } finally {
+    btnTodo.disabled = false;
+  }
+}
+
 export function initIAEvaluacion() {
   window.generarEvaluacionIA      = generarEvaluacionIA;
   window.generarFormativaIA       = generarFormativaIA;
   window.tipoInstrumentoFormativa = tipoInstrumentoFormativa;
+
+  const btnTodo = document.getElementById("btnGenerarTodoEvaluaciones");
+  if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoEvaluaciones(btnTodo));
 }
