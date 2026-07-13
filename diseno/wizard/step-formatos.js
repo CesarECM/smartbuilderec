@@ -1,4 +1,5 @@
 // ─── wizard/step-formatos.js — Paso Final: Formatos y Descarga (W#9) ─────────
+import { initPreview } from "./preview-html.js";
 
 /** Valida que el expediente esté completo antes de descargar */
 export function validarExpedienteCompleto() {
@@ -81,6 +82,7 @@ export function poblarResumenExpediente() {
 export function initStepFormatos() {
   window.validarExpedienteCompleto = validarExpedienteCompleto;
   window.poblarResumenExpediente   = poblarResumenExpediente;
+  initPreview();
 }
 
 export function getTemplate() {
@@ -133,6 +135,12 @@ export function getTemplate() {
             <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#854d0e;">⚠️ Inconsistencias detectadas</p>
             <ul id="res-alertas-lista" style="margin:0;padding-left:16px;font-size:12px;color:#854d0e;"></ul>
           </div>
+
+          <button type="button" id="btnVistaPrevia" class="btn-ia" style="width:100%;font-size:14px;padding:11px 16px;margin-bottom:14px;">
+            👁 Vista previa del expediente
+          </button>
+
+          <hr style="margin:0 0 16px;border:none;border-top:1px solid #e2e8f0;">
 
           <p style="font-size:12px;color:#64748b;margin-bottom:16px;">
             Se generarán <strong>10 documentos</strong> en formato Word y PowerPoint empaquetados en un archivo ZIP.
