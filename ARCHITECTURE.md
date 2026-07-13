@@ -214,8 +214,9 @@ diseno/wizard/
 ├── config.js        # constantes: secciones, tiempos mínimos EC0217, categorías
 ├── api.js           # llamarIA(endpoint, payload), llamarIAStream — fetch al backend
 ├── validators.js    # validarTiempos, validarTaxonomia (reglas normativas EC0217)
-├── export.js        # descargarPlaneacionFinal — arma payload, llama ZIP, celebración
-├── tecnicas-data.js # catálogo de técnicas didácticas (datos estáticos)
+├── export.js           # descargarPlaneacionFinal — arma payload, llama ZIP, celebración
+├── download-tracker.js # saveDownloadSnapshot, hasUnsavedChanges — badge "expediente modificado"
+├── tecnicas-data.js    # catálogo de técnicas didácticas (datos estáticos)
 │
 │  # UI
 ├── ui-sync.js       # indicador de guardado, barra progreso global, eventos sbe:sync-*

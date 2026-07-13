@@ -5,6 +5,7 @@
 import { BACKEND_URL }               from "./config.js";
 import { mostrarCelebracion }        from "./ui-helpers.js";
 import { validarExpedienteCompleto } from "./step-formatos.js";
+import { saveDownloadSnapshot }      from "./download-tracker.js";
 
 function _mensajeError(err) {
   if (!err) return "Error desconocido";
@@ -75,6 +76,10 @@ export async function descargarPlaneacionFinal() {
 
     if (typeof logEvento === "function")
       logEvento("wizard.descarga.ok", { nombre_curso: payload.datos?.nombreCurso || "" });
+
+    saveDownloadSnapshot();
+    const _badge = document.getElementById("badge-descarga-desactualizada");
+    if (_badge) _badge.style.display = "none";
 
     mostrarCelebracion();
 

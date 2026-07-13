@@ -1,5 +1,6 @@
 // ─── wizard/step-formatos.js — Paso Final: Formatos y Descarga (W#9) ─────────
-import { initPreview } from "./preview-html.js";
+import { initPreview }       from "./preview-html.js";
+import { hasUnsavedChanges } from "./download-tracker.js";
 
 /** Valida que el expediente esté completo antes de descargar */
 export function validarExpedienteCompleto() {
@@ -77,6 +78,14 @@ export function poblarResumenExpediente() {
     alertasLista.innerHTML = errores.map(e => `<li>${e}</li>`).join("");
     alertasEl.style.display = errores.length > 0 ? "block" : "none";
   }
+
+  _actualizarBadgeDescarga();
+}
+
+function _actualizarBadgeDescarga() {
+  const badge = document.getElementById("badge-descarga-desactualizada");
+  if (!badge) return;
+  badge.style.display = hasUnsavedChanges() ? "flex" : "none";
 }
 
 export function initStepFormatos() {
@@ -145,6 +154,11 @@ export function getTemplate() {
           <p style="font-size:12px;color:#64748b;margin-bottom:16px;">
             Se generarán <strong>10 documentos</strong> en formato Word y PowerPoint empaquetados en un archivo ZIP.
           </p>
+
+          <div id="badge-descarga-desactualizada" style="display:none;align-items:center;gap:10px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#9a3412;">
+            <span style="font-size:16px;">⚠️</span>
+            <span>El expediente fue modificado desde la última descarga. Los documentos anteriores <strong>no reflejan los cambios recientes</strong>.</span>
+          </div>
 
           <button type="button" id="btnDescargarPlaneacionFinal" class="btn-siguiente">
             ⬇ Descargar expediente completo

@@ -21,7 +21,8 @@ import { escribirConDelay, escribirConDelayCancelable } from "./ui-writing.js";
 import { mostrarSeccionPrincipal, desbloquear, initNavigation } from "./navigation.js";
 
 // Sprint 11: Export y validadores normativos
-import { initExport }        from "./export.js";
+import { initExport }           from "./export.js";
+import { initDownloadTracker }  from "./download-tracker.js";
 import { validarTiempos, validarTaxonomia, validarCategoriasMateriales } from "./validators.js";
 
 // Sprint 10: Módulos de IA
@@ -122,6 +123,7 @@ initStepFormatos();
 
 // ─── Sprint 11: Export y validadores ─────────────────────────────────────────
 initExport();
+initDownloadTracker();
 window.wizardValidators = { validarTiempos, validarTaxonomia, validarCategoriasMateriales };
 
 // ─── Sprint 10: Módulos de IA ─────────────────────────────────────────────────
