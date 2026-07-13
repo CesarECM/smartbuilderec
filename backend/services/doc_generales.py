@@ -1,3 +1,5 @@
+import math
+
 from docx import Document
 
 from services.doc_helpers import tabla_encabezado, _docx_bytes, _titulo
@@ -58,6 +60,7 @@ def generar_lista_requerimientos(data) -> bytes:
     tabla_encabezado(doc, data.datos)
 
     mat = data.materiales or {}
+    participantes = data.datos.participantes or 0
 
     secciones = [
         ("Instalaciones, mobiliario y su distribución",             mat.get("instalaciones", "")),
@@ -82,9 +85,9 @@ def generar_lista_requerimientos(data) -> bytes:
         doc.add_heading(titulo, level=2)
         items = _items(contenido)
         num_filas_datos = max(len(items), 3)
-        t = doc.add_table(rows=num_filas_datos + 1, cols=4)
+        t = doc.add_table(rows=num_filas_datos + 1, cols=5)
         t.style = "Table Grid"
-        encabezados = ["No.", "Descripción", "Existe", "No existe"]
+        encabezados = ["No.", "Descripción", "Cantidad", "Existe", "No existe"]
         for j, enc in enumerate(encabezados):
             t.rows[0].cells[j].paragraphs[0].add_run(enc).bold = True
         for i, item in enumerate(items, start=1):
@@ -93,5 +96,26 @@ def generar_lista_requerimientos(data) -> bytes:
         for i in range(len(items) + 1, num_filas_datos + 1):
             t.rows[i].cells[0].text = str(i)
         doc.add_paragraph()
+
+    # Formatos individuales por participante
+    doc.add_heading("Formatos individuales (uno por participante)", level=2)
+    hojas_asistencia = math.ceil(participantes / 20) if participantes > 0 else 1
+    formatos_ind = [
+        ("Evaluación Diagnóstica",          participantes),
+        ("Contrato de Aprendizaje",         participantes),
+        ("Evaluación Formativa",            participantes),
+        ("Evaluación Sumativa",             participantes),
+        ("Evaluación de Reacción",          participantes),
+        ("Lista de Asistencia (hojas)",     hojas_asistencia),
+    ]
+    t = doc.add_table(rows=len(formatos_ind) + 1, cols=5)
+    t.style = "Table Grid"
+    for j, enc in enumerate(["No.", "Formato", "Cantidad", "Listo", "Observaciones"]):
+        t.rows[0].cells[j].paragraphs[0].add_run(enc).bold = True
+    for i, (nombre, cantidad) in enumerate(formatos_ind, start=1):
+        t.rows[i].cells[0].text = str(i)
+        t.rows[i].cells[1].text = nombre
+        t.rows[i].cells[2].text = str(cantidad) if participantes > 0 else "—"
+    doc.add_paragraph()
 
     return _docx_bytes(doc)
