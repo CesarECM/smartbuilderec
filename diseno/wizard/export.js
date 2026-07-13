@@ -104,8 +104,53 @@ export async function descargarPlaneacionFinal() {
   }
 }
 
+export async function descargarDocumentoIndividual(docId, btnEl) {
+  const payload  = typeof window.recolectarPayload === "function" ? window.recolectarPayload() : {};
+  const original = btnEl?.textContent;
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = "⏳"; }
+
+  try {
+    const fetchFn  = typeof fetchConTimeout === "function" ? fetchConTimeout : fetch;
+    const response = await fetchFn(`${BACKEND_URL}/generate-doc/individual/${docId}`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      let det = `HTTP ${response.status}`;
+      try { const j = await response.json(); det = j.detail || det; } catch (_) {}
+      throw new Error(det);
+    }
+
+    const blob        = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const match       = disposition.match(/filename=(.+)/);
+    const filename    = match ? match[1].trim() : `${docId}_EC0217.docx`;
+
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+
+    if (btnEl) { btnEl.textContent = "✅"; setTimeout(() => { btnEl.textContent = original; btnEl.disabled = false; }, 2000); return; }
+  } catch (err) {
+    if (typeof showAlert === "function") showAlert(`⚠️ Error al descargar: ${_mensajeError(err)}`);
+    if (btnEl) btnEl.textContent = original;
+  } finally {
+    if (btnEl) btnEl.disabled = false;
+  }
+}
+
 export function initExport() {
-  window.descargarPlaneacionFinal = descargarPlaneacionFinal;
+  window.descargarPlaneacionFinal      = descargarPlaneacionFinal;
+  window.descargarDocumentoIndividual  = descargarDocumentoIndividual;
+
   const btn = document.getElementById("btnDescargarPlaneacionFinal");
   if (btn) btn.addEventListener("click", descargarPlaneacionFinal);
+
+  document.querySelectorAll(".btn-doc-individual").forEach(b => {
+    b.addEventListener("click", () => descargarDocumentoIndividual(b.dataset.doc, b));
+  });
 }

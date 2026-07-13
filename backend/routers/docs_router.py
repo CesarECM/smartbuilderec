@@ -25,6 +25,9 @@ router = APIRouter()
 
 _progreso_jobs: dict = {}
 
+_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+
 
 @router.get("/generate-doc/progreso/{job_id}")
 async def progreso_generacion(job_id: str):
@@ -232,4 +235,49 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
         raise
     except Exception as e:
         print("ERROR EN /generate-doc/planeacion:", repr(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate-doc/individual/{doc_id}")
+def generate_doc_individual(doc_id: str, data: PlaneacionRequest):
+    try:
+        payload      = data.model_dump()
+        tipo_form    = (data.evaluaciones.tipoInstrumentoFormativa or "").lower().strip()
+        nombre_curso = limpiar_nombre_archivo(data.datos.nombreCurso or "EC0217")
+
+        gen_map = {
+            "planeacion":     (lambda: generar_planeacion_docx(payload),    "01_Documento_de_Planeacion_EC0217.docx",   _DOCX),
+            "diagnostica":    (lambda: generar_evaluacion_diagnostica(data), "02_Evaluacion_Diagnostica.docx",           _DOCX),
+            "sumativa":       (lambda: generar_evaluacion_sumativa(data),    "05_Evaluacion_Sumativa.docx",              _DOCX),
+            "reaccion":       (lambda: generar_evaluacion_reaccion(data),    "06_Evaluacion_Reaccion.docx",              _DOCX),
+            "asistencia":     (lambda: generar_lista_asistencia(data),       "07_Lista_de_Asistencia.docx",              _DOCX),
+            "contrato":       (lambda: generar_contrato_aprendizaje(data),   "08_Contrato_de_Aprendizaje.docx",          _DOCX),
+            "requerimientos": (lambda: generar_lista_requerimientos(data),   "09_Lista_de_Requerimientos.docx",          _DOCX),
+            "presentacion":   (lambda: generar_presentacion_curso(data),     "10_Guia_de_Presentacion_EC0217.pptx",      _PPTX),
+        }
+
+        if doc_id == "formativa":
+            if tipo_form == "guia_observacion":
+                gen_fn, filename = generar_evaluacion_formativa_guia,   "03_Evaluacion_Formativa_Guia_Observacion.docx"
+            else:
+                gen_fn, filename = generar_evaluacion_formativa_cotejo, "03_Evaluacion_Formativa_Cotejo.docx"
+            contenido, media_type = gen_fn(data), _DOCX
+        elif doc_id in gen_map:
+            gen_fn, filename, media_type = gen_map[doc_id]
+            contenido = gen_fn()
+        else:
+            raise HTTPException(status_code=400, detail=f"Documento '{doc_id}' no reconocido.")
+
+        base, ext = filename.rsplit(".", 1)
+        fn_out    = f"{base}_{nombre_curso}.{ext}"
+
+        return StreamingResponse(
+            io.BytesIO(contenido),
+            media_type=media_type,
+            headers={"Content-Disposition": f"attachment; filename={fn_out}"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"ERROR /generate-doc/individual/{doc_id}: {repr(e)}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -146,6 +146,27 @@ export function getTemplate() {
             Generando formatos...
           </div>
           <p id="mensajeFormatos" style="display:none;margin-top:15px;"></p>
+
+          <hr style="margin:24px 0 16px;">
+          <h3 style="margin:0 0 6px;font-size:14px;">Descargar documentos individuales</h3>
+          <p style="font-size:12px;color:#64748b;margin:0 0 14px;">Descarga un solo documento con los datos actuales, sin regenerar el paquete completo.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${[
+              ["planeacion",     "📄", "Documento de Planeación EC0217"],
+              ["diagnostica",    "📝", "Evaluación Diagnóstica"],
+              ["formativa",      "📋", "Evaluación Formativa"],
+              ["sumativa",       "📝", "Evaluación Sumativa"],
+              ["reaccion",       "😊", "Evaluación de Reacción"],
+              ["asistencia",     "👥", "Lista de Asistencia"],
+              ["contrato",       "🤝", "Contrato de Aprendizaje"],
+              ["requerimientos", "📦", "Lista de Requerimientos"],
+              ["presentacion",   "🎯", "Guía de Presentación (PPT)"],
+            ].map(([doc, ico, label]) => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--c-bg-soft,#f8fafc);border-radius:6px;">
+                <span style="font-size:13px;">${ico} ${label}</span>
+                <button type="button" class="btn-doc-individual btn-ia" data-doc="${doc}" style="font-size:12px;padding:5px 12px;">⬇ Descargar</button>
+              </div>`).join("")}
+          </div>
         </div>
       </section>
   `;
