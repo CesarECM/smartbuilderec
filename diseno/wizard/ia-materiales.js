@@ -115,14 +115,13 @@ export async function generarClasificacionIA() {
     if (_n > 0) {
       const _elMat = document.getElementById("req-materiales-didacticos");
       if (_elMat) {
-        const _hojas = Math.ceil(_n / 20);
         const _formatos = [
           `• Evaluación Diagnóstica — ${_n} copias`,
           `• Contrato de Aprendizaje — ${_n} copias`,
           `• Evaluación Formativa — ${_n} copias`,
           `• Evaluación Sumativa — ${_n} copias`,
           `• Evaluación de Reacción — ${_n} copias`,
-          `• Lista de Asistencia — ${_hojas} hoja${_hojas > 1 ? "s" : ""}`,
+          `• Lista de Asistencia — 1 juego`,
         ].join("\n");
         const _actual = _elMat.value.trim();
         _elMat.value = _actual ? `${_actual}\n${_formatos}` : _formatos;
