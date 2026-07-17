@@ -1,10 +1,30 @@
 // ─── wizard/step-tiempos.js — Paso 15: Distribución de Tiempos ───────────────
-// Usa window.sbeTiemposCurso (expuesto por app.js) para compartir el array.
 // La norma EC0217 exige exactamente 120 minutos de duración del curso.
 
 import { DURACION_MINIMA_MIN } from "./config.js";
 
-const _tiempos = () => window.sbeTiemposCurso || [];
+const _DEFAULT_TIEMPOS = [
+  { seccion: "Apertura", filas: [
+    { titulo: "Encuadre y presentación del instructor", tiempo: 10 },
+    { titulo: "Técnica de integración grupal",          tiempo: 10 },
+    { titulo: "Evaluación diagnóstica",                 tiempo: 10 },
+  ]},
+  { seccion: "Desarrollo", filas: [
+    { titulo: "Técnica expositiva",          tiempo: 30 },
+    { titulo: "Técnica demostrativa",        tiempo: 20 },
+    { titulo: "Técnica energizante",         tiempo: 10 },
+    { titulo: "Técnica de diálogo/discusión",tiempo: 15 },
+  ]},
+  { seccion: "Cierre", filas: [
+    { titulo: "Resumen y compromisos de aplicación", tiempo: 5 },
+  ]},
+  { seccion: "Evaluación", filas: [
+    { titulo: "Evaluación sumativa",  tiempo: 5 },
+    { titulo: "Evaluación de reacción", tiempo: 5 },
+  ]},
+];
+
+const _tiempos = () => window.sbeTiemposCurso ?? [];
 
 export function guardarTiemposTemporal() {
   localStorage.setItem("ec0217_tiempos", JSON.stringify(_tiempos()));
@@ -114,9 +134,7 @@ export function cargarTiempos() {
     try {
       const data = JSON.parse(raw);
       if (Array.isArray(data) && data.length > 0) {
-        const t = _tiempos();
-        t.length = 0;
-        t.push(...data);
+        window.sbeTiemposCurso = data;
       }
     } catch (_) {}
   }
@@ -128,12 +146,15 @@ export function cargarTiempos() {
 }
 
 export function initStepTiempos() {
-  window.guardarTiemposTemporal    = guardarTiemposTemporal;
-  window.guardarTiemposFinal       = guardarTiemposFinal;
+  if (!window.sbeTiemposCurso) {
+    window.sbeTiemposCurso = JSON.parse(JSON.stringify(_DEFAULT_TIEMPOS));
+  }
+  window.guardarTiemposTemporal      = guardarTiemposTemporal;
+  window.guardarTiemposFinal         = guardarTiemposFinal;
   window.actualizarSubtotalesTiempos = actualizarSubtotalesTiempos;
-  window.actualizarTotalTiempos    = actualizarTotalTiempos;
-  window.renderTiempos             = renderTiempos;
-  window.cargarTiempos             = cargarTiempos;
+  window.actualizarTotalTiempos      = actualizarTotalTiempos;
+  window.renderTiempos               = renderTiempos;
+  window.cargarTiempos               = cargarTiempos;
 }
 
 export function getTemplate() {
