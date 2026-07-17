@@ -16,13 +16,14 @@ function _sec(titulo, contenido) {
   </div>`;
 }
 
-// Fila de tabla: etiqueta + valor
-function _f(label, val) {
+// Fila de tabla: etiqueta + valor (pre=true preserva saltos de línea)
+function _f(label, val, pre = false) {
   const v = _esc(val?.toString().trim() || "");
+  const valHtml = pre ? v.replace(/\n/g, "<br>") : v;
   return `<tr>
     <td style="padding:5px 10px;color:#64748b;font-weight:600;white-space:nowrap;
                width:210px;vertical-align:top;border-bottom:1px solid #f1f5f9;">${label}</td>
-    <td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;">${v || _NA}</td>
+    <td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;">${valHtml || _NA}</td>
   </tr>`;
 }
 
@@ -71,7 +72,7 @@ export function getPreviewHTML(p) {
       const total = (b.filas || []).reduce((s, f) => s + (parseInt(f.tiempo, 10) || 0), 0);
       const filas = (b.filas || []).map(f =>
         `<tr>
-          <td style="padding:4px 10px;border-bottom:1px solid #f1f5f9;">${_esc(f.actividad) || "—"}</td>
+          <td style="padding:4px 10px;border-bottom:1px solid #f1f5f9;">${_esc(f.titulo) || "—"}</td>
           <td style="padding:4px 10px;border-bottom:1px solid #f1f5f9;text-align:right;
                      white-space:nowrap;width:80px;">${parseInt(f.tiempo, 10) || 0} min</td>
         </tr>`
@@ -172,10 +173,11 @@ export function getPreviewHTML(p) {
     ].join(""))),
 
     _sec("9. Evaluaciones", _tbl([
-      _f("Diagnóstica",  `0% — ${ev.instDiagnostica || "—"}`),
-      _f("Formativa",    `${pctF}% (${ev.tipoInstrumentoFormativa || "—"}) — ${ev.instFormativa || "—"}`),
-      _f("Sumativa",     `${pctS}% — ${ev.instSumativa || "—"}`),
-      _f("Reacción",     ev.instReac),
+      _f("Diagnóstica (0%)",             ev.instDiagnostica,  true),
+      _f(`Formativa (${pctF}%)`,         ev.instFormativa,    true),
+      _f("Tipo instrumento formativa",   ev.tipoInstrumentoFormativa),
+      _f(`Sumativa (${pctS}%)`,          ev.instSumativa,     true),
+      _f("Reacción",                     ev.instReac,         true),
     ].join(""))),
 
     _sec("10. Distribución de Tiempos", secTiempos),
