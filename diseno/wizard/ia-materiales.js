@@ -109,6 +109,26 @@ export async function generarClasificacionIA() {
       if (el) el.value = data[key] || "";
     });
 
+    // Inyectar formatos × participantes en Materiales didácticos
+    const _datos = getData("ec0217_datos") || {};
+    const _n = parseInt(_datos.participantes, 10) || 0;
+    if (_n > 0) {
+      const _elMat = document.getElementById("req-materiales-didacticos");
+      if (_elMat) {
+        const _hojas = Math.ceil(_n / 20);
+        const _formatos = [
+          `• Evaluación Diagnóstica — ${_n} copias`,
+          `• Contrato de Aprendizaje — ${_n} copias`,
+          `• Evaluación Formativa — ${_n} copias`,
+          `• Evaluación Sumativa — ${_n} copias`,
+          `• Evaluación de Reacción — ${_n} copias`,
+          `• Lista de Asistencia — ${_hojas} hoja${_hojas > 1 ? "s" : ""}`,
+        ].join("\n");
+        const _actual = _elMat.value.trim();
+        _elMat.value = _actual ? `${_actual}\n${_formatos}` : _formatos;
+      }
+    }
+
     if (typeof window.guardarMateriales === "function") window.guardarMateriales();
     if (typeof showToast === "function") showToast("Materiales clasificados correctamente", "success");
     mostrarUndo("Clasificación de materiales", "req-instalaciones");

@@ -25,42 +25,7 @@ export function guardarMaterialesFinal() {
   document.getElementById("nav-formatos")?.classList.remove("disabled");
 }
 
-const _FORMATOS_IND = [
-  "Evaluación Diagnóstica",
-  "Contrato de Aprendizaje",
-  "Evaluación Formativa",
-  "Evaluación Sumativa",
-  "Evaluación de Reacción",
-];
-
-export function actualizarFormatosIndividuales() {
-  const datos = JSON.parse(localStorage.getItem("ec0217_datos") || "{}");
-  const n = parseInt(datos.participantes, 10) || 0;
-  const label = n > 0 ? String(n) : "N";
-
-  const badgeN  = document.getElementById("badge-n-participantes");
-  const badgeFmt = document.getElementById("badge-participantes-fmt");
-  if (badgeN)  badgeN.textContent  = label;
-  if (badgeFmt) badgeFmt.textContent = label;
-
-  const tbody = document.getElementById("tbody-formatos-ind");
-  if (!tbody) return;
-
-  const hojasAsistencia = n > 0 ? Math.ceil(n / 20) : "—";
-  const filas = _FORMATOS_IND.map(nombre => ({ nombre, cantidad: n > 0 ? n : "—" }));
-  filas.push({ nombre: "Lista de Asistencia (hojas)", cantidad: hojasAsistencia });
-
-  tbody.innerHTML = filas.map((f, i) => `
-    <tr style="background:${i % 2 === 0 ? "#fff" : "#f8fafc"};">
-      <td style="padding:8px 12px;border:1px solid #e2e8f0;">${f.nombre}</td>
-      <td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:center;font-weight:600;color:#1F3B6D;">${f.cantidad}</td>
-      <td style="padding:8px 12px;border:1px solid #e2e8f0;text-align:center;"><input type="checkbox" style="width:16px;height:16px;cursor:pointer;"></td>
-    </tr>
-  `).join("");
-}
-
 export function cargarMateriales() {
-  actualizarFormatosIndividuales();
   const raw = localStorage.getItem("ec0217_materiales");
   if (!raw) return;
   try {
@@ -85,10 +50,9 @@ export function cargarMateriales() {
 }
 
 export function initStepMateriales() {
-  window.guardarMateriales              = guardarMateriales;
-  window.guardarMaterialesFinal         = guardarMaterialesFinal;
-  window.cargarMateriales               = cargarMateriales;
-  window.actualizarFormatosIndividuales = actualizarFormatosIndividuales;
+  window.guardarMateriales  = guardarMateriales;
+  window.guardarMaterialesFinal = guardarMaterialesFinal;
+  window.cargarMateriales   = cargarMateriales;
 }
 
 export function getTemplate() {
@@ -199,11 +163,8 @@ export function getTemplate() {
               </div>
               <div class="form-group full-width">
                 <label for="req-materiales-didacticos">Materiales didácticos de apoyo y servicios</label>
-                <span id="badge-mat-participantes" style="display:inline-flex;align-items:center;gap:5px;background:#e0e7ff;color:#3730a3;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;margin-bottom:8px;">
-                  × <span id="badge-n-participantes">N</span> participantes — multiplica los ítems individuales por esta cantidad
-                </span>
                 <textarea spellcheck="true" lang="es" id="req-materiales-didacticos" rows="5"
-                  placeholder="Ej: • Hojas blancas (1 por participante)&#10;• Bolígrafos&#10;• Manual del participante"></textarea>
+                  placeholder="Ej: • Hojas blancas&#10;• Bolígrafos&#10;• Manual del participante&#10;(Los formatos × participantes se añaden automáticamente al clasificar con IA)"></textarea>
               </div>
               <div class="form-group full-width">
                 <label for="req-humanos">Requerimientos humanos</label>
@@ -220,28 +181,6 @@ export function getTemplate() {
                 <textarea spellcheck="true" lang="es" id="req-seguridad" rows="4"
                   placeholder="Ej: • Botiquín de primeros auxilios&#10;• Señalización de salidas de emergencia&#10;• Gel antibacterial"></textarea>
               </div>
-            </div>
-          </div>
-
-          <hr>
-
-          <div id="seccion-formatos-individuales">
-            <h2 style="margin-bottom:6px;">Formatos individuales por participante</h2>
-            <p class="hint" style="margin-bottom:16px;">
-              Con <strong id="badge-participantes-fmt">—</strong> participantes registrados en el Paso 1,
-              necesitarás preparar estas impresiones antes del curso.
-            </p>
-            <div style="overflow-x:auto;">
-              <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead>
-                  <tr style="background:#f0f4fb;">
-                    <th style="padding:8px 12px;border:1px solid #e2e8f0;text-align:left;">Formato</th>
-                    <th style="padding:8px 12px;border:1px solid #e2e8f0;text-align:center;width:110px;">Copias</th>
-                    <th style="padding:8px 12px;border:1px solid #e2e8f0;text-align:center;width:80px;">¿Listo?</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-formatos-ind"></tbody>
-              </table>
             </div>
           </div>
 
