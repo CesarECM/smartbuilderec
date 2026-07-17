@@ -1,7 +1,15 @@
 // ─── wizard/step-tiempos.js — Paso 15: Distribución de Tiempos ───────────────
-// La norma EC0217 exige exactamente 120 minutos de duración del curso.
+// La meta de minutos es la duración declarada en Paso 1 (mínimo 120 por norma).
 
 import { DURACION_MINIMA_MIN } from "./config.js";
+
+function _getDuracionRequerida() {
+  try {
+    const d = JSON.parse(localStorage.getItem("ec0217_datos") || "{}");
+    const n = parseInt(d.duracion, 10);
+    return n >= DURACION_MINIMA_MIN ? n : DURACION_MINIMA_MIN;
+  } catch (_) { return DURACION_MINIMA_MIN; }
+}
 
 const _DEFAULT_TIEMPOS = [
   { seccion: "Apertura", filas: [
@@ -46,32 +54,36 @@ export function actualizarSubtotalesTiempos() {
 }
 
 export function actualizarTotalTiempos() {
+  const meta  = _getDuracionRequerida();
   const total = _tiempos().reduce((acc, b) => acc + b.filas.reduce((s, f) => s + Number(f.tiempo || 0), 0), 0);
 
   const totalEl = document.getElementById("totalTiempos");
   if (totalEl) totalEl.textContent = total;
 
+  const metaEl = document.getElementById("duracionMetaLabel");
+  if (metaEl) metaEl.textContent = `${meta} minutos`;
+
   const totalCard = document.getElementById("totalTiemposCard");
   if (totalCard) {
     totalCard.classList.remove("total-correcto", "total-error");
-    totalCard.classList.add(total === DURACION_MINIMA_MIN ? "total-correcto" : "total-error");
+    totalCard.classList.add(total === meta ? "total-correcto" : "total-error");
   }
 
   const errEl = document.getElementById("err-tiempos");
   if (errEl) {
-    if (total === DURACION_MINIMA_MIN) {
+    if (total === meta) {
       errEl.style.display = "none";
     } else {
-      const diff = total - DURACION_MINIMA_MIN;
+      const diff = total - meta;
       errEl.textContent = diff > 0
-        ? `El total es ${total} min — necesitas reducir ${diff} minuto${diff !== 1 ? "s" : ""} en alguna actividad.`
-        : `El total es ${total} min — necesitas agregar ${Math.abs(diff)} minuto${Math.abs(diff) !== 1 ? "s" : ""} en alguna actividad.`;
+        ? `El total es ${total} min — necesitas reducir ${diff} minuto${diff !== 1 ? "s" : ""} para llegar a ${meta} min.`
+        : `El total es ${total} min — necesitas agregar ${Math.abs(diff)} minuto${Math.abs(diff) !== 1 ? "s" : ""} para llegar a ${meta} min.`;
       errEl.style.display = "block";
     }
   }
 
   const btnGuardarTiempos = document.getElementById("btnGuardarTiempos");
-  if (btnGuardarTiempos) btnGuardarTiempos.disabled = total !== DURACION_MINIMA_MIN;
+  if (btnGuardarTiempos) btnGuardarTiempos.disabled = total !== meta;
 
   return total;
 }
@@ -165,8 +177,8 @@ export function getTemplate() {
 
         <div class="card" style="max-width: 950px;">
           <p>
-            Ajusta los minutos de cada actividad para que el total sea exactamente <strong>120 minutos</strong>.
-            Todos los campos son editables — modifica los valores hasta que el contador llegue a 120.
+            Ajusta los minutos de cada actividad para que el total sea exactamente <strong id="duracionMetaLabel">120 minutos</strong>.
+            Todos los campos son editables — modifica los valores hasta alcanzar la duración indicada en el Paso 1.
           </p>
           <p class="hint">
             💡 <strong>Sugerencia:</strong> Si te sobran o faltan minutos, ajusta primero las técnicas grupales
