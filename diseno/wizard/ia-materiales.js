@@ -122,9 +122,14 @@ export async function generarClasificacionIA() {
           `• Evaluación Sumativa — ${_n} copias`,
           `• Evaluación de Reacción — ${_n} copias`,
           `• Lista de Asistencia — 1 juego`,
-        ].join("\n");
-        const _actual = _elMat.value.trim();
-        _elMat.value = _actual ? `${_actual}\n${_formatos}` : _formatos;
+        ];
+        const _prefijos = ["• Evaluación Diagnóstica", "• Contrato de Aprendizaje",
+          "• Evaluación Formativa", "• Evaluación Sumativa",
+          "• Evaluación de Reacción", "• Lista de Asistencia"];
+        const _base = _elMat.value.split("\n")
+          .filter(l => !_prefijos.some(p => l.trim().startsWith(p)))
+          .join("\n").trim();
+        _elMat.value = _base ? `${_base}\n${_formatos.join("\n")}` : _formatos.join("\n");
       }
     }
 
