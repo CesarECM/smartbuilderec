@@ -46,14 +46,8 @@ Instrucciones:
    - Extensión eléctrica o multicontacto, si se requiere para conectar el equipo.
 
    En materialesDidacticos:
-   - Formatos para evaluación diagnóstica.
-   - Formatos para evaluación formativa o intermedia.
-   - Formatos para evaluación sumativa o final.
-   - Formatos para evaluación de satisfacción o reacción.
-   - Formatos de contrato de aprendizaje.
-   - Lista de asistencia.
-   - Lista de verificación de requerimientos.
    - Papelería necesaria: hojas blancas, bolígrafos, lápices, plumones, pintarrón o rotafolio según se requiera.
+   IMPORTANTE: NO incluyas formatos de evaluación, contrato de aprendizaje, lista de asistencia ni lista de verificación de requerimientos — esos documentos se gestionan automáticamente por el sistema con las cantidades correctas por participante.
 
    En humanos:
    - Instructor.
@@ -85,7 +79,7 @@ Estructura obligatoria de salida:
 {{
   "instalaciones": "• Aula, salón o espacio adecuado para el número de participantes registrados\n• Mesas de trabajo suficientes para los participantes\n• Sillas suficientes para los participantes\n• Distribución del mobiliario de acuerdo con las actividades del curso",
   "equipo": "• Laptop\n• Proyector\n• Pantalla de proyección o pared blanca\n• Extensión eléctrica o multicontacto",
-  "materialesDidacticos": "• Formatos para evaluación diagnóstica\n• Formatos para evaluación formativa o intermedia\n• Formatos para evaluación sumativa o final\n• Formatos para evaluación de satisfacción o reacción\n• Formatos de contrato de aprendizaje\n• Lista de asistencia\n• Lista de verificación de requerimientos\n• Hojas blancas\n• Bolígrafos\n• Lápices\n• Plumones",
+  "materialesDidacticos": "• Hojas blancas\n• Bolígrafos\n• Lápices\n• Plumones",
   "humanos": "• Instructor\n• Participantes registrados\n• Personal de staff o apoyo",
   "otros": "",
   "seguridad": "• Gel antibacterial\n• Cubrebocas\n• Botiquín de primeros auxilios\n• Señalización de salidas de emergencia\n• Extinguidor\n• Spray desinfectante\n• Toallas desinfectantes"
