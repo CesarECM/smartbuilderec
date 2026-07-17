@@ -93,9 +93,10 @@ export async function generarCompromisosIA() {
 }
 
 async function _generarTodoCierre(btnTodo) {
-  const compromisos   = document.getElementById("compromisosTexto");
-  const cierreTexto   = document.getElementById("cierreTexto");
-  const cierreResumen = document.getElementById("cierreResumen");
+  const compromisos        = document.getElementById("compromisosTexto");
+  const cierreTexto        = document.getElementById("cierreTexto");
+  const cierreResumen      = document.getElementById("cierreResumen");
+  const descripcionGeneral = document.getElementById("descripcionGeneralEvaluacion");
 
   iniciarBatch("ec0217_cierre", "cargarCierre");
   const tareas = [];
@@ -106,6 +107,7 @@ async function _generarTodoCierre(btnTodo) {
   } else if (!cierreResumen?.value.trim()) {
     tareas.push({ fn: generarResumenIA });
   }
+  if (!descripcionGeneral?.value.trim()) tareas.push({ fn: () => window.generarDescripcionGeneralIA?.() });
 
   if (tareas.length === 0) {
     if (typeof showAlert === "function") showAlert("Todos los campos ya tienen contenido.");
