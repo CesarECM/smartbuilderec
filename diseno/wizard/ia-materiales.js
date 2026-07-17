@@ -166,4 +166,7 @@ export function initIAMateriales() {
 
   const btnTodo = document.getElementById("btnGenerarTodosMateriales");
   if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoMateriales(btnTodo));
+
+  const btnClas = document.getElementById("btnGenerarClasificacion");
+  if (btnClas) btnClas.addEventListener("click", generarClasificacionIA);
 }
