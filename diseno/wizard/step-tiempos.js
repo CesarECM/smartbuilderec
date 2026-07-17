@@ -82,8 +82,14 @@ export function actualizarTotalTiempos() {
     }
   }
 
+  const hayActividadCero = _tiempos().some(b => b.filas.some(f => (parseInt(f.tiempo, 10) || 0) < 1));
   const btnGuardarTiempos = document.getElementById("btnGuardarTiempos");
-  if (btnGuardarTiempos) btnGuardarTiempos.disabled = total !== meta;
+  if (btnGuardarTiempos) btnGuardarTiempos.disabled = total !== meta || hayActividadCero;
+
+  if (hayActividadCero && errEl && total === meta) {
+    errEl.textContent = "Todas las actividades deben tener al menos 1 minuto.";
+    errEl.style.display = "block";
+  }
 
   return total;
 }
@@ -113,7 +119,7 @@ export function renderTiempos() {
               <td>${fila.titulo}</td>
               <td class="col-tiempo">
                 <div class="input-tiempo-wrapper">
-                  <input type="number" min="0" value="${fila.tiempo}"
+                  <input type="number" min="1" value="${fila.tiempo}"
                     data-bloque="${bloqueIndex}" data-fila="${filaIndex}" class="input-tiempo">
                   <span class="min-label">min</span>
                 </div>
@@ -134,6 +140,17 @@ export function renderTiempos() {
       guardarTiemposTemporal();
       actualizarTotalTiempos();
       actualizarSubtotalesTiempos();
+    });
+    input.addEventListener("blur", () => {
+      if (!input.value || Number(input.value) < 1) {
+        input.value = 1;
+        const bi = Number(input.dataset.bloque);
+        const fi = Number(input.dataset.fila);
+        _tiempos()[bi].filas[fi].tiempo = 1;
+        guardarTiemposTemporal();
+        actualizarTotalTiempos();
+        actualizarSubtotalesTiempos();
+      }
     });
   });
 
