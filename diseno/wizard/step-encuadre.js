@@ -150,6 +150,13 @@ export function validarContrato() {
   return true;
 }
 
+export function guardarReglasFinal() {
+  guardarEncuadreTemporal();
+  localStorage.setItem("ec0217_reglas_completo", "true");
+  document.getElementById("nav-reglas")?.classList.add("completed");
+  document.getElementById("nav-contrato")?.classList.remove("disabled");
+}
+
 export function guardarEncuadreFinal() {
   const data = recolectarEncuadre();
   localStorage.setItem("ec0217_encuadre", JSON.stringify(data));
@@ -206,6 +213,7 @@ export function initStepEncuadre() {
   window.validarPreguntas                 = validarPreguntas;
   window.guardarPreguntasFinal            = guardarPreguntasFinal;
   window.validarReglas                    = validarReglas;
+  window.guardarReglasFinal               = guardarReglasFinal;
   window.validarContrato                  = validarContrato;
   window.guardarEncuadreFinal             = guardarEncuadreFinal;
   window.cargarEncuadre                   = cargarEncuadre;

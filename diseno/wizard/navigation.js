@@ -105,6 +105,43 @@ export function initNavigation() {
     if (destino) mostrarSeccionPrincipal(destino);
   });
 
+  // Click en nav-items habilitados del sidebar principal
+  document.querySelector(".nav-grupos")?.addEventListener("click", ev => {
+    const item = ev.target.closest(".nav-item");
+    if (!item || item.classList.contains("disabled")) return;
+    // Los sub-tabs de objetivos se manejan en ia-objetivos.js
+    if (["nav-cognitiva","nav-psicomotriz","nav-afectiva","nav-general"].includes(item.id)) return;
+    const seccion = NAV_A_SECCION[item.id];
+    if (seccion) mostrarSeccionPrincipal(seccion);
+  });
+
+  // Tabla centralizada de botones "Siguiente / Guardar" de cada paso
+  const _BTN_NAV = [
+    { btn:"btnSiguienteDatos",     validar:"validarDatosCurso",      guardar:"guardarDatosCurso",       sig:"seccionObjetivos"   },
+    { btn:"btnGuardarBeneficios",  validar:"validarBeneficios",       guardar:"guardarBeneficios",        sig:"seccionTemario"     },
+    { btn:"btnGuardarTemario",     validar:"validarTemario",          guardar:"guardarTemarioFinal",      sig:"seccionIntegracion" },
+    { btn:"btnGuardarIntegracion", validar:"validarIntegracion",      guardar:"guardarIntegracionFinal",  sig:"seccionPreguntas"   },
+    { btn:"btnGuardarPreguntas",   validar:"validarPreguntas",        guardar:"guardarPreguntasFinal",    sig:"seccionReglas"      },
+    { btn:"btnGuardarReglas",      validar:"validarReglas",           guardar:"guardarReglasFinal",       sig:"seccionContrato"    },
+    { btn:"btnGuardarContrato",    validar:"validarContrato",         guardar:"guardarEncuadreFinal",     sig:"seccionExpositiva"  },
+    { btn:"btnGuardarExpositiva",  validar:"validarExpositiva",       guardar:"guardarExpositivaFinal",   sig:"seccionDemostrativa"},
+    { btn:"btnGuardarDemostrativa",validar:"validarDemostrativa",     guardar:"guardarDemostrativaFinal", sig:"seccionEnergizante" },
+    { btn:"btnGuardarEnergizante", validar:"validarEnergizante",      guardar:"guardarEnergizanteFinal",  sig:"seccionDialogo"     },
+    { btn:"btnGuardarDialogo",     validar:"validarDialogo",          guardar:"guardarDialogoFinal",      sig:"seccionCierre"      },
+    { btn:"btnGuardarCierre",      validar:"validarCierre",           guardar:"guardarCierreFinal",       sig:"seccionEvaluaciones"},
+    { btn:"btnGuardarEvaluaciones",validar:"validarEvaluaciones",     guardar:"guardarEvaluacionesFinal", sig:"seccionTiempos"     },
+    { btn:"btnGuardarTiempos",     validar:null,                      guardar:"guardarTiemposFinal",      sig:"seccionMateriales"  },
+    { btn:"btnGuardarMateriales",  validar:null,                      guardar:"guardarMaterialesFinal",   sig:"seccionFormatos"    },
+  ];
+
+  _BTN_NAV.forEach(({ btn, validar, guardar, sig }) => {
+    document.getElementById(btn)?.addEventListener("click", () => {
+      if (validar && typeof window[validar] === "function" && !window[validar]()) return;
+      if (guardar && typeof window[guardar] === "function") window[guardar]();
+      mostrarSeccionPrincipal(sig);
+    });
+  });
+
   // Exponer en window para que app.js y scripts clásicos puedan llamarlos
   window.mostrarSeccionPrincipal = mostrarSeccionPrincipal;
   window.desbloquear             = desbloquear;

@@ -18,6 +18,13 @@ export function guardarMateriales() {
   localStorage.setItem("ec0217_materiales", JSON.stringify(materiales));
 }
 
+export function guardarMaterialesFinal() {
+  guardarMateriales();
+  localStorage.setItem("ec0217_materiales_completo", "true");
+  document.getElementById("nav-materiales")?.classList.add("completed");
+  document.getElementById("nav-formatos")?.classList.remove("disabled");
+}
+
 const _FORMATOS_IND = [
   "Evaluación Diagnóstica",
   "Contrato de Aprendizaje",
@@ -78,8 +85,9 @@ export function cargarMateriales() {
 }
 
 export function initStepMateriales() {
-  window.guardarMateriales             = guardarMateriales;
-  window.cargarMateriales              = cargarMateriales;
+  window.guardarMateriales              = guardarMateriales;
+  window.guardarMaterialesFinal         = guardarMaterialesFinal;
+  window.cargarMateriales               = cargarMateriales;
   window.actualizarFormatosIndividuales = actualizarFormatosIndividuales;
 }
 

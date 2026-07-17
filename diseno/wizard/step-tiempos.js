@@ -10,6 +10,13 @@ export function guardarTiemposTemporal() {
   localStorage.setItem("ec0217_tiempos", JSON.stringify(_tiempos()));
 }
 
+export function guardarTiemposFinal() {
+  guardarTiemposTemporal();
+  localStorage.setItem("ec0217_tiempos_completo", "true");
+  document.getElementById("nav-tiempos")?.classList.add("completed");
+  document.getElementById("nav-materiales")?.classList.remove("disabled");
+}
+
 export function actualizarSubtotalesTiempos() {
   document.querySelectorAll(".tiempo-bloque").forEach((bloqueDiv, bloqueIndex) => {
     const subtotal = _tiempos()[bloqueIndex]?.filas.reduce((acc, f) => acc + Number(f.tiempo || 0), 0) ?? 0;
@@ -122,6 +129,7 @@ export function cargarTiempos() {
 
 export function initStepTiempos() {
   window.guardarTiemposTemporal    = guardarTiemposTemporal;
+  window.guardarTiemposFinal       = guardarTiemposFinal;
   window.actualizarSubtotalesTiempos = actualizarSubtotalesTiempos;
   window.actualizarTotalTiempos    = actualizarTotalTiempos;
   window.renderTiempos             = renderTiempos;

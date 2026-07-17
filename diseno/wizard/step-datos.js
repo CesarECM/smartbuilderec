@@ -93,6 +93,12 @@ export function initStepDatos() {
   window.validarDatosCurso   = validarDatosCurso;
   window.cargarDatosCurso    = cargarDatosCurso;
   window.guardarDatosCurso   = guardarDatosCurso;
+
+  document.getElementById("btnCopiarInstructor")?.addEventListener("click", () => {
+    const inst = document.getElementById("instructor")?.value.trim();
+    const dis  = document.getElementById("disenador");
+    if (inst && dis) dis.value = inst;
+  });
 }
 
 export function getTemplate() {

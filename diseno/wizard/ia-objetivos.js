@@ -143,4 +143,74 @@ export async function generarGeneral() {
 export function initIAObjetivos() {
   window.evaluateText   = evaluateText;
   window.generarGeneral = generarGeneral;
+
+  // Botón "Revisar con IA"
+  document.getElementById("sendBtn")?.addEventListener("click", () => {
+    evaluateText(document.getElementById("objectiveInput")?.value || "");
+  });
+
+  // Botón "Siguiente →" (marcar objetivo actual como completo)
+  document.getElementById("nextBtn")?.addEventListener("click", () => {
+    const e = _estado();
+    const ta = document.getElementById("objectiveInput");
+    if (ta && e.actual) e[e.actual].texto = ta.value;
+    window.marcarCompleta?.(e.actual);
+  });
+
+  // Botón "Guardar objetivo" (modo libre)
+  document.getElementById("btnGuardarObjetivoLibre")?.addEventListener("click", () => {
+    const e = _estado();
+    const ta = document.getElementById("objectiveInput");
+    if (ta && e.actual) e[e.actual].texto = ta.value;
+    window.guardarObjetivoLibre?.();
+  });
+
+  // Botón "✨ Generar objetivo general con IA"
+  document.getElementById("btnGenerarObjetivoGeneral")?.addEventListener("click", () => generarGeneral());
+
+  // Botón "Siguiente" (ir a Beneficios tras objetivo general)
+  document.getElementById("btnIrBeneficios")?.addEventListener("click", () => {
+    window.mostrarSeccionPrincipal?.("seccionBeneficios");
+  });
+
+  // Modo estricto ON / OFF
+  document.getElementById("btnModoEstrictoOn")?.addEventListener("click", () => {
+    localStorage.setItem("ec0217_modo_estricto", "on");
+    window.reiniciarAvanceObjetivosEstricto?.();
+    window.aplicarModoObjetivos?.();
+  });
+  document.getElementById("btnModoEstrictoOff")?.addEventListener("click", () => {
+    localStorage.setItem("ec0217_modo_estricto", "off");
+    window.aplicarModoObjetivos?.();
+  });
+
+  // Sub-tabs: cognitiva / psicomotriz / afectiva / general
+  const TITLES = { cognitiva:"Objetivo Cognitivo", psicomotriz:"Objetivo Psicomotriz", afectiva:"Objetivo Afectivo", general:"Objetivo General" };
+  ["cognitiva","psicomotriz","afectiva","general"].forEach(tipo => {
+    document.getElementById(`nav-${tipo}`)?.addEventListener("click", () => {
+      if (document.getElementById(`nav-${tipo}`)?.classList.contains("disabled")) return;
+      const e  = _estado();
+      const ta = document.getElementById("objectiveInput");
+      if (ta && e.actual) e[e.actual].texto = ta.value;
+      e.actual = tipo;
+      if (ta) ta.value = e[tipo].texto || "";
+      const titleEl = document.getElementById("sectionTitle");
+      if (titleEl) titleEl.textContent = TITLES[tipo] || tipo;
+      ["cognitiva","psicomotriz","afectiva","general"].forEach(t =>
+        document.getElementById(`nav-${t}`)?.classList.toggle("active", t === tipo)
+      );
+      const modo = localStorage.getItem("ec0217_modo_estricto") || "on";
+      const isGeneral = tipo === "general";
+      const $  = id => document.getElementById(id);
+      const sv = (id, v) => { const el = $(id); if (el) el.style.display = v; };
+      sv("btnGenerarGeneral",      isGeneral && !e.general.completa  ? "inline-block" : "none");
+      sv("btnIrBeneficios",        isGeneral &&  e.general.completa  ? "inline-block" : "none");
+      sv("nextBtn",               !isGeneral && modo === "on"  && !e[tipo].completa ? "inline-block" : "none");
+      sv("btnGuardarObjetivoLibre",!isGeneral && modo === "off"               ? "inline-block" : "none");
+      const sumEl = $("summary");
+      if (sumEl) sumEl.textContent = "Aquí aparecerá el análisis automático.";
+      const ckEl = $("checksList");
+      if (ckEl) ckEl.style.display = "none";
+    });
+  });
 }

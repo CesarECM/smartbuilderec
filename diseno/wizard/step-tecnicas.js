@@ -146,6 +146,20 @@ export function validarEnergizante() {
   return true;
 }
 
+export function guardarIntegracionFinal() {
+  guardarTecnicasTemporal();
+  localStorage.setItem("ec0217_integracion_completo", "true");
+  document.getElementById("nav-integracion")?.classList.add("completed");
+  document.getElementById("nav-preguntas")?.classList.remove("disabled");
+}
+
+export function guardarEnergizanteFinal() {
+  guardarTecnicasTemporal();
+  localStorage.setItem("ec0217_energizante_completo", "true");
+  document.getElementById("nav-energizante")?.classList.add("completed");
+  document.getElementById("nav-dialogo")?.classList.remove("disabled");
+}
+
 export function guardarTecnicasFinal() {
   const data = recolectarTecnicas();
   const rhSel = obtenerRadioSeleccionado("tecnicaIntegracion");
@@ -211,6 +225,8 @@ export function initStepTecnicas() {
   window.inicializarTecnicasPersonalizadasPorDefecto = inicializarTecnicasPersonalizadasPorDefecto;
   window.validarIntegracion                   = validarIntegracion;
   window.validarEnergizante                   = validarEnergizante;
+  window.guardarIntegracionFinal              = guardarIntegracionFinal;
+  window.guardarEnergizanteFinal              = guardarEnergizanteFinal;
   window.guardarTecnicasFinal                 = guardarTecnicasFinal;
   window.cargarTecnicas                       = cargarTecnicas;
 }
