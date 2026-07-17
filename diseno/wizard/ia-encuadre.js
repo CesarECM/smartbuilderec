@@ -52,7 +52,7 @@ export async function generarPreguntasEncuadreIA() {
     }
 
     if (typeof window.guardarEncuadreTemporal === "function") window.guardarEncuadreTemporal();
-    mostrarUndo("Preguntas de encuadre");
+    mostrarUndo("Preguntas de encuadre", "preguntasEncuadre");
 
   } catch (err) {
     console.error("Error al generar preguntas:", err);

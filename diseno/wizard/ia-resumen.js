@@ -43,7 +43,7 @@ export async function generarResumenIA() {
       if (cierreResumen) cierreResumen.value = texto;
       localStorage.setItem("ec0217_cierre_resumen", texto);
       if (typeof window.guardarCierreTemporal === "function") window.guardarCierreTemporal();
-      mostrarUndo("Resumen");
+      mostrarUndo("Resumen", "cierreResumen");
     }
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -80,7 +80,7 @@ export async function generarCompromisosIA() {
     if (texto && compromisosTexto) {
       compromisosTexto.value = texto;
       if (typeof window.guardarCierreTemporal === "function") window.guardarCierreTemporal();
-      mostrarUndo("Compromisos");
+      mostrarUndo("Compromisos", "compromisosTexto");
     }
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;

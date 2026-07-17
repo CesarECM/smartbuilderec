@@ -46,7 +46,7 @@ export async function generarExpositivaIA(campo, boton) {
 
     textareaDestino.value = data.texto || "";
     if (typeof window.guardarExpositivaTemporal === "function") window.guardarExpositivaTemporal();
-    mostrarUndo("Técnica Expositiva");
+    mostrarUndo("Técnica Expositiva", IDS_EXPOSITIVA[campo]);
 
   } catch (err) {
     console.error("Error al generar técnica expositiva:", err);
@@ -89,7 +89,7 @@ export async function generarDemostrativaIA(campo, boton) {
 
     textareaDestino.value = textoGenerado;
     if (typeof window.guardarDemostrativaTemporal === "function") window.guardarDemostrativaTemporal();
-    mostrarUndo("Técnica Demostrativa");
+    mostrarUndo("Técnica Demostrativa", IDS_DEMOSTRATIVA[campo]);
 
   } catch (err) {
     console.error("Error al generar técnica demostrativa:", err);

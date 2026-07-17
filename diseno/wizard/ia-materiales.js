@@ -57,7 +57,7 @@ export async function generarMaterialesIA(tecnica) {
 
     textareaEl.value = data.texto || "";
     if (typeof window.guardarMateriales === "function") window.guardarMateriales();
-    mostrarUndo(`Materiales — ${tecnica}`);
+    mostrarUndo(`Materiales — ${tecnica}`, `mat-${tecnica}`);
 
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -111,7 +111,7 @@ export async function generarClasificacionIA() {
 
     if (typeof window.guardarMateriales === "function") window.guardarMateriales();
     if (typeof showToast === "function") showToast("Materiales clasificados correctamente", "success");
-    mostrarUndo("Clasificación de materiales");
+    mostrarUndo("Clasificación de materiales", "req-instalaciones");
 
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;

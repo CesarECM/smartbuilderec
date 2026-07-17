@@ -1,13 +1,44 @@
 // ─── wizard/undo.js — Deshacer la última generación con IA ───────────────────
-// guardarUndo(lsKey, cargarFn)  → guarda snapshot (no-op si hay batch activo)
-// mostrarUndo(desc)             → muestra barra (no-op si hay batch activo)
-// iniciarBatch(lsKey, cargarFn) → guarda snapshot y activa modo batch
-// finalizarBatch(desc)          → desactiva batch y muestra barra
-// limpiarUndo()                 → oculta barra y descarta snapshot
-// aplicarUndo()                 → restaura LS y llama window[cargarFn]()
+// guardarUndo(lsKey, cargarFn)         → guarda snapshot (no-op si hay batch activo)
+// mostrarUndo(desc, elementId?)        → botón inline bajo elementId, o barra si null
+// iniciarBatch(lsKey, cargarFn)        → guarda snapshot y activa modo batch
+// finalizarBatch(desc, elementId?)     → desactiva batch y muestra barra
+// limpiarUndo()                        → oculta UI y descarta snapshot
+// aplicarUndo()                        → restaura LS y llama window[cargarFn]()
 
 let _snapshot    = null;  // { lsKey, valorPrevio, cargarFn }
 let _batchActivo = false;
+
+// ── Inline undo (generación individual) ──────────────────────────────────────
+
+function _removeInline() {
+  document.getElementById("sbe-undo-inline")?.remove();
+}
+
+function _createInline(elementId, descripcion) {
+  _removeInline();
+  const anchor = document.getElementById(elementId);
+  if (!anchor) return;
+
+  const div = document.createElement("div");
+  div.id = "sbe-undo-inline";
+  div.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:6px;";
+  div.innerHTML = `
+    <button id="sbe-undo-btn"
+      style="background:none;border:1px solid #94a3b8;color:#475569;border-radius:5px;
+             padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap;">
+      ↩ Deshacer
+    </button>
+    <span style="font-size:11px;color:#94a3b8;">${descripcion} — generado con IA</span>
+    <button id="sbe-undo-close"
+      style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;
+             padding:0 4px;margin-left:auto;line-height:1;">✕</button>`;
+  anchor.insertAdjacentElement("afterend", div);
+  document.getElementById("sbe-undo-btn").addEventListener("click", aplicarUndo);
+  document.getElementById("sbe-undo-close").addEventListener("click", limpiarUndo);
+}
+
+// ── Barra inferior (batch / fallback) ────────────────────────────────────────
 
 function _getBar() {
   let bar = document.getElementById("sbe-undo-bar");
@@ -26,33 +57,39 @@ function _getBar() {
         Generación con IA aplicada
       </span>
       <div style="display:flex;gap:8px;flex-shrink:0;">
-        <button id="sbe-undo-btn"
+        <button id="sbe-undo-btn-bar"
           style="background:#3b82f6;color:#fff;border:none;padding:6px 16px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;">
           ↩ Deshacer
         </button>
-        <button id="sbe-undo-close"
+        <button id="sbe-undo-close-bar"
           style="background:transparent;color:#94a3b8;border:none;padding:4px 8px;cursor:pointer;font-size:16px;line-height:1;">
           ✕
         </button>
       </div>`;
     document.body.appendChild(bar);
-    document.getElementById("sbe-undo-btn").addEventListener("click", aplicarUndo);
-    document.getElementById("sbe-undo-close").addEventListener("click", limpiarUndo);
+    document.getElementById("sbe-undo-btn-bar").addEventListener("click", aplicarUndo);
+    document.getElementById("sbe-undo-close-bar").addEventListener("click", limpiarUndo);
   }
   return bar;
 }
+
+// ── API pública ───────────────────────────────────────────────────────────────
 
 export function guardarUndo(lsKey, cargarFn) {
   if (_batchActivo) return;
   _snapshot = { lsKey, valorPrevio: localStorage.getItem(lsKey), cargarFn };
 }
 
-export function mostrarUndo(descripcion) {
+export function mostrarUndo(descripcion, elementId = null) {
   if (_batchActivo || !_snapshot) return;
-  const bar  = _getBar();
-  const desc = document.getElementById("sbe-undo-desc");
-  if (desc) desc.textContent = `↩ Generado con IA: ${descripcion}`;
-  bar.style.display = "flex";
+  if (elementId) {
+    _createInline(elementId, descripcion);
+  } else {
+    const bar  = _getBar();
+    const desc = document.getElementById("sbe-undo-desc");
+    if (desc) desc.textContent = `↩ Generado con IA: ${descripcion}`;
+    bar.style.display = "flex";
+  }
 }
 
 export function iniciarBatch(lsKey, cargarFn) {
@@ -60,14 +97,15 @@ export function iniciarBatch(lsKey, cargarFn) {
   _snapshot    = { lsKey, valorPrevio: localStorage.getItem(lsKey), cargarFn };
 }
 
-export function finalizarBatch(descripcion) {
+export function finalizarBatch(descripcion, elementId = null) {
   _batchActivo = false;
-  mostrarUndo(descripcion);
+  mostrarUndo(descripcion, elementId);
 }
 
 export function limpiarUndo() {
   _snapshot    = null;
   _batchActivo = false;
+  _removeInline();
   const bar = document.getElementById("sbe-undo-bar");
   if (bar) bar.style.display = "none";
 }
@@ -86,10 +124,10 @@ export function aplicarUndo() {
 }
 
 export function initUndo() {
-  window.guardarUndo   = guardarUndo;
-  window.mostrarUndo   = mostrarUndo;
-  window.iniciarBatch  = iniciarBatch;
+  window.guardarUndo    = guardarUndo;
+  window.mostrarUndo    = mostrarUndo;
+  window.iniciarBatch   = iniciarBatch;
   window.finalizarBatch = finalizarBatch;
-  window.limpiarUndo   = limpiarUndo;
-  window.aplicarUndo   = aplicarUndo;
+  window.limpiarUndo    = limpiarUndo;
+  window.aplicarUndo    = aplicarUndo;
 }

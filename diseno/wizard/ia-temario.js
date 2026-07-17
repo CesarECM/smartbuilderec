@@ -54,7 +54,7 @@ export async function generarTemarioIA() {
     if (typeof window.guardarTemarioTemporal  === "function") window.guardarTemarioTemporal();
     if (typeof window.renderTemario           === "function") window.renderTemario();
     if (typeof window.limpiarErroresTemario   === "function") window.limpiarErroresTemario();
-    mostrarUndo("Temario");
+    mostrarUndo("Temario", "btnGenerarTemario");
 
   } catch (err) {
     console.error("Error al generar temario:", err);

@@ -35,7 +35,7 @@ export async function generarDialogoIA(campo, boton) {
 
     textareaDestino.value = data.texto || "";
     if (typeof window.guardarDialogoTemporal === "function") window.guardarDialogoTemporal();
-    mostrarUndo("Técnica Diálogo");
+    mostrarUndo("Técnica Diálogo", IDS_DIALOGO[campo]);
 
   } catch (err) {
     console.error("Error al generar técnica diálogo/discusión:", err);

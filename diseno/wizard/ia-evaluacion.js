@@ -41,7 +41,7 @@ export async function generarEvaluacionIA(tipo) {
     }
 
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
-    mostrarUndo(`Evaluación ${tipo}`);
+    mostrarUndo(`Evaluación ${tipo}`, esDiagnostica ? "instDiagnostica" : "instSumativa");
 
   } catch (err) {
     const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
@@ -124,7 +124,7 @@ export async function generarFormativaIA() {
 
     if (instFormativa) instFormativa.value = textoGenerado;
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
-    mostrarUndo("Evaluación formativa");
+    mostrarUndo("Evaluación formativa", "instFormativa");
 
   } catch (err) {
     console.error("Error al generar evaluación formativa:", err);

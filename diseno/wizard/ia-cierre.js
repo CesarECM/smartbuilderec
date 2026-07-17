@@ -50,7 +50,7 @@ export async function generarCierreIA() {
 
     if (cierreTexto) cierreTexto.value = data.texto || "";
     if (typeof window.guardarCierreTemporal === "function") window.guardarCierreTemporal();
-    mostrarUndo("Cierre");
+    mostrarUndo("Cierre", "cierreTexto");
 
     // Generar resumen automáticamente junto al cierre
     try {
@@ -110,7 +110,7 @@ export async function generarDescripcionGeneralIA() {
 
     if (descripcionGeneralEvaluacion) descripcionGeneralEvaluacion.value = data.texto || "";
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
-    mostrarUndo("Descripción general");
+    mostrarUndo("Descripción general", "descripcionGeneralEvaluacion");
 
   } catch (err) {
     console.error("Error al generar descripción general:", err);
