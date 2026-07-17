@@ -33,7 +33,7 @@
       const historial= codigos.filter(c =>  !!c.used_at || new Date(c.expires_at) <= ahora);
 
       let html = activos.length
-        ? `<div class="code-grid">${activos.map(c => _adm_renderCodeCard(c, perfilesMap, ahora)).join('')}</div>`
+        ? `<div class="code-grid">${activos.map((c, i) => _adm_renderCodeCard(c, perfilesMap, ahora, i === 0)).join('')}</div>`
         : `<p class="empty-txt" style="margin-bottom:16px">No hay códigos activos. Genera uno nuevo arriba.</p>`;
 
       html += `<details class="historial-section" ${historial.length ? 'open' : ''}>
@@ -49,14 +49,16 @@
       lista.innerHTML = html;
     }
 
-    function _adm_renderCodeCard(c, perfilesMap, ahora) {
+    function _adm_renderCodeCard(c, perfilesMap, ahora, isNewest = false) {
       const expirado   = new Date(c.expires_at) <= ahora;
       const usado      = !!c.used_at;
       const disponible = !usado && !expirado;
+      const destacar   = isNewest && disponible;
       const badgeCls   = usado ? 'badge-usado' : expirado ? 'badge-expirado' : 'badge-disponible';
       const badgeTxt   = usado ? 'Usado' : expirado ? 'Expirado' : 'Disponible';
       const fechaExp   = new Date(c.expires_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
       const fechaCrea  = new Date(c.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+      const tiempoRel  = _adm_tiempoRelativo(c.created_at);
 
       let metaExtra = '';
       if (usado && c.used_by && perfilesMap[c.used_by]) {
@@ -67,17 +69,33 @@
         metaExtra = '<br>Canjeado';
       }
 
-      return `<div class="code-card" id="adm-ccard-${c.id}">
+      return `<div class="code-card${destacar ? ' code-card--nuevo' : ''}" id="adm-ccard-${c.id}">
+        ${destacar ? `<div class="code-nuevo-label">✨ Recién generado</div>` : ''}
         <div class="code-card-top">
           <span class="code-text">${c.code}</span>
           <span class="${badgeCls}">${badgeTxt}</span>
         </div>
-        <div class="code-meta">Creado: ${fechaCrea}<br>Expira: ${fechaExp}${metaExtra}</div>
+        <div class="code-meta"><span class="code-tiempo-rel">${tiempoRel}</span><br>Creado: ${fechaCrea} · Expira: ${fechaExp}${metaExtra}</div>
         <div class="code-actions">
           ${disponible ? `<button class="btn-sm" onclick="admCopiarCodigo('${c.code}')">Copiar</button>` : ''}
           ${disponible ? `<button class="btn-sm danger" onclick="admEliminarCodigo('${c.id}',this)">Eliminar</button>` : ''}
         </div>
       </div>`;
+    }
+
+    function _adm_tiempoRelativo(fechaISO) {
+      const diff = Date.now() - new Date(fechaISO).getTime();
+      const min  = Math.floor(diff / 60000);
+      if (min < 1)  return 'hace unos segundos';
+      if (min < 60) return `hace ${min} minuto${min !== 1 ? 's' : ''}`;
+      const h = Math.floor(min / 60);
+      if (h < 24)   return `hace ${h} hora${h !== 1 ? 's' : ''}`;
+      const d = Math.floor(h / 24);
+      if (d < 7)    return `hace ${d} día${d !== 1 ? 's' : ''}`;
+      const w = Math.floor(d / 7);
+      if (w < 5)    return `hace ${w} semana${w !== 1 ? 's' : ''}`;
+      const m = Math.floor(d / 30);
+      return `hace ${m} mes${m !== 1 ? 'es' : ''}`;
     }
 
     function _adm_generarCodigoAleatorio() {
@@ -143,12 +161,23 @@
     }
 
     function admCopiarCodigo(code) {
-      navigator.clipboard.writeText(code).catch(() => {
+      const mensaje =
+`🎓 ¡Te comparto tu acceso a SmartBuilder EC!
+
+Con este código puedes registrarte y empezar a construir tu expediente didáctico listo para evaluación CONOCER EC0217.01:
+
+🔑 Código: ${code}
+
+👉 Regístrate aquí: https://smartbuilderec.com/registro
+
+Te tomará menos de 2 minutos y podrás generar todos los documentos que exige la norma de forma guiada, rápida y con apoyo de inteligencia artificial.`;
+
+      navigator.clipboard.writeText(mensaje).catch(() => {
         const t = document.createElement('textarea');
-        t.value = code; document.body.appendChild(t); t.select();
+        t.value = mensaje; document.body.appendChild(t); t.select();
         document.execCommand('copy'); t.remove();
       });
-      mostrarToast(`✓ Código ${code} copiado`);
+      mostrarToast(`✓ Código ${code} copiado con mensaje`);
     }
 
     function _adm_actualizarEstadoBtnCodigo(creditos, codigosActivos) {
