@@ -9,16 +9,25 @@ function _esc(str) {
 }
 
 function _sec(titulo, contenido) {
-  return `<div style="margin-bottom:24px;">
-    <h3 style="margin:0 0 10px;font-size:14px;color:var(--c-primary,#1e40af);
-      border-bottom:2px solid var(--c-primary,#1e40af);padding-bottom:6px;">${titulo}</h3>
+  return `<div style="margin-bottom:28px;">
+    <h3 style="margin:0 0 8px;font-size:14px;color:var(--c-primary,#1e40af);
+      border-bottom:2px solid var(--c-primary,#1e40af);padding-bottom:5px;">${titulo}</h3>
     <div style="font-size:13px;color:#374151;line-height:1.7;">${contenido}</div>
   </div>`;
 }
 
+// Fila de tabla: etiqueta + valor
 function _f(label, val) {
   const v = _esc(val?.toString().trim() || "");
-  return `<p style="margin:3px 0;"><span style="color:#64748b;display:inline-block;min-width:190px;">${label}:</span>${v || _NA}</p>`;
+  return `<tr>
+    <td style="padding:5px 10px;color:#64748b;font-weight:600;white-space:nowrap;
+               width:210px;vertical-align:top;border-bottom:1px solid #f1f5f9;">${label}</td>
+    <td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;">${v || _NA}</td>
+  </tr>`;
+}
+
+function _tbl(filas) {
+  return `<table style="width:100%;border-collapse:collapse;font-size:13px;">${filas}</table>`;
 }
 
 function _lista(arr) {
@@ -40,116 +49,134 @@ export function getPreviewHTML(p) {
   const mat = p.materiales   || {};
   const tArr = Array.isArray(p.tiempos) ? p.tiempos : [];
 
+  // ── Temario ───────────────────────────────────────────────────────────────
   const secTemario = (() => {
     const u = (nom, items) => items?.length
-      ? `<p style="margin:8px 0 3px;font-weight:600;">${_esc(nom)}</p>${_lista(items)}`
+      ? `<tr>
+          <td style="padding:5px 10px;font-weight:600;color:#64748b;vertical-align:top;
+                     width:120px;border-bottom:1px solid #f1f5f9;">${_esc(nom)}</td>
+          <td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;">${_lista(items)}</td>
+        </tr>`
       : "";
-    const html = u(tem.nombreU1 || "Unidad 1", tem.u1)
-               + u(tem.nombreU2 || "Unidad 2", tem.u2)
-               + u(tem.nombreU3 || "Unidad 3", tem.u3);
-    return html || _NA;
+    const filas = u(tem.nombreU1 || "Unidad 1", tem.u1)
+                + u(tem.nombreU2 || "Unidad 2", tem.u2)
+                + u(tem.nombreU3 || "Unidad 3", tem.u3);
+    return filas ? _tbl(filas) : _NA;
   })();
 
+  // ── Distribución de tiempos ───────────────────────────────────────────────
   const secTiempos = (() => {
     if (!tArr.length) return _NA;
     return tArr.map(b => {
       const total = (b.filas || []).reduce((s, f) => s + (parseInt(f.tiempo, 10) || 0), 0);
-      const rows  = (b.filas || []).map(f =>
-        `<tr><td style="padding:2px 8px;">${_esc(f.actividad) || "—"}</td>
-             <td style="padding:2px 8px;text-align:right;">${parseInt(f.tiempo, 10) || 0} min</td></tr>`
+      const filas = (b.filas || []).map(f =>
+        `<tr>
+          <td style="padding:4px 10px;border-bottom:1px solid #f1f5f9;">${_esc(f.actividad) || "—"}</td>
+          <td style="padding:4px 10px;border-bottom:1px solid #f1f5f9;text-align:right;
+                     white-space:nowrap;width:80px;">${parseInt(f.tiempo, 10) || 0} min</td>
+        </tr>`
       ).join("");
-      return `<p style="margin:8px 0 4px;font-weight:600;">${_esc(b.nombre) || "Bloque"} — ${total} min</p>
-        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;">
-          <thead><tr style="background:#f1f5f9;color:#64748b;">
-            <th style="padding:3px 8px;text-align:left;">Actividad</th>
-            <th style="padding:3px 8px;text-align:right;">Tiempo</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
+      const titulo = _esc(b.seccion || b.nombre || "Bloque");
+      return `<p style="margin:12px 0 4px;font-weight:700;color:#1e40af;">${titulo} — ${total} min</p>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px;">
+          <thead>
+            <tr style="background:#f0f4fb;">
+              <th style="padding:4px 10px;text-align:left;color:#64748b;">Actividad</th>
+              <th style="padding:4px 10px;text-align:right;color:#64748b;width:80px;">Tiempo</th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
         </table>`;
     }).join("");
   })();
 
+  // ── Materiales ────────────────────────────────────────────────────────────
   const secMateriales = (() => {
     const cats = [
-      ["instalaciones",         "Instalaciones"],
-      ["equipo",                "Equipo"],
-      ["materialesDidacticos",  "Materiales didácticos"],
-      ["humanos",               "Recursos humanos"],
-      ["otros",                 "Otros"],
-      ["seguridad",             "Seguridad"],
+      ["instalaciones",        "Instalaciones y mobiliario"],
+      ["equipo",               "Equipo de apoyo"],
+      ["materialesDidacticos", "Materiales didácticos"],
+      ["humanos",              "Requerimientos humanos"],
+      ["otros",                "Otros requerimientos"],
+      ["seguridad",            "Salud / Seguridad"],
     ];
-    const html = cats.map(([k, label]) => {
-      const items = mat[k];
-      return items?.length
-        ? `<p style="margin:6px 0 2px;font-weight:600;">${label}</p>${_lista(items)}`
-        : "";
+    const filas = cats.map(([k, label]) => {
+      const val = mat[k];
+      if (!val) return "";
+      const arr = typeof val === "string" ? val.split("\n").map(s => s.trim()).filter(Boolean) : (val || []);
+      if (!arr.length) return "";
+      return `<tr>
+        <td style="padding:5px 10px;font-weight:600;color:#64748b;vertical-align:top;
+                   width:180px;border-bottom:1px solid #f1f5f9;">${label}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #f1f5f9;">${_lista(arr)}</td>
+      </tr>`;
     }).join("");
-    return html || _NA;
+    return filas ? _tbl(filas) : _NA;
   })();
 
   const pctF = ev.pctFormativa ?? 0;
   const pctS = ev.pctSumativa  ?? 0;
 
   return [
-    _sec("1. Datos del Curso", [
-      _f("Nombre del curso", d.nombreCurso),
-      _f("Instructor",       d.instructor),
-      _f("Diseñador",        d.disenador),
-      _f("Lugar",            d.lugar),
-      _f("Fecha",            d.fecha),
-      _f("Duración",         d.duracion ? `${d.duracion} min` : ""),
-      _f("Participantes",    d.participantes),
-      _f("Perfil de egreso", d.perfil),
-    ].join("")),
+    _sec("1. Datos del Curso", _tbl([
+      _f("Nombre del curso",  d.nombreCurso),
+      _f("Instructor",        d.instructor),
+      _f("Diseñador",         d.disenador),
+      _f("Lugar",             d.lugar),
+      _f("Fecha",             d.fecha),
+      _f("Duración",          d.duracion ? `${d.duracion} min` : ""),
+      _f("Participantes",     d.participantes),
+      _f("Perfil de egreso",  d.perfil),
+    ].join(""))),
 
-    _sec("2. Objetivos de Aprendizaje", [
+    _sec("2. Objetivos de Aprendizaje", _tbl([
       _f("Cognitivo",   obj.cognitiva),
       _f("Psicomotriz", obj.psicomotriz),
       _f("Afectivo",    obj.afectiva),
       _f("General",     obj.general),
-    ].join("")),
+    ].join(""))),
 
     _sec("3. Beneficios del Curso",
-      p.beneficios ? `<p style="margin:4px 0;">${_esc(p.beneficios)}</p>` : _NA
+      p.beneficios ? _lista(p.beneficios) : _NA
     ),
 
     _sec("4. Temario", secTemario),
 
-    _sec("5. Técnica Expositiva", [
+    _sec("5. Técnica Expositiva", _tbl([
       _f("Objetivo",     exp.objetivo),
       _f("Introducción", exp.introduccion),
       _f("Desarrollo",   exp.desarrollo),
       _f("Síntesis",     exp.sintesis),
-    ].join("")),
+    ].join(""))),
 
-    _sec("6. Técnica Demostrativa", [
+    _sec("6. Técnica Demostrativa", _tbl([
       _f("Objetivo",    dem.objetivo),
       _f("Experiencia", dem.experiencia),
       _f("Actividad",   dem.actividad),
       _f("Ejemplos",    dem.ejemplos),
-    ].join("")),
+    ].join(""))),
 
-    _sec("7. Técnica de Diálogo / Discusión", [
+    _sec("7. Técnica de Diálogo / Discusión", _tbl([
       _f("Objetivo",      dia.objetivo),
       _f("Actividad",     dia.actividad),
       _f("Instrucciones", dia.instrucciones),
       _f("Conclusión",    dia.conclusion),
-    ].join("")),
+    ].join(""))),
 
-    _sec("8. Actividad de Cierre", [
-      _f("Actividad principal",     cie.texto),
+    _sec("8. Cierre", _tbl([
+      _f("Texto de cierre",         cie.texto),
       _f("Resumen",                 cie.resumen),
       _f("Compromisos de aplic.",   cie.compromisos),
       _f("Sugerencias continuidad", cie.sugerencias),
       _f("Referencias bibliogr.",   cie.referencias),
-    ].join("")),
+    ].join(""))),
 
-    _sec("9. Evaluaciones", [
+    _sec("9. Evaluaciones", _tbl([
       _f("Diagnóstica",  `0% — ${ev.instDiagnostica || "—"}`),
       _f("Formativa",    `${pctF}% (${ev.tipoInstrumentoFormativa || "—"}) — ${ev.instFormativa || "—"}`),
       _f("Sumativa",     `${pctS}% — ${ev.instSumativa || "—"}`),
       _f("Reacción",     ev.instReac),
-    ].join("")),
+    ].join(""))),
 
     _sec("10. Distribución de Tiempos", secTiempos),
     _sec("11. Materiales y Requerimientos", secMateriales),
