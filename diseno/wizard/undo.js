@@ -20,20 +20,26 @@ function _createInline(elementId, descripcion) {
   const anchor = document.getElementById(elementId);
   if (!anchor) return;
 
+  // Subir al .form-group para no romper grids internos (ej. .textarea-ia-row)
+  const container = anchor.closest(".form-group") || anchor.parentElement;
+  if (!container) return;
+
   const div = document.createElement("div");
   div.id = "sbe-undo-inline";
-  div.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:6px;";
+  div.style.cssText = "display:flex;align-items:center;gap:8px;padding-top:2px;";
   div.innerHTML = `
     <button id="sbe-undo-btn"
       style="background:none;border:1px solid #94a3b8;color:#475569;border-radius:5px;
-             padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap;">
+             padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
       ↩ Deshacer
     </button>
-    <span style="font-size:11px;color:#94a3b8;">${descripcion} — generado con IA</span>
+    <span style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      ${descripcion} — generado con IA
+    </span>
     <button id="sbe-undo-close"
       style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;
-             padding:0 4px;margin-left:auto;line-height:1;">✕</button>`;
-  anchor.insertAdjacentElement("afterend", div);
+             padding:0 4px;margin-left:auto;flex-shrink:0;line-height:1;">✕</button>`;
+  container.appendChild(div);
   document.getElementById("sbe-undo-btn").addEventListener("click", aplicarUndo);
   document.getElementById("sbe-undo-close").addEventListener("click", limpiarUndo);
 }
