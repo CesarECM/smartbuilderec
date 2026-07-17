@@ -22,7 +22,9 @@ function _f(label, val) {
 }
 
 function _lista(arr) {
-  if (!arr?.length) return _NA;
+  if (!arr) return _NA;
+  if (typeof arr === "string") arr = arr.split("\n").map(s => s.trim()).filter(Boolean);
+  if (!arr.length) return _NA;
   return `<ul style="margin:4px 0;padding-left:20px;">${arr.map(i => `<li>${_esc(i)}</li>`).join("")}</ul>`;
 }
 

@@ -88,7 +88,9 @@
       }
     }
 
-    document.getElementById("inputImportarJSON").addEventListener("change", async function() {
+    const _inputJSON = document.getElementById("inputImportarJSON");
+    if (!_inputJSON) return;
+    _inputJSON.addEventListener("change", async function() {
       const file = this.files[0];
       if (!file) return;
       this.value = "";
