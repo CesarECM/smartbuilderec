@@ -229,4 +229,13 @@ export function initStepTecnicas() {
   window.guardarEnergizanteFinal              = guardarEnergizanteFinal;
   window.guardarTecnicasFinal                 = guardarTecnicasFinal;
   window.cargarTecnicas                       = cargarTecnicas;
+
+  // Poblar textareas al elegir una técnica (sin este listener, los campos
+  // quedan vacíos y la validación falla aunque el radio esté seleccionado)
+  document.querySelectorAll('input[name="tecnicaIntegracion"]').forEach(r =>
+    r.addEventListener("change", actualizarCamposPersonalizadosTecnicas)
+  );
+  document.querySelectorAll('input[name="tecnicaEnergizante"]').forEach(r =>
+    r.addEventListener("change", actualizarCamposPersonalizadosTecnicas)
+  );
 }
