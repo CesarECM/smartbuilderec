@@ -28,6 +28,7 @@ import { validarTiempos, validarTaxonomia, validarCategoriasMateriales } from ".
 // Sprint 10: Módulos de IA
 import { initUndo }          from "./undo.js";
 import { initIAObjetivos }   from "./ia-objetivos.js";
+import { initIABeneficios }  from "./ia-beneficios.js";
 import { initIATemario }     from "./ia-temario.js";
 import { initIAEncuadre }    from "./ia-encuadre.js";
 import { initIATecnicas }    from "./ia-tecnicas.js";
@@ -129,6 +130,7 @@ window.wizardValidators = { validarTiempos, validarTaxonomia, validarCategoriasM
 // ─── Sprint 10: Módulos de IA ─────────────────────────────────────────────────
 initUndo();
 initIAObjetivos();
+initIABeneficios();
 initIATemario();
 initIAEncuadre();
 initIATecnicas();

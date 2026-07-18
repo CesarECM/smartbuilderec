@@ -66,4 +66,5 @@ export async function generarPreguntasEncuadreIA() {
 
 export function initIAEncuadre() {
   window.generarPreguntasEncuadreIA = generarPreguntasEncuadreIA;
+  document.getElementById("btnGenerarPreguntas")?.addEventListener("click", () => generarPreguntasEncuadreIA());
 }

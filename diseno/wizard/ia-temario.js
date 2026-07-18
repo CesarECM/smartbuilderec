@@ -68,4 +68,5 @@ export async function generarTemarioIA() {
 
 export function initIATemario() {
   window.generarTemarioIA = generarTemarioIA;
+  document.getElementById("btnGenerarTemario")?.addEventListener("click", () => generarTemarioIA());
 }

@@ -115,6 +115,12 @@ export function initStepTemario() {
   window.validarTemario       = validarTemario;
   window.guardarTemarioFinal  = guardarTemarioFinal;
   window.cargarTemario        = cargarTemario;
+
+  ["U1","U2","U3"].forEach(u => {
+    document.getElementById(`btnAgregarTema${u}`)?.addEventListener("click", () =>
+      agregarTema(u.toLowerCase(), document.getElementById(`tema${u}Input`))
+    );
+  });
 }
 
 export function getTemplate() {

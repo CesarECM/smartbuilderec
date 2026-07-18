@@ -217,6 +217,9 @@ export function initStepEncuadre() {
   window.validarContrato                  = validarContrato;
   window.guardarEncuadreFinal             = guardarEncuadreFinal;
   window.cargarEncuadre                   = cargarEncuadre;
+
+  document.getElementById("btnCopiarReglas")?.addEventListener("click", copiarReglasSeleccionadasATextarea);
+  document.getElementById("btnAgregarAcuerdo")?.addEventListener("click", agregarAcuerdoPersonalizado);
 }
 
 export function getTemplate() {

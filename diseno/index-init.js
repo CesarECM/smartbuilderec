@@ -88,9 +88,12 @@
       }
     }
 
-    const _inputJSON = document.getElementById("inputImportarJSON");
-    if (!_inputJSON) return;
-    _inputJSON.addEventListener("change", async function() {
+    // El HTML del wizard se inyecta por main.js (módulo diferido), por lo que el
+    // elemento no existe cuando este script clásico corre. Esperamos la señal.
+    function _setupImportarJSON() {
+      const _inputJSON = document.getElementById("inputImportarJSON");
+      if (!_inputJSON) return;
+      _inputJSON.addEventListener("change", async function() {
       const file = this.files[0];
       if (!file) return;
       this.value = "";
@@ -152,6 +155,8 @@
         console.error("Error importando:", err);
       }
     });
+    }
+    window.addEventListener("wizard:modules-ready", _setupImportarJSON, { once: true });
 
     // Al cargar la página, prerellenar paso 1 si ya hay datos en localStorage
     window.addEventListener("DOMContentLoaded", function() {
