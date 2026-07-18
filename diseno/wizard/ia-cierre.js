@@ -125,4 +125,7 @@ export async function generarDescripcionGeneralIA() {
 export function initIACierre() {
   window.generarCierreIA             = generarCierreIA;
   window.generarDescripcionGeneralIA = generarDescripcionGeneralIA;
+
+  document.getElementById("btnGenerarCierre")?.addEventListener("click", () => generarCierreIA());
+  document.getElementById("btnGenerarDescripcionGeneral")?.addEventListener("click", () => generarDescripcionGeneralIA());
 }

@@ -146,4 +146,7 @@ export function initIAResumen() {
 
   const btnTodo = document.getElementById("btnGenerarTodoCierre");
   if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoCierre(btnTodo));
+
+  document.getElementById("btnGenerarResumen")?.addEventListener("click", () => generarResumenIA());
+  document.getElementById("btnGenerarCompromisos")?.addEventListener("click", () => generarCompromisosIA());
 }
