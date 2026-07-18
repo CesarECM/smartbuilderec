@@ -5,6 +5,7 @@
 import { llamarIA } from "./api.js";
 
 const CRITERIA = ["quien", "cuando", "accion", "objeto", "condicion", "finalidad"];
+const NEXT_TAB = { cognitiva: "psicomotriz", psicomotriz: "afectiva", afectiva: "general" };
 
 const _estado = () => window.sbeEstadoObjetivos || {
   actual: "cognitiva",
@@ -149,39 +150,49 @@ export function initIAObjetivos() {
     evaluateText(document.getElementById("objectiveInput")?.value || "");
   });
 
-  // Botón "Siguiente →" (marcar objetivo actual como completo)
+  // Botón "Siguiente →" (modo estricto: marcar completo y avanzar al siguiente tab)
   document.getElementById("nextBtn")?.addEventListener("click", () => {
     const e = _estado();
     const ta = document.getElementById("objectiveInput");
     if (ta && e.actual) e[e.actual].texto = ta.value;
+    const siguiente = NEXT_TAB[e.actual];
     window.marcarCompleta?.(e.actual);
+    if (siguiente) document.getElementById(`nav-${siguiente}`)?.click();
   });
 
-  // Botón "Guardar objetivo" (modo libre)
+  // Botón "Guardar objetivo" (modo libre: guardar y avanzar al siguiente tab)
   document.getElementById("btnGuardarObjetivoLibre")?.addEventListener("click", () => {
     const e = _estado();
     const ta = document.getElementById("objectiveInput");
     if (ta && e.actual) e[e.actual].texto = ta.value;
+    const siguiente = NEXT_TAB[e.actual];
     window.guardarObjetivoLibre?.();
+    if (siguiente) document.getElementById(`nav-${siguiente}`)?.click();
   });
 
-  // Botón "✨ Generar objetivo general con IA"
+  // Botón "✨ Generar objetivo general con IA" (input card, modo libre)
   document.getElementById("btnGenerarObjetivoGeneral")?.addEventListener("click", () => generarGeneral());
+
+  // Botón "✨ Generar Objetivo General con IA" (panel de resultados, modo estricto)
+  document.getElementById("btnGenerarGeneral")?.addEventListener("click", () => generarGeneral());
 
   // Botón "Siguiente" (ir a Beneficios tras objetivo general)
   document.getElementById("btnIrBeneficios")?.addEventListener("click", () => {
     window.mostrarSeccionPrincipal?.("seccionBeneficios");
   });
 
-  // Modo estricto ON / OFF
+  // Modo estricto ON / OFF — refrescar visibilidad de botones del tab activo
   document.getElementById("btnModoEstrictoOn")?.addEventListener("click", () => {
     localStorage.setItem("ec0217_modo_estricto", "on");
     window.reiniciarAvanceObjetivosEstricto?.();
     window.aplicarModoObjetivos?.();
+    document.getElementById("nav-cognitiva")?.click();
   });
   document.getElementById("btnModoEstrictoOff")?.addEventListener("click", () => {
     localStorage.setItem("ec0217_modo_estricto", "off");
     window.aplicarModoObjetivos?.();
+    const e = _estado();
+    document.getElementById(`nav-${e.actual}`)?.click();
   });
 
   // Sub-tabs: cognitiva / psicomotriz / afectiva / general
@@ -203,10 +214,11 @@ export function initIAObjetivos() {
       const isGeneral = tipo === "general";
       const $  = id => document.getElementById(id);
       const sv = (id, v) => { const el = $(id); if (el) el.style.display = v; };
-      sv("btnGenerarGeneral",      isGeneral && !e.general.completa  ? "inline-block" : "none");
-      sv("btnIrBeneficios",        isGeneral &&  e.general.completa  ? "inline-block" : "none");
-      sv("nextBtn",               !isGeneral && modo === "on"  && !e[tipo].completa ? "inline-block" : "none");
-      sv("btnGuardarObjetivoLibre",!isGeneral && modo === "off"               ? "inline-block" : "none");
+      sv("btnGenerarGeneral",       isGeneral && !e.general.completa  ? "inline-block" : "none");
+      sv("btnIrBeneficios",         isGeneral &&  e.general.completa  ? "inline-block" : "none");
+      sv("nextBtn",                 "none");
+      sv("btnGuardarObjetivoLibre", !isGeneral && modo === "off"      ? "inline-block" : "none");
+      sv("sendBtn",                 isGeneral ? "none" : "inline-block");
       const sumEl = $("summary");
       if (sumEl) sumEl.textContent = "Aquí aparecerá el análisis automático.";
       const ckEl = $("checksList");

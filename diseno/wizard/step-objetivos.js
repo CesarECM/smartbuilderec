@@ -251,7 +251,7 @@ export function getTemplate() {
           <div class="card">
             <h3>Resumen</h3>
             <p id="summary">Aquí aparecerá el análisis automático.</p>
-            <button id="nextBtn" class="next-btn">Siguiente →</button>
+            <button id="nextBtn" class="next-btn" style="display:none;">Siguiente →</button>
             <button id="btnGenerarGeneral" class="next-btn" style="display:none;">
               ✨ Generar Objetivo General con IA
             </button>
