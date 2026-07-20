@@ -37,6 +37,10 @@ def generar_evaluacion_diagnostica(data) -> bytes:
         or ""
     ).strip()
 
+    header_diag = (getattr(data.evaluaciones, "instDiagnosticaHeader", "") or "").strip()
+    if header_diag:
+        doc.add_paragraph(header_diag)
+
     if reactivos_texto:
         doc.add_heading("Cuestionario", level=2)
         for linea in reactivos_texto.split("\n"):
@@ -71,6 +75,10 @@ def generar_evaluacion_formativa_cotejo(data) -> bytes:
         p = doc.add_paragraph()
         p.add_run(etiqueta).bold = True
         p.add_run(f" {texto}")
+
+    header_form = (getattr(data.evaluaciones, "instFormativaHeader", "") or "").strip()
+    if header_form:
+        doc.add_paragraph(header_form)
 
     doc.add_paragraph()
 
@@ -114,6 +122,10 @@ def generar_evaluacion_formativa_guia(data) -> bytes:
         p = doc.add_paragraph()
         p.add_run(etiqueta).bold = True
         p.add_run(f" {texto}")
+
+    header_form = (getattr(data.evaluaciones, "instFormativaHeader", "") or "").strip()
+    if header_form:
+        doc.add_paragraph(header_form)
 
     doc.add_paragraph()
 
@@ -167,6 +179,10 @@ def generar_evaluacion_sumativa(data) -> bytes:
         or data.evaluaciones.instSuma
         or ""
     ).strip()
+
+    header_suma = (getattr(data.evaluaciones, "instSumativaHeader", "") or "").strip()
+    if header_suma:
+        doc.add_paragraph(header_suma)
 
     if reactivos_texto:
         doc.add_heading("Cuestionario", level=2)

@@ -101,7 +101,7 @@ def _tabla_requerimientos(doc, d):
         mat.get('materialesDidacticos') or mat.get('demostrativa') or "Manual del participante, hojas, bolígrafos y materiales de apoyo.",
         mat.get('humanos')       or mat.get('dialogo')           or "Instructor y participantes registrados.",
         mat.get('otros')         or mat.get('energizante')       or "Material extra requerido para las actividades.",
-        mat.get('seguridad')                                     or "Botiquín, señalización de salida, medidas de higiene y protección civil.",
+        mat.get('seguridad') or "Salidas de emergencia señalizadas, extintor vigente, botiquín de primeros auxilios, medidas de higiene y protocolo de evacuación.",
     ]
     labels = [
         "Instalaciones, mobiliario y distribución:",

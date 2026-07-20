@@ -6,7 +6,7 @@ from openai import OpenAI
 
 from models.ia_models import (
     EvaluationRequest, GeneralRequest, BeneficiosRequest,
-    TemarioRequest, PreguntasRequest,
+    TemarioRequest, PreguntasRequest, PerfilRequest,
 )
 from services.doc_helpers import load_prompt
 
@@ -115,5 +115,19 @@ def generate_preguntas(data: PreguntasRequest):
         )
         resultado = _parse_json(response.choices[0].message.content.strip())
         return {"preguntas": resultado.get("preguntas", [])}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate-perfil")
+def generate_perfil(data: PerfilRequest):
+    try:
+        prompt = load_prompt("perfil_prompt.txt", nombre=data.nombre)
+        response = _client.chat.completions.create(
+            model=_MODEL_GRL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.4,
+        )
+        return {"perfil": response.choices[0].message.content.strip()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

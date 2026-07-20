@@ -29,6 +29,10 @@ Instrucciones:
 - No uses viñetas ni numeración fuera del JSON.
 - Asegúrate de que cada opción sea plausible (no haya una respuesta obviamente incorrecta).
 
+Además de las preguntas, genera:
+- "header": un párrafo breve de instrucciones/propósito/alcance y tiempo estimado para el participante (máx. 3 oraciones).
+- "clave": la secuencia de respuestas correctas en formato "1. X  2. X  3. X  4. X  5. X" (solo letras A-D).
+
 Devuelve únicamente JSON válido con esta estructura:
 
 {{
@@ -43,5 +47,7 @@ Devuelve únicamente JSON válido con esta estructura:
       }},
       "respuesta_correcta": "A"
     }}
-  ]
+  ],
+  "header": "Instrucciones: Lee cada pregunta y selecciona la respuesta correcta. Esta evaluación sumativa representa el 50% de tu calificación final. Tiempo estimado: 20 minutos.",
+  "clave": "1. A  2. B  3. C  4. D  5. E"
 }}

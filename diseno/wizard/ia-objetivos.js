@@ -196,7 +196,7 @@ export function initIAObjetivos() {
   });
 
   // Sub-tabs: cognitiva / psicomotriz / afectiva / general
-  const TITLES = { cognitiva:"Objetivo Cognitivo", psicomotriz:"Objetivo Psicomotriz", afectiva:"Objetivo Afectivo", general:"Objetivo General" };
+  const TITLES = { cognitiva:"Objetivo Cognitivo", psicomotriz:"Objetivo Psicomotriz", afectiva:"Objetivo Afectivo / Relacional-Social", general:"Objetivo General" };
   ["cognitiva","psicomotriz","afectiva","general"].forEach(tipo => {
     document.getElementById(`nav-${tipo}`)?.addEventListener("click", () => {
       if (document.getElementById(`nav-${tipo}`)?.classList.contains("disabled")) return;

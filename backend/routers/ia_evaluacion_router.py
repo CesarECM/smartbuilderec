@@ -90,11 +90,24 @@ async def generate_formativa(payload: dict):
         reactivos = resultado.get("reactivos", [])
         if not isinstance(reactivos, list):
             reactivos = []
+        n = len(reactivos)
         texto = "\n".join(
             f"{i + 1}. {reactivo}"
             for i, reactivo in enumerate(reactivos)
             if str(reactivo).strip()
         )
-        return {"tipoInstrumento": tipo, "texto": texto}
+        header = resultado.get("header", "")
+        clave  = resultado.get("clave", "")
+        n_criterios = resultado.get("n_criterios", n)
+        pct = resultado.get("pct_por_criterio", round(100 / n_criterios, 1) if n_criterios > 0 else 0)
+        return {
+            "tipoInstrumento": tipo,
+            "texto": texto,
+            "reactivos": reactivos,
+            "header": header,
+            "clave": clave,
+            "n_criterios": n_criterios,
+            "pct_por_criterio": pct,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar evaluación formativa: {str(e)}")

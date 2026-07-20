@@ -1,0 +1,19 @@
+Eres un experto en diseño instruccional bajo los estándares EC0217.01 y EC0301 de CONOCER México.
+
+Genera el perfil del participante y los requisitos de ingreso para el siguiente curso de capacitación:
+
+Nombre del curso:
+{nombre}
+
+Instrucciones:
+- Redacta en dos secciones con los títulos exactos:
+  "Perfil del participante:" y "Requisitos de ingreso:"
+- En "Perfil del participante:" describe las características del participante ideal:
+  conocimientos previos del área, actitudes, habilidades y valores requeridos (4 a 6 puntos).
+- En "Requisitos de ingreso:" lista los requisitos formales de acceso al curso:
+  nivel educativo mínimo, experiencia laboral, documentación u otros condicionantes (3 a 5 puntos).
+- Adapta el contenido al contexto laboral mexicano y al nombre específico del curso.
+- Usa lenguaje formal, claro y directo. Sin markdown, sin asteriscos, sin viñetas especiales.
+- Separa cada punto con un salto de línea. Usa guion simple (-) como marcador de cada punto.
+
+Devuelve únicamente el texto con las dos secciones. No añadas introducción ni conclusión.

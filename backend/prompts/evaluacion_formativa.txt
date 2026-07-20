@@ -28,6 +28,12 @@ Instrucciones:
 11. No inventes otra actividad distinta. Usa solamente la actividad descrita en el apartado c).
 12. Usa lenguaje claro, formal y directamente evaluable.
 
+Además de los reactivos, genera:
+- "header": párrafo breve de instrucciones, propósito del instrumento, alcance y tiempo estimado para el evaluador/participante (máx. 3 oraciones).
+- "clave": descripción del criterio de aprobación para el instructor, p. ej. "El participante acredita si cumple con al menos el 70% de los criterios. Cada criterio cumplido vale 1 punto."
+- "n_criterios": número entero igual a la cantidad de reactivos generados.
+- "pct_por_criterio": número con un decimal igual a 100 / n_criterios (redondeado a 1 decimal).
+
 Reglas de salida:
 - Devuelve únicamente JSON válido.
 - No agregues explicaciones antes ni después del JSON.
@@ -47,5 +53,9 @@ Devuelve exactamente esta estructura:
     "Reactivo 3",
     "Reactivo 4",
     "Reactivo 5"
-  ]
+  ],
+  "header": "Instrucciones para el evaluador: A continuación se presentan los criterios de desempeño. Marque si el participante cumple o no con cada criterio durante la ejecución de la actividad. Tiempo estimado: 15 minutos.",
+  "clave": "El participante acredita si cumple con al menos el 70% de los criterios (mínimo 4 de 5). Cada criterio cumplido vale 1 punto.",
+  "n_criterios": 5,
+  "pct_por_criterio": 20.0
 }}

@@ -75,6 +75,13 @@ class EvaluacionesInfo(BaseModel):
     instReac: str = ""
     descripcionGeneral: str = ""
     tipoInstrumentoFormativa: str = ""
+    instDiagnosticaHeader: str = ""
+    instDiagnosticaClave: str = ""
+    instFormativaHeader: str = ""
+    instFormativaClave: str = ""
+    instSumativaHeader: str = ""
+    instSumativaClave: str = ""
+    notaFormativa: str = ""
 
 
 class TiempoFila(BaseModel):

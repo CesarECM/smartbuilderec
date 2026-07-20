@@ -54,12 +54,19 @@ def generar_lista_requerimientos(data) -> bytes:
     participantes = data.datos.participantes or 0
 
     secciones = [
-        ("Instalaciones, mobiliario y su distribución",             mat.get("instalaciones", "")),
-        ("Equipo de apoyo",                                         mat.get("equipo", "")),
-        ("Materiales didácticos de apoyo y servicios",              mat.get("materialesDidacticos", "")),
-        ("Requerimientos humanos",                                  mat.get("humanos", "")),
-        ("Otros requerimientos",                                    mat.get("otros", "")),
-        ("Medidas de salud/seguridad/higiene/protección civil",     mat.get("seguridad", "")),
+        ("Instalaciones, mobiliario y su distribución",        mat.get("instalaciones", "")),
+        ("Equipo de apoyo",                                    mat.get("equipo", "")),
+        ("Materiales didácticos de apoyo y servicios",         mat.get("materialesDidacticos", "")),
+        ("Requerimientos humanos",                             mat.get("humanos", "")),
+        ("Otros requerimientos",                               mat.get("otros", "")),
+    ]
+
+    _ITEMS_SEGURIDAD = [
+        "Salidas de emergencia señalizadas y despejadas",
+        "Extintor accesible, vigente y visible",
+        "Botiquín de primeros auxilios disponible",
+        "Medidas de higiene (desinfectante, ventilación, distancia entre participantes)",
+        "Protocolo de evacuación conocido por todos los participantes",
     ]
 
     def _items(texto: str) -> list:
@@ -87,6 +94,18 @@ def generar_lista_requerimientos(data) -> bytes:
         for i in range(len(items) + 1, num_filas_datos + 1):
             t.rows[i].cells[0].text = str(i)
         doc.add_paragraph()
+
+    # Sección de seguridad: ítems mínimos hardcoded + ítems del usuario
+    doc.add_heading("Medidas de Salud / Seguridad / Higiene / Protección Civil", level=2)
+    items_seg = _ITEMS_SEGURIDAD + [i for i in _items(mat.get("seguridad", "")) if i not in _ITEMS_SEGURIDAD]
+    t = doc.add_table(rows=len(items_seg) + 1, cols=3)
+    t.style = "Table Grid"
+    for j, enc in enumerate(["No.", "Ítem de verificación", "Verificado ✓"]):
+        t.rows[0].cells[j].paragraphs[0].add_run(enc).bold = True
+    for i, item in enumerate(items_seg, start=1):
+        t.rows[i].cells[0].text = str(i)
+        t.rows[i].cells[1].text = item
+    doc.add_paragraph()
 
     # Formatos individuales por participante
     doc.add_heading("Formatos individuales (uno por participante)", level=2)

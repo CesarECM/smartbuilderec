@@ -180,14 +180,18 @@ export function getTemplate() {
             </div>
 
             <div class="form-group full-width">
-              <label for="perfil">Perfil del participante *</label>
+              <label for="perfil">Perfil del participante / Requisitos de ingreso *</label>
+              <button type="button" id="btnGenerarPerfil" class="btn-ia" style="margin-bottom:8px;">✨ Completar con IA</button>
+              <div id="loaderPerfil" style="display:none; margin-bottom:8px;">Generando perfil...</div>
               <textarea spellcheck="true" lang="es" id="perfil"
-                placeholder="Describe el perfil: puesto, experiencia previa, nivel educativo, etc.">
-                Conocimientos:
-                AHV:
-                Habilidades:
-                Valores:
-              </textarea>
+                placeholder="Describe el perfil del participante y los requisitos de ingreso al curso...">Perfil del participante:
+  Conocimientos:
+  AHV:
+  Habilidades:
+  Valores:
+
+Requisitos de ingreso:
+</textarea>
               <span class="error-msg" id="err-perfil">Este campo es requerido.</span>
             </div>
 

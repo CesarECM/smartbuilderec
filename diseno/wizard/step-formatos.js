@@ -152,7 +152,7 @@ export function getTemplate() {
           <hr style="margin:0 0 16px;border:none;border-top:1px solid #e2e8f0;">
 
           <p style="font-size:12px;color:#64748b;margin-bottom:16px;">
-            Se generarán <strong>10 documentos</strong> en formato Word y PowerPoint empaquetados en un archivo ZIP.
+            Se generarán <strong>11 documentos</strong> en formato Word y PowerPoint empaquetados en un archivo ZIP (incluye Manual del Instructor con claves de evaluación).
           </p>
 
           <div id="badge-descarga-desactualizada" style="display:none;align-items:center;gap:10px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#9a3412;">

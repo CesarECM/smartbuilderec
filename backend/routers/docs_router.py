@@ -20,6 +20,7 @@ from services.doc_evaluaciones import (
 from services.doc_planeacion import generar_presentacion_curso
 from services.doc_generales import generar_contrato_aprendizaje, generar_lista_requerimientos
 from services.doc_planeacion_docx import generar_planeacion_docx
+from services.doc_instructor import generar_manual_instructor
 
 router = APIRouter()
 
@@ -148,6 +149,7 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
             ("08_Contrato_de_Aprendizaje.docx",         lambda: generar_contrato_aprendizaje(data)),
             ("09_Lista_de_Requerimientos.docx",         lambda: generar_lista_requerimientos(data)),
             ("10_Guia_de_Presentacion_EC0217.pptx",     lambda: generar_presentacion_curso(data)),
+            ("11_Manual_del_Instructor.docx",            lambda: generar_manual_instructor(data)),
         ]
 
         if tipo_form == "guia_observacion":
@@ -174,6 +176,13 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
             "instReac":                 ev.get("instReac", ""),
             "descripcionGeneral":       ev.get("descripcionGeneral", ""),
             "tipoInstrumentoFormativa": ev.get("tipoInstrumentoFormativa", ""),
+            "instDiagnosticaHeader":    ev.get("instDiagnosticaHeader", ""),
+            "instDiagnosticaClave":     ev.get("instDiagnosticaClave", ""),
+            "instFormativaHeader":      ev.get("instFormativaHeader", ""),
+            "instFormativaClave":       ev.get("instFormativaClave", ""),
+            "instSumativaHeader":       ev.get("instSumativaHeader", ""),
+            "instSumativaClave":        ev.get("instSumativaClave", ""),
+            "notaFormativa":            ev.get("notaFormativa", ""),
         }
 
         payload_json_bytes = json.dumps(payload_exportable, ensure_ascii=False, indent=2).encode("utf-8")
@@ -254,6 +263,7 @@ def generate_doc_individual(doc_id: str, data: PlaneacionRequest):
             "contrato":       (lambda: generar_contrato_aprendizaje(data),   "08_Contrato_de_Aprendizaje.docx",          _DOCX),
             "requerimientos": (lambda: generar_lista_requerimientos(data),   "09_Lista_de_Requerimientos.docx",          _DOCX),
             "presentacion":   (lambda: generar_presentacion_curso(data),     "10_Guia_de_Presentacion_EC0217.pptx",      _PPTX),
+            "instructor":     (lambda: generar_manual_instructor(data),      "11_Manual_del_Instructor.docx",             _DOCX),
         }
 
         if doc_id == "formativa":

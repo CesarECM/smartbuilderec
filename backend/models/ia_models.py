@@ -116,3 +116,7 @@ class CompromisosRequest(BaseModel):
     objetivoCognitivo: str = ""
     objetivoPsicomotriz: str = ""
     objetivoAfectivo: str = ""
+
+
+class PerfilRequest(BaseModel):
+    nombre: str = ""

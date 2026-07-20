@@ -37,6 +37,7 @@ import { initIACierre }      from "./ia-cierre.js";
 import { initIAResumen }     from "./ia-resumen.js";
 import { initIAEvaluacion }  from "./ia-evaluacion.js";
 import { initIAMateriales }  from "./ia-materiales.js";
+import { initIAPerfil }      from "./ia-perfil.js";
 
 // Sprint 9: Steps del wizard
 import { initStepDatos }            from "./step-datos.js";
@@ -139,6 +140,7 @@ initIACierre();
 initIAResumen();
 initIAEvaluacion();
 initIAMateriales();
+initIAPerfil();
 
 // ─── Exponer API de módulos en window.* ──────────────────────────────────────
 window.wizardState  = { state, setState, getSeccionCompleta, setSeccionCompleta, getDatos, setDatos };

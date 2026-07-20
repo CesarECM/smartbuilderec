@@ -40,6 +40,11 @@ export async function generarEvaluacionIA(tipo) {
       }
     }
 
+    const headerField = document.getElementById(esDiagnostica ? "instDiagnosticaHeader" : "instSumativaHeader");
+    const claveField  = document.getElementById(esDiagnostica ? "instDiagnosticaClave"  : "instSumativaClave");
+    if (headerField && data.header) headerField.value = data.header;
+    if (claveField  && data.clave)  claveField.value  = data.clave;
+
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
     mostrarUndo(`Evaluación ${tipo}`, esDiagnostica ? "instDiagnostica" : "instSumativa");
 
@@ -123,6 +128,16 @@ export async function generarFormativaIA() {
     }
 
     if (instFormativa) instFormativa.value = textoGenerado;
+
+    const instFormativaHeader = document.getElementById("instFormativaHeader");
+    const instFormativaClave  = document.getElementById("instFormativaClave");
+    const notaFormativaPct    = document.getElementById("notaFormativaPct");
+    if (instFormativaHeader && data.header) instFormativaHeader.value = data.header;
+    if (instFormativaClave  && data.clave)  instFormativaClave.value  = data.clave;
+    if (notaFormativaPct && data.n_criterios && data.pct_por_criterio) {
+      notaFormativaPct.textContent = `${data.n_criterios} criterios × ${data.pct_por_criterio}% = 100%`;
+    }
+
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
     mostrarUndo("Evaluación formativa", "instFormativa");
 
@@ -139,15 +154,20 @@ export async function generarFormativaIA() {
   }
 }
 
+const _incompleto = (idMain, idHeader, idClave) =>
+  !document.getElementById(idMain)?.value.trim() ||
+  !document.getElementById(idHeader)?.value.trim() ||
+  !document.getElementById(idClave)?.value.trim();
+
 async function _generarTodoEvaluaciones(btnTodo) {
   iniciarBatch("ec0217_evaluaciones", "cargarEvaluaciones");
   const campos = [
-    { id: "instDiagnostica", fn: () => generarEvaluacionIA("diagnostica") },
-    { id: "instFormativa",   fn: generarFormativaIA },
-    { id: "instSumativa",    fn: () => generarEvaluacionIA("sumativa") },
+    { fn: () => generarEvaluacionIA("diagnostica"), vacio: _incompleto("instDiagnostica", "instDiagnosticaHeader", "instDiagnosticaClave") },
+    { fn: generarFormativaIA,                       vacio: _incompleto("instFormativa", "instFormativaHeader", "instFormativaClave") },
+    { fn: () => generarEvaluacionIA("sumativa"),    vacio: _incompleto("instSumativa", "instSumativaHeader", "instSumativaClave") },
   ];
 
-  const vacios  = campos.filter(c => !document.getElementById(c.id)?.value.trim());
+  const vacios  = campos.filter(c => c.vacio);
   if (vacios.length === 0) {
     if (typeof showAlert === "function") showAlert("Todos los instrumentos ya tienen contenido.");
     return;

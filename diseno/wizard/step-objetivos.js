@@ -212,7 +212,7 @@ export function getTemplate() {
         <div class="objetivos-tabs">
           <button id="nav-cognitiva" class="nav-item active" type="button">Cognitiva</button>
           <button id="nav-psicomotriz" class="nav-item disabled" type="button">Psicomotriz</button>
-          <button id="nav-afectiva" class="nav-item disabled" type="button">Afectiva</button>
+          <button id="nav-afectiva" class="nav-item disabled" type="button">Afectivo / Relacional-Social</button>
           <button id="nav-general" class="nav-item disabled" type="button">General</button>
         </div>
         <h1 id="sectionTitle">Objetivo Cognitivo</h1>

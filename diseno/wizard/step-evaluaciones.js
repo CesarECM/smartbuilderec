@@ -27,8 +27,15 @@ export function recolectarEvaluaciones() {
     pctFormativa:             gi("pctFormativa"),
     pctSumativa:              gi("pctSumativa"),
     instDiagnostica:          g("instDiagnostica"),
+    instDiagnosticaHeader:    g("instDiagnosticaHeader"),
+    instDiagnosticaClave:     g("instDiagnosticaClave"),
     instFormativa:            g("instFormativa"),
+    instFormativaHeader:      g("instFormativaHeader"),
+    instFormativaClave:       g("instFormativaClave"),
     instSumativa:             g("instSumativa"),
+    instSumativaHeader:       g("instSumativaHeader"),
+    instSumativaClave:        g("instSumativaClave"),
+    notaFormativa:            document.getElementById("notaFormativaPct")?.textContent.trim() || "",
     instReac:                 g("instReac"),
     tipoInstrumentoFormativa: _tipoInstrumentoFormativa,
     descripcionGeneral:       g("descripcionGeneralEvaluacion"),
@@ -61,11 +68,21 @@ export function cargarEvaluaciones() {
     txt("pctFormativaValor", formativa);
     txt("pctSumativaValor",  sumativa);
 
-    set("instDiagnostica",          d.instDiagnostica  || "");
-    set("instFormativa",            d.instFormativa    || "");
-    set("instSumativa",             d.instSumativa     || "");
-    set("instReac",                 d.instReac         || "");
+    set("instDiagnostica",          d.instDiagnostica       || "");
+    set("instDiagnosticaHeader",    d.instDiagnosticaHeader || "");
+    set("instDiagnosticaClave",     d.instDiagnosticaClave  || "");
+    set("instFormativa",            d.instFormativa         || "");
+    set("instFormativaHeader",      d.instFormativaHeader   || "");
+    set("instFormativaClave",       d.instFormativaClave    || "");
+    set("instSumativa",             d.instSumativa          || "");
+    set("instSumativaHeader",       d.instSumativaHeader    || "");
+    set("instSumativaClave",        d.instSumativaClave     || "");
+    set("instReac",                 d.instReac              || "");
     set("descripcionGeneralEvaluacion", d.descripcionGeneral || "");
+    if (d.notaFormativa) {
+      const elNota = document.getElementById("notaFormativaPct");
+      if (elNota) elNota.textContent = d.notaFormativa;
+    }
 
     if (localStorage.getItem("ec0217_evaluaciones_completo") === "true") {
       document.getElementById("nav-evaluaciones")?.classList.add("completed");
@@ -176,6 +193,18 @@ export function getTemplate() {
             </div>
             <textarea spellcheck="true" lang="es" id="instDiagnostica" rows="12"
               placeholder="Aquí aparecerán 5 preguntas de opción múltiple."></textarea>
+          </div>
+          <div class="form-group full-width" style="margin-top:12px;">
+            <label for="instDiagnosticaHeader">Instrucciones / Propósito / Alcance / Tiempo</label>
+            <span class="hint">Encabezado del instrumento entregado al participante.</span>
+            <textarea spellcheck="true" lang="es" id="instDiagnosticaHeader" rows="4"
+              placeholder="Ej. Instrucciones: Lee cada pregunta y selecciona la respuesta correcta. Tiempo: 10 min."></textarea>
+            <p class="hint" style="margin-top:4px;"><strong>Distribución:</strong> 5 reactivos × 20% = 100%</p>
+          </div>
+          <div class="form-group full-width" style="margin-top:12px;">
+            <label for="instDiagnosticaClave">Clave de respuestas <span class="hint">(solo manual del instructor)</span></label>
+            <textarea spellcheck="true" lang="es" id="instDiagnosticaClave" rows="3"
+              placeholder="1. A  2. B  3. C  4. D  5. E"></textarea>
           </div><br>
 
           <div class="form-group full-width">
@@ -189,6 +218,18 @@ export function getTemplate() {
             <textarea spellcheck="true" lang="es" id="instFormativa" rows="12"
               placeholder="Aquí aparecerá una lista de cotejo o guía de observación generada con IA."></textarea>
           </div>
+          <div class="form-group full-width" style="margin-top:12px;">
+            <label for="instFormativaHeader">Instrucciones / Propósito / Alcance / Tiempo</label>
+            <span class="hint">Encabezado del instrumento entregado al participante.</span>
+            <textarea spellcheck="true" lang="es" id="instFormativaHeader" rows="4"
+              placeholder="Se llenará automáticamente al generar con IA."></textarea>
+            <p id="notaFormativaPct" class="hint" style="margin-top:4px;"><em>Distribución de porcentajes: se calculará al generar con IA.</em></p>
+          </div>
+          <div class="form-group full-width" style="margin-top:12px;">
+            <label for="instFormativaClave">Clave de respuestas <span class="hint">(solo manual del instructor)</span></label>
+            <textarea spellcheck="true" lang="es" id="instFormativaClave" rows="3"
+              placeholder="Se llenará automáticamente al generar con IA."></textarea>
+          </div>
 
           <br>
           <div class="form-group full-width">
@@ -201,6 +242,18 @@ export function getTemplate() {
             </div>
             <textarea spellcheck="true" lang="es" id="instSumativa" rows="12"
               placeholder="Aquí aparecerán 5 preguntas de opción múltiple."></textarea>
+          </div>
+          <div class="form-group full-width" style="margin-top:12px;">
+            <label for="instSumativaHeader">Instrucciones / Propósito / Alcance / Tiempo</label>
+            <span class="hint">Encabezado del instrumento entregado al participante.</span>
+            <textarea spellcheck="true" lang="es" id="instSumativaHeader" rows="4"
+              placeholder="Ej. Instrucciones: Lee cada pregunta y selecciona la respuesta correcta. Tiempo: 10 min."></textarea>
+            <p class="hint" style="margin-top:4px;"><strong>Distribución:</strong> 5 reactivos × 20% = 100%</p>
+          </div>
+          <div class="form-group full-width" style="margin-top:12px;">
+            <label for="instSumativaClave">Clave de respuestas <span class="hint">(solo manual del instructor)</span></label>
+            <textarea spellcheck="true" lang="es" id="instSumativaClave" rows="3"
+              placeholder="1. A  2. B  3. C  4. D  5. E"></textarea>
           </div>
 
           <div class="form-group full-width">
