@@ -207,6 +207,7 @@ window.dispatchEvent(new CustomEvent("wizard:modules-ready"));
   window.cargarCierre?.();
   window.cargarEvaluaciones?.();
   window.cargarTiempos?.();
+  window.cargarMateriales?.();
   window.actualizarBotonDescripcionGeneral?.();
 
   if (localStorage.getItem("ec0217_datos_completo") === "true") {

@@ -20,12 +20,13 @@ def load_prompt(filename: str, **kwargs) -> str:
     return content.format(**kwargs)
 
 
-def tabla_encabezado(doc: Document, datos) -> None:
+def tabla_encabezado(doc: Document, datos, sin_participante: bool = False) -> None:
     """Agrega la tabla de encabezado estándar EC0217 al documento."""
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
 
-    tabla = doc.add_table(rows=4, cols=2)
+    num_filas = 3 if sin_participante else 4
+    tabla = doc.add_table(rows=num_filas, cols=2)
     tabla.style = "Table Grid"
 
     def set_cell(row, col, label, value=""):
@@ -43,8 +44,9 @@ def tabla_encabezado(doc: Document, datos) -> None:
     set_cell(1, 1, "Nombre del Diseñador:", datos.disenador)
     set_cell(2, 0, "Duración del curso:", f"{datos.duracion} minutos")
     set_cell(2, 1, "Fecha(s):", datos.fecha)
-    tabla.rows[3].cells[0].merge(tabla.rows[3].cells[1])
-    set_cell(3, 0, "Nombre del Participante:", "")
+    if not sin_participante:
+        tabla.rows[3].cells[0].merge(tabla.rows[3].cells[1])
+        set_cell(3, 0, "Nombre del Participante:", "")
 
     doc.add_paragraph()
 

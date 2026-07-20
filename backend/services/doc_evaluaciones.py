@@ -185,7 +185,7 @@ def generar_evaluacion_sumativa(data) -> bytes:
 def generar_evaluacion_reaccion(data) -> bytes:
     doc = Document()
     _titulo(doc, "EVALUACIÓN DE REACCIÓN")
-    tabla_encabezado(doc, data.datos)
+    tabla_encabezado(doc, data.datos, sin_participante=True)
 
     doc.add_paragraph("Instrucciones generales: Valore cada aspecto marcando con una X la columna que corresponda.")
 
@@ -230,7 +230,7 @@ def generar_evaluacion_reaccion(data) -> bytes:
 def generar_lista_asistencia(data) -> bytes:
     doc = Document()
     _titulo(doc, "LISTA DE ASISTENCIA")
-    tabla_encabezado(doc, data.datos)
+    tabla_encabezado(doc, data.datos, sin_participante=True)
 
     t = doc.add_table(rows=21, cols=3)
     t.style = "Table Grid"

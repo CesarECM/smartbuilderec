@@ -18,15 +18,6 @@ def generar_contrato_aprendizaje(data) -> bytes:
         "desarrollo de la sesión."
     )
 
-    acuerdos = list(data.encuadre.acuerdosTexto or [])
-    if data.encuadre.otroAcuerdo:
-        acuerdos.append(data.encuadre.otroAcuerdo)
-    if acuerdos:
-        doc.add_paragraph()
-        doc.add_paragraph("Los participantes acuerdan lo siguiente:")
-        for i, acuerdo in enumerate(acuerdos, 1):
-            doc.add_paragraph(f"{i}. {acuerdo}", style="List Number")
-
     doc.add_paragraph()
 
     doc.add_heading("Compromisos del Instructor", level=2)
@@ -57,7 +48,7 @@ def generar_contrato_aprendizaje(data) -> bytes:
 def generar_lista_requerimientos(data) -> bytes:
     doc = Document()
     _titulo(doc, "LISTA DE VERIFICACIÓN DE REQUERIMIENTOS")
-    tabla_encabezado(doc, data.datos)
+    tabla_encabezado(doc, data.datos, sin_participante=True)
 
     mat = data.materiales or {}
     participantes = data.datos.participantes or 0
