@@ -5,11 +5,13 @@ import { llamarIA } from "./api.js";
 import { guardarUndo, mostrarUndo } from "./undo.js";
 
 export async function generarPerfilIA() {
-  const datos = getData("ec0217_datos") || {};
+  // Leer del DOM primero: el usuario puede no haber guardado aún los datos del paso 1
+  const nombreCurso = document.getElementById("nombreCurso")?.value.trim()
+                   || (getData("ec0217_datos") || {}).nombreCurso || "";
 
-  if (!datos.nombreCurso) {
+  if (!nombreCurso) {
     if (typeof showAlert === "function")
-      showAlert("Primero completa el nombre del curso para generar el perfil.");
+      showAlert("Primero escribe el nombre del curso para generar el perfil.");
     return;
   }
 
@@ -33,7 +35,7 @@ export async function generarPerfilIA() {
     if (btn) { btn.disabled = true; btn.textContent = "Generando..."; }
 
     const data = await llamarIA("generate-perfil", {
-      nombre: datos.nombreCurso || "",
+      nombre: nombreCurso,
     });
 
     if (ta) ta.value = data.perfil || "";
