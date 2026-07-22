@@ -95,6 +95,23 @@ export function cargarDatosCurso() {
   }
 }
 
+function _sincronizarPreLlenadoObjetivos(den) {
+  const e = window.sbeEstadoObjetivos;
+  if (!e) return;
+  const PATRON = /^El .+ al finalizar la (primera|segunda|tercera) unidad, $/;
+  [
+    { s: "cognitiva",   t: `El ${den} al finalizar la primera unidad, ` },
+    { s: "psicomotriz", t: `El ${den} al finalizar la segunda unidad, ` },
+    { s: "afectiva",    t: `El ${den} al finalizar la tercera unidad, ` },
+  ].forEach(({ s, t }) => {
+    if (!e[s].completa && PATRON.test(e[s].texto)) e[s].texto = t;
+  });
+  const ta = document.getElementById("objectiveInput");
+  if (ta && e[e.actual] && !e[e.actual].completa && PATRON.test(ta.value)) {
+    ta.value = e[e.actual].texto;
+  }
+}
+
 export function guardarDatosCurso() {
   const denSel  = document.getElementById("denominacionParticipante")?.value || "participante";
   const denOtro = document.getElementById("denominacionOtro")?.value.trim()  || "";
@@ -113,6 +130,7 @@ export function guardarDatosCurso() {
   localStorage.setItem("ec0217_datos_completo", "true");
   document.getElementById("nav-datos")?.classList.add("completed");
   document.getElementById("nav-objetivos")?.classList.remove("disabled");
+  _sincronizarPreLlenadoObjetivos(datos.denominacion);
 }
 
 export function initStepDatos() {
