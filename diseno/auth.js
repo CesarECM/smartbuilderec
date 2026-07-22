@@ -18,11 +18,20 @@ async function getUser() {
 async function getUserProfile() {
   const { data: { user } } = await _supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await _supabase
+  const { data, error } = await _supabase
     .from("profiles")
     .select("id, nombre, apellido, email, rol, credits, admin_id, activo, vigencia_hasta, telefono, curp, branding_logo_url, branding_empresa, branding_color_primario, branding_color_acento")
     .eq("id", user.id)
     .single();
+  if (error) {
+    // Fallback sin columnas de branding (ej. schema cache aún no actualizado)
+    const { data: fallback } = await _supabase
+      .from("profiles")
+      .select("id, nombre, apellido, email, rol, credits, admin_id, activo, vigencia_hasta, telefono, curp")
+      .eq("id", user.id)
+      .single();
+    return fallback;
+  }
   return data;
 }
 
