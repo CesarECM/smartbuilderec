@@ -5,6 +5,7 @@ document.getElementById('rp-admin').innerHTML = `
         <button class="role-tab-btn"        id="adm-tab-usuarios"   onclick="admShowTab('usuarios')">👥 Usuarios &amp; Acceso</button>
         <button class="role-tab-btn"        onclick="window.location.href='erp-admin'">🏫 ERP →</button>
         <button class="role-tab-btn"        id="adm-tab-mi-perfil"  onclick="admShowTab('mi-perfil')">👤 Mi Perfil</button>
+        <button class="role-tab-btn"        id="adm-tab-branding"   onclick="admShowTab('branding')">🎨 Mi Marca</button>
       </nav>
 
       <!-- ── Resumen ─────────────────────────────────────────────── -->
@@ -78,5 +79,11 @@ document.getElementById('rp-admin').innerHTML = `
       <div id="adm-panel-mi-perfil" class="role-tab-panel">
         <div class="sec-header"><h2>👤 Mi Perfil</h2></div>
         <div id="adm-perfilFormContainer"><p class="loading-txt">Cargando perfil...</p></div>
+      </div>
+
+      <!-- ── Mi Marca ────────────────────────────────────────────── -->
+      <div id="adm-panel-branding" class="role-tab-panel">
+        <div class="sec-header"><h2>🎨 Mi Marca</h2></div>
+        <div id="adm-brandingContainer"><p class="loading-txt">Cargando...</p></div>
       </div>
 `;

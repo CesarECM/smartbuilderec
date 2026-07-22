@@ -7,7 +7,7 @@
     var _adm_perfilTabLoaded      = false;
     var _adm_transferirPlaneacionId = null;
     var _contactoAdmin            = {};
-    var _adm_tabsLoaded = { resumen: true, 'mis-cursos': false, usuarios: false, 'mi-perfil': false };
+    var _adm_tabsLoaded = { resumen: true, 'mis-cursos': false, usuarios: false, 'mi-perfil': false, branding: false };
 
     async function admInit() {
       document.getElementById('adm-btnGenerarCodigo')
@@ -39,6 +39,13 @@
         if (typeof _htmlPerfilForm === 'function') {
           container.innerHTML = _htmlPerfilForm(_perfil);
           if (_perfil.curp) typeof validarCurpInput === 'function' && validarCurpInput();
+        }
+      }
+      if (name === 'branding' && !_adm_tabsLoaded['branding']) {
+        _adm_tabsLoaded['branding'] = true;
+        const container = document.getElementById('adm-brandingContainer');
+        if (container && typeof _htmlBrandingPanel === 'function') {
+          container.innerHTML = _htmlBrandingPanel(_perfil);
         }
       }
     }

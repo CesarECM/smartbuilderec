@@ -14,8 +14,10 @@ def get_perfil(request: Request):
     from database import get_supabase
     user_id = request.state.user.get("sub")
     sb = get_supabase()
-    res = sb.table("profiles").select("id, nombre, apellido, rol, credits, activo") \
-        .eq("id", user_id).single().execute()
+    res = sb.table("profiles").select(
+        "id, nombre, apellido, rol, credits, activo, "
+        "branding_logo_url, branding_empresa, branding_color_primario, branding_color_acento"
+    ).eq("id", user_id).single().execute()
     return res.data or {}
 
 

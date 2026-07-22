@@ -6,6 +6,8 @@ async function init() {
   _perfil = await getUserProfile();
   if (!_perfil) { window.location.href = "login"; return; }
 
+  if (typeof inyectarBranding === 'function') inyectarBranding(_perfil);
+
   const rolValido = _perfil.rol === "admin" || _perfil.rol === "super_admin";
   if (!rolValido) {
     window.location.href = "panel";

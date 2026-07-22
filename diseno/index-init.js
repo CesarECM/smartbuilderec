@@ -179,6 +179,7 @@
       try {
         const perfil = await getUserProfile();
         if (perfil) {
+          if (typeof inyectarBranding === 'function') inyectarBranding(perfil);
           const nombre = [perfil.nombre, perfil.apellido].filter(Boolean).join(" ") || perfil.email;
           document.getElementById("wiz-nav-nombre").textContent = nombre;
           const back = document.getElementById("wizNavBack");
