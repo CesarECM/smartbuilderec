@@ -11,6 +11,10 @@ const _estado = () => window.sbeEstadoObjetivos || {
   general: { texto: "", completa: false },
 };
 const _modo = () => localStorage.getItem("ec0217_modo_estricto") || "on";
+const _getDenominacion = () => {
+  try { return JSON.parse(localStorage.getItem("ec0217_datos") || "{}").denominacion || "participante"; }
+  catch (_) { return "participante"; }
+};
 
 export function guardarObjetivos() {
   const e = _estado();
@@ -139,38 +143,44 @@ export function guardarObjetivoLibre() {
 }
 
 export function cargarObjetivos() {
-  const raw = localStorage.getItem("ec0217_objetivos");
-  if (!raw) return;
-
-  const obj = JSON.parse(raw);
-  const e   = _estado();
+  const raw      = localStorage.getItem("ec0217_objetivos");
+  const e        = _estado();
   const textarea = document.getElementById("objectiveInput");
 
-  e.cognitiva.texto    = obj.cognitiva    || "";
-  e.psicomotriz.texto  = obj.psicomotriz  || "";
-  e.afectiva.texto     = obj.afectiva     || "";
-  e.general.texto      = obj.general      || "";
+  if (raw) {
+    const obj = JSON.parse(raw);
+    e.cognitiva.texto    = obj.cognitiva    || "";
+    e.psicomotriz.texto  = obj.psicomotriz  || "";
+    e.afectiva.texto     = obj.afectiva     || "";
+    e.general.texto      = obj.general      || "";
 
-  if (obj.cognitivaCompleta) {
-    e.cognitiva.completa = true;
-    document.getElementById("nav-cognitiva")?.classList.add("completed");
-    document.getElementById("nav-psicomotriz")?.classList.remove("disabled");
+    if (obj.cognitivaCompleta) {
+      e.cognitiva.completa = true;
+      document.getElementById("nav-cognitiva")?.classList.add("completed");
+      document.getElementById("nav-psicomotriz")?.classList.remove("disabled");
+    }
+    if (obj.psicomotrizCompleta) {
+      e.psicomotriz.completa = true;
+      document.getElementById("nav-psicomotriz")?.classList.add("completed");
+      document.getElementById("nav-afectiva")?.classList.remove("disabled");
+    }
+    if (obj.afectivaCompleta) {
+      e.afectiva.completa = true;
+      document.getElementById("nav-afectiva")?.classList.add("completed");
+      document.getElementById("nav-general")?.classList.remove("disabled");
+    }
+    if (obj.generalCompleta) {
+      e.general.completa = true;
+      document.getElementById("nav-general")?.classList.add("completed");
+      habilitarBeneficios();
+    }
   }
-  if (obj.psicomotrizCompleta) {
-    e.psicomotriz.completa = true;
-    document.getElementById("nav-psicomotriz")?.classList.add("completed");
-    document.getElementById("nav-afectiva")?.classList.remove("disabled");
-  }
-  if (obj.afectivaCompleta) {
-    e.afectiva.completa = true;
-    document.getElementById("nav-afectiva")?.classList.add("completed");
-    document.getElementById("nav-general")?.classList.remove("disabled");
-  }
-  if (obj.generalCompleta) {
-    e.general.completa = true;
-    document.getElementById("nav-general")?.classList.add("completed");
-    habilitarBeneficios();
-  }
+
+  // Pre-llenar objetivos particulares vacíos con la denominación elegida en Datos del Curso
+  const den = _getDenominacion();
+  if (!e.cognitiva.texto)   e.cognitiva.texto   = `El ${den} al finalizar la primera unidad, `;
+  if (!e.psicomotriz.texto) e.psicomotriz.texto = `El ${den} al finalizar la segunda unidad, `;
+  if (!e.afectiva.texto)    e.afectiva.texto    = `El ${den} al finalizar la tercera unidad, `;
 
   if (textarea) textarea.value = e[e.actual].texto || "";
   aplicarModoObjetivos();

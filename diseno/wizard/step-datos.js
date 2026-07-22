@@ -19,6 +19,9 @@ export function limpiarErroresDatos() {
     const err = document.getElementById(errId);
     if (err) err.style.display = "none";
   });
+  document.getElementById("denominacionOtro")?.classList.remove("error");
+  const errDen = document.getElementById("err-denominacion");
+  if (errDen) errDen.style.display = "none";
 }
 
 export function mostrarErrorDatos(id, errId) {
@@ -52,6 +55,17 @@ export function validarDatosCurso() {
     }
   }
 
+  if (document.getElementById("denominacionParticipante")?.value === "otro") {
+    const otroEl = document.getElementById("denominacionOtro");
+    const errEl  = document.getElementById("err-denominacion");
+    if (!otroEl?.value.trim()) {
+      otroEl?.classList.add("error");
+      if (errEl) errEl.style.display = "block";
+      if (!primerError) primerError = "denominacionOtro";
+      valido = false;
+    }
+  }
+
   if (primerError) {
     const el = document.getElementById(primerError);
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -68,9 +82,22 @@ export function cargarDatosCurso() {
     const el = document.getElementById(id);
     if (el && d[id] !== undefined) el.value = d[id];
   });
+  const PRESETS = ["participante","estudiante","alumno","ciudadano","trabajador","servidor público","operario técnico"];
+  const selEl  = document.getElementById("denominacionParticipante");
+  const otroEl = document.getElementById("denominacionOtro");
+  if (selEl && d.denominacion !== undefined) {
+    if (PRESETS.includes(d.denominacion)) {
+      selEl.value = d.denominacion;
+    } else {
+      selEl.value = "otro";
+      if (otroEl) { otroEl.value = d.denominacion; otroEl.style.display = "block"; }
+    }
+  }
 }
 
 export function guardarDatosCurso() {
+  const denSel  = document.getElementById("denominacionParticipante")?.value || "participante";
+  const denOtro = document.getElementById("denominacionOtro")?.value.trim()  || "";
   const datos = {
     nombreCurso:   document.getElementById("nombreCurso")?.value.trim()   || "",
     instructor:    document.getElementById("instructor")?.value.trim()    || "",
@@ -80,6 +107,7 @@ export function guardarDatosCurso() {
     duracion:      parseInt(document.getElementById("duracion")?.value    || "0", 10),
     participantes: parseInt(document.getElementById("participantes")?.value || "0", 10),
     perfil:        document.getElementById("perfil")?.value.trim()        || "",
+    denominacion:  denSel === "otro" ? denOtro || "participante" : denSel,
   };
   localStorage.setItem("ec0217_datos", JSON.stringify(datos));
   localStorage.setItem("ec0217_datos_completo", "true");
@@ -98,6 +126,11 @@ export function initStepDatos() {
     const inst = document.getElementById("instructor")?.value.trim();
     const dis  = document.getElementById("disenador");
     if (inst && dis) dis.value = inst;
+  });
+
+  document.getElementById("denominacionParticipante")?.addEventListener("change", ({ target }) => {
+    const otroEl = document.getElementById("denominacionOtro");
+    if (otroEl) otroEl.style.display = target.value === "otro" ? "block" : "none";
   });
 }
 
@@ -177,6 +210,24 @@ export function getTemplate() {
               <input type="number" id="participantes" placeholder="Mínimo 4" min="4">
               <span class="hint">Mínimo 4 participantes según EC0217.01</span>
               <span class="error-msg" id="err-participantes">Mínimo 4 participantes.</span>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="denominacionParticipante">¿Cómo llamarás a los participantes de tu curso? *</label>
+              <select id="denominacionParticipante">
+                <option value="participante">El participante</option>
+                <option value="estudiante">El estudiante</option>
+                <option value="alumno">El alumno</option>
+                <option value="ciudadano">El ciudadano</option>
+                <option value="trabajador">El trabajador</option>
+                <option value="servidor público">El servidor público</option>
+                <option value="operario técnico">El operario técnico</option>
+                <option value="otro">Otro — escribir...</option>
+              </select>
+              <input type="text" id="denominacionOtro" placeholder="Ej. el becario, el voluntario..."
+                style="display:none; margin-top:8px;">
+              <span class="hint">Se usará como prefijo en los objetivos y documentos generados.</span>
+              <span class="error-msg" id="err-denominacion">Escribe cómo llamarás al participante.</span>
             </div>
 
             <div class="form-group full-width">
