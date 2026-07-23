@@ -39,8 +39,8 @@ export function getSidebarHTML() {
             <ul class="nav-grupo-items open">
               <li id="nav-datos" class="nav-item active">Datos del curso</li>
               <li id="nav-objetivos" class="nav-item">Objetivos</li>
-              <li id="nav-beneficios" class="nav-item disabled">Beneficios</li>
-              <li id="nav-temario" class="nav-item disabled">Temario</li>
+              <li id="nav-beneficios" class="nav-item disabled" data-prereq="Completa «Objetivos» primero">Beneficios</li>
+              <li id="nav-temario" class="nav-item disabled" data-prereq="Completa «Beneficios» primero">Temario</li>
             </ul>
           </li>
 
@@ -50,10 +50,10 @@ export function getSidebarHTML() {
               <span class="nav-grupo-arrow">▾</span>
             </div>
             <ul class="nav-grupo-items open">
-              <li id="nav-integracion" class="nav-item disabled">Técnica de integración</li>
-              <li id="nav-preguntas" class="nav-item disabled">Preguntas</li>
-              <li id="nav-reglas" class="nav-item disabled">Reglas</li>
-              <li id="nav-contrato" class="nav-item disabled">Contrato de aprendizaje</li>
+              <li id="nav-integracion" class="nav-item disabled" data-prereq="Completa «Temario» primero">Técnica de integración</li>
+              <li id="nav-preguntas" class="nav-item disabled" data-prereq="Completa «Integración grupal» primero">Preguntas</li>
+              <li id="nav-reglas" class="nav-item disabled" data-prereq="Completa «Preguntas de experiencia» primero">Reglas</li>
+              <li id="nav-contrato" class="nav-item disabled" data-prereq="Completa «Reglas del curso» primero">Contrato de aprendizaje</li>
             </ul>
           </li>
 
@@ -63,10 +63,10 @@ export function getSidebarHTML() {
               <span class="nav-grupo-arrow">▾</span>
             </div>
             <ul class="nav-grupo-items open">
-              <li id="nav-expositiva" class="nav-item disabled">Técnica expositiva</li>
-              <li id="nav-demostrativa" class="nav-item disabled">Técnica demostrativa</li>
-              <li id="nav-energizante" class="nav-item disabled">Técnica energizante</li>
-              <li id="nav-dialogo" class="nav-item disabled">Técnica diálogo/discusión</li>
+              <li id="nav-expositiva" class="nav-item disabled" data-prereq="Completa «Contrato de aprendizaje» primero">Técnica expositiva</li>
+              <li id="nav-demostrativa" class="nav-item disabled" data-prereq="Completa «Técnica expositiva» primero">Técnica demostrativa</li>
+              <li id="nav-energizante" class="nav-item disabled" data-prereq="Completa «Técnica demostrativa» primero">Técnica energizante</li>
+              <li id="nav-dialogo" class="nav-item disabled" data-prereq="Completa «Técnica energizante» primero">Técnica diálogo/discusión</li>
             </ul>
           </li>
 
@@ -76,7 +76,7 @@ export function getSidebarHTML() {
               <span class="nav-grupo-arrow">▾</span>
             </div>
             <ul class="nav-grupo-items open">
-              <li id="nav-cierre" class="nav-item disabled">Cierre</li>
+              <li id="nav-cierre" class="nav-item disabled" data-prereq="Completa «Técnica de diálogo» primero">Cierre</li>
             </ul>
           </li>
 
@@ -86,7 +86,7 @@ export function getSidebarHTML() {
               <span class="nav-grupo-arrow">▾</span>
             </div>
             <ul class="nav-grupo-items open">
-              <li id="nav-evaluaciones" class="nav-item disabled">Evaluaciones</li>
+              <li id="nav-evaluaciones" class="nav-item disabled" data-prereq="Completa «Cierre del curso» primero">Evaluaciones</li>
             </ul>
           </li>
 
@@ -96,8 +96,8 @@ export function getSidebarHTML() {
               <span class="nav-grupo-arrow">▾</span>
             </div>
             <ul class="nav-grupo-items open">
-              <li id="nav-tiempos" class="nav-item disabled">Tiempos</li>
-              <li id="nav-materiales" class="nav-item disabled">Materiales</li>
+              <li id="nav-tiempos" class="nav-item disabled" data-prereq="Completa «Evaluaciones» primero">Tiempos</li>
+              <li id="nav-materiales" class="nav-item disabled" data-prereq="Completa «Tiempos del curso» primero">Materiales</li>
             </ul>
           </li>
 
@@ -107,7 +107,7 @@ export function getSidebarHTML() {
               <span class="nav-grupo-arrow">▾</span>
             </div>
             <ul class="nav-grupo-items open">
-              <li id="nav-formatos" class="nav-item disabled">Formatos</li>
+              <li id="nav-formatos" class="nav-item disabled" data-prereq="Completa «Lista de materiales» primero">Formatos</li>
             </ul>
           </li>
 

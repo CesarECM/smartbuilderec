@@ -5,6 +5,27 @@ import { BUNNY_LIBRARY_ID, VIDEOS, MODULE_GROUPS } from "./video-config.js";
 const WATCHED_KEY = "sbe_videos_watched";
 const ALL_KEYS    = MODULE_GROUPS.flatMap(g => g.keys);
 
+// Información de cada sección: nav-id, nombre legible y prerrequisito inmediato
+const SECTION_INFO = {
+  seccionDatos:        { nav: "nav-datos",        label: "Datos del curso",           prereq: null },
+  seccionObjetivos:    { nav: "nav-objetivos",    label: "Objetivos de aprendizaje",  prereq: "Datos del curso" },
+  seccionBeneficios:   { nav: "nav-beneficios",   label: "Beneficios",                prereq: "Objetivos de aprendizaje" },
+  seccionTemario:      { nav: "nav-temario",       label: "Temario",                   prereq: "Beneficios" },
+  seccionIntegracion:  { nav: "nav-integracion",  label: "Integración grupal",        prereq: "Temario" },
+  seccionPreguntas:    { nav: "nav-preguntas",    label: "Preguntas de experiencia",  prereq: "Integración grupal" },
+  seccionReglas:       { nav: "nav-reglas",       label: "Reglas del curso",          prereq: "Preguntas de experiencia" },
+  seccionContrato:     { nav: "nav-contrato",     label: "Contrato de aprendizaje",   prereq: "Reglas del curso" },
+  seccionExpositiva:   { nav: "nav-expositiva",   label: "Técnica expositiva",        prereq: "Contrato de aprendizaje" },
+  seccionDemostrativa: { nav: "nav-demostrativa", label: "Técnica demostrativa",      prereq: "Técnica expositiva" },
+  seccionEnergizante:  { nav: "nav-energizante",  label: "Técnica energizante",       prereq: "Técnica demostrativa" },
+  seccionDialogo:      { nav: "nav-dialogo",       label: "Técnica de diálogo",        prereq: "Técnica energizante" },
+  seccionCierre:       { nav: "nav-cierre",       label: "Cierre del curso",          prereq: "Técnica de diálogo" },
+  seccionEvaluaciones: { nav: "nav-evaluaciones", label: "Evaluaciones",              prereq: "Cierre del curso" },
+  seccionTiempos:      { nav: "nav-tiempos",      label: "Tiempos del curso",         prereq: "Evaluaciones" },
+  seccionMateriales:   { nav: "nav-materiales",   label: "Lista de materiales",       prereq: "Tiempos del curso" },
+  seccionFormatos:     { nav: "nav-formatos",      label: "Formatos adicionales",      prereq: "Lista de materiales" },
+};
+
 function getWatched() {
   try { return new Set(JSON.parse(localStorage.getItem(WATCHED_KEY) || "[]")); }
   catch (_) { return new Set(); }
@@ -34,6 +55,34 @@ function updateBadge() {
   badge.textContent   = done === ALL_KEYS.length ? "✓" : done;
 }
 
+// Navega a una sección o muestra mensaje de restricción si está bloqueada
+function navigateOrBlock(seccion) {
+  const info = SECTION_INFO[seccion];
+  if (!info) return;
+  const navEl = document.getElementById(info.nav);
+  const isLocked = navEl?.classList.contains("disabled");
+  if (!isLocked) {
+    closeDrawer();
+    window.mostrarSeccionPrincipal?.(seccion);
+    return;
+  }
+  // Encontrar el primer paso bloqueado en el camino hacia el destino
+  const flujo = window.wizardConfig?.FLUJO_SECCIONES ?? Object.keys(SECTION_INFO);
+  const destIdx = flujo.indexOf(seccion);
+  let firstBlocked = info.prereq;
+  for (let i = 0; i < destIdx; i++) {
+    const si = SECTION_INFO[flujo[i]];
+    if (si && document.getElementById(si.nav)?.classList.contains("disabled")) {
+      firstBlocked = si.label;
+      break;
+    }
+  }
+  window.showToast?.(
+    `Antes de «${info.label}», completa «${firstBlocked}» primero`,
+    "default", 4000
+  );
+}
+
 function closeAll() {
   document.querySelectorAll(".vp-acc-item.vp-open").forEach(item => {
     item.classList.remove("vp-open");
@@ -49,11 +98,16 @@ function toggleItem(item) {
   item.classList.add("vp-open");
   const guid   = item.dataset.guid;
   const iframe = item.querySelector("iframe");
-  if (iframe && guid) {
-    iframe.src = embedUrl(guid);
-    markWatched(guid);
-  }
+  if (iframe && guid) { iframe.src = embedUrl(guid); markWatched(guid); }
   setTimeout(() => item.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+}
+
+function buildLinks(links) {
+  if (!links?.length) return "";
+  const btns = links.map(l =>
+    `<button class="vp-step-link" data-seccion="${l.seccion}" type="button">${l.label}</button>`
+  ).join("");
+  return `<div class="vp-step-links">${btns}</div>`;
 }
 
 function buildAccordion() {
@@ -76,6 +130,7 @@ function buildAccordion() {
         </button>
         <div class="vp-acc-body">
           <p class="vp-acc-desc">${v.description}</p>
+          ${buildLinks(v.links)}
           <div class="vp-acc-player">
             <iframe allowfullscreen
               allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen">
@@ -89,7 +144,6 @@ function buildAccordion() {
 }
 
 function getHTML() {
-  const total = ALL_KEYS.length;
   return `
   <button id="vp-tab" title="Ver videos guía EC0217.01">
     <span id="vp-badge"></span>
@@ -99,7 +153,7 @@ function getHTML() {
   <div id="vp-overlay"></div>
   <aside id="vp-drawer">
     <div id="vp-header">
-      <span id="vp-header-title">📹 Guía EC0217.01 <small>(${total} videos)</small></span>
+      <span id="vp-header-title">📹 Guía EC0217.01 <small>(${ALL_KEYS.length} videos)</small></span>
       <button id="vp-close" title="Cerrar">✕</button>
     </div>
     <div id="vp-accordion">${buildAccordion()}</div>
@@ -123,6 +177,10 @@ export function initVideoPanel() {
   document.getElementById("vp-close")?.addEventListener("click", closeDrawer);
   document.getElementById("vp-overlay")?.addEventListener("click", closeDrawer);
   document.getElementById("vp-accordion")?.addEventListener("click", e => {
+    if (e.target.closest(".vp-step-link")) {
+      navigateOrBlock(e.target.closest(".vp-step-link").dataset.seccion);
+      return;
+    }
     const trigger = e.target.closest(".vp-acc-trigger");
     if (trigger) toggleItem(trigger.closest(".vp-acc-item"));
   });
