@@ -21,6 +21,7 @@ from services.doc_planeacion import generar_presentacion_curso
 from services.doc_generales import generar_contrato_aprendizaje, generar_lista_requerimientos
 from services.doc_planeacion_docx import generar_planeacion_docx
 from services.doc_instructor import generar_manual_instructor
+from services.doc_informe_final import generar_informe_final
 
 router = APIRouter()
 
@@ -150,6 +151,7 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
             ("09_Lista_de_Requerimientos.docx",         lambda: generar_lista_requerimientos(data)),
             ("10_Guia_de_Presentacion_EC0217.pptx",     lambda: generar_presentacion_curso(data)),
             ("11_Manual_del_Instructor.docx",            lambda: generar_manual_instructor(data)),
+            ("12_Informe_Final_del_Curso.xlsx",           lambda: generar_informe_final(data)),
         ]
 
         if tipo_form == "guia_observacion":
@@ -267,6 +269,7 @@ def generate_doc_individual(doc_id: str, data: PlaneacionRequest):
             "requerimientos": (lambda: generar_lista_requerimientos(data),   "09_Lista_de_Requerimientos.docx",          _DOCX),
             "presentacion":   (lambda: generar_presentacion_curso(data),     "10_Guia_de_Presentacion_EC0217.pptx",      _PPTX),
             "instructor":     (lambda: generar_manual_instructor(data),      "11_Manual_del_Instructor.docx",             _DOCX),
+            "informe":        (lambda: generar_informe_final(data),          "12_Informe_Final_del_Curso.xlsx",            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
         }
 
         if doc_id == "formativa":
