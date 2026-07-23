@@ -39,6 +39,7 @@ export function recolectarEvaluaciones() {
     notaFormativa:            document.getElementById("notaFormativaPct")?.textContent.trim() || "",
     instReac:                 g("instReac"),
     tipoInstrumentoFormativa: _tipoInstrumentoFormativa,
+    estiloPuntaje:            document.querySelector('input[name="estiloPuntaje"]:checked')?.value || "B",
     descripcionGeneral:       g("descripcionGeneralEvaluacion"),
     apfDiagnostica:           g("apfDiagnostica"),
     apfFormativa:             g("apfFormativa"),
@@ -58,6 +59,11 @@ export function cargarEvaluaciones() {
     const d = JSON.parse(raw);
     _tipoInstrumentoFormativa = d.tipoInstrumentoFormativa || "";
     window.sbetipoInstrumentoFormativa = _tipoInstrumentoFormativa;
+
+    if (d.estiloPuntaje) {
+      const radio = document.querySelector(`input[name="estiloPuntaje"][value="${d.estiloPuntaje}"]`);
+      if (radio) radio.checked = true;
+    }
 
     const formativa = d.pctFormativa !== undefined ? parseInt(d.pctFormativa, 10) : 50;
     const sumativa  = 100 - formativa;

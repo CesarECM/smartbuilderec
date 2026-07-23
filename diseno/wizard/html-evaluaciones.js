@@ -43,6 +43,25 @@ export function getEvaluacionesTemplate() {
 
           <span class="hint">La suma de evaluación formativa y sumativa debe ser 100%. La diagnóstica puede ser 0% porque normalmente solo identifica conocimientos previos.</span>
 
+          <div style="margin-top:18px;padding:14px 16px;background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;">
+            <p style="font-weight:600;margin:0 0 10px;">Estilo de puntaje por reactivo</p>
+            <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer;">
+              <input type="radio" name="estiloPuntaje" id="estiloPuntajeB" value="B" checked style="margin-top:3px;">
+              <span>
+                <strong>100 puntos internos</strong><br>
+                <span class="hint">El instrumento se califica sobre 100 pts. La dificultad distribuye: Muy fácil 10 pts · Fácil 15 pts · Intermedia 20 pts · Difícil 25 pts · Muy difícil 30 pts.</span>
+              </span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+              <input type="radio" name="estiloPuntaje" id="estiloPuntajeA" value="A" style="margin-top:3px;">
+              <span>
+                <strong>Puntos del curso</strong><br>
+                <span class="hint">Los pts equivalen al peso del instrumento en la calificación total. Si la sumativa vale 40%, sus 5 reactivos suman 40 pts en total.</span>
+              </span>
+            </label>
+            <span class="hint" style="display:block;margin-top:8px;">Se aplica al generar con IA. Para recalcular un instrumento ya generado, vuelve a generarlo.</span>
+          </div>
+
           <hr>
           <h3>Instrumentos de evaluación</h3>
 

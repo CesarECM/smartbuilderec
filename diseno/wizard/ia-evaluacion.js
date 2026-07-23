@@ -13,12 +13,21 @@ const _PESOS_DIFICULTAD = {
   "muy difícil": 30, "muy dificil": 30,
 };
 
-function _construirClaveConPesos(preguntas) {
+function _calcularPts(nivel, tipo) {
+  const base = _PESOS_DIFICULTAD[nivel] ?? 20;
+  const estilo = document.querySelector('input[name="estiloPuntaje"]:checked')?.value || "B";
+  if (estilo !== "A" || tipo === "diagnostica") return base;
+  const pctId = tipo === "sumativa" ? "pctSumativa" : "pctFormativa";
+  const pct   = parseInt(document.getElementById(pctId)?.value || "0", 10);
+  return Math.round((base / 100) * pct * 10) / 10;
+}
+
+function _construirClaveConPesos(preguntas, tipo) {
   if (!Array.isArray(preguntas)) return "";
   return preguntas.map((p, i) => {
     const letra = p.respuesta_correcta || "—";
     const nivel = (p.nivel_dificultad || p.dificultad || p.nivel || "").toLowerCase().trim();
-    const pts   = _PESOS_DIFICULTAD[nivel] ?? 20;
+    const pts   = _calcularPts(nivel, tipo);
     return `${i + 1}. ${letra}  (${pts} pts)`;
   }).join("\n");
 }
@@ -52,7 +61,7 @@ export async function generarEvaluacionIA(tipo) {
       if (Array.isArray(resultado)) {
         destino.value = resultado.map((p, i) => {
           const nivel = (p.nivel_dificultad || p.dificultad || p.nivel || "").toLowerCase().trim();
-          const pts   = _PESOS_DIFICULTAD[nivel] ?? 20;
+          const pts   = _calcularPts(nivel, tipo);
           return `${i + 1}. ${p.pregunta || ""}  (${pts} pts)\n   A) ${p.opciones?.A || ""}\n   B) ${p.opciones?.B || ""}\n   C) ${p.opciones?.C || ""}\n   D) ${p.opciones?.D || ""}`;
         }).join("\n\n");
       } else {
@@ -65,7 +74,7 @@ export async function generarEvaluacionIA(tipo) {
     if (headerField && data.header) headerField.value = data.header;
     if (claveField) {
       claveField.value = Array.isArray(resultado)
-        ? _construirClaveConPesos(resultado)
+        ? _construirClaveConPesos(resultado, tipo)
         : (data.clave || "");
     }
 
