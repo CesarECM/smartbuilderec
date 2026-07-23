@@ -7,13 +7,13 @@ export const VIDEOS = {
   introduccion: {
     guid:        "15088e59-b23e-46f2-8df4-fb1462d41e30",
     title:       "Introducción",
-    duration:    "—",
+    duration:    "8 min",
     description: "Presentación del curso y visión general del proceso de certificación como instructor bajo la norma EC0217.01 del CONOCER.",
   },
   snc: {
     guid:        "2ddfe8ab-ad17-41bf-8a1a-03a5a54a8bc8",
     title:       "Sistema Nacional de Competencias",
-    duration:    "—",
+    duration:    "29 min",
     description: "Qué es el CONOCER, cómo funciona el Sistema Nacional de Competencias y el rol del instructor certificado dentro del esquema.",
   },
 
@@ -21,19 +21,19 @@ export const VIDEOS = {
   fichaEC0217: {
     guid:        "6aec9b2c-6a75-4401-be0b-4697e27af7f7",
     title:       "Ficha del Estándar EC0217.01",
-    duration:    "—",
+    duration:    "62 min",
     description: "Análisis detallado de la ficha técnica del estándar: elementos de competencia, criterios de desempeño y productos esperados por el CONOCER.",
   },
   deteccionNec: {
     guid:        "b840cb9c-3f11-4da4-9bd3-58b404f4e4bd",
     title:       "Detección de Necesidades",
-    duration:    "—",
+    duration:    "26 min",
     description: "Cómo identificar y documentar las necesidades de capacitación que justifican el diseño del curso.",
   },
   redaccionObj: {
     guid:        "76cb0cdb-570e-41f4-b39a-ec6d35064471",
     title:       "Redacción de Objetivos",
-    duration:    "—",
+    duration:    "12 min",
     description: "Técnica para redactar objetivos de aprendizaje cognitivos, psicomotrices y afectivos con verbos de acción correctos según la taxonomía.",
   },
   pasoAPaso1: {
