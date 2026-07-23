@@ -82,6 +82,9 @@ class EvaluacionesInfo(BaseModel):
     instSumativaHeader: str = ""
     instSumativaClave: str = ""
     notaFormativa: str = ""
+    apfDiagnostica: str = ""
+    apfFormativa: str = ""
+    apfSumativa: str = ""
 
 
 class TiempoFila(BaseModel):

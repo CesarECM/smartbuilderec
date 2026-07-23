@@ -154,6 +154,40 @@ export async function generarFormativaIA() {
   }
 }
 
+export async function generarAPFIA(tipo) {
+  const objetivos = getData("ec0217_objetivos") || {};
+  const datos     = getData("ec0217_datos")     || {};
+  const idMap = {
+    diagnostica: { btn: "btnGenerarAPFDiagnostica", campo: "apfDiagnostica" },
+    formativa:   { btn: "btnGenerarAPFFormativa",   campo: "apfFormativa"   },
+    sumativa:    { btn: "btnGenerarAPFSumativa",     campo: "apfSumativa"    },
+  };
+  const { btn: btnId, campo: campoId } = idMap[tipo] || {};
+  const boton   = document.getElementById(btnId);
+  const destino = document.getElementById(campoId);
+
+  guardarUndo("ec0217_evaluaciones", "cargarEvaluaciones");
+  try {
+    if (boton) { boton.disabled = true; boton.textContent = "Generando..."; }
+    const data = await llamarIA("generate-alcance-proposito-finalidad", {
+      nombreCurso:         datos.nombreCurso      || "",
+      objetivoGeneral:     objetivos.general      || "",
+      objetivoCognitivo:   objetivos.cognitiva    || "",
+      objetivoPsicomotriz: objetivos.psicomotriz  || "",
+      objetivoAfectivo:    objetivos.afectiva     || "",
+      tipoEvaluacion:      tipo,
+    });
+    if (destino && data.texto) destino.value = data.texto;
+    if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
+    mostrarUndo(`APF ${tipo}`, campoId);
+  } catch (err) {
+    const msg = typeof mensajeAmigable === "function" ? mensajeAmigable(err) : err.message;
+    if (typeof showAlert === "function") showAlert(`No se pudo generar el alcance/propósito/finalidad:\n\n${msg}`);
+  } finally {
+    if (boton) { boton.disabled = false; boton.textContent = "✨ Generar con IA (basado en el objetivo general del curso)"; }
+  }
+}
+
 const _incompleto = (idMain, idHeader, idClave) =>
   !document.getElementById(idMain)?.value.trim() ||
   !document.getElementById(idHeader)?.value.trim() ||
@@ -201,8 +235,13 @@ async function _generarTodoEvaluaciones(btnTodo) {
 export function initIAEvaluacion() {
   window.generarEvaluacionIA      = generarEvaluacionIA;
   window.generarFormativaIA       = generarFormativaIA;
+  window.generarAPFIA             = generarAPFIA;
   window.tipoInstrumentoFormativa = tipoInstrumentoFormativa;
 
   const btnTodo = document.getElementById("btnGenerarTodoEvaluaciones");
   if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoEvaluaciones(btnTodo));
+
+  document.getElementById("btnGenerarAPFDiagnostica")?.addEventListener("click", () => generarAPFIA("diagnostica"));
+  document.getElementById("btnGenerarAPFFormativa")?.addEventListener("click",   () => generarAPFIA("formativa"));
+  document.getElementById("btnGenerarAPFSumativa")?.addEventListener("click",    () => generarAPFIA("sumativa"));
 }

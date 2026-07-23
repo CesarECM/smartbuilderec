@@ -143,27 +143,56 @@ def _tabla_evaluaciones(doc, d):
     _table_setup(t, [C1, C2, C3, C4])
 
     r = t.add_row()
-    _subhdr(r.cells[0], "Aspecto a Evaluar / Finalidad", C1)
+    _subhdr(r.cells[0], "Aspecto / Alcance / Propósito / Finalidad", C1)
     _subhdr(r.cells[1], "%", C2)
     _subhdr(r.cells[2], "Instrumento de Evaluación", C3)
     _subhdr(r.cells[3], "Momento de Aplicación", C4)
 
+    _APF_DEFAULT = {
+        "diagnostica": (
+            "Los reactivos abordan los temas y contenidos principales del curso.",
+            "Conocer el nivel de conocimientos y experiencia previa de los participantes para orientar el proceso de enseñanza-aprendizaje.",
+            "Identificar el nivel de conocimientos previos de los participantes como punto de partida del curso.",
+        ),
+        "formativa": (
+            "Cubre los criterios y desempeños desarrollados durante el proceso de enseñanza-aprendizaje.",
+            "Retroalimentar a los participantes sobre sus avances y fortalecer el aprendizaje durante el curso.",
+            "Identificar la comprensión y avance logrado por los participantes durante el curso.",
+        ),
+        "sumativa": (
+            "Abarca todos los contenidos temáticos y competencias desarrolladas durante el curso.",
+            "Comprobar el logro de aprendizaje integral adquirido por los participantes al concluir el curso.",
+            "Acreditar los aprendizajes adquiridos por los participantes en el proceso de enseñanza-aprendizaje.",
+        ),
+    }
+
     rows_data = [
-        ("1. Evaluación Diagnóstica",
-         "Identificar el nivel de conocimientos previos de los participantes como punto de partida del curso.",
+        ("1. Evaluación Diagnóstica", "diagnostica",
          pct_d, _inst(ev.get('instDiagnostica'), 'Cuestionario diagnóstico'), "Al inicio\n(solo referencial)"),
-        ("2. Evaluación Formativa",
-         "Identificar la comprensión y avance logrado por los participantes durante el curso.",
+        ("2. Evaluación Formativa", "formativa",
          pct_f, _inst(ev.get('instFormativa'), 'Lista de cotejo / Guía de observación'), "Intermedia"),
-        ("3. Evaluación Final (Sumativa)",
-         "Acreditar los aprendizajes adquiridos por los participantes en el proceso de enseñanza-aprendizaje.",
+        ("3. Evaluación Final (Sumativa)", "sumativa",
          pct_s, _inst(ev.get('instSumativa'), 'Cuestionario final'), "Al final del curso"),
     ]
-    for tipo, finalidad, pct, instrumento, momento in rows_data:
+    _apf_fields = {
+        "diagnostica": ev.get('apfDiagnostica', ''),
+        "formativa":   ev.get('apfFormativa', ''),
+        "sumativa":    ev.get('apfSumativa', ''),
+    }
+    for tipo, tipo_key, pct, instrumento, momento in rows_data:
+        alcance, proposito, finalidad = _APF_DEFAULT[tipo_key]
+        apf_texto = _apf_fields.get(tipo_key, '').strip()
         r = t.add_row()
         _borders(r.cells[0]); _pad(r.cells[0]); _cw(r.cells[0], C1); _clear(r.cells[0])
-        _para(r.cells[0], tipo, bold=True, sp_before=20, sp_after=8)
-        _para(r.cells[0], f"Finalidad: {finalidad}", size_pt=9, sp_before=8, sp_after=20)
+        _para(r.cells[0], tipo, bold=True, sp_before=20, sp_after=4)
+        if apf_texto:
+            for linea in apf_texto.split('\n'):
+                if linea.strip():
+                    _para(r.cells[0], linea.strip(), size_pt=9, sp_before=4, sp_after=4)
+        else:
+            _para(r.cells[0], f"Alcance: {alcance}",   size_pt=9, sp_before=4, sp_after=4)
+            _para(r.cells[0], f"Propósito: {proposito}", size_pt=9, sp_before=4, sp_after=4)
+            _para(r.cells[0], f"Finalidad: {finalidad}", size_pt=9, sp_before=4, sp_after=20)
         _val(r.cells[1], f"{pct}%", C2); _val(r.cells[2], instrumento, C3); _val(r.cells[3], momento, C4)
 
     r = t.add_row(); r.cells[0].merge(r.cells[3])

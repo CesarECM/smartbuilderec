@@ -1,0 +1,26 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01 del CONOCER.
+
+Redacta el alcance, propósito y finalidad de la evaluación {tipo_label} para el siguiente curso de capacitación.
+
+Nombre del curso: {nombreCurso}
+Objetivo general: {objetivoGeneral}
+Objetivo cognitivo: {objetivoCognitivo}
+Objetivo psicomotriz: {objetivoPsicomotriz}
+Objetivo afectivo: {objetivoAfectivo}
+
+Tipo de evaluación: {tipo_label}
+Momento de aplicación: {momento}
+
+Reglas de redacción:
+- Alcance: 1-2 oraciones que describan concretamente qué temas, habilidades o competencias cubre esta evaluación, referenciando el contenido específico del curso "{nombreCurso}".
+- Propósito: 1-2 oraciones que expliquen por qué se aplica esta evaluación y qué información aporta al proceso de enseñanza-aprendizaje de este curso específico.
+- Finalidad: 1-2 oraciones que describan el resultado final que se espera obtener con esta evaluación en el contexto de los objetivos del curso.
+- Cada texto debe estar tropicalizado al nombre del curso y a sus objetivos. Evita fórmulas genéricas que apliquen a cualquier curso.
+- Usa lenguaje formal, pedagógico y coherente con el estándar EC0217.01.
+
+Devuelve únicamente JSON válido con esta estructura exacta:
+{{
+  "alcance": "...",
+  "proposito": "...",
+  "finalidad": "..."
+}}

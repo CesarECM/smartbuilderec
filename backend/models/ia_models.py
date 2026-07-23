@@ -81,6 +81,7 @@ class EvaluacionIARequest(BaseModel):
     objetivoCognitivo: str = ""
     objetivoPsicomotriz: str = ""
     objetivoAfectivo: str = ""
+    tipoEvaluacion: str = ""
 
 
 class MaterialesRequest(BaseModel):

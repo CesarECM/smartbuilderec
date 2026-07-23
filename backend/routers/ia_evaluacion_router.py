@@ -61,6 +61,42 @@ def generate_evaluacion_sumativa(data: EvaluacionIARequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/generate-alcance-proposito-finalidad")
+def generate_alcance_proposito_finalidad(data: dict):
+    tipo = data.get("tipoEvaluacion", "diagnostica")
+    tipo_info = {
+        "diagnostica": ("diagnóstica",        "Al inicio del curso"),
+        "formativa":   ("formativa",           "Durante el desarrollo del curso"),
+        "sumativa":    ("sumativa (final)",    "Al finalizar el curso"),
+    }
+    tipo_label, momento = tipo_info.get(tipo, ("diagnóstica", "Al inicio del curso"))
+    try:
+        prompt = load_prompt(
+            "alcance_proposito_finalidad_prompt.txt",
+            nombreCurso=data.get("nombreCurso", ""),
+            objetivoGeneral=data.get("objetivoGeneral", ""),
+            objetivoCognitivo=data.get("objetivoCognitivo", ""),
+            objetivoPsicomotriz=data.get("objetivoPsicomotriz", ""),
+            objetivoAfectivo=data.get("objetivoAfectivo", ""),
+            tipo_label=tipo_label,
+            momento=momento,
+        )
+        response = _client.chat.completions.create(
+            model=_MODEL_GRL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,
+            response_format={"type": "json_object"},
+        )
+        result = json.loads(response.choices[0].message.content.strip())
+        alcance   = result.get("alcance",   "")
+        proposito = result.get("proposito", "")
+        finalidad = result.get("finalidad", "")
+        texto = f"Alcance: {alcance}\nPropósito: {proposito}\nFinalidad: {finalidad}"
+        return {"texto": texto, "alcance": alcance, "proposito": proposito, "finalidad": finalidad}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/generate-formativa")
 async def generate_formativa(payload: dict):
     nombre_curso = payload.get("nombreCurso", "")

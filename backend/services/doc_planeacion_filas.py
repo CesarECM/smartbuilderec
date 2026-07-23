@@ -63,7 +63,7 @@ def _filas_apertura(d):
          'actividades': [
              "El instructor realizará la evaluación diagnóstica.",
              f"Instrumento: {_inst(ev.get('instDiagnostica'),'Cuestionario diagnóstico')}",
-             "Indicará alcance, propósito y finalidad.",
+             f"Indicará alcance, propósito y finalidad:\n{ev.get('apfDiagnostica') or 'Alcance: Los reactivos abordan los temas y contenidos principales del curso.\nPropósito: Conocer el nivel de conocimientos y experiencia previa de los participantes para orientar el proceso de enseñanza-aprendizaje.\nFinalidad: Identificar el nivel de conocimientos previos de los participantes como punto de partida del curso.'}",
              "Indicará las instrucciones y el tiempo para realizarla.",
              "Aclarará las dudas que se presenten.",
              "Mencionará que los errores son oportunidades para fortalecer el aprendizaje.",
@@ -113,7 +113,8 @@ def _filas_desarrollo(d):
          'actividades': [
              "El instructor realizará la evaluación formativa.",
              f"Instrumento: {_inst(ev.get('instFormativa'),'Lista de cotejo / Guía de observación')}",
-             "Indicará alcance, propósito y finalidad.", "Indicará instrucciones y tiempo.", "Aclarará dudas.",
+             f"Indicará alcance, propósito y finalidad:\n{ev.get('apfFormativa') or 'Alcance: Cubre los criterios y desempeños desarrollados durante el proceso de enseñanza-aprendizaje.\nPropósito: Retroalimentar a los participantes sobre sus avances y fortalecer el aprendizaje durante el curso.\nFinalidad: Identificar la comprensión y avance logrado por los participantes durante el curso.'}",
+             "Indicará instrucciones y tiempo.", "Aclarará dudas.",
          ],
          'duracion': _tiempo(d, "Evaluación formativa"), 'tecnica': "", 'material': "Formatos de evaluación formativa\nBolígrafos"},
         {'etapa': "Descanso", 'actividades': ["Descanso"],
@@ -145,7 +146,8 @@ def _filas_desarrollo(d):
          'actividades': [
              "El instructor realizará la evaluación final.",
              f"Instrumento: {_inst(ev.get('instSumativa'),'Cuestionario final')}",
-             "Indicará alcances e instrucciones.", "Indicará el tiempo.", "Aclarará dudas.",
+             f"Indicará alcance, propósito y finalidad:\n{ev.get('apfSumativa') or 'Alcance: Abarca todos los contenidos temáticos y competencias desarrolladas durante el curso.\nPropósito: Comprobar el logro de aprendizaje integral adquirido por los participantes al concluir el curso.\nFinalidad: Acreditar los aprendizajes adquiridos por los participantes en el proceso de enseñanza-aprendizaje.'}",
+             "Indicará instrucciones y tiempo.", "Aclarará dudas.",
          ],
          'duracion': _tiempo(d, "Evaluación final"), 'tecnica': "", 'material': "Formatos de evaluación final\nBolígrafos"},
         {'etapa': "Suma de los tiempos",

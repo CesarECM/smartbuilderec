@@ -183,6 +183,9 @@ def generate_doc_planeacion(data: PlaneacionRequest, request: Request):
             "instSumativaHeader":       ev.get("instSumativaHeader", ""),
             "instSumativaClave":        ev.get("instSumativaClave", ""),
             "notaFormativa":            ev.get("notaFormativa", ""),
+            "apfDiagnostica":           ev.get("apfDiagnostica", ""),
+            "apfFormativa":             ev.get("apfFormativa", ""),
+            "apfSumativa":              ev.get("apfSumativa", ""),
         }
 
         payload_json_bytes = json.dumps(payload_exportable, ensure_ascii=False, indent=2).encode("utf-8")
