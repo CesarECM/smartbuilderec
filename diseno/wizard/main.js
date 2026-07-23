@@ -15,6 +15,7 @@ import { state, setState, getSeccionCompleta, setSeccionCompleta, getDatos, setD
 import { BACKEND_URL, FLUJO_SECCIONES, NAV_A_SECCION, DURACION_MINIMA_MIN, CATEGORIAS_MATERIALES, TECNICAS_MATERIALES } from "./config.js";
 import { llamarIA, llamarIAStream }  from "./api.js";
 import { initSyncUI }                from "./ui-sync.js";
+import { initVideoPanel }           from "./video-panel.js";
 import { initSidebar, getSidebarHTML, abrirGrupoActivo } from "./ui-sidebar.js";
 import { initUIHelpers }             from "./ui-helpers.js";
 import { escribirConDelay, escribirConDelayCancelable } from "./ui-writing.js";
@@ -105,6 +106,7 @@ initSidebar();     // Grupos colapsables + hamburguesa; expone window.abrirGrupo
 initNavigation();  // Modo libre + teclado; expone window.mostrarSeccionPrincipal, window.desbloquear
 initUIHelpers();   // Progress bar, focus mode, toasts, botones copiar/regresar
 initSyncUI();      // Indicadores sync (sbe:sync-*)
+initVideoPanel();  // Panel lateral de videos guía EC0217.01
 
 // ─── Inicializar steps (exponen sus funciones en window.*) ────────────────────
 initStepDatos();

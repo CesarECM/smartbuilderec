@@ -48,6 +48,7 @@ export function mostrarSeccionPrincipal(id) {
   if (initFn) _call(initFn);
 
   abrirGrupoActivo();
+  _call("showVideoForSection", id);
 
   // Actualizar progress bar (definido en ui-helpers.js; expuesto en window por initUIHelpers)
   const seccionKey = id.replace("seccion", "").toLowerCase();
