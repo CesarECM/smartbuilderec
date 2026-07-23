@@ -1,8 +1,9 @@
 // ─── wizard/video-panel.js — Panel lateral de videos guía EC0217.01 ──────────
 
-import { BUNNY_LIBRARY_ID, VIDEOS, VIDEO_LIST } from "./video-config.js";
+import { BUNNY_LIBRARY_ID, VIDEOS, MODULE_GROUPS } from "./video-config.js";
 
 const WATCHED_KEY = "sbe_videos_watched";
+const ALL_KEYS    = MODULE_GROUPS.flatMap(g => g.keys);
 
 function getWatched() {
   try { return new Set(JSON.parse(localStorage.getItem(WATCHED_KEY) || "[]")); }
@@ -25,12 +26,12 @@ function markWatched(guid) {
 
 function updateBadge() {
   const watched = getWatched();
-  const done = VIDEO_LIST.filter(k => watched.has(VIDEOS[k]?.guid)).length;
-  const badge = document.getElementById("vp-badge");
+  const done    = ALL_KEYS.filter(k => watched.has(VIDEOS[k]?.guid)).length;
+  const badge   = document.getElementById("vp-badge");
   if (!badge) return;
   if (done === 0) { badge.style.display = "none"; return; }
   badge.style.display = "block";
-  badge.textContent = done === VIDEO_LIST.length ? "✓" : done;
+  badge.textContent   = done === ALL_KEYS.length ? "✓" : done;
 }
 
 function closeAll() {
@@ -46,7 +47,7 @@ function toggleItem(item) {
   closeAll();
   if (isOpen) return;
   item.classList.add("vp-open");
-  const guid = item.dataset.guid;
+  const guid   = item.dataset.guid;
   const iframe = item.querySelector("iframe");
   if (iframe && guid) {
     iframe.src = embedUrl(guid);
@@ -57,33 +58,38 @@ function toggleItem(item) {
 
 function buildAccordion() {
   const watched = getWatched();
-  return VIDEO_LIST.map(key => {
-    const v = VIDEOS[key];
-    if (!v) return "";
-    const done = watched.has(v.guid);
-    return `
-    <div class="vp-acc-item" data-guid="${v.guid}">
-      <button class="vp-acc-trigger" type="button">
-        <span class="vp-dot${done ? " vp-dot--done" : ""}" title="${done ? "Visto" : ""}">●</span>
-        <span class="vp-acc-info">
-          <span class="vp-acc-title">${v.title}</span>
-          <span class="vp-acc-dur">${v.duration}</span>
-        </span>
-        <span class="vp-acc-arrow">▾</span>
-      </button>
-      <div class="vp-acc-body">
-        <p class="vp-acc-desc">${v.description}</p>
-        <div class="vp-acc-player">
-          <iframe allowfullscreen
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen">
-          </iframe>
+  return MODULE_GROUPS.map(group => {
+    const items = group.keys.map(key => {
+      const v = VIDEOS[key];
+      if (!v) return "";
+      const done = watched.has(v.guid);
+      const dur  = v.duration !== "—" ? `· ${v.duration}` : "";
+      return `
+      <div class="vp-acc-item" data-guid="${v.guid}">
+        <button class="vp-acc-trigger" type="button">
+          <span class="vp-dot${done ? " vp-dot--done" : ""}" title="${done ? "Visto" : ""}">●</span>
+          <span class="vp-acc-info">
+            <span class="vp-acc-title">${v.title}</span>
+            <span class="vp-acc-dur">${dur}</span>
+          </span>
+          <span class="vp-acc-arrow">▾</span>
+        </button>
+        <div class="vp-acc-body">
+          <p class="vp-acc-desc">${v.description}</p>
+          <div class="vp-acc-player">
+            <iframe allowfullscreen
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen">
+            </iframe>
+          </div>
         </div>
-      </div>
-    </div>`;
+      </div>`;
+    }).join("");
+    return `<div class="vp-module-header">${group.label}</div>${items}`;
   }).join("");
 }
 
 function getHTML() {
+  const total = ALL_KEYS.length;
   return `
   <button id="vp-tab" title="Ver videos guía EC0217.01">
     <span id="vp-badge"></span>
@@ -93,7 +99,7 @@ function getHTML() {
   <div id="vp-overlay"></div>
   <aside id="vp-drawer">
     <div id="vp-header">
-      <span id="vp-header-title">📹 Guía EC0217.01 <small>(12 videos)</small></span>
+      <span id="vp-header-title">📹 Guía EC0217.01 <small>(${total} videos)</small></span>
       <button id="vp-close" title="Cerrar">✕</button>
     </div>
     <div id="vp-accordion">${buildAccordion()}</div>
