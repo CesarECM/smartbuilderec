@@ -5,6 +5,24 @@
 import { llamarIA } from "./api.js";
 import { guardarUndo, mostrarUndo, iniciarBatch, finalizarBatch } from "./undo.js";
 
+const _PESOS_DIFICULTAD = {
+  "muy fácil": 10, "muy facil": 10,
+  "fácil": 15,     "facil": 15,
+  "intermedia": 20, "intermedio": 20,
+  "difícil": 25,   "dificil": 25,
+  "muy difícil": 30, "muy dificil": 30,
+};
+
+function _construirClaveConPesos(preguntas) {
+  if (!Array.isArray(preguntas)) return "";
+  return preguntas.map((p, i) => {
+    const letra = p.respuesta_correcta || "—";
+    const nivel = (p.nivel_dificultad || p.dificultad || p.nivel || "").toLowerCase().trim();
+    const pts   = _PESOS_DIFICULTAD[nivel] ?? 20;
+    return `${i + 1}. ${letra}  (${pts} pts)`;
+  }).join("\n");
+}
+
 let tipoInstrumentoFormativa = "";
 
 export async function generarEvaluacionIA(tipo) {
@@ -29,12 +47,14 @@ export async function generarEvaluacionIA(tipo) {
       objetivoAfectivo:    objetivos.afectiva     || "",
     });
 
+    const resultado = data.preguntas || data.texto || data;
     if (destino) {
-      const resultado = data.preguntas || data.texto || data;
       if (Array.isArray(resultado)) {
-        destino.value = resultado.map((p, i) =>
-          `${i + 1}. ${p.pregunta || ""}\n      A) ${p.opciones?.A || ""}\n      B) ${p.opciones?.B || ""}\n      C) ${p.opciones?.C || ""}\n      D) ${p.opciones?.D || ""}\n      Respuesta correcta: ${p.respuesta_correcta || p.respuesta || ""}\n      Dificultad: ${p.dificultad || p.nivel || p.nivel_dificultad || ""}`
-        ).join("\n\n");
+        destino.value = resultado.map((p, i) => {
+          const nivel = (p.nivel_dificultad || p.dificultad || p.nivel || "").toLowerCase().trim();
+          const pts   = _PESOS_DIFICULTAD[nivel] ?? 20;
+          return `${i + 1}. ${p.pregunta || ""}  (${pts} pts)\n   A) ${p.opciones?.A || ""}\n   B) ${p.opciones?.B || ""}\n   C) ${p.opciones?.C || ""}\n   D) ${p.opciones?.D || ""}`;
+        }).join("\n\n");
       } else {
         destino.value = resultado || "";
       }
@@ -43,7 +63,11 @@ export async function generarEvaluacionIA(tipo) {
     const headerField = document.getElementById(esDiagnostica ? "instDiagnosticaHeader" : "instSumativaHeader");
     const claveField  = document.getElementById(esDiagnostica ? "instDiagnosticaClave"  : "instSumativaClave");
     if (headerField && data.header) headerField.value = data.header;
-    if (claveField  && data.clave)  claveField.value  = data.clave;
+    if (claveField) {
+      claveField.value = Array.isArray(resultado)
+        ? _construirClaveConPesos(resultado)
+        : (data.clave || "");
+    }
 
     if (typeof window.guardarEvaluacionesTemporal === "function") window.guardarEvaluacionesTemporal();
     mostrarUndo(`Evaluación ${tipo}`, esDiagnostica ? "instDiagnostica" : "instSumativa");
@@ -240,6 +264,9 @@ export function initIAEvaluacion() {
 
   const btnTodo = document.getElementById("btnGenerarTodoEvaluaciones");
   if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoEvaluaciones(btnTodo));
+
+  document.getElementById("btnGenerarDiagnostica")?.addEventListener("click", () => generarEvaluacionIA("diagnostica"));
+  document.getElementById("btnGenerarSumativa")?.addEventListener("click",    () => generarEvaluacionIA("sumativa"));
 
   document.getElementById("btnGenerarAPFDiagnostica")?.addEventListener("click", () => generarAPFIA("diagnostica"));
   document.getElementById("btnGenerarAPFFormativa")?.addEventListener("click",   () => generarAPFIA("formativa"));

@@ -126,6 +126,9 @@ export function actualizarBotonDescripcionGeneral() {
 }
 
 export function initStepEvaluaciones() {
+  document.getElementById("sliderEvaluaciones")
+    ?.addEventListener("input", e => actualizarPorcentajesEvaluacion(e.target.value));
+
   window.actualizarPorcentajesEvaluacion  = actualizarPorcentajesEvaluacion;
   window.recolectarEvaluaciones           = recolectarEvaluaciones;
   window.guardarEvaluacionesTemporal      = guardarEvaluacionesTemporal;
