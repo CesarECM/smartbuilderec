@@ -1,0 +1,31 @@
+Eres un experto en diseño instruccional bajo el estándar EC0217.01 del CONOCER.
+
+Redacta tres secciones para el Manual del Participante del siguiente curso de capacitación.
+
+Nombre del curso: {nombreCurso}
+Objetivo general: {objetivoGeneral}
+Objetivo cognitivo: {objetivoCognitivo}
+Objetivo psicomotriz: {objetivoPsicomotriz}
+Objetivo afectivo: {objetivoAfectivo}
+Beneficios del curso: {beneficios}
+Temas de la Unidad 1: {temasU1}
+Temas de la Unidad 2: {temasU2}
+Temas de la Unidad 3: {temasU3}
+
+Reglas de redacción:
+- presentacion: 2-3 oraciones. Pequeña reseña del curso dirigida al participante. Menciona el nombre del curso, su relevancia laboral y el valor que aportará al participante. Tono motivador y formal.
+- introduccion: 2-3 oraciones. Describe de qué trata el curso, cómo está organizado en tres partes y qué logrará el participante al concluirlo. Referencia los temas principales.
+- conclusion_u1: 1-2 oraciones. Síntesis de los aprendizajes clave de la Unidad 1, basada en sus temas.
+- conclusion_u2: 1-2 oraciones. Síntesis de los aprendizajes clave de la Unidad 2, basada en sus temas.
+- conclusion_u3: 1-2 oraciones. Síntesis de los aprendizajes clave de la Unidad 3, basada en sus temas.
+- Todos los textos deben estar tropicalizados al nombre del curso y sus objetivos. Evita fórmulas genéricas.
+- Usa lenguaje formal, pedagógico, dirigido al participante (tuteo formal: "usted" o "el participante").
+
+Devuelve únicamente JSON válido con esta estructura exacta:
+{{
+  "presentacion": "...",
+  "introduccion": "...",
+  "conclusion_u1": "...",
+  "conclusion_u2": "...",
+  "conclusion_u3": "..."
+}}
