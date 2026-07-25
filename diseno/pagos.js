@@ -2,8 +2,7 @@
 (function () {
   'use strict';
 
-  const BACKEND_URL = (typeof window !== 'undefined' && window._SBE_BACKEND_URL)
-    || 'https://smartbuilderec-api.onrender.com';
+  const BACKEND_URL = 'https://smartbuilderec.onrender.com';
 
   const PLAN_INFO = {
     basico:      { label: 'Básico',      credits: 10 },
