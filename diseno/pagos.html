@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planes y Precios — SmartBuilderEC</title>
+  <meta name="description" content="Elige el plan ideal para tu Centro de Evaluación o perfil como Evaluador Independiente.">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="pagos.css">
+</head>
+<body>
+  <header class="pagos-header">
+    <a href="landing.html" class="pagos-logo">
+      <img src="img/ECM%20blanco%20sin%20fondo.png" alt="SmartBuilderEC" height="36">
+    </a>
+    <nav class="pagos-nav" id="pagosNav">
+      <a href="panel.html" class="btn-nav" id="btnPanel" style="display:none">Mi Panel</a>
+      <a href="login.html" class="btn-nav" id="btnLogin">Iniciar sesión</a>
+    </nav>
+  </header>
+
+  <main class="pagos-main">
+    <div class="pagos-hero">
+      <h1>Planes para Centros de Evaluación<br>y Evaluadores Independientes</h1>
+      <p>Créditos mensuales para gestionar tus instructores. Sin contratos, cancela cuando quieras.</p>
+    </div>
+
+    <div id="planesAlert" class="planes-alert" style="display:none"></div>
+
+    <div class="planes-grid">
+      <!-- Básico -->
+      <div class="plan-card" id="card-basico">
+        <div class="plan-name">Básico</div>
+        <div class="plan-price"><span class="plan-amount">$399</span><span class="plan-period">/mes</span></div>
+        <div class="plan-credits">10 créditos mensuales</div>
+        <ul class="plan-features">
+          <li>✓ Wizard EC0217.01 completo</li>
+          <li>✓ Generación de documentos ZIP</li>
+          <li>✓ Soporte IA en cada paso</li>
+          <li>✓ Panel de administración</li>
+        </ul>
+        <button class="btn-plan" data-plan="basico">Comenzar con Básico</button>
+      </div>
+
+      <!-- Profesional (destacado) -->
+      <div class="plan-card plan-card--featured" id="card-profesional">
+        <div class="plan-badge">Más popular</div>
+        <div class="plan-name">Profesional</div>
+        <div class="plan-price"><span class="plan-amount">$799</span><span class="plan-period">/mes</span></div>
+        <div class="plan-credits">25 créditos mensuales</div>
+        <ul class="plan-features">
+          <li>✓ Todo lo del plan Básico</li>
+          <li>✓ EC0217.01 + EC0301</li>
+          <li>✓ Marca blanca (logo y colores)</li>
+          <li>✓ Soporte prioritario</li>
+        </ul>
+        <button class="btn-plan btn-plan--featured" data-plan="profesional">Comenzar con Profesional</button>
+      </div>
+
+      <!-- Partner -->
+      <div class="plan-card" id="card-partner">
+        <div class="plan-name">Partner</div>
+        <div class="plan-price"><span class="plan-amount">$1,499</span><span class="plan-period">/mes</span></div>
+        <div class="plan-credits">60 créditos mensuales</div>
+        <ul class="plan-features">
+          <li>✓ Todo lo del plan Profesional</li>
+          <li>✓ Múltiples normas CONOCER</li>
+          <li>✓ Reportes y analítica</li>
+          <li>✓ Soporte dedicado</li>
+        </ul>
+        <button class="btn-plan" data-plan="partner">Comenzar con Partner</button>
+      </div>
+    </div>
+
+    <!-- Créditos extra -->
+    <div class="extra-credits-section">
+      <div class="extra-credits-card">
+        <div class="extra-icon">🪙</div>
+        <div class="extra-info">
+          <h3>¿Necesitas más créditos?</h3>
+          <p>Compra paquetes de <strong>+10 créditos</strong> por <strong>$350 MXN</strong>. Vigencia de 30 días a partir de la compra.</p>
+        </div>
+        <button class="btn-extra" id="btnExtraCredits">Comprar +10 créditos</button>
+      </div>
+    </div>
+
+    <p class="pagos-note">Los créditos no usados vencen al cierre de cada ciclo mensual. Los créditos extra tienen 30 días de vigencia desde su compra. Precios en MXN + IVA.</p>
+  </main>
+
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script src="pagos.js"></script>
+</body>
+</html>

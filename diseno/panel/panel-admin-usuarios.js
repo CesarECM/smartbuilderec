@@ -7,7 +7,7 @@
     var _adm_perfilTabLoaded      = false;
     var _adm_transferirPlaneacionId = null;
     var _contactoAdmin            = {};
-    var _adm_tabsLoaded = { resumen: true, 'mis-cursos': false, usuarios: false, 'mi-perfil': false, branding: false };
+    var _adm_tabsLoaded = { resumen: true, 'mis-cursos': false, usuarios: false, 'mi-perfil': false, branding: false, 'mi-plan': false };
 
     async function admInit() {
       document.getElementById('adm-btnGenerarCodigo')
@@ -46,6 +46,13 @@
         const container = document.getElementById('adm-brandingContainer');
         if (container && typeof _htmlBrandingPanel === 'function') {
           container.innerHTML = _htmlBrandingPanel(_perfil);
+        }
+      }
+      if (name === 'mi-plan' && !_adm_tabsLoaded['mi-plan']) {
+        _adm_tabsLoaded['mi-plan'] = true;
+        const container = document.getElementById('adm-planContainer');
+        if (container && typeof admPlanInit === 'function') {
+          admPlanInit();
         }
       }
     }

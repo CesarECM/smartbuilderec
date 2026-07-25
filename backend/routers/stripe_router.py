@@ -1,13 +1,24 @@
+import os
+import time
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from database import get_supabase
-from services.email_service import send_template
-from services.capi import send_purchase_event
-from datetime import datetime, timedelta, timezone
+
 import stripe
-import os
-import time
+from database import get_supabase
+from services.stripe_checkout_service import (
+    extract_session_data,
+    handle_checkout_completed,
+    handle_subscription_ended,
+)
+from services.subscription_service import (
+    handle_checkout_subscription,
+    handle_invoice_paid,
+    handle_invoice_payment_failed,
+    handle_subscription_updated,
+)
+from services.credits_service import add_extra_pack
 
 router = APIRouter()
 
@@ -22,7 +33,7 @@ def _stripe():
     return stripe
 
 
-# ─── Checkout (solo plan instructor) ──────────────────────────────────────────
+# ─── Checkout instructor (plan único original) ────────────────────────────────
 
 class CheckoutRequest(BaseModel):
     success_url: str
@@ -75,9 +86,10 @@ def billing_portal(request: Request):
         raise HTTPException(status_code=404, detail="No hay suscripción activa.")
 
     sc = _stripe()
+    frontend = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
     portal = sc.billing_portal.Session.create(
         customer=customer_id,
-        return_url=os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app") + "/dashboard.html",
+        return_url=f"{frontend}/panel.html",
     )
     return {"portal_url": portal.url}
 
@@ -86,44 +98,66 @@ def billing_portal(request: Request):
 
 @router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
-    payload = await request.body()
+    payload    = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
-    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET_TEST" if _test_mode() else "STRIPE_WEBHOOK_SECRET", "").strip()
+    secret_key = "STRIPE_WEBHOOK_SECRET_TEST" if _test_mode() else "STRIPE_WEBHOOK_SECRET"
+    webhook_secret = os.getenv(secret_key, "").strip()
 
     if not webhook_secret:
-        print("[webhook] ERROR: STRIPE_WEBHOOK_SECRET no configurado")
         return JSONResponse({"detail": "Webhook secret no configurado."}, status_code=500)
 
     sc = _stripe()
     try:
         event = sc.Webhook.construct_event(payload, sig_header, webhook_secret)
     except Exception as e:
-        print(f"[webhook] Firma inválida: {type(e).__name__}: {e}")
+        print(f"[webhook] Firma inválida: {e}")
         return JSONResponse({"detail": "Firma inválida."}, status_code=400)
 
     etype = event["type"]
-    print(f"[webhook] Evento recibido: {etype}")
+    obj   = event["data"]["object"]
+    print(f"[webhook] {etype}")
 
     try:
         if etype == "checkout.session.completed":
-            _handle_checkout_completed(event["data"]["object"])
+            mode = obj.get("mode") if isinstance(obj, dict) else getattr(obj, "mode", "")
+            meta = obj.get("metadata") or {} if isinstance(obj, dict) else dict(obj.metadata or {})
+            if mode == "subscription":
+                handle_checkout_subscription(obj)
+            elif mode == "payment" and meta.get("type") == "creditos_extra":
+                user_id = meta.get("user_id", "")
+                pi_id   = obj.get("payment_intent", "") if isinstance(obj, dict) \
+                          else getattr(obj, "payment_intent", "")
+                if user_id and pi_id:
+                    add_extra_pack(user_id, pi_id)
+            else:
+                handle_checkout_completed(obj)
+
+        elif etype == "invoice.paid":
+            handle_invoice_paid(obj)
+
+        elif etype == "customer.subscription.updated":
+            handle_subscription_updated(obj)
+
         elif etype in ("customer.subscription.deleted", "customer.subscription.paused"):
-            _handle_subscription_ended(event["data"]["object"])
+            handle_subscription_ended(obj if isinstance(obj, dict) else obj.to_dict())
+
+        elif etype == "invoice.payment_failed":
+            handle_invoice_payment_failed(obj)
+
     except Exception as e:
-        print(f"[webhook] Error procesando {etype}: {type(e).__name__}: {e}")
+        print(f"[webhook] Error en {etype}: {type(e).__name__}: {e}")
 
     return {"received": True}
 
 
+# ─── Repair checkout (superadmin) ─────────────────────────────────────────────
+
 @router.post("/admin/repair-checkout")
 def repair_checkout(request: Request, session_id: str):
-    """Activa manualmente una cuenta a partir de un Stripe session_id ya pagado.
-    Solo superadmin. Úsalo cuando el webhook falló pero el pago fue exitoso."""
-    from database import get_supabase as _gsb
     uid = request.state.user.get("sub") if hasattr(request.state, "user") and request.state.user else None
     if not uid:
         raise HTTPException(status_code=401, detail="Autenticación requerida.")
-    sb = _gsb()
+    sb = get_supabase()
     prof = sb.table("profiles").select("rol").eq("id", uid).single().execute()
     if not prof.data or prof.data.get("rol") != "super_admin":
         raise HTTPException(status_code=403, detail="Solo superadmin.")
@@ -134,166 +168,11 @@ def repair_checkout(request: Request, session_id: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Sesión no encontrada: {e}")
 
-    data = _extract_session_data(session)
+    data = extract_session_data(session)
     if not data["email"]:
-        raise HTTPException(status_code=400, detail="No se encontró email en la sesión de Stripe.")
+        raise HTTPException(status_code=400, detail="No se encontró email en la sesión.")
     if data["pstatus"] != "paid":
-        raise HTTPException(status_code=400, detail=f"El pago no está confirmado (status: {data['pstatus']}).")
+        raise HTTPException(status_code=400, detail=f"El pago no está confirmado ({data['pstatus']}).")
 
-    _handle_checkout_completed(data)
-    print(f"[repair-checkout] Cuenta activada para {data['email']} — session {session_id}")
+    handle_checkout_completed(data)
     return {"ok": True, "email": data["email"], "session_id": session_id}
-
-
-def _extract_session_data(session) -> dict:
-    """Convierte un objeto Session de Stripe (cualquier versión SDK) a dict plano.
-    SDK >=8: objetos tipados sin .get() → usar getattr.
-    SDK <8:  StripeObject dict-like → getattr también funciona."""
-    cd       = getattr(session, "customer_details", None)
-    cd_email = getattr(cd, "email", None) if cd else None
-    cd_name  = getattr(cd, "name",  None) if cd else None
-
-    email  = cd_email or ""
-    nombre = cd_name  or ""
-
-    customer = getattr(session, "customer", None) or ""
-    if customer and not isinstance(customer, str):
-        customer = getattr(customer, "id", "") or ""
-
-    print(f"[checkout] metadata extraída — nombre: '{nombre}', email: '{email}'")
-    return {
-        "email":       str(email),
-        "nombre":      str(nombre),
-        "customer":    str(customer),
-        "amount":      getattr(session, "amount_total", None) or 179900,
-        "pstatus":     getattr(session, "payment_status", None) or "",
-        "session_id":  getattr(session, "id", None) or "",
-        "event_time":  getattr(session, "created", None) or int(time.time()),
-        "success_url": getattr(session, "success_url", None) or "",
-    }
-
-
-def _handle_checkout_completed(session):
-    # Acepta tanto objeto Stripe como dict plano (desde repair-checkout)
-    if isinstance(session, dict) and "email" in session:
-        data = session  # ya es dict plano de _extract_session_data
-    else:
-        data = _extract_session_data(session)
-
-    email    = data["email"]
-    nombre   = data["nombre"]
-    stripe_customer_id = data["customer"]
-    monto_centavos     = data["amount"]
-
-    if not email:
-        print("[checkout] Sin email — no se puede crear usuario")
-        return
-
-    vigencia_hasta = (datetime.now(timezone.utc) + timedelta(days=90)).strftime("%Y-%m-%d")
-    sb = get_supabase()
-
-    try:
-        result = sb.auth.admin.create_user({
-            "email": email,
-            "email_confirm": True,
-            "user_metadata": {"nombre": nombre},
-        })
-        user_id = result.user.id
-
-        sb.table("profiles").update({
-            "nombre":             nombre,
-            "rol":                "user",
-            "activo":             True,
-            "admin_id":           None,
-            "stripe_customer_id": stripe_customer_id,
-            "vigencia_hasta":     vigencia_hasta,
-        }).eq("id", user_id).execute()
-
-        frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
-        link_acceso = f"{frontend_url}/reset-password.html"
-        try:
-            link_res = sb.auth.admin.generate_link({
-                "type": "recovery",
-                "email": email,
-                "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
-            })
-            if hasattr(link_res, "properties") and link_res.properties:
-                link_acceso = getattr(link_res.properties, "action_link", link_acceso) or link_acceso
-            print(f"[checkout] link_acceso generado: {link_acceso[:80]}...")
-        except Exception as le:
-            print(f"[checkout] generate_link error: {le}")
-
-        monto_str = f"${monto_centavos // 100:,.0f} MXN"
-        send_template("bienvenida_user_stripe", email, {
-            "nombre":      nombre or email,
-            "email":       email,
-            "monto":       monto_str,
-            "link_acceso": link_acceso,
-        })
-        print(f"[checkout] Usuario creado: {email}")
-
-    except Exception as e:
-        err = str(e)
-        if "already been registered" in err or "already exists" in err:
-            try:
-                sb.table("profiles").update({
-                    "stripe_customer_id": stripe_customer_id,
-                    "activo":             True,
-                    "vigencia_hasta":     vigencia_hasta,
-                }).eq("email", email).execute()
-                print(f"[checkout] Usuario existente reactivado: {email}")
-
-                # Generar link de acceso y enviar email igual que usuario nuevo
-                frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
-                link_acceso = f"{frontend_url}/reset-password.html"
-                try:
-                    link_res = sb.auth.admin.generate_link({
-                        "type": "recovery",
-                        "email": email,
-                        "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
-                    })
-                    if hasattr(link_res, "properties") and link_res.properties:
-                        link_acceso = getattr(link_res.properties, "action_link", link_acceso) or link_acceso
-                except Exception as le:
-                    print(f"[checkout] generate_link (reactivación) error: {le}")
-
-                monto_str = f"${monto_centavos // 100:,.0f} MXN"
-                send_template("bienvenida_user_stripe", email, {
-                    "nombre":      nombre or email,
-                    "email":       email,
-                    "monto":       monto_str,
-                    "link_acceso": link_acceso,
-                })
-                print(f"[checkout] Email de bienvenida enviado a usuario reactivado: {email}")
-            except Exception as re:
-                print(f"⚠️ checkout reactivación error: {re}")
-        else:
-            print(f"⚠️ checkout_completed error: {err}")
-
-    # CAPI: siempre intentar, independiente del resultado del bloque anterior
-    frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
-    send_purchase_event(
-        event_id=data.get("session_id") or email,
-        event_time=data.get("event_time", 0),
-        email=email,
-        value_centavos=monto_centavos,
-        currency="MXN",
-        event_source_url=f"{frontend_url}/checkout-success.html",
-    )
-
-
-def _handle_subscription_ended(subscription: dict):
-    stripe_customer_id = subscription.get("customer", "")
-    if not stripe_customer_id:
-        return
-    sb = get_supabase()
-    try:
-        user_res = sb.table("profiles").select("nombre, email").eq("stripe_customer_id", stripe_customer_id).single().execute()
-        sb.table("profiles").update({"activo": False}).eq("stripe_customer_id", stripe_customer_id).execute()
-        if user_res.data and user_res.data.get("email"):
-            send_template("suscripcion_cancelada", user_res.data["email"], {
-                "nombre": user_res.data.get("nombre") or user_res.data["email"],
-                "email": user_res.data["email"],
-            })
-    except Exception as e:
-        print(f"⚠️ subscription_ended error: {e}")

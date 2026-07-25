@@ -24,6 +24,24 @@
         : rolesIds[rolesIds.length - 1];
 
       switchRol(rolDefecto);
+
+      // Retorno desde Stripe checkout de planes
+      const params = new URLSearchParams(window.location.search);
+      const payment = params.get('payment');
+      if (payment === 'success' || payment === 'extra_ok') {
+        const msg = payment === 'extra_ok'
+          ? '✓ Créditos extra añadidos a tu cuenta.'
+          : '✓ ¡Suscripción activada! Ya puedes gestionar instructores.';
+        setTimeout(() => mostrarToast(msg), 800);
+        // Limpiar query param sin recargar
+        const clean = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', clean);
+      }
+      // Abrir pestaña Mi Plan si viene de pagos
+      if (window._admPlanOpenOnLoad && typeof admShowTab === 'function') {
+        setTimeout(() => admShowTab('mi-plan'), 600);
+        if (window._admPlanSuccessMsg) setTimeout(() => mostrarToast(window._admPlanSuccessMsg), 1000);
+      }
     }
 
     init();

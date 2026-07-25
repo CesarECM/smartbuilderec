@@ -56,6 +56,9 @@ backend/services/
 ├── erp_helpers.py        # _caller, _get_profile, _require_role, _get_extra_roles,
 │                         # _is_evaluador, _is_asesor, _can_manage_alumno, _is_assigned_as,
 │                         # _build_cert_status
+├── stripe_checkout_service.py # extract_session_data, handle_checkout_completed (instructor)
+├── subscription_service.py    # handle_checkout_subscription, handle_invoice_paid, handle_subscription_updated
+├── credits_service.py         # get_credits_summary, add_extra_pack, expire_stale_packs
 ├── soporte_feedback.py   # _analizar_resolucion_sync (feedback loop Claude Haiku)
 ├── rag_service.py        # búsqueda semántica en knowledge base
 ├── embeddings_service.py # generación de embeddings
@@ -88,7 +91,8 @@ backend/routers/
 ├── admin_router.py          # rutas de administración general
 ├── alumno_router.py         # rutas del panel alumno
 ├── email_router.py          # envío de emails
-├── stripe_router.py         # webhooks y pagos Stripe
+├── stripe_router.py         # webhooks Stripe (checkout instructor + dispatch suscripciones)
+├── planes_router.py         # /planes/* — suscripciones CE/EI, créditos extra, status, upgrade/cancel
 │
 │  # ERP (re-exportador)
 ├── erp_router.py            # agrega sub-routers de erp/
@@ -156,7 +160,8 @@ diseno/
 ├── landing.html         # Landing pública (~292 líneas)
 ├── login.html           # Login / registro
 ├── registro.html        # Registro nuevo usuario
-├── pago.html            # Checkout de pago
+├── pago.html            # Checkout de pago (instructor individual)
+├── pagos.html           # Página pública de planes CE/EI (Básico/Profesional/Partner + extras)
 ├── checkout-success.html
 ├── mi-expediente.html   # Expediente del evaluado
 ├── datos.html           # Formulario de datos complementarios

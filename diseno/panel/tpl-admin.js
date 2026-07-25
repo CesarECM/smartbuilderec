@@ -6,6 +6,7 @@ document.getElementById('rp-admin').innerHTML = `
         <button class="role-tab-btn"        onclick="window.location.href='erp-admin'">🏫 ERP →</button>
         <button class="role-tab-btn"        id="adm-tab-mi-perfil"  onclick="admShowTab('mi-perfil')">👤 Mi Perfil</button>
         <button class="role-tab-btn"        id="adm-tab-branding"   onclick="admShowTab('branding')">🎨 Mi Marca</button>
+        <button class="role-tab-btn"        id="adm-tab-mi-plan"    onclick="admShowTab('mi-plan')">💳 Mi Plan</button>
       </nav>
 
       <!-- ── Resumen ─────────────────────────────────────────────── -->
@@ -85,5 +86,14 @@ document.getElementById('rp-admin').innerHTML = `
       <div id="adm-panel-branding" class="role-tab-panel">
         <div class="sec-header"><h2>🎨 Mi Marca</h2></div>
         <div id="adm-brandingContainer"><p class="loading-txt">Cargando...</p></div>
+      </div>
+
+      <!-- ── Mi Plan ────────────────────────────────────────────── -->
+      <div id="adm-panel-mi-plan" class="role-tab-panel">
+        <div class="sec-header">
+          <h2>💳 Mi Plan</h2>
+          <a href="pagos.html" class="btn-sm" style="text-decoration:none">Ver todos los planes →</a>
+        </div>
+        <div id="adm-planContainer"><p class="loading-txt">Cargando...</p></div>
       </div>
 `;
