@@ -3,6 +3,7 @@ MPS #009 — Endpoints de suscripciones y créditos para admins (CE/EI).
 """
 import os
 from datetime import datetime, timezone
+from typing import Optional
 
 import stripe
 from fastapi import APIRouter, HTTPException, Request
@@ -55,8 +56,8 @@ def _get_admin_profile(caller_id: str, sb):
 
 class CheckoutSubRequest(BaseModel):
     plan: str
-    success_url: str | None = None
-    cancel_url:  str | None = None
+    success_url: Optional[str] = None
+    cancel_url:  Optional[str] = None
 
 
 @router.post("/checkout-subscription")
@@ -94,8 +95,8 @@ def checkout_subscription(data: CheckoutSubRequest, request: Request):
 # ── Crear Checkout Session para créditos extra (one-time) ─────────────────────
 
 class CheckoutExtraRequest(BaseModel):
-    success_url: str | None = None
-    cancel_url:  str | None = None
+    success_url: Optional[str] = None
+    cancel_url:  Optional[str] = None
 
 
 @router.post("/checkout-creditos-extra")
@@ -216,8 +217,8 @@ def cancel_subscription(request: Request):
 
 class CheckoutPublicoRequest(BaseModel):
     plan: str
-    success_url: str | None = None
-    cancel_url:  str | None = None
+    success_url: Optional[str] = None
+    cancel_url:  Optional[str] = None
 
 
 @router.post("/checkout-publico")

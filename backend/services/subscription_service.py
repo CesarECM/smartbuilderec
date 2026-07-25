@@ -100,8 +100,7 @@ def _create_or_get_admin(email: str, nombre: str, customer_id: str, plan: str, s
             pass
 
         from services.email_service import send_template
-        from services.subscription_service import PLAN_CREDITS as _PC
-        credits_label = _PC.get(plan, 0)
+        credits_label = PLAN_CREDITS.get(plan, 0)
         send_template("bienvenida_admin_stripe", email, {
             "nombre": nombre or email, "email": email,
             "plan": plan.capitalize(), "creditos": str(credits_label),
