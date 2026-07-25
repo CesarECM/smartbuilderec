@@ -112,20 +112,12 @@
       const btn = document.getElementById('adm-btnGenerarCodigo');
       btn.disabled = true; btn.textContent = 'Generando...';
 
-      const [{ data: perfil }, { data: codsActivos }] = await Promise.all([
-        _supabase.from('profiles').select('credits').eq('id', _perfil.id).single(),
-        _supabase.from('access_codes').select('id')
-          .eq('admin_id', _perfil.id).is('used_at', null)
-          .gt('expires_at', new Date().toISOString()),
-      ]);
-      const codigosActivos = codsActivos?.length ?? 0;
+      const { data: perfil } = await _supabase
+        .from('profiles').select('credits').eq('id', _perfil.id).single();
 
-      if (_perfil.rol !== 'super_admin' && (!perfil || perfil.credits <= codigosActivos)) {
+      if (_perfil.rol !== 'super_admin' && (!perfil || perfil.credits <= 0)) {
         btn.disabled = false; btn.textContent = '+ Generar código';
-        const msg = !perfil || perfil.credits <= 0
-          ? 'No tienes créditos disponibles. Contacta al administrador de la plataforma.'
-          : `Tus ${perfil.credits} crédito${perfil.credits !== 1 ? 's' : ''} ya están comprometidos por ${codigosActivos} código${codigosActivos !== 1 ? 's' : ''} activo${codigosActivos !== 1 ? 's' : ''}.`;
-        alert(msg);
+        alert('No tienes créditos disponibles. Ve a Mi Plan para renovar o agregar créditos.');
         return;
       }
 
@@ -184,14 +176,11 @@ Te tomará menos de 2 minutos y podrás generar todos los documentos que exige l
       const btn = document.getElementById('adm-btnGenerarCodigo');
       if (!btn) return;
       if (_perfil.rol === 'super_admin') { btn.disabled = false; return; }
-      const disponibles = creditos - codigosActivos;
-      if (disponibles <= 0) {
+      if (creditos <= 0) {
         btn.disabled = true;
-        btn.title = creditos <= 0
-          ? 'Sin créditos — contacta al administrador de la plataforma'
-          : `Tus ${creditos} crédito${creditos !== 1 ? 's' : ''} ya están comprometidos por ${codigosActivos} código${codigosActivos !== 1 ? 's' : ''} activo${codigosActivos !== 1 ? 's' : ''}`;
+        btn.title = 'Sin créditos disponibles — ve a Mi Plan para renovar o agregar créditos';
       } else {
         btn.disabled = false;
-        btn.title = `Puedes generar ${disponibles} código${disponibles !== 1 ? 's' : ''} más`;
+        btn.title = `${creditos} crédito${creditos !== 1 ? 's' : ''} disponible${creditos !== 1 ? 's' : ''}`;
       }
     }

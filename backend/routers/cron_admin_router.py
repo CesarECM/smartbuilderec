@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 import pyotp
 from fastapi import APIRouter, HTTPException, Request
@@ -143,6 +144,7 @@ def admin_delete_user(user_id: str, request: Request):
 
     try:
         sb.auth.admin.delete_user(user_id)
+
         try:
             sb.table("audit_logs").insert({
                 "actor_id":    caller_id,
@@ -154,6 +156,40 @@ def admin_delete_user(user_id: str, request: Request):
             }).execute()
         except Exception:
             pass
+
+        # Restaurar crédito al admin propietario del usuario eliminado
+        admin_id = target.get("admin_id")
+        if admin_id:
+            try:
+                prof = sb.table("profiles").select("credits") \
+                    .eq("id", admin_id).single().execute()
+                current = (prof.data or {}).get("credits", 0)
+                sb.table("profiles").update({"credits": current + 1}) \
+                    .eq("id", admin_id).execute()
+
+                sub = sb.table("admin_subscriptions") \
+                    .select("plan_credits_remaining, plan_credits_total") \
+                    .eq("user_id", admin_id).maybe_single().execute()
+                if sub.data:
+                    new_remaining = min(
+                        sub.data["plan_credits_total"],
+                        sub.data["plan_credits_remaining"] + 1,
+                    )
+                    sb.table("admin_subscriptions").update({
+                        "plan_credits_remaining": new_remaining,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }).eq("user_id", admin_id).execute()
+
+                sb.table("credit_transactions").insert({
+                    "user_id":     admin_id,
+                    "type":        "restored",
+                    "amount":      1,
+                    "source":      f"user_deleted:{user_id}",
+                    "description": "Crédito restaurado al eliminar usuario",
+                }).execute()
+            except Exception as ce:
+                print(f"[credits] Error restaurando crédito admin={admin_id}: {ce}")
+
         return {"deleted": user_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {str(e)}")
