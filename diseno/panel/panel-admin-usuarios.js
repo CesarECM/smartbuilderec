@@ -214,7 +214,7 @@
     }
 
     async function admEliminarUsuario(userId, nombre) {
-      if (!confirm(`¿Eliminar a ${nombre}? Se restaurará 1 crédito a tu cuenta. Esta acción no se puede deshacer.`)) return;
+      if (!confirm(`¿Eliminar a ${nombre}? El crédito utilizado no se recupera hasta la próxima renovación mensual. Esta acción no se puede deshacer.`)) return;
       const btn = document.getElementById('adm-del-' + userId);
       btn.disabled = true; btn.textContent = '...';
       try {
@@ -224,7 +224,7 @@
         if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || 'Error al eliminar.'); }
         const row = document.getElementById('adm-urow-' + userId);
         if (row) { row.style.transition = 'opacity 0.3s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 320); }
-        mostrarToast('✓ Usuario eliminado. Crédito restaurado.');
+        mostrarToast('✓ Usuario eliminado.');
         admCargarStats();
       } catch(e) { alert(e.message); btn.disabled = false; btn.textContent = 'Eliminar'; }
     }
