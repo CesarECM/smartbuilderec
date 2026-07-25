@@ -212,6 +212,36 @@ def cancel_subscription(request: Request):
     return {"ok": True, "message": "Suscripción cancelada al fin del período actual."}
 
 
+# ── Checkout público para clientes nuevos (sin cuenta) ───────────────────────
+
+class CheckoutPublicoRequest(BaseModel):
+    plan: str
+    success_url: str | None = None
+    cancel_url:  str | None = None
+
+
+@router.post("/checkout-publico")
+def checkout_publico(data: CheckoutPublicoRequest):
+    """Endpoint sin autenticación. Stripe recolecta email+tarjeta. El webhook crea la cuenta."""
+    if data.plan not in PLAN_CREDITS:
+        raise HTTPException(status_code=400, detail=f"Plan inválido: {data.plan}")
+    frontend = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+    sc = _stripe()
+    try:
+        session = sc.checkout.Session.create(
+            payment_method_types=["card"],
+            mode="subscription",
+            line_items=[{"price": _price_id(data.plan), "quantity": 1}],
+            success_url=data.success_url or f"{frontend}/checkout-success.html?plan={data.plan}&nuevo=1",
+            cancel_url=data.cancel_url or f"{frontend}/pagos.html",
+            metadata={"plan": data.plan},
+            billing_address_collection="auto",
+        )
+        return {"checkout_url": session.url, "session_id": session.id}
+    except stripe.StripeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Cron: expirar packs vencidos ───────────────────────────────────────────────
 
 @router.post("/cron/expire-packs")

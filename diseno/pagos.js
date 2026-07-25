@@ -80,39 +80,59 @@
     }
   }
 
+  async function _checkoutPublico(plan) {
+    const btn = document.querySelector(`#card-${plan} .btn-plan`);
+    const origText = btn?.textContent || '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Redirigiendo...'; }
+    try {
+      const res = await fetch(`${BACKEND_URL}/planes/checkout-publico`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.detail || 'Error al procesar. Intenta de nuevo.'); return; }
+      if (data.checkout_url) window.location.href = data.checkout_url;
+    } catch (e) {
+      alert('Error de conexión. Intenta de nuevo.');
+    } finally {
+      _loading = false;
+      if (btn) { btn.disabled = false; btn.textContent = origText; }
+    }
+  }
+
   async function _handlePlanClick(plan) {
     if (_loading) return;
     if (plan === _currentPlan) return;
+    _loading = true;
+
+    // Cliente nuevo (sin sesión): ir directo a Stripe sin requerir login
     if (!_session) {
-      sessionStorage.setItem('pagos_plan_pending', plan);
-      window.location.href = `login.html?redirect=${encodeURIComponent('pagos.html')}`;
+      await _checkoutPublico(plan);
       return;
     }
-    _loading = true;
+
     const btn = document.querySelector(`#card-${plan} .btn-plan`);
     const origText = btn?.textContent || '';
     if (btn) { btn.disabled = true; btn.textContent = 'Procesando...'; }
     try {
       const endpoint = _currentPlan ? '/planes/upgrade' : '/planes/checkout-subscription';
-      let body, method = 'POST';
-      if (_currentPlan) {
-        body = JSON.stringify({ new_plan: plan });
-      } else {
-        body = JSON.stringify({
-          plan,
-          success_url: `${window.location.origin}/panel.html?payment=success`,
-          cancel_url:  `${window.location.origin}/pagos.html`,
-        });
-      }
+      const body = _currentPlan
+        ? JSON.stringify({ new_plan: plan })
+        : JSON.stringify({
+            plan,
+            success_url: `${window.location.origin}/panel.html?payment=success`,
+            cancel_url:  `${window.location.origin}/pagos.html`,
+          });
       const res = await fetch(`${BACKEND_URL}${endpoint}`, {
-        method, headers: await _getHeaders(), body,
+        method: 'POST', headers: await _getHeaders(), body,
       });
       const data = await res.json();
       if (!res.ok) { alert(data.detail || 'Error al procesar. Intenta de nuevo.'); return; }
       if (data.checkout_url) {
         window.location.href = data.checkout_url;
       } else {
-        alert('✓ ' + (data.message || 'Plan actualizado.'));
+        alert('OK ' + (data.message || 'Plan actualizado.'));
         window.location.reload();
       }
     } catch (e) {
@@ -126,8 +146,8 @@
   async function _handleExtraCredits() {
     if (_loading) return;
     if (!_session) {
-      sessionStorage.setItem('pagos_plan_pending', 'extra');
-      window.location.href = `login.html?redirect=${encodeURIComponent('pagos.html')}`;
+      // Sin sesión: redirigir a login con intención de comprar extras
+      window.location.href = `login.html?redirect=${encodeURIComponent('panel.html?tab=mi-plan')}`;
       return;
     }
     _loading = true;

@@ -10,12 +10,14 @@ _PATHS_PUBLICOS = {"/", "/validate-token", "/webhook/stripe", "/checkout/session
 _jwks_cache: dict = {}
 
 _SOPORTE_PUBLICOS = {
+    ("POST", "/planes/checkout-publico"),
     ("POST", "/soporte/sesiones/init"),
     ("POST", "/soporte/chat"),
     ("POST", "/soporte/tickets"),
     ("POST", "/soporte/cron/analizar-patrones"),
     ("POST", "/admin/cron/vigencias"),
     ("POST", "/auth/reset-password"),
+    ("POST", "/wizard/sync-fallback"),
 }
 
 

@@ -52,16 +52,86 @@ def _active_extra_credits(user_id: str, sb) -> int:
     return sum(r["credits_remaining"] for r in (res.data or []))
 
 
+def _get_session_email_nombre(session) -> tuple[str, str]:
+    cd = session.get("customer_details") if isinstance(session, dict) \
+         else getattr(session, "customer_details", None)
+    if cd is None:
+        return "", ""
+    email  = (cd.get("email", "") if isinstance(cd, dict) else getattr(cd, "email", "")) or ""
+    nombre = (cd.get("name",  "") if isinstance(cd, dict) else getattr(cd, "name",  "")) or ""
+    return str(email).strip(), str(nombre).strip()
+
+
+def _create_or_get_admin(email: str, nombre: str, customer_id: str, plan: str, sb) -> str:
+    """Obtiene o crea un admin a partir del email de Stripe Checkout. Retorna user_id."""
+    try:
+        res = sb.table("profiles").select("id, rol") \
+            .eq("email", email).maybe_single().execute()
+        if res.data and res.data.get("id"):
+            user_id = res.data["id"]
+            sb.table("profiles").update({"stripe_customer_id": customer_id, "activo": True}) \
+                .eq("id", user_id).execute()
+            print(f"[sub] Admin existente vinculado: {email}")
+            return user_id
+    except Exception:
+        pass
+
+    try:
+        result = sb.auth.admin.create_user({
+            "email": email, "email_confirm": True,
+            "user_metadata": {"nombre": nombre},
+        })
+        user_id = result.user.id
+        sb.table("profiles").update({
+            "nombre": nombre, "rol": "admin", "activo": True,
+            "stripe_customer_id": customer_id, "credits": 0,
+        }).eq("id", user_id).execute()
+
+        frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+        link = f"{frontend_url}/reset-password.html"
+        try:
+            lr = sb.auth.admin.generate_link({
+                "type": "recovery", "email": email,
+                "options": {"redirect_to": f"{frontend_url}/reset-password.html"},
+            })
+            if hasattr(lr, "properties") and lr.properties:
+                link = getattr(lr.properties, "action_link", link) or link
+        except Exception:
+            pass
+
+        from services.email_service import send_template
+        from services.subscription_service import PLAN_CREDITS as _PC
+        credits_label = _PC.get(plan, 0)
+        send_template("bienvenida_admin_stripe", email, {
+            "nombre": nombre or email, "email": email,
+            "plan": plan.capitalize(), "creditos": str(credits_label),
+            "link_acceso": link,
+        })
+        print(f"[sub] Nuevo admin creado vía checkout: {email}")
+        return user_id
+    except Exception as e:
+        print(f"[sub] Error creando admin {email}: {e}")
+        return ""
+
+
 def handle_checkout_subscription(session, sb=None) -> None:
     sb = sb or get_supabase()
-    user_id   = (session.get("metadata") or {}).get("user_id", "") \
-                if isinstance(session, dict) else (session.metadata or {}).get("user_id", "")
-    plan      = (session.get("metadata") or {}).get("plan", "") \
-                if isinstance(session, dict) else (session.metadata or {}).get("plan", "")
-    sub_id    = session.get("subscription", "") if isinstance(session, dict) \
-                else getattr(session, "subscription", "")
-    customer  = session.get("customer", "") if isinstance(session, dict) \
-                else getattr(session, "customer", "")
+    meta     = session.get("metadata") or {} if isinstance(session, dict) \
+               else dict(session.metadata or {})
+    user_id  = meta.get("user_id", "")
+    plan     = meta.get("plan", "")
+    sub_id   = session.get("subscription", "") if isinstance(session, dict) \
+               else getattr(session, "subscription", "")
+    customer = session.get("customer", "") if isinstance(session, dict) \
+               else getattr(session, "customer", "")
+
+    # Cliente nuevo: no hay user_id → crear/vincular admin con email de Stripe
+    if not user_id:
+        email, nombre = _get_session_email_nombre(session)
+        if not email:
+            print("[sub] checkout_subscription sin user_id ni email")
+            return
+        user_id = _create_or_get_admin(email, nombre, customer, plan, sb)
 
     if not user_id or not sub_id:
         print(f"[sub] checkout_subscription sin user_id o sub_id")
