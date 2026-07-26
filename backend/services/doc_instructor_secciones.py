@@ -139,7 +139,7 @@ def _seccion_instrumentos(doc: Document, ev) -> None:
         p = doc.add_paragraph()
         p.add_run("Instrucciones para el participante: ").bold = True
         p.add_run(header_d)
-    reactivos_d = _get("apfDiagnostica", "instDiagnostica")
+    reactivos_d = _get("instDiagnostica", "instDiag")
     if reactivos_d:
         doc.add_heading("Reactivos", level=3)
         for linea in reactivos_d.split("\n"):
@@ -156,7 +156,7 @@ def _seccion_instrumentos(doc: Document, ev) -> None:
         p = doc.add_paragraph()
         p.add_run("Instrucciones para el participante: ").bold = True
         p.add_run(header_f)
-    reactivos_f = _get("apfFormativa", "instFormativa")
+    reactivos_f = _get("instFormativa", "instForm")
     if reactivos_f:
         doc.add_heading("Reactivos / Criterios", level=3)
         for linea in reactivos_f.split("\n"):
@@ -178,7 +178,7 @@ def _seccion_instrumentos(doc: Document, ev) -> None:
         p = doc.add_paragraph()
         p.add_run("Instrucciones para el participante: ").bold = True
         p.add_run(header_s)
-    reactivos_s = _get("apfSumativa", "instSumativa")
+    reactivos_s = _get("instSumativa", "instSuma")
     if reactivos_s:
         doc.add_heading("Reactivos", level=3)
         for linea in reactivos_s.split("\n"):
