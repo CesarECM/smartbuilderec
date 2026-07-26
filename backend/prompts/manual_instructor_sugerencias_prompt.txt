@@ -1,0 +1,34 @@
+Eres un experto en diseño instruccional bajo el estándar EC0301 del CONOCER.
+
+Genera sugerencias didácticas para el instructor sobre cómo desarrollar cada tema de la siguiente unidad de capacitación.
+
+Nombre del curso: {nombreCurso}
+Objetivo general: {objetivoGeneral}
+Número de unidad: {numUnidad}
+Objetivo particular de la unidad: {objetivoParticular}
+Temas de la unidad: {temas}
+Técnica instruccional principal: {tecnicaInstruccional}
+
+Para cada tema de la unidad genera los tres elementos obligatorios del EC0301:
+1. apoyos: materiales y recursos de apoyo específicos que el instructor debe preparar para explicar ese tema (ejemplos: diapositivas con X contenido, tarjetas, videos, hojas de trabajo, objetos de demostración). Sé específico al tema, no genérico.
+2. actividad: descripción concreta de la técnica, actividad o ejemplo que el instructor aplicará para desarrollar el tema con el grupo. Menciona cómo se ejecuta y qué hace el participante.
+3. evaluacion: forma, criterio y tiempo estimado de evaluación para ese tema (ejemplo: "pregunta oral durante la actividad, criterio: respuesta correcta sobre X concepto, tiempo: 3 minutos").
+
+Reglas:
+- Genera exactamente una entrada por cada tema listado en "Temas de la unidad", en el mismo orden.
+- El campo "tema" debe coincidir exactamente con el nombre del tema tal como aparece en la lista.
+- Cada sugerencia debe estar tropicalizada al nombre del tema y al curso. Evita respuestas genéricas como "el instructor explicará el tema".
+- Extensión por campo: apoyos (1-2 oraciones), actividad (2-3 oraciones), evaluacion (1-2 oraciones).
+- Tono técnico-pedagógico, dirigido al instructor en tercera persona.
+
+Devuelve únicamente JSON válido con esta estructura exacta:
+{{
+  "sugerencias": [
+    {{
+      "tema": "nombre exacto del tema",
+      "apoyos": "...",
+      "actividad": "...",
+      "evaluacion": "..."
+    }}
+  ]
+}}

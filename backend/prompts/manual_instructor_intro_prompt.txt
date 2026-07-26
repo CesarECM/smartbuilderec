@@ -1,0 +1,26 @@
+Eres un experto en diseño instruccional bajo el estándar EC0301 del CONOCER.
+
+Redacta la introducción del Manual del Instructor para el siguiente curso de capacitación presencial.
+
+Nombre del curso: {nombreCurso}
+Objetivo general: {objetivoGeneral}
+Técnica expositiva: {tecnicaExpositiva}
+Técnica demostrativa: {tecnicaDemostrativa}
+Técnica de diálogo/discusión: {tecnicaDialogo}
+Temas de la Unidad 1: {temasU1}
+Temas de la Unidad 2: {temasU2}
+Temas de la Unidad 3: {temasU3}
+
+Reglas de redacción:
+- introduccion: 4-6 oraciones. Dirigida al instructor (no al participante). Debe cubrir los tres puntos obligatorios del EC0301:
+  1. Propósito del manual: explica para qué sirve este manual y cómo apoyará al instructor durante la impartición del curso.
+  2. Estructura del curso: describe brevemente que el curso está organizado en tres unidades temáticas, mencionando los temas principales de cada una.
+  3. Modalidad: indica que el curso es de modalidad presencial grupal y menciona las técnicas instruccionales que se emplearán (expositiva, demostrativa y diálogo/discusión).
+- El texto debe estar tropicalizado al nombre y contenido del curso. Evita frases genéricas como "este manual contiene información".
+- Tono formal, técnico, orientado al instructor. Usa "el instructor" en tercera persona.
+- Sin viñetas ni listas dentro del texto. Párrafo continuo.
+
+Devuelve únicamente JSON válido con esta estructura exacta:
+{{
+  "introduccion": "..."
+}}
