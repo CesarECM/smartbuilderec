@@ -23,13 +23,16 @@
     _c.toastSync("saving");
     try {
       const session = await getSession();
+      window._sbeDebug?.log("sync", session ? "ok" : "error", "session", { uid: session?.user?.id?.slice(0, 8) || "null", adminMode: _c.adminMode });
       if (!session) {
         _c.toastSync("error", "⚠️ Sesión expirada — vuelve a iniciar sesión");
         return;
       }
 
       const estado = _c.recolectarEstado();
+      window._sbeDebug?.log("sync", "req", "estado", { tieneDatos: !!estado.datos, nombreCurso: estado.datos?.nombreCurso || "(vacío)", claves: Object.keys(estado).join(",") || "(ninguno)" });
       if (!estado.datos || typeof estado.datos !== "object") {
+        window._sbeDebug?.log("sync", "warn", "estado-vacio", "Sin ec0217_datos en cache — guardado cancelado");
         _c.toastSync("ok");
         return;
       }
@@ -38,13 +41,17 @@
       const pasoActual  = _c.calcularPasoActual(estado);
       _c.emitir("sbe:progress", { paso: pasoActual, total: 16 });
       const planeacionId = localStorage.getItem("sbe_planeacion_id");
+      window._sbeDebug?.log("sync", "req", "ruta", { planeacionId: planeacionId || "(ninguno)", nombreCurso, paso: pasoActual, ruta: planeacionId ? "UPDATE" : (_c.adminMode ? "admin-skip" : "INSERT") });
 
       if (planeacionId) {
         // UPDATE
-        const { error } = await _supabase
+        window._sbeDebug?.log("sync", "req", "update", { id: planeacionId, nombre: nombreCurso, paso: pasoActual });
+        const { data: updated, error } = await _supabase
           .from("planeaciones")
           .update({ datos: estado, nombre_curso: nombreCurso, paso_actual: pasoActual })
-          .eq("id", planeacionId);
+          .eq("id", planeacionId)
+          .select("id");
+        window._sbeDebug?.log("sync", error ? "error" : (updated?.length ? "ok" : "warn"), "update-result", { rows: updated?.length ?? 0, error: error?.message || null });
         if (error) {
           console.warn("[storage] Error al actualizar:", error.message);
           _c.emitir("sbe:sync-error");
@@ -53,9 +60,24 @@
             window.logEvento('wizard.sync.error', { tipo: 'update', error: error.message, planeacion_id: planeacionId });
           return;
         }
+        if (!updated?.length) {
+          if (_c.adminMode) {
+            _c.toastSync("error", "⚠️ La planeación ya no existe. Cierra esta ventana.");
+            return;
+          }
+          console.warn("[storage] Planeación eliminada externamente. Limpiando ID stale.");
+          _c.origRemoveItem("sbe_planeacion_id");
+          scheduleSyncToSupabase();
+          return;
+        }
 
       } else if (!_c.adminMode) {
-        // INSERT solo en modo normal
+        // INSERT solo en modo normal — requiere nombre del curso
+        if (!estado.datos?.nombreCurso) {
+          window._sbeDebug?.log("sync", "warn", "insert-bloqueado", "nombreCurso vacío — INSERT cancelado");
+          _c.toastSync("ok");
+          return;
+        }
         const { data: perfil } = await _supabase
           .from("profiles").select("rol").eq("id", session.user.id).single();
 
@@ -64,6 +86,7 @@
             .from("planeaciones")
             .select("id", { count: "exact", head: true })
             .eq("user_id", session.user.id);
+          window._sbeDebug?.log("sync", total >= 5 ? "warn" : "ok", "limite", { total, max: 5 });
           if (total >= 5) {
             _c.toastSync("error", "⚠️ Límite de 5 cursos alcanzado — elimina uno desde tu panel");
             if (typeof showAlert === "function") {
@@ -76,17 +99,20 @@
           }
         }
 
+        window._sbeDebug?.log("sync", "req", "insert", { nombre: nombreCurso, paso: pasoActual, uid: session.user.id.slice(0, 8) });
         const { data, error } = await _supabase
           .from("planeaciones")
           .insert({ user_id: session.user.id, nombre_curso: nombreCurso, datos: estado, paso_actual: pasoActual })
           .select("id").single();
-
+        window._sbeDebug?.log("sync", error ? "error" : "ok", "insert-result", { id: data?.id || null, error: error?.message || null });
         if (error) {
           console.warn("[storage] Error al crear:", error.message);
           _c.emitir("sbe:sync-error");
           _c.toastSync("error", "⚠️ No se pudo crear el curso. Intenta de nuevo.");
           if (typeof window.logEvento === 'function')
             window.logEvento('wizard.sync.error', { tipo: 'insert', error: error.message });
+          if (!sessionStorage.getItem("sbe_fallback_sent"))
+            _enviarRespaldoAdmin(session, nombreCurso, estado, error.message);
           return;
         }
         if (data?.id) {
@@ -101,6 +127,28 @@
     } finally {
       _c.syncing = false;
     }
+  }
+
+  // ── Respaldo por email cuando INSERT falla ────────────────────────────────
+
+  async function _enviarRespaldoAdmin(session, nombreCurso, estado, errorMsg) {
+    sessionStorage.setItem("sbe_fallback_sent", "1");
+    try {
+      const _url = (typeof BACKEND_URL !== "undefined" ? BACKEND_URL : "https://smartbuilderec.onrender.com");
+      const headers = { "Content-Type": "application/json" };
+      if (session?.access_token) headers["Authorization"] = `Bearer ${session.access_token}`;
+      await fetch(`${_url}/wizard/sync-fallback`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          user_email:   session?.user?.email || "",
+          user_name:    session?.user?.user_metadata?.full_name || "",
+          nombre_curso: nombreCurso,
+          datos:        estado,
+          error:        errorMsg,
+        }),
+      });
+    } catch (_) {}
   }
 
   // ── Inicialización: fuente de verdad = Supabase ───────────────────────────
@@ -220,6 +268,22 @@
     }
     await syncToSupabase();
   }
+
+  // ── Flush al ocultar/cerrar la pestaña ────────────────────────────────────
+  // visibilitychange:hidden cubre cierre de tab, cambio de tab y foco perdido.
+  // pagehide es el fallback para navegaciones directas al cerrar.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && _c.syncTimer !== null) {
+      window._sbeDebug?.log("sync", "req", "flush-trigger", { via: "visibilitychange" });
+      flushSync();
+    }
+  });
+  window.addEventListener("pagehide", () => {
+    if (_c.syncTimer !== null) {
+      window._sbeDebug?.log("sync", "req", "flush-trigger", { via: "pagehide" });
+      clearTimeout(_c.syncTimer); _c.syncTimer = null; syncToSupabase();
+    }
+  });
 
   // ── Puente para core.js (localStorage.setItem llama window._sbeSync.schedule)
   window._sbeSync = { schedule: scheduleSyncToSupabase };
