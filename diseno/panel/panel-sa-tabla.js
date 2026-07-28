@@ -10,8 +10,8 @@
       { id: 'asesor',       label: '🤝 Asesor',    locked: false, userOnly: false },
       { id: 'evaluador',    label: '📋 Evaluador', locked: false, userOnly: false },
       { id: 'admin',        label: '👑 Admin',     locked: false, userOnly: false },
-      { id: 'norma_ec0091', label: '🔬 EC0091',   locked: false, userOnly: true  },
-      { id: 'norma_ec0616', label: '🏥 EC0616',   locked: false, userOnly: true  },
+      { id: 'norma_ec0091', label: '🔬 EC0091',   locked: false, userOnly: false },
+      { id: 'norma_ec0616', label: '🏥 EC0616',   locked: false, userOnly: false },
       // super_admin excluido — no asignable desde UI
     ];
 
