@@ -37,7 +37,7 @@
         return;
       }
 
-      const nombreCurso = estado.datos?.nombreCurso || "Sin título";
+      let nombreCurso = estado.datos?.nombreCurso || "";
       const pasoActual  = _c.calcularPasoActual(estado);
       _c.emitir("sbe:progress", { paso: pasoActual, total: 16 });
       const planeacionId = localStorage.getItem("sbe_planeacion_id");
@@ -73,11 +73,11 @@
 
       } else if (!_c.adminMode) {
         // INSERT solo en modo normal — requiere nombre del curso
-        if (!estado.datos?.nombreCurso) {
-          window._sbeDebug?.log("sync", "warn", "insert-bloqueado", "nombreCurso vacío — INSERT cancelado");
-          _c.emitir("sbe:sync-noguardado");
-          _c.toastSync("warn", "⚠️ Escribe el nombre del curso para guardar");
-          return;
+        if (!nombreCurso) {
+          const { count: _n } = await _supabase.from("planeaciones")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", session.user.id).like("nombre_curso", "Sin nombre%");
+          nombreCurso = `Sin nombre de curso${_n ? ` (${_n + 1})` : ""}`;
         }
         const { data: perfil } = await _supabase
           .from("profiles").select("rol").eq("id", session.user.id).single();
