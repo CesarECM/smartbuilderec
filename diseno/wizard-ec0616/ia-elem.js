@@ -2,16 +2,8 @@
 // Cada elemento usa 3 botones: generarDescripcion, refinarTexto, revisarCumplimiento.
 // Identificado por el id del elemento (oxigenacion, alimentacion, etc.)
 
-import { BACKEND_URL } from "./config.js";
-import { ELEMENTOS }   from "./config.js";
-
-async function _llamar(endpoint, payload) {
-  const res = await fetch(`${BACKEND_URL}/${endpoint}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
+import { llamarIA as _llamar } from "./api.js";
+import { ELEMENTOS } from "./config.js";
 
 function _getDatosCandidato() {
   const raw = localStorage.getItem("ec0616_datos");

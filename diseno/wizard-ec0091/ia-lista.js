@@ -1,14 +1,6 @@
 // ─── wizard-ec0091/ia-lista.js — IA para Paso 8: Lista de verificación ───────
 
-import { BACKEND_URL } from "./config.js";
-
-async function _llamar(endpoint, payload) {
-  const res = await fetch(`${BACKEND_URL}/${endpoint}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
+import { llamarIA as _llamar } from "./api.js";
 
 function _getLineas() {
   const raw = localStorage.getItem("ec0091_lineas");

@@ -1,14 +1,6 @@
 // ─── wizard-ec0091/ia-revision-global.js — Revisora cruzada Paso 13 ──────────
 
-import { BACKEND_URL } from "./config.js";
-
-async function _llamar(endpoint, payload) {
-  const res = await fetch(`${BACKEND_URL}/${endpoint}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
+import { llamarIA as _llamar } from "./api.js";
 
 function _recolectarExpediente() {
   const leer = key => { const r = localStorage.getItem(key); return r ? JSON.parse(r) : {}; };

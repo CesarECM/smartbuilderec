@@ -1,15 +1,7 @@
 // ─── wizard-ec0616/ia-scorecard.js — Detectora de brechas global Paso 9 ──────
 
-import { BACKEND_URL } from "./config.js";
-import { ELEMENTOS }   from "./config.js";
-
-async function _llamar(endpoint, payload) {
-  const res = await fetch(`${BACKEND_URL}/${endpoint}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
+import { llamarIA as _llamar } from "./api.js";
+import { ELEMENTOS } from "./config.js";
 
 function _recolectarPortafolio() {
   const leer = key => { const r = localStorage.getItem(key); return r ? JSON.parse(r) : {}; };
