@@ -8,8 +8,8 @@
 
     async function saToggleRol(userId, rolActualPerfil, role, estaActivo) {
       try {
-        // Roles extra (asesor / evaluador) — vía ERP API
-        if (role === 'asesor' || role === 'evaluador') {
+        // Roles extra (asesor / evaluador / normas) — vía ERP API
+        if (['asesor', 'evaluador', 'norma_ec0091', 'norma_ec0616'].includes(role)) {
           if (estaActivo) {
             await apiFetch(`/erp/admin/roles/quitar?user_id=${userId}&role=${role}`, { method: 'DELETE' });
             _sa_extraMap[userId]?.delete(role);
@@ -80,8 +80,9 @@
     function sa_RefrescarFilaRoles(u) {
       const chipsWrap = document.getElementById('sa-chips-' + u.id);
       if (!chipsWrap) return;
-      const rolesActivos = _sa_getUserRoles(u);
-      chipsWrap.innerHTML = _SA_ALL_ROLES.map(r => {
+      const rolesActivos  = _sa_getUserRoles(u);
+      const rolesVisibles = _SA_ALL_ROLES.filter(r => !r.userOnly || u.rol === 'user');
+      chipsWrap.innerHTML = rolesVisibles.map(r => {
         const on  = rolesActivos.has(r.id);
         const cls = r.locked ? 'rchip locked' : (on ? 'rchip on' : 'rchip off');
         const oc  = r.locked ? '' : `onclick="saToggleRol('${u.id}','${u.rol}','${r.id}',${on})"`;

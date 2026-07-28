@@ -85,6 +85,28 @@ document.getElementById('rp-alumno').innerHTML = `
           <span class="alm-step-note">Esperando autorización de evaluador</span>
         </div>
       </div>
+
+      <!-- ─ Sección 4: Mis verificaciones EC0091 ─────────────────── -->
+      <div id="alumno-ec0091-section" style="display:none">
+        <div class="sec-header sec-gap">
+          <div><h2>🔬 Mis verificaciones <span class="count-tag">EC0091</span></h2></div>
+          <div class="sec-actions">
+            <a href="ec0091?new=1" class="btn-primary">+ Nueva verificación</a>
+          </div>
+        </div>
+        <div id="alumno-ec0091-lista"><p class="loading-txt">Cargando...</p></div>
+      </div>
+
+      <!-- ─ Sección 5: Mi portafolio EC0616 ─────────────────────── -->
+      <div id="alumno-ec0616-section" style="display:none">
+        <div class="sec-header sec-gap">
+          <div><h2>🏥 Mi portafolio <span class="count-tag">EC0616</span></h2></div>
+          <div class="sec-actions">
+            <a href="ec0616?new=1" class="btn-primary">+ Nuevo portafolio</a>
+          </div>
+        </div>
+        <div id="alumno-ec0616-lista"><p class="loading-txt">Cargando...</p></div>
+      </div>
 `;
 
 document.getElementById('rp-asesor').innerHTML = `

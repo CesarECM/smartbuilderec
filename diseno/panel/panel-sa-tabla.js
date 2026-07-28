@@ -6,10 +6,12 @@
     var _sa_promoverUserId = null;
 
     const _SA_ALL_ROLES = [
-      { id: 'alumno',    label: '🎓 Alumno',    locked: true  },
-      { id: 'asesor',    label: '🤝 Asesor',    locked: false },
-      { id: 'evaluador', label: '📋 Evaluador', locked: false },
-      { id: 'admin',     label: '👑 Admin',     locked: false },
+      { id: 'alumno',       label: '🎓 Alumno',    locked: true,  userOnly: false },
+      { id: 'asesor',       label: '🤝 Asesor',    locked: false, userOnly: false },
+      { id: 'evaluador',    label: '📋 Evaluador', locked: false, userOnly: false },
+      { id: 'admin',        label: '👑 Admin',     locked: false, userOnly: false },
+      { id: 'norma_ec0091', label: '🔬 EC0091',   locked: false, userOnly: true  },
+      { id: 'norma_ec0616', label: '🏥 EC0616',   locked: false, userOnly: true  },
       // super_admin excluido — no asignable desde UI
     ];
 
@@ -80,8 +82,10 @@
 
     function _sa_getUserRoles(u) {
       const set = new Set(['alumno']);
-      if (_sa_extraMap[u.id]?.has('asesor'))    set.add('asesor');
-      if (_sa_extraMap[u.id]?.has('evaluador')) set.add('evaluador');
+      if (_sa_extraMap[u.id]?.has('asesor'))       set.add('asesor');
+      if (_sa_extraMap[u.id]?.has('evaluador'))    set.add('evaluador');
+      if (_sa_extraMap[u.id]?.has('norma_ec0091')) set.add('norma_ec0091');
+      if (_sa_extraMap[u.id]?.has('norma_ec0616')) set.add('norma_ec0616');
       if (u.rol === 'admin' || u.rol === 'super_admin') set.add('admin');
       return set;
     }
@@ -160,8 +164,9 @@
           const nombre = [u.nombre, u.apellido].filter(Boolean).join(' ') || '(Sin nombre)';
           const ini    = ((u.nombre?.[0]||'')+(u.apellido?.[0]||'')).toUpperCase() || '?';
           _contactoSA[u.id] = { nombre, email: u.email, tel: u.telefono || '' };
-          const rolesActivos = _sa_getUserRoles(u);
-          const chips = _SA_ALL_ROLES.map(r => {
+          const rolesActivos  = _sa_getUserRoles(u);
+          const rolesVisibles = _SA_ALL_ROLES.filter(r => !r.userOnly || u.rol === 'user');
+          const chips = rolesVisibles.map(r => {
             const on  = rolesActivos.has(r.id);
             const cls = r.locked ? 'rchip locked' : (on ? 'rchip on' : 'rchip off');
             const oc  = r.locked ? '' : `onclick="saToggleRol('${u.id}','${u.rol}','${r.id}',${on})"`;

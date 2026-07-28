@@ -7,6 +7,7 @@
       await Promise.all([
         cargarAlumnoDatos(),
         cargarAlumnoEstadoYPlaneaciones(),
+        cargarPanelNormasExtras(),
       ]);
     }
 

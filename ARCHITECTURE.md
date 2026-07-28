@@ -156,6 +156,8 @@ backend/generators/
 ```
 diseno/
 ├── index.html           # Wizard EC0217 (16 pasos) — ES Modules, ~60 líneas
+├── ec0091.html          # Wizard EC0091 (13 pasos) — ES Modules
+├── ec0616.html          # Wizard EC0616 (9 pasos) — ES Modules
 ├── panel.html           # Panel unificado (alumno + admin + superadmin) — ~75 líneas
 ├── landing.html         # Landing pública (~292 líneas)
 ├── login.html           # Login / registro
@@ -266,6 +268,54 @@ diseno/wizard/
 └── ia-materiales.js   # generarMaterialesIA, generarClasificacionIA
 ```
 
+### Wizard EC0091 (`diseno/wizard-ec0091/`)
+
+Verificador Externo de Centro de Evaluación. 13 pasos. ZIP con 5 documentos Word.
+Standalone: sin dependencia de `_sbeCore`. Sync propio en `ec0091_datos` (Supabase).
+Habilitado por usuario desde superadmin (`user_roles.role = 'norma_ec0091'`).
+
+```
+diseno/wizard-ec0091/
+├── config.js       # BACKEND_URL, secciones de los 13 pasos
+├── state.js        # estado compartido
+├── sync.js         # sync standalone → tabla ec0091_datos
+├── navigation.js   # sidebar + mostrarSeccion91
+├── main.js         # entry point
+├── step-datos.js … step-expediente.js  # 13 step modules
+├── ia-objetivo.js … ia-revision-global.js  # 5 módulos IA
+└── export.js       # descargarZipEC0091 (auth headers + registro_id)
+```
+
+### Wizard EC0616 (`diseno/wizard-ec0616/`)
+
+Candidato a auxiliar de enfermería (portafolio de evidencias). 9 pasos.
+ZIP con 9 documentos Word (portada + 7 elementos + declaratoria).
+Habilitado por usuario desde superadmin (`user_roles.role = 'norma_ec0616'`).
+
+```
+diseno/wizard-ec0616/
+├── config.js       # BACKEND_URL, array ELEMENTOS (7 elementos con desempeños)
+├── state.js, sync.js, navigation.js, main.js
+├── step-datos.js, step-elemento.js (factory 7 módulos), step-portafolio.js
+├── ia-elem.js      # 3 botones IA por elemento
+├── ia-scorecard.js
+└── export.js       # descargarZipEC0616 (auth headers + registro_id)
+```
+
+### Tablas Supabase EC0091/EC0616
+
+```sql
+-- Ambas tablas siguen el patrón de planeaciones pero sin slots de descarga.
+-- 1 crédito del admin se consume en la primera descarga (credito_canjeado = FALSE → TRUE).
+ec0091_datos (id, user_id, admin_id, nombre_verificacion, datos JSONB,
+              credito_canjeado BOOLEAN, snapshot_url, created_at, updated_at)
+ec0616_datos (id, user_id, admin_id, nombre_candidato, datos JSONB,
+              credito_canjeado BOOLEAN, snapshot_url, created_at, updated_at)
+
+-- Acceso controlado via user_roles:
+-- superadmin habilita: INSERT INTO user_roles (user_id, role) VALUES (?, 'norma_ec0091')
+```
+
 ### Panel Unificado (`diseno/panel/`)
 
 ```
@@ -276,7 +326,8 @@ diseno/panel/
 │                    # renderRoleSwitcher, switchRol, cargarPanel
 │
 │  # Vista alumno / asesor / evaluador
-├── panel-alumno.js  # Panel alumno completo + asesor + evaluador + _tiempoRel
+├── panel-alumno.js       # Panel alumno completo + asesor + evaluador + _tiempoRel
+├── panel-alumno-normas.js # Secciones EC0091/EC0616 condicionales (si norma habilitada)
 │
 │  # Vista admin
 ├── panel-admin-usuarios.js    # admInit, admShowTab, admCargarStats, admCargarUsuarios,
