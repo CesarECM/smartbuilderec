@@ -118,7 +118,7 @@ export function initNavigation() {
 
   // Tabla centralizada de botones "Siguiente / Guardar" de cada paso
   const _BTN_NAV = [
-    { btn:"btnSiguienteDatos",     validar:"validarDatosCurso",      guardar:"guardarDatosCurso",       sig:"seccionObjetivos"   },
+    { btn:"btnSiguienteDatos",     validar:"validarDatosCurso",      guardar:"guardarDatosCurso",       sig:"seccionObjetivos",   syncNow: true },
     { btn:"btnGuardarBeneficios",  validar:"validarBeneficios",       guardar:"guardarBeneficios",        sig:"seccionTemario"     },
     { btn:"btnGuardarTemario",     validar:"validarTemario",          guardar:"guardarTemarioFinal",      sig:"seccionIntegracion" },
     { btn:"btnGuardarIntegracion", validar:"validarIntegracion",      guardar:"guardarIntegracionFinal",  sig:"seccionPreguntas"   },
@@ -135,10 +135,11 @@ export function initNavigation() {
     { btn:"btnGuardarMateriales",  validar:null,                      guardar:"guardarMaterialesFinal",   sig:"seccionFormatos"    },
   ];
 
-  _BTN_NAV.forEach(({ btn, validar, guardar, sig }) => {
+  _BTN_NAV.forEach(({ btn, validar, guardar, sig, syncNow: doSync }) => {
     document.getElementById(btn)?.addEventListener("click", () => {
       if (validar && typeof window[validar] === "function" && !window[validar]()) return;
       if (guardar && typeof window[guardar] === "function") window[guardar]();
+      if (doSync && window.storageSync?.syncNow) window.storageSync.syncNow();
       mostrarSeccionPrincipal(sig);
     });
   });

@@ -128,6 +128,10 @@
       el.style.background = "#2e7d32";
       el.textContent = "✓ Guardado";
       el._t = setTimeout(() => { el.style.opacity = "0"; }, 2500);
+    } else if (tipo === "warn") {
+      el.style.background = "#92400e";
+      el.textContent = mensaje || "⚠️ Pendiente de guardar";
+      el._t = setTimeout(() => { el.style.opacity = "0"; }, 6000);
     } else if (tipo === "error") {
       el.style.background = "#b91c1c";
       el.textContent = mensaje || "⚠️ Error al guardar";

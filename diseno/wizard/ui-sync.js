@@ -23,6 +23,11 @@ export function initSyncUI() {
     text.style.color = "rgba(255,255,255,0.5)";
     _okTimer = setTimeout(() => { text.textContent = "Sincronizado"; }, 3000);
   });
+  window.addEventListener("sbe:sync-noguardado", () => {
+    clearTimeout(_okTimer);
+    icon.textContent = "⚠️"; text.textContent = "Sin guardar";
+    text.style.color = "#fbbf24";
+  });
   window.addEventListener("sbe:sync-error", () => {
     icon.textContent = "⚠️"; text.textContent = "Error al guardar";
     text.style.color = "#f87171";

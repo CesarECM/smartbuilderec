@@ -75,7 +75,8 @@
         // INSERT solo en modo normal — requiere nombre del curso
         if (!estado.datos?.nombreCurso) {
           window._sbeDebug?.log("sync", "warn", "insert-bloqueado", "nombreCurso vacío — INSERT cancelado");
-          _c.toastSync("ok");
+          _c.emitir("sbe:sync-noguardado");
+          _c.toastSync("warn", "⚠️ Escribe el nombre del curso para guardar");
           return;
         }
         const { data: perfil } = await _supabase
@@ -230,6 +231,12 @@
         console.warn("[storage] Planeación no encontrada. Limpiando.");
         _c.origRemoveItem("sbe_planeacion_id");
         _c.origRemoveItem("sbe_admin_editing");
+        _c.limpiarCache();
+        return;
+      }
+      if (data.user_id !== session.user.id) {
+        window._sbeDebug?.log("sync", "warn", "init-uid-mismatch", { planeacionId: planeacionId?.slice(0, 8) });
+        _c.origRemoveItem("sbe_planeacion_id");
         _c.limpiarCache();
         return;
       }
