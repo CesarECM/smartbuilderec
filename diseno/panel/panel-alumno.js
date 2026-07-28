@@ -15,7 +15,9 @@
     async function cargarAlumnoEstadoYPlaneaciones() {
       try {
         _alumnoEstado = await apiFetch('/alumno/estado');
+        window._sbeDebug?.log("panel", "ok", "/alumno/estado", { slots_usados: _alumnoEstado?.slots_usados, slots_max: _alumnoEstado?.slots_max, modo_degradado: _alumnoEstado?.modo_degradado });
       } catch (e) {
+        window._sbeDebug?.log("panel", "error", "/alumno/estado", { error: e.message });
         _alumnoEstado = { planeaciones_count: 0, slots_usados: 0, slots_disponibles: 5, modo_degradado: false };
       }
       _renderSlotCounter();
@@ -122,6 +124,7 @@
     // ── Mis planeaciones ─────────────────────────────────────────
     async function cargarMisPlaneaciones() {
       const el = document.getElementById('alumno-planeaciones');
+      window._sbeDebug?.log("panel", "req", "cargarMisPlaneaciones", { uid: _perfil?.id?.slice(0, 8) || "null" });
       const { data, error } = await _supabase
         .from('planeaciones')
         .select('id, nombre_curso, paso_actual, status, updated_at')
@@ -129,10 +132,12 @@
         .order('updated_at', { ascending: false });
 
       const count = data?.length || 0;
+      window._sbeDebug?.log("panel", error ? "error" : "ok", "planeaciones-query", { count, error: error?.message || null, ids: data?.map(p => p.id?.slice(0, 8)).join(",") || "(ninguno)" });
       const cTag = document.getElementById('alumno-plan-count');
       if (cTag) cTag.textContent = count;
 
       if (error || !count) {
+        window._sbeDebug?.log("panel", "warn", "sin-planeaciones", { razon: error ? "error-bd" : "count-cero" });
         el.innerHTML = `<div style="text-align:center;padding:32px;background:var(--c-surface);border:2px dashed var(--c-border);border-radius:var(--r-xl)">
           <div style="font-size:36px;margin-bottom:10px">📋</div>
           <h3 style="font-size:15px;font-weight:700;margin-bottom:6px">Aún no tienes cursos</h3>
