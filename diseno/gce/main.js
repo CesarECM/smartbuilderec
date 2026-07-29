@@ -11,6 +11,7 @@ import { getTemplate as tplPlan,   initStepPlan, cargarPlan, guardarPlan,
 import { getTemplate as tplIEC,     initStepIEC, guardarIEC, emitirJuicio }                 from "./step-iec.js";
 import { getTemplate as tplCedula,  initStepCedula, guardarCedula, emitirCedula }           from "./step-cedula.js";
 import { getTemplate as tplEncuesta, initStepEncuesta, guardarEncuesta, cerrarProceso }      from "./step-encuesta.js";
+import { descargarPortafolioZip }                                                             from "./export.js";
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,7 @@ import { getTemplate as tplEncuesta, initStepEncuesta, guardarEncuesta, cerrarPr
   window.gceEmitirCedula           = emitirCedula;
   window.guardarEncuesta           = guardarEncuesta;
   window.gceCerrarProceso          = cerrarProceso;
+  window.descargarPortafolioZip    = descargarPortafolioZip;
   window.actualizarSidebar         = actualizarSidebar;
 
   // ── Inyectar sidebar ──────────────────────────────────────────────────────
