@@ -21,15 +21,23 @@ function ocShowTab(name) {
 
 async function _ocCargarEstandares() {
   try {
+    console.log('[GCE-OC] GET', BACKEND_URL + '/gce/estandares');
     const d = await apiFetch('/gce/estandares');
+    console.log('[GCE-OC] estándares recibidos:', d);
     _oc_estandares = d.estandares || [];
-  } catch { _oc_estandares = []; }
+  } catch (e) {
+    console.error('[GCE-OC] error al cargar estándares:', e);
+    _oc_estandares = [];
+  }
 }
 
 async function _ocCargarProcesos() {
   const el = document.getElementById('oc-listaProcesos');
   try {
+    console.log('[GCE-OC] GET', BACKEND_URL + '/gce/procesos');
+    if (el) el.innerHTML = '<p class="loading-txt">Cargando procesos…</p>';
     const d = await apiFetch('/gce/procesos');
+    console.log('[GCE-OC] procesos recibidos:', d);
     _oc_procesos = d.procesos || [];
 
     const ids = [...new Set([
@@ -56,7 +64,13 @@ async function _ocCargarProcesos() {
     const ct = document.getElementById('oc-countProcesos');
     if (ct) ct.textContent = _oc_procesos.length || '';
   } catch (e) {
-    if (el) el.innerHTML = `<p class="empty-txt">Error al cargar: ${e.message}</p>`;
+    console.error('[GCE-OC] error al cargar procesos:', e);
+    const esFetch = e instanceof TypeError && e.message === 'Failed to fetch';
+    const msg = esFetch
+      ? 'No se pudo conectar al servidor. El backend puede estar iniciando (cold start). Espera 30 s y recarga.'
+      : `Error: ${e.message}`;
+    if (el) el.innerHTML = `<p class="empty-txt">${msg}</p>
+      <button class="btn-sm" style="margin:8px 0" onclick="_ocCargarProcesos()">🔄 Reintentar</button>`;
   }
 }
 

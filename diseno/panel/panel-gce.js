@@ -59,14 +59,21 @@ function gceShowTab(name) {
 
 async function gceCargarEstandares() {
   try {
+    console.log('[GCE-CE] GET', BACKEND_URL + '/gce/estandares');
     const d = await apiFetch('/gce/estandares');
+    console.log('[GCE-CE] estándares:', d);
     _gce_estandares = d.estandares || [];
-  } catch { _gce_estandares = []; }
+  } catch (e) {
+    console.error('[GCE-CE] error estándares:', e);
+    _gce_estandares = [];
+  }
 }
 
 async function gceCargarProcesos() {
   const el = document.getElementById('gce-listaProcesos');
   try {
+    console.log('[GCE-CE] GET', BACKEND_URL + '/gce/procesos');
+    if (el) el.innerHTML = '<p class="loading-txt">Cargando procesos…</p>';
     const d = await apiFetch('/gce/procesos');
     _gce_procesos = d.procesos || [];
 
@@ -92,7 +99,13 @@ async function gceCargarProcesos() {
     const ct = document.getElementById('gce-countProcesos');
     if (ct) ct.textContent = _gce_procesos.length || '';
   } catch (e) {
-    if (el) el.innerHTML = `<p class="empty-txt">Error al cargar procesos: ${e.message}</p>`;
+    console.error('[GCE-CE] error procesos:', e);
+    const esFetch = e instanceof TypeError && e.message === 'Failed to fetch';
+    const msg = esFetch
+      ? 'No se pudo conectar al servidor. El backend puede estar iniciando (cold start). Espera 30 s y recarga.'
+      : `Error: ${e.message}`;
+    if (el) el.innerHTML = `<p class="empty-txt">${msg}</p>
+      <button class="btn-sm" style="margin:8px 0" onclick="gceCargarProcesos()">🔄 Reintentar</button>`;
   }
 }
 
