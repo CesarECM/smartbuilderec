@@ -127,3 +127,24 @@ def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
     if "estado" in payload:
         _notificar_candidato(sb, proceso_id, payload["estado"])
     return res.data[0] if res.data else {}
+
+
+@router.get("/candidatos/buscar")
+def buscar_candidatos(q: str, request: Request):
+    """Busca usuarios registrados por nombre o email (service role — sin RLS)."""
+    sb = get_supabase()
+    uid = _caller(request)
+    perfil = _get_profile(sb, uid)
+    if not _puede_gestionar(sb, uid, perfil):
+        raise HTTPException(403, "Se requiere rol ce_admin u oc_admin.")
+    if not q or len(q.strip()) < 2:
+        return {"candidatos": []}
+    lq = q.strip().lower()
+    res = (
+        sb.table("profiles")
+        .select("id, nombre, apellido, email")
+        .or_(f"nombre.ilike.%{lq}%,apellido.ilike.%{lq}%,email.ilike.%{lq}%")
+        .limit(10)
+        .execute()
+    )
+    return {"candidatos": res.data or []}

@@ -201,12 +201,8 @@ async function gceBuscarCandidato(q) {
   if (!q || q.trim().length < 2) { res.style.display = 'none'; return; }
   clearTimeout(_gce_buscarTimer);
   _gce_buscarTimer = setTimeout(async () => {
-    const lq = q.trim().toLowerCase();
-    const { data } = await _supabase.from('profiles')
-      .select('id, nombre, apellido, email')
-      .or(`nombre.ilike.%${lq}%,apellido.ilike.%${lq}%,email.ilike.%${lq}%`)
-      .limit(8);
-    const lista = data || [];
+    const d = await apiFetch(`/gce/candidatos/buscar?q=${encodeURIComponent(q.trim())}`);
+    const lista = d.candidatos || [];
     if (!lista.length) { res.style.display = 'block'; res.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--c-text-3)">Sin resultados</div>'; return; }
     res.style.display = 'block';
     res.innerHTML = lista.map(u => {
