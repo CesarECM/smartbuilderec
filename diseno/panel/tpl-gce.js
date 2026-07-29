@@ -88,6 +88,17 @@ document.getElementById('rp-ce_admin').innerHTML = `
         </button>
         <button onclick="gceGuardarNuevo()" class="btn-primary" id="gce-btnGuardar">Crear proceso</button>
       </div>
+
+      <!-- debug log -->
+      <details id="gce-debug-wrap" style="margin-top:14px">
+        <summary style="font-size:11px;color:var(--c-text-3);cursor:pointer;user-select:none">🐛 Debug log</summary>
+        <div style="display:flex;justify-content:flex-end;margin:4px 0">
+          <button onclick="gceCopiarLog()" class="btn-sm">📋 Copiar</button>
+          <button onclick="gceLimpiarLog()" class="btn-sm" style="margin-left:4px">🗑 Limpiar</button>
+        </div>
+        <pre id="gce-debug-log"
+          style="font-size:10px;background:#0f172a;color:#94a3b8;padding:8px 10px;border-radius:6px;max-height:140px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;margin:0"></pre>
+      </details>
     </div>
   </div>
 `;

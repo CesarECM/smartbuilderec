@@ -58,20 +58,14 @@ function gceShowTab(name) {
 
 async function gceCargarEstandares() {
   try {
-    console.log('[GCE-CE] GET', BACKEND_URL + '/gce/estandares');
     const d = await apiFetch('/gce/estandares');
-    console.log('[GCE-CE] estándares:', d);
     _gce_estandares = d.estandares || [];
-  } catch (e) {
-    console.error('[GCE-CE] error estándares:', e);
-    _gce_estandares = [];
-  }
+  } catch { _gce_estandares = []; }
 }
 
 async function gceCargarProcesos() {
   const el = document.getElementById('gce-listaProcesos');
   try {
-    console.log('[GCE-CE] GET', BACKEND_URL + '/gce/procesos');
     if (el) el.innerHTML = '<p class="loading-txt">Cargando procesos…</p>';
     const d = await apiFetch('/gce/procesos');
     _gce_procesos = d.procesos || [];
@@ -98,7 +92,6 @@ async function gceCargarProcesos() {
     const ct = document.getElementById('gce-countProcesos');
     if (ct) ct.textContent = _gce_procesos.length || '';
   } catch (e) {
-    console.error('[GCE-CE] error procesos:', e);
     const esFetch = e instanceof TypeError && e.message === 'Failed to fetch';
     const msg = esFetch
       ? 'No se pudo conectar al servidor. El backend puede estar iniciando (cold start). Espera 30 s y recarga.'
@@ -144,30 +137,14 @@ function gceEvSelect(procesoId, evaluadorIdActual) {
 function gceRenderTabla() {
   const el = document.getElementById('gce-listaProcesos');
   if (!el) return;
-  if (!_gce_procesos.length) {
-    el.innerHTML = '<p class="empty-txt">Sin procesos registrados. Usa "+ Nueva evaluación" para comenzar.</p>';
-    return;
-  }
-  el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr>
-      <th>Candidato</th><th>EC</th><th>Estado</th><th>Evaluador</th><th>Inicio</th><th>Enlace</th>
-    </tr></thead>
-    <tbody>${_gce_procesos.map(p => {
+  if (!_gce_procesos.length) { el.innerHTML = '<p class="empty-txt">Sin procesos registrados. Usa "+ Nueva evaluación" para comenzar.</p>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table"><thead><tr><th>Candidato</th><th>EC</th><th>Estado</th><th>Evaluador</th><th>Inicio</th><th>Enlace</th></tr></thead><tbody>${
+    _gce_procesos.map(p => {
       const ec  = _gce_estandares.find(e => e.id === p.estandar_id) || {};
       const fec = new Date(p.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
-      return `<tr>
-        <td>
-          <div style="font-weight:600;color:var(--c-text)">${gceNombre(p._candidato)}</div>
-          <div style="font-size:11px;color:var(--c-text-3)">${p._candidato?.email || ''}</div>
-        </td>
-        <td><span class="norma-badge" style="font-size:9px">${ec.codigo || '—'}</span></td>
-        <td>${gceBadge(p.estado)}</td>
-        <td>${gceEvSelect(p.id, p.evaluador_id)}</td>
-        <td style="font-size:12px;color:var(--c-text-4)">${fec}</td>
-        <td><button class="btn-sm" onclick="gceCopiarEnlace('${p.id}')" title="Copiar enlace del portafolio">🔗</button></td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>`;
+      return `<tr><td><div style="font-weight:600;color:var(--c-text)">${gceNombre(p._candidato)}</div><div style="font-size:11px;color:var(--c-text-3)">${p._candidato?.email || ''}</div></td><td><span class="norma-badge" style="font-size:9px">${ec.codigo || '—'}</span></td><td>${gceBadge(p.estado)}</td><td>${gceEvSelect(p.id, p.evaluador_id)}</td><td style="font-size:12px;color:var(--c-text-4)">${fec}</td><td><button class="btn-sm" onclick="gceCopiarEnlace('${p.id}')" title="Copiar enlace">🔗</button></td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
 }
 
 // ── Stats ────────────────────────────────────────────────────
@@ -193,6 +170,20 @@ function gceRenderStats() {
 // ── Modal nueva evaluación ───────────────────────────────────
 
 var _gce_buscarTimer = null;
+var _gce_log = [];
+
+function gceLog(msg) {
+  const ts = new Date().toLocaleTimeString('es-MX', { hour12: false });
+  const line = `[${ts}] ${typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg}`;
+  _gce_log.push(line);
+  const el = document.getElementById('gce-debug-log');
+  if (el) { el.textContent = _gce_log.join('\n'); el.scrollTop = el.scrollHeight; }
+  console.log('[GCE]', msg);
+}
+function gceCopiarLog() {
+  navigator.clipboard.writeText(_gce_log.join('\n')).then(() => mostrarToast('✓ Log copiado.'), () => mostrarToast(_gce_log.join('\n')));
+}
+function gceLimpiarLog() { _gce_log = []; const el = document.getElementById('gce-debug-log'); if (el) el.textContent = ''; }
 
 async function gceBuscarCandidato(q) {
   document.getElementById('gce-selCandidato').value = '';
@@ -203,7 +194,7 @@ async function gceBuscarCandidato(q) {
   _gce_buscarTimer = setTimeout(async () => {
     try {
       const url = `/gce/candidatos/buscar?q=${encodeURIComponent(q.trim())}`;
-      console.log('[GCE buscar]', url); const d = await apiFetch(url); console.log('[GCE buscar] resp:', d);
+      gceLog('GET ' + url); const d = await apiFetch(url); gceLog(d);
       const lista = d.candidatos || [];
       if (!lista.length) { res.style.display = 'block'; res.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--c-text-3)">Sin resultados</div>'; return; }
       res.style.display = 'block';
@@ -212,7 +203,7 @@ async function gceBuscarCandidato(q) {
         return `<div onclick="gceSeleccionarCandidato('${u.id}','${nom.replace(/'/g,"\\'")}','${u.email}')" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--c-border)" onmouseenter="this.style.background='var(--c-hover)'" onmouseleave="this.style.background=''"><div style="font-weight:600">${nom}</div><div style="font-size:11px;color:var(--c-text-3)">${u.email}</div></div>`;
       }).join('');
     } catch (e) {
-      console.error('[GCE buscar] error:', e);
+      gceLog('ERROR: ' + e.message);
       res.style.display = 'block'; res.innerHTML = `<div style="padding:8px 12px;font-size:12px;color:#ef4444">Error: ${e.message}</div>`;
     }
   }, 300);
