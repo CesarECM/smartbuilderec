@@ -39,7 +39,7 @@ VALUES (
 </table>
 </body>
 </html>',
-  '["nombre","ec_codigo","estado_label","link_portafolio"]'
+  ARRAY['nombre','ec_codigo','estado_label','link_portafolio']
 )
 ON CONFLICT (slug) DO UPDATE SET
   nombre   = EXCLUDED.nombre,
