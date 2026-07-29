@@ -239,10 +239,9 @@ async function gceAbrirModalNuevo() {
     gceLog(_gce_estandares.length ? `${_gce_estandares.length} ECs cargados` : 'ERROR: sin ECs en la tabla');
   }
 
-  const selEC = document.getElementById('gce-selEC');
-  selEC.innerHTML = _gce_estandares.length
+  document.getElementById('gce-selEC').innerHTML = _gce_estandares.length
     ? '<option value="">— Selecciona EC —</option>' + _gce_estandares.map(e => `<option value="${e.id}">${e.codigo} — ${e.titulo}</option>`).join('')
-    : '<option value="">⚠️ Sin ECs disponibles — revisa Debug log</option>';
+    : '<option value="">⚠️ Sin ECs — revisa Debug log</option>';
 
   document.getElementById('gce-selEvaluador').innerHTML =
     '<option value="">Sin asignar por ahora</option>' +
