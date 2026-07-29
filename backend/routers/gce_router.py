@@ -131,7 +131,7 @@ def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
 
 @router.get("/candidatos/buscar")
 def buscar_candidatos(q: str, request: Request):
-    """Busca usuarios registrados por nombre o email (service role — sin RLS)."""
+    """Busca candidatos del CE (admin_id = ce_uid) por nombre o email."""
     sb = get_supabase()
     uid = _caller(request)
     perfil = _get_profile(sb, uid)
@@ -140,9 +140,12 @@ def buscar_candidatos(q: str, request: Request):
     if not q or len(q.strip()) < 2:
         return {"candidatos": []}
     lq = q.strip().lower()
+    # super_admin ve todos; ce_admin/oc_admin solo ven sus usuarios
+    query = sb.table("profiles").select("id, nombre, apellido, email")
+    if perfil.get("rol") != "super_admin":
+        query = query.eq("admin_id", uid)
     res = (
-        sb.table("profiles")
-        .select("id, nombre, apellido, email")
+        query
         .or_(f"nombre.ilike.%{lq}%,apellido.ilike.%{lq}%,email.ilike.%{lq}%")
         .limit(10)
         .execute()
