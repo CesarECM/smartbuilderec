@@ -54,8 +54,6 @@ function gceShowTab(name) {
   if (name === 'resumen') gceRenderStats();
 }
 
-// ── Carga de datos ───────────────────────────────────────────
-
 async function gceCargarEstandares() {
   try {
     const d = await apiFetch('/gce/estandares');
@@ -112,8 +110,6 @@ async function gceCargarUsuarios() {
   _gce_evaluadores = evProfs || [];
 }
 
-// ── Helpers de render ────────────────────────────────────────
-
 function gceNombre(u) {
   return [u?.nombre, u?.apellido].filter(Boolean).join(' ') || u?.email || '—';
 }
@@ -145,8 +141,6 @@ function gceRenderTabla() {
   }</tbody></table></div>`;
 }
 
-// ── Stats ────────────────────────────────────────────────────
-
 function gceRenderStats() {
   const enCurso = _gce_procesos.filter(p => p.estado !== 'certificado').length;
   const cert    = _gce_procesos.filter(p => p.estado === 'certificado').length;
@@ -164,8 +158,6 @@ function gceRenderStats() {
     return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--c-text-3)">${v.label}</span><span style="font-size:12px;font-weight:700">${n}</span></div><div style="height:8px;background:var(--c-border);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${v.color};border-radius:4px;transition:width .35s"></div></div></div>`;
   }).join('');
 }
-
-// ── Modal nueva evaluación ───────────────────────────────────
 
 var _gce_buscarTimer = null;
 var _gce_log = [];
@@ -277,8 +269,6 @@ async function gceGuardarNuevo() {
     btn.disabled = false; btn.textContent = 'Crear proceso';
   }
 }
-
-// ── Asignar evaluador (inline select en tabla) ───────────────
 
 function gceCopiarEnlace(procesoId) {
   const url = `${window.location.origin}/gce?proceso_id=${procesoId}`;
