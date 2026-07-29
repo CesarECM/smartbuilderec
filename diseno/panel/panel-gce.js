@@ -4,7 +4,6 @@
 
 var _gce_procesos    = [];
 var _gce_estandares  = [];
-var _gce_candidatos  = [];
 var _gce_evaluadores = [];
 
 const GCE_ESTADOS = {
@@ -29,11 +28,11 @@ async function gceInit() {
 async function gceCargarCreditos() {
   try {
     const { data } = await _supabase.from('profiles').select('credits').eq('id', _perfil.id).single();
-    const n  = data?.credits ?? 0;
-    const el = document.getElementById('gce-creditos-count');
-    if (el) el.textContent = n;
-    const bar = document.getElementById('gce-creditos-bar');
-    if (bar) bar.style.color = n < 3 ? '#ef4444' : 'var(--c-text-3)';
+    const n = data?.credits ?? 0;
+    const $c = document.getElementById('gce-creditos-count');
+    const $b = document.getElementById('gce-creditos-bar');
+    if ($c) $c.textContent = n;
+    if ($b) $b.style.color = n < 3 ? '#ef4444' : 'var(--c-text-3)';
   } catch { /* ignore */ }
 }
 
@@ -110,15 +109,14 @@ async function gceCargarProcesos() {
 }
 
 async function gceCargarUsuarios() {
-  const { data: todos } = await _supabase
-    .from('profiles').select('id, nombre, apellido, email')
-    .eq('admin_id', _perfil.id).order('nombre');
-  _gce_candidatos = todos || [];
-
   const { data: evRoles } = await _supabase
     .from('user_roles').select('user_id').eq('role', 'evaluador');
   const evIds = new Set((evRoles || []).map(r => r.user_id));
-  _gce_evaluadores = _gce_candidatos.filter(u => evIds.has(u.id));
+  if (!evIds.size) { _gce_evaluadores = []; return; }
+  const { data: evProfs } = await _supabase
+    .from('profiles').select('id, nombre, apellido, email')
+    .in('id', [...evIds]).order('nombre');
+  _gce_evaluadores = evProfs || [];
 }
 
 // ── Helpers de render ────────────────────────────────────────
@@ -177,43 +175,65 @@ function gceRenderTabla() {
 function gceRenderStats() {
   const enCurso = _gce_procesos.filter(p => p.estado !== 'certificado').length;
   const cert    = _gce_procesos.filter(p => p.estado === 'certificado').length;
-  const elT = document.getElementById('gce-statTotal');
-  const elC = document.getElementById('gce-statEnCurso');
-  const elR = document.getElementById('gce-statCert');
-  if (elT) elT.textContent = _gce_procesos.length;
-  if (elC) elC.textContent = enCurso;
-  if (elR) elR.textContent = cert;
-
-  const pipe = document.getElementById('gce-pipeline');
-  if (pipe) {
-    const total  = _gce_procesos.length;
-    const counts = {};
-    _gce_procesos.forEach(p => { counts[p.estado] = (counts[p.estado] || 0) + 1; });
-    pipe.innerHTML = Object.entries(GCE_ESTADOS).map(([k, v]) => {
-      const n   = counts[k] || 0;
-      const pct = total ? Math.round((n / total) * 100) : 0;
-      return `<div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:12px;color:var(--c-text-3)">${v.label}</span>
-          <span style="font-size:12px;font-weight:700;color:var(--c-text)">${n}</span>
-        </div>
-        <div style="height:8px;background:var(--c-border);border-radius:4px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${v.color};border-radius:4px;transition:width .35s"></div>
-        </div>
-      </div>`;
-    }).join('');
-  }
+  const $s = id => document.getElementById(id);
+  if ($s('gce-statTotal'))  $s('gce-statTotal').textContent  = _gce_procesos.length;
+  if ($s('gce-statEnCurso')) $s('gce-statEnCurso').textContent = enCurso;
+  if ($s('gce-statCert'))   $s('gce-statCert').textContent   = cert;
+  const pipe  = $s('gce-pipeline');
+  if (!pipe) return;
+  const total = _gce_procesos.length;
+  const counts = {};
+  _gce_procesos.forEach(p => { counts[p.estado] = (counts[p.estado] || 0) + 1; });
+  pipe.innerHTML = Object.entries(GCE_ESTADOS).map(([k, v]) => {
+    const n = counts[k] || 0, pct = total ? Math.round((n / total) * 100) : 0;
+    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--c-text-3)">${v.label}</span><span style="font-size:12px;font-weight:700">${n}</span></div><div style="height:8px;background:var(--c-border);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${v.color};border-radius:4px;transition:width .35s"></div></div></div>`;
+  }).join('');
 }
 
 // ── Modal nueva evaluación ───────────────────────────────────
+
+var _gce_buscarTimer = null;
+
+async function gceBuscarCandidato(q) {
+  document.getElementById('gce-selCandidato').value = '';
+  document.getElementById('gce-candidatoSeleccionado').style.display = 'none';
+  const res = document.getElementById('gce-candidatoResultados');
+  if (!q || q.trim().length < 2) { res.style.display = 'none'; return; }
+  clearTimeout(_gce_buscarTimer);
+  _gce_buscarTimer = setTimeout(async () => {
+    const lq = q.trim().toLowerCase();
+    const { data } = await _supabase.from('profiles')
+      .select('id, nombre, apellido, email')
+      .or(`nombre.ilike.%${lq}%,apellido.ilike.%${lq}%,email.ilike.%${lq}%`)
+      .limit(8);
+    const lista = data || [];
+    if (!lista.length) { res.style.display = 'block'; res.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--c-text-3)">Sin resultados</div>'; return; }
+    res.style.display = 'block';
+    res.innerHTML = lista.map(u => {
+      const nom = gceNombre(u);
+      return `<div onclick="gceSeleccionarCandidato('${u.id}','${nom.replace(/'/g,"\\'")}','${u.email}')" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--c-border)" onmouseenter="this.style.background='var(--c-hover)'" onmouseleave="this.style.background=''"><div style="font-weight:600">${nom}</div><div style="font-size:11px;color:var(--c-text-3)">${u.email}</div></div>`;
+    }).join('');
+  }, 300);
+}
+
+function gceSeleccionarCandidato(id, nombre, email) {
+  document.getElementById('gce-selCandidato').value = id;
+  document.getElementById('gce-inputCandidato').value = nombre + ' — ' + email;
+  document.getElementById('gce-candidatoResultados').style.display = 'none';
+  const tag = document.getElementById('gce-candidatoSeleccionado');
+  tag.textContent = '✓ ' + nombre;
+  tag.style.display = 'block';
+}
 
 function gceAbrirModalNuevo() {
   const modal = document.getElementById('gce-modal-nuevo');
   if (!modal) return;
 
-  document.getElementById('gce-selCandidato').innerHTML =
-    '<option value="">— Selecciona candidato —</option>' +
-    _gce_candidatos.map(u => `<option value="${u.id}">${gceNombre(u)}</option>`).join('');
+  // Resetear buscador candidato
+  document.getElementById('gce-inputCandidato').value = '';
+  document.getElementById('gce-selCandidato').value   = '';
+  document.getElementById('gce-candidatoResultados').style.display = 'none';
+  document.getElementById('gce-candidatoSeleccionado').style.display = 'none';
 
   document.getElementById('gce-selEC').innerHTML =
     '<option value="">— Selecciona EC —</option>' +
@@ -227,8 +247,7 @@ function gceAbrirModalNuevo() {
 }
 
 function gceCerrarModalNuevo() {
-  const m = document.getElementById('gce-modal-nuevo');
-  if (m) m.style.display = 'none';
+  const m = document.getElementById('gce-modal-nuevo'); if (m) m.style.display = 'none';
 }
 
 async function gceGuardarNuevo() {
@@ -259,10 +278,7 @@ async function gceGuardarNuevo() {
 
 function gceCopiarEnlace(procesoId) {
   const url = `${window.location.origin}/gce?proceso_id=${procesoId}`;
-  navigator.clipboard.writeText(url).then(
-    () => mostrarToast('✓ Enlace copiado al portapapeles.'),
-    () => mostrarToast('Enlace: ' + url),
-  );
+  navigator.clipboard.writeText(url).then(() => mostrarToast('✓ Enlace copiado.'), () => mostrarToast('Enlace: ' + url));
 }
 
 async function gceAsignarEvaluador(procesoId, evaluadorId) {

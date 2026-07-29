@@ -53,10 +53,14 @@ document.getElementById('rp-ce_admin').innerHTML = `
 
       <label style="display:block;margin-bottom:14px">
         <span style="font-size:12px;color:var(--c-text-3);display:block;margin-bottom:4px">Candidato *</span>
-        <select id="gce-selCandidato"
-          style="width:100%;padding:8px 10px;border:1px solid var(--c-border);border-radius:6px;background:var(--c-bg);color:var(--c-text);font-size:13px">
-          <option value="">— Selecciona candidato —</option>
-        </select>
+        <input id="gce-inputCandidato" type="text" placeholder="Buscar por nombre o correo…" autocomplete="off"
+          oninput="gceBuscarCandidato(this.value)"
+          style="width:100%;padding:8px 10px;border:1px solid var(--c-border);border-radius:6px;background:var(--c-bg);color:var(--c-text);font-size:13px;box-sizing:border-box">
+        <div id="gce-candidatoResultados"
+          style="display:none;border:1px solid var(--c-border);border-radius:6px;background:var(--c-surface);max-height:160px;overflow-y:auto;margin-top:2px"></div>
+        <input id="gce-selCandidato" type="hidden" value="">
+        <div id="gce-candidatoSeleccionado"
+          style="display:none;font-size:12px;color:#059669;margin-top:4px;padding:4px 8px;background:#f0fdf4;border-radius:4px"></div>
       </label>
 
       <label style="display:block;margin-bottom:14px">
