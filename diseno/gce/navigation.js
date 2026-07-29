@@ -62,12 +62,15 @@ export function mostrarPaso(id) {
 // ── Actualizar indicadores del sidebar ───────────────────────────────────────
 
 export function actualizarSidebar() {
-  const fichaOk  = !!(getDatos("ficha_registro").nombre_completo);
-  const diagOk   = !!(getDatos("diagnostico").fecha);
-  const planOk   = state.proceso?.estado === "plan_acordado"
-                   || ["evidencias","juicio","cierre","certificado"].includes(state.proceso?.estado);
+  const est       = state.proceso?.estado || "";
+  const fichaOk   = !!(getDatos("ficha_registro").nombre_completo);
+  const diagOk    = !!(getDatos("diagnostico").fecha);
+  const planOk    = ["plan_acordado","evidencias","juicio","cierre","certificado"].includes(est);
+  const iecOk     = ["juicio","cierre","certificado"].includes(est);
+  const ceduOk    = est === "cierre" || est === "certificado";
+  const encOk     = est === "certificado";
 
-  const completados = { ficha: fichaOk, diagnostico: diagOk, plan: planOk };
+  const completados = { ficha: fichaOk, diagnostico: diagOk, plan: planOk, iec: iecOk, cedula: ceduOk, encuesta: encOk };
 
   PASOS.forEach((p, i) => {
     const nav = document.getElementById("gce-nav-" + p.id);
