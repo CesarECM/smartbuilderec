@@ -201,14 +201,20 @@ async function gceBuscarCandidato(q) {
   if (!q || q.trim().length < 2) { res.style.display = 'none'; return; }
   clearTimeout(_gce_buscarTimer);
   _gce_buscarTimer = setTimeout(async () => {
-    const d = await apiFetch(`/gce/candidatos/buscar?q=${encodeURIComponent(q.trim())}`);
-    const lista = d.candidatos || [];
-    if (!lista.length) { res.style.display = 'block'; res.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--c-text-3)">Sin resultados</div>'; return; }
-    res.style.display = 'block';
-    res.innerHTML = lista.map(u => {
-      const nom = gceNombre(u);
-      return `<div onclick="gceSeleccionarCandidato('${u.id}','${nom.replace(/'/g,"\\'")}','${u.email}')" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--c-border)" onmouseenter="this.style.background='var(--c-hover)'" onmouseleave="this.style.background=''"><div style="font-weight:600">${nom}</div><div style="font-size:11px;color:var(--c-text-3)">${u.email}</div></div>`;
-    }).join('');
+    try {
+      const url = `/gce/candidatos/buscar?q=${encodeURIComponent(q.trim())}`;
+      console.log('[GCE buscar]', url); const d = await apiFetch(url); console.log('[GCE buscar] resp:', d);
+      const lista = d.candidatos || [];
+      if (!lista.length) { res.style.display = 'block'; res.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--c-text-3)">Sin resultados</div>'; return; }
+      res.style.display = 'block';
+      res.innerHTML = lista.map(u => {
+        const nom = gceNombre(u);
+        return `<div onclick="gceSeleccionarCandidato('${u.id}','${nom.replace(/'/g,"\\'")}','${u.email}')" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--c-border)" onmouseenter="this.style.background='var(--c-hover)'" onmouseleave="this.style.background=''"><div style="font-weight:600">${nom}</div><div style="font-size:11px;color:var(--c-text-3)">${u.email}</div></div>`;
+      }).join('');
+    } catch (e) {
+      console.error('[GCE buscar] error:', e);
+      res.style.display = 'block'; res.innerHTML = `<div style="padding:8px 12px;font-size:12px;color:#ef4444">Error: ${e.message}</div>`;
+    }
   }, 300);
 }
 
