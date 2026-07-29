@@ -151,15 +151,22 @@ function gceRenderStats() {
 
   const pipe = document.getElementById('gce-pipeline');
   if (pipe) {
+    const total  = _gce_procesos.length;
     const counts = {};
     _gce_procesos.forEach(p => { counts[p.estado] = (counts[p.estado] || 0) + 1; });
-    pipe.innerHTML = Object.entries(GCE_ESTADOS).map(([k, v]) =>
-      `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-        <div style="width:10px;height:10px;border-radius:50%;background:${v.color};flex-shrink:0"></div>
-        <span style="font-size:12px;color:var(--c-text-3);flex:1">${v.label}</span>
-        <span style="font-size:12px;font-weight:700;color:var(--c-text)">${counts[k] || 0}</span>
-      </div>`
-    ).join('');
+    pipe.innerHTML = Object.entries(GCE_ESTADOS).map(([k, v]) => {
+      const n   = counts[k] || 0;
+      const pct = total ? Math.round((n / total) * 100) : 0;
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--c-text-3)">${v.label}</span>
+          <span style="font-size:12px;font-weight:700;color:var(--c-text)">${n}</span>
+        </div>
+        <div style="height:8px;background:var(--c-border);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${v.color};border-radius:4px;transition:width .35s"></div>
+        </div>
+      </div>`;
+    }).join('');
   }
 }
 

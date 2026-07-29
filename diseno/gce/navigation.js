@@ -1,6 +1,6 @@
 // ─── gce/navigation.js — Sidebar timeline + navegación ────────────────────────
 
-import { PASOS } from "./config.js";
+import { PASOS, ESTADO_A_PASO } from "./config.js";
 import { state, getDatos } from "./state.js";
 
 // ── Sidebar HTML ─────────────────────────────────────────────────────────────
@@ -62,6 +62,7 @@ export function mostrarPaso(id) {
 // ── Actualizar indicadores del sidebar ───────────────────────────────────────
 
 export function actualizarSidebar() {
+  _renderTimelineCandidato();
   const est       = state.proceso?.estado || "";
   const fichaOk   = !!(getDatos("ficha_registro").nombre_completo);
   const diagOk    = !!(getDatos("diagnostico").fecha);
@@ -98,6 +99,38 @@ export function actualizarSidebar() {
       dot.textContent = String(i + 1);
     }
   });
+}
+
+// ── Timeline del candidato ────────────────────────────────────────────────────
+
+function _renderTimelineCandidato() {
+  const el = document.getElementById("gce-candidato-info");
+  if (!el) return;
+
+  const ficha   = state.datos?.ficha_registro || {};
+  const nombre  = ficha.nombre_completo || state.perfil?.email || "Candidato";
+  const estado  = state.proceso?.estado || "";
+  const juicio  = state.proceso?.juicio;
+
+  const pasoActualId = ESTADO_A_PASO[estado] || "ficha";
+  const pasoIdx      = PASOS.findIndex(p => p.id === pasoActualId);
+  const progreso     = Math.max(0, pasoIdx);
+  const pct          = Math.round((progreso / (PASOS.length - 1)) * 100);
+
+  let juicioHtml = "";
+  if (juicio) {
+    const col = juicio === "C" ? "#4ade80" : "#f87171";
+    const lbl = juicio === "C" ? "COMPETENTE" : "TODAVÍA NO COMPETENTE";
+    juicioHtml = `<div style="margin-top:7px;font-size:10px;font-weight:700;color:${col};letter-spacing:.3px">${lbl}</div>`;
+  }
+
+  el.innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.65);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nombre}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:6px">Paso ${progreso + 1} de ${PASOS.length}</div>
+    <div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:#8b5cf6;border-radius:3px;transition:width .4s"></div>
+    </div>
+    ${juicioHtml}`;
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────

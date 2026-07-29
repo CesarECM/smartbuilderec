@@ -34,6 +34,7 @@
       if (extraRoles.includes('asesor'))    roles.push({ id: 'asesor',     label: '🤝 Asesor' });
       if (extraRoles.includes('evaluador')) roles.push({ id: 'evaluador',  label: '📋 Evaluador' });
       if (extraRoles.includes('ce_admin'))  roles.push({ id: 'ce_admin',   label: '🏫 GCE' });
+      if (extraRoles.includes('oc_admin'))  roles.push({ id: 'oc_admin',   label: '🏛️ OC' });
       if (perfil.rol === 'admin' || perfil.rol === 'super_admin')
         roles.push({ id: 'admin', label: '👑 Admin' });
       if (perfil.rol === 'super_admin')
@@ -70,6 +71,7 @@
         case 'asesor':      typeof cargarPanelAsesor    === 'function' && await cargarPanelAsesor();    break;
         case 'evaluador':   typeof cargarPanelEvaluador === 'function' && await cargarPanelEvaluador(); break;
         case 'ce_admin':    typeof gceInit              === 'function' && await gceInit();              break;
+        case 'oc_admin':    typeof ocInit               === 'function' && await ocInit();               break;
         case 'admin':       typeof admInit              === 'function' && await admInit();              break;
         case 'super_admin': typeof saInit               === 'function' && await saInit();               break;
       }

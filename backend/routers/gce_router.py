@@ -1,8 +1,11 @@
+import os
+
 from fastapi import APIRouter, HTTPException, Request
 
 from database import get_supabase
 from models.gce_models import ProcesoCreate, ProcesoUpdate, ESTADOS_VALIDOS
 from services.erp_helpers import _caller, _get_profile, _get_extra_roles
+from services.email_service import send_template
 
 router = APIRouter(prefix="/gce", tags=["gce"])
 
@@ -71,6 +74,39 @@ def obtener_proceso(proceso_id: str, request: Request):
     return res.data
 
 
+_ESTADOS_NOTIFICAR = {"juicio", "cierre"}
+_LABELS_ESTADO = {
+    "juicio": "Juicio de evaluación emitido",
+    "cierre": "Cédula de Evaluación disponible",
+}
+
+
+def _notificar_candidato(sb, proceso_id: str, nuevo_estado: str) -> None:
+    if nuevo_estado not in _ESTADOS_NOTIFICAR:
+        return
+    try:
+        proc = sb.table("procesos_evaluacion") \
+            .select("candidato_id, estandar_id") \
+            .eq("id", proceso_id).maybe_single().execute()
+        if not proc.data:
+            return
+        cand = sb.table("profiles").select("nombre, email") \
+            .eq("id", proc.data["candidato_id"]).maybe_single().execute()
+        ec = sb.table("estandares_competencia").select("codigo") \
+            .eq("id", proc.data["estandar_id"]).maybe_single().execute()
+        if not cand.data or not cand.data.get("email"):
+            return
+        frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+        send_template("gce_avance_proceso", cand.data["email"], {
+            "nombre":         cand.data.get("nombre", cand.data["email"]),
+            "ec_codigo":      (ec.data or {}).get("codigo", "GCE"),
+            "estado_label":   _LABELS_ESTADO[nuevo_estado],
+            "link_portafolio": f"{frontend_url}/gce?proceso_id={proceso_id}",
+        })
+    except Exception as e:
+        print(f"⚠️ gce notify error: {e}")
+
+
 @router.patch("/procesos/{proceso_id}")
 def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
     sb = get_supabase()
@@ -88,4 +124,6 @@ def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
         .eq("id", proceso_id)
         .execute()
     )
+    if "estado" in payload:
+        _notificar_candidato(sb, proceso_id, payload["estado"])
     return res.data[0] if res.data else {}
