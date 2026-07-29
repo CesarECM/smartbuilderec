@@ -132,8 +132,6 @@ function gceEvSelect(procesoId, evaluadorIdActual) {
     style="font-size:11px;padding:3px 6px;border:1px solid var(--c-border);border-radius:4px;background:var(--c-bg);color:var(--c-text);max-width:160px">${opts}</select>`;
 }
 
-// ── Render tabla ─────────────────────────────────────────────
-
 function gceRenderTabla() {
   const el = document.getElementById('gce-listaProcesos');
   if (!el) return;
@@ -185,19 +183,27 @@ function gceCopiarLog() {
 }
 function gceLimpiarLog() { _gce_log = []; const el = document.getElementById('gce-debug-log'); if (el) el.textContent = ''; }
 
+function _gcePositionarResultados() {
+  const input = document.getElementById('gce-inputCandidato');
+  const res   = document.getElementById('gce-candidatoResultados');
+  if (!input || !res) return;
+  const r = input.getBoundingClientRect();
+  res.style.cssText = `display:block;position:fixed;top:${r.bottom + 2}px;left:${r.left}px;width:${r.width}px;z-index:2000;border:1px solid var(--c-border);border-radius:6px;background:var(--c-surface);max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.2)`;
+}
+
 async function gceBuscarCandidato(q) {
   document.getElementById('gce-selCandidato').value = '';
   document.getElementById('gce-candidatoSeleccionado').style.display = 'none';
   const res = document.getElementById('gce-candidatoResultados');
-  if (!q || q.trim().length < 2) { res.style.display = 'none'; return; }
+  if (!q || q.trim().length < 2) { res.style.cssText = 'display:none'; return; }
   clearTimeout(_gce_buscarTimer);
   _gce_buscarTimer = setTimeout(async () => {
     try {
       const url = `/gce/candidatos/buscar?q=${encodeURIComponent(q.trim())}`;
       gceLog('GET ' + url); const d = await apiFetch(url); gceLog(d);
       const lista = d.candidatos || [];
-      if (!lista.length) { res.style.display = 'block'; res.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--c-text-3)">Sin resultados</div>'; return; }
-      res.style.display = 'block';
+      if (!lista.length) { _gcePositionarResultados(); res.innerHTML = '<div style="padding:8px 12px;font-size:12px;color:var(--c-text-3)">Sin resultados</div>'; return; }
+      _gcePositionarResultados();
       res.innerHTML = lista.map(u => {
         const nom = gceNombre(u);
         return `<div onclick="gceSeleccionarCandidato('${u.id}','${nom.replace(/'/g,"\\'")}','${u.email}')" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--c-border)" onmouseenter="this.style.background='var(--c-hover)'" onmouseleave="this.style.background=''"><div style="font-weight:600">${nom}</div><div style="font-size:11px;color:var(--c-text-3)">${u.email}</div></div>`;
@@ -212,7 +218,7 @@ async function gceBuscarCandidato(q) {
 function gceSeleccionarCandidato(id, nombre, email) {
   document.getElementById('gce-selCandidato').value = id;
   document.getElementById('gce-inputCandidato').value = nombre + ' — ' + email;
-  document.getElementById('gce-candidatoResultados').style.display = 'none';
+  document.getElementById('gce-candidatoResultados').style.cssText = 'display:none';
   const tag = document.getElementById('gce-candidatoSeleccionado');
   tag.textContent = '✓ ' + nombre;
   tag.style.display = 'block';
