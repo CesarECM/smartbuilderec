@@ -9,7 +9,7 @@
     async function saToggleRol(userId, rolActualPerfil, role, estaActivo) {
       try {
         // Roles extra (asesor / evaluador / normas) — vía ERP API
-        if (['asesor', 'evaluador', 'norma_ec0091', 'norma_ec0616'].includes(role)) {
+        if (['asesor', 'evaluador', 'norma_ec0091', 'norma_ec0616', 'ce_admin', 'oc_admin'].includes(role)) {
           if (estaActivo) {
             await apiFetch(`/erp/admin/roles/quitar?user_id=${userId}&role=${role}`, { method: 'DELETE' });
             _sa_extraMap[userId]?.delete(role);

@@ -12,6 +12,8 @@
       { id: 'admin',        label: '👑 Admin',     locked: false, userOnly: false },
       { id: 'norma_ec0091', label: '🔬 EC0091',   locked: false, userOnly: false },
       { id: 'norma_ec0616', label: '🏥 EC0616',   locked: false, userOnly: false },
+      { id: 'ce_admin',     label: '🏫 GCE',      locked: false, userOnly: false },
+      { id: 'oc_admin',     label: '🏛️ OC',       locked: false, userOnly: false },
       // super_admin excluido — no asignable desde UI
     ];
 
@@ -86,6 +88,8 @@
       if (_sa_extraMap[u.id]?.has('evaluador'))    set.add('evaluador');
       if (_sa_extraMap[u.id]?.has('norma_ec0091')) set.add('norma_ec0091');
       if (_sa_extraMap[u.id]?.has('norma_ec0616')) set.add('norma_ec0616');
+      if (_sa_extraMap[u.id]?.has('ce_admin'))     set.add('ce_admin');
+      if (_sa_extraMap[u.id]?.has('oc_admin'))     set.add('oc_admin');
       if (u.rol === 'admin' || u.rol === 'super_admin') set.add('admin');
       return set;
     }
