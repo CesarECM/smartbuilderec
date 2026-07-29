@@ -117,7 +117,7 @@ function gceRenderTabla() {
   }
   el.innerHTML = `<div class="table-wrap"><table class="data-table">
     <thead><tr>
-      <th>Candidato</th><th>EC</th><th>Estado</th><th>Evaluador</th><th>Inicio</th>
+      <th>Candidato</th><th>EC</th><th>Estado</th><th>Evaluador</th><th>Inicio</th><th>Enlace</th>
     </tr></thead>
     <tbody>${_gce_procesos.map(p => {
       const ec  = _gce_estandares.find(e => e.id === p.estandar_id) || {};
@@ -131,6 +131,7 @@ function gceRenderTabla() {
         <td>${gceBadge(p.estado)}</td>
         <td>${gceEvSelect(p.id, p.evaluador_id)}</td>
         <td style="font-size:12px;color:var(--c-text-4)">${fec}</td>
+        <td><button class="btn-sm" onclick="gceCopiarEnlace('${p.id}')" title="Copiar enlace del portafolio">🔗</button></td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
@@ -213,6 +214,14 @@ async function gceGuardarNuevo() {
 }
 
 // ── Asignar evaluador (inline select en tabla) ───────────────
+
+function gceCopiarEnlace(procesoId) {
+  const url = `${window.location.origin}/gce?proceso_id=${procesoId}`;
+  navigator.clipboard.writeText(url).then(
+    () => mostrarToast('✓ Enlace copiado al portapapeles.'),
+    () => mostrarToast('Enlace: ' + url),
+  );
+}
 
 async function gceAsignarEvaluador(procesoId, evaluadorId) {
   try {

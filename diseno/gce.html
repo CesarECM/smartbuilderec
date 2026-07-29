@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartBuilderEC — Portafolio de Evidencias</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="gce.css">
+</head>
+<body>
+
+  <!-- ── Barra de navegación superior ───────────────────────── -->
+  <nav id="wiz-nav">
+    <a href="panel" class="wiz-nav-back">← Mi Panel</a>
+    <span id="wiz-nav-curso" class="wiz-nav-curso"></span>
+    <div class="wiz-nav-user">
+      <span id="wiz-nav-nombre"></span>
+      <button class="wiz-nav-logout" onclick="logout()">Salir</button>
+    </div>
+  </nav>
+
+  <button class="menu-toggle" id="menuToggle" title="Abrir menú">☰</button>
+
+  <!-- ── Layout principal ────────────────────────────────────── -->
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main" id="gce-main">
+      <!-- Los pasos son inyectados por gce/main.js -->
+    </main>
+  </div>
+
+  <!-- ── Scripts base (no módulos) ───────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script src="panel/branding-engine.js"></script>
+  <script src="shared/utils.js"></script>
+  <script src="gce/sync.js"></script>
+
+  <!-- ── Módulo principal (ES Module) ───────────────────────── -->
+  <script type="module" src="gce/main.js"></script>
+
+</body>
+</html>

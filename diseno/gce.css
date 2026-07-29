@@ -1,0 +1,156 @@
+/* ─── gce.css — Estilos del portal GCE (Gestor del Ciclo de Evaluación) ──────
+   Hereda layout de styles/main.css e index.css.
+   Paleta violeta-índigo para diferenciar de EC0217 (azul) y EC0616 (verde).
+*/
+
+:root {
+  --gce-primary: #4c1d95;
+  --gce-accent:  #7c3aed;
+  --gce-light:   #f5f3ff;
+}
+
+/* ── Barra superior ──────────────────────────────────────────── */
+#wiz-nav {
+  background: var(--gce-primary) !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar {
+  --sidebar-bg: #3b0764;
+}
+
+.ec-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(124, 58, 237, 0.15);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.ec-badge-code {
+  font-size: 11px;
+  font-weight: 800;
+  color: #c4b5fd;
+  background: rgba(196,181,253,.12);
+  border: 1px solid rgba(196,181,253,.3);
+  border-radius: 4px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.ec-badge-name {
+  font-size: 11px;
+  color: rgba(255,255,255,.5);
+  line-height: 1.3;
+}
+
+/* ── Pasos / secciones ───────────────────────────────────────── */
+.gce-paso {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+.gce-paso.hidden {
+  display: none !important;
+}
+
+/* ── Formulario ──────────────────────────────────────────────── */
+.gce-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.form-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--gce-accent);
+  border-bottom: 1px solid var(--c-border);
+  padding-bottom: 6px;
+  margin: 20px 0 14px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.form-label {
+  font-size: 12px;
+  color: var(--c-text-3);
+  font-weight: 500;
+}
+
+.form-input {
+  padding: 8px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: inherit;
+  transition: border-color .15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--gce-accent);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+}
+
+.form-input:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 64px;
+}
+
+/* ── Reactivos del diagnóstico ───────────────────────────────── */
+.gce-reactivo {
+  background: var(--c-surface);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+  border: 1px solid var(--c-border);
+}
+
+.gce-reactivo label:hover {
+  background: rgba(124,58,237,.06);
+  border-color: var(--gce-accent) !important;
+}
+
+/* ── Botones de navegación ───────────────────────────────────── */
+.wizard-nav-btns {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .gce-paso {
+    padding: 20px 16px 40px;
+  }
+}
