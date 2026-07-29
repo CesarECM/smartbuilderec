@@ -97,15 +97,17 @@ La plataforma cuenta con un backend de IA que genera sugerencias contextualizada
 
 Stack tecnológico
 
-Frontend: Next.js / TypeScript
+Frontend: Vanilla JS (ES Modules) — sin framework, sin TypeScript
 
-Backend: FastAPI (Python)
+Backend: FastAPI (Python) en Render
 
-Base de Datos: PostgreSQL
+Base de Datos / Auth: Supabase (PostgreSQL)
 
-IA: OpenAI API
+IA: OpenAI API (GPT-4o/mini) + Anthropic Claude (soporte)
 
-Generación de archivos: Librerías especializadas para la manipulación y exportación a formatos DOCX / PPTX en ZIP.
+Generación de archivos: python-docx (Python) + librería docx (Node.js subprocess) para DOCX/PPTX en ZIP
+
+Deploy: Vercel (frontend) + Render (backend) — `git push origin main` actualiza producción
 
 Actualmente el proyecto cuenta con una arquitectura madura basada en múltiples sprints previos de desarrollo y sesiones de planeación mágica (MPS), por lo que debes asumir que existe una estructura base sólida y evitar duplicar soluciones.
 
