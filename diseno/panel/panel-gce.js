@@ -224,19 +224,25 @@ function gceSeleccionarCandidato(id, nombre, email) {
   tag.style.display = 'block';
 }
 
-function gceAbrirModalNuevo() {
+async function gceAbrirModalNuevo() {
   const modal = document.getElementById('gce-modal-nuevo');
   if (!modal) return;
 
-  // Resetear buscador candidato
   document.getElementById('gce-inputCandidato').value = '';
   document.getElementById('gce-selCandidato').value   = '';
   document.getElementById('gce-candidatoResultados').style.display = 'none';
   document.getElementById('gce-candidatoSeleccionado').style.display = 'none';
 
-  document.getElementById('gce-selEC').innerHTML =
-    '<option value="">— Selecciona EC —</option>' +
-    _gce_estandares.map(e => `<option value="${e.id}">${e.codigo} — ${e.titulo}</option>`).join('');
+  if (!_gce_estandares.length) {
+    gceLog('ECs vacíos — recargando...');
+    await gceCargarEstandares();
+    gceLog(_gce_estandares.length ? `${_gce_estandares.length} ECs cargados` : 'ERROR: sin ECs en la tabla');
+  }
+
+  const selEC = document.getElementById('gce-selEC');
+  selEC.innerHTML = _gce_estandares.length
+    ? '<option value="">— Selecciona EC —</option>' + _gce_estandares.map(e => `<option value="${e.id}">${e.codigo} — ${e.titulo}</option>`).join('')
+    : '<option value="">⚠️ Sin ECs disponibles — revisa Debug log</option>';
 
   document.getElementById('gce-selEvaluador').innerHTML =
     '<option value="">Sin asignar por ahora</option>' +
