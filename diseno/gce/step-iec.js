@@ -229,6 +229,7 @@ export async function emitirJuicio() {
     if (state.proceso) { state.proceso.estado = "juicio"; state.proceso.juicio = juicio; }
     actualizarSidebar();
     if (btn) { btn.textContent = "✓ Juicio emitido"; }
+    setTimeout(() => window.gceMostrarPaso?.("cedula"), 800);
   } catch {
     if (btn) { btn.disabled = false; btn.textContent = "Emitir juicio"; }
   }

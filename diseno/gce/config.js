@@ -17,7 +17,7 @@ export const ESTADO_A_PASO = {
   diagnostico:   "diagnostico",
   plan_acordado: "plan",
   evidencias:    "iec",
-  juicio:        "iec",
+  juicio:        "cedula",
   cierre:        "cedula",
   certificado:   "encuesta",
 };

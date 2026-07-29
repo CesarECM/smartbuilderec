@@ -8,19 +8,9 @@ import { getTemplate as tplFicha,  initStepFicha,       cargarFicha, guardarFich
 import { getTemplate as tplDiag,   initStepDiagnostico, finalizarDiagnostico }           from "./step-diagnostico.js";
 import { getTemplate as tplPlan,   initStepPlan, cargarPlan, guardarPlan,
          confirmarPlanEvaluador, confirmarPlanCandidato }                                   from "./step-plan.js";
-import { getTemplate as tplIEC,    initStepIEC, guardarIEC, emitirJuicio }                 from "./step-iec.js";
-
-// ── Placeholder para pasos S5+ ────────────────────────────────────────────────
-
-function tplPlaceholder(id, icono, titulo) {
-  return `<section id="gce-paso-${id}" class="gce-paso hidden">
-    <div class="wizard-section-header"><h2>${icono} ${titulo}</h2></div>
-    <div style="padding:40px 20px;text-align:center;color:var(--c-text-3)">
-      <div style="font-size:36px;margin-bottom:12px">🔒</div>
-      <p style="font-size:14px">Disponible próximamente</p>
-    </div>
-  </section>`;
-}
+import { getTemplate as tplIEC,     initStepIEC, guardarIEC, emitirJuicio }                 from "./step-iec.js";
+import { getTemplate as tplCedula,  initStepCedula, guardarCedula, emitirCedula }           from "./step-cedula.js";
+import { getTemplate as tplEncuesta, initStepEncuesta, guardarEncuesta, cerrarProceso }      from "./step-encuesta.js";
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
@@ -66,6 +56,10 @@ function tplPlaceholder(id, icono, titulo) {
   window.confirmarPlanEvaluador    = confirmarPlanEvaluador;
   window.confirmarPlanCandidato    = confirmarPlanCandidato;
   window.guardarIEC                = guardarIEC;
+  window.guardarCedula             = guardarCedula;
+  window.gceEmitirCedula           = emitirCedula;
+  window.guardarEncuesta           = guardarEncuesta;
+  window.gceCerrarProceso          = cerrarProceso;
   window.actualizarSidebar         = actualizarSidebar;
 
   // ── Inyectar sidebar ──────────────────────────────────────────────────────
@@ -79,8 +73,8 @@ function tplPlaceholder(id, icono, titulo) {
     mainEl.insertAdjacentHTML("beforeend", tplDiag());
     mainEl.insertAdjacentHTML("beforeend", tplPlan());
     mainEl.insertAdjacentHTML("beforeend", tplIEC());
-    mainEl.insertAdjacentHTML("beforeend", tplPlaceholder("cedula",   "🏅", "Cédula de Evaluación"));
-    mainEl.insertAdjacentHTML("beforeend", tplPlaceholder("encuesta", "⭐", "Encuesta de Satisfacción"));
+    mainEl.insertAdjacentHTML("beforeend", tplCedula());
+    mainEl.insertAdjacentHTML("beforeend", tplEncuesta());
   }
 
   // ── Inicializar módulos ───────────────────────────────────────────────────
@@ -89,6 +83,8 @@ function tplPlaceholder(id, icono, titulo) {
   initStepDiagnostico();
   initStepPlan();
   initStepIEC();
+  initStepCedula();
+  initStepEncuesta();
 
   // ── Actualizar header ─────────────────────────────────────────────────────
   const nombre = [state.perfil?.nombre, state.perfil?.apellido].filter(Boolean).join(" ")
