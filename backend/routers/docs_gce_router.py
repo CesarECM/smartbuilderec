@@ -48,6 +48,15 @@ def _canjear_credito_gce(sb, proceso_id: str) -> None:
         .eq("id", proceso_id) \
         .execute()
 
+    if ce_id:
+        sb.table("credit_transactions").insert({
+            "user_id":     ce_id,
+            "type":        "gce_portafolio",
+            "amount":      -1,
+            "source":      f"proceso:{proceso_id}",
+            "description": "Descarga portafolio GCE",
+        }).execute()
+
 
 @router.post("/generate-portafolio")
 def generate_portafolio_gce(data: GCEPortafolioRequest, request: Request):

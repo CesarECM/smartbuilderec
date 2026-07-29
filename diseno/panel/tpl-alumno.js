@@ -107,6 +107,17 @@ document.getElementById('rp-alumno').innerHTML = `
         </div>
         <div id="alumno-ec0616-lista"><p class="loading-txt">Cargando...</p></div>
       </div>
+
+      <!-- ─ Sección 6: Mis procesos GCE ──────────────────────────── -->
+      <div id="alumno-gce-section" style="display:none">
+        <div class="sec-header sec-gap">
+          <div>
+            <h2>🏛️ Mis evaluaciones <span class="count-tag" id="alumno-gce-ec"></span></h2>
+            <p style="font-size:12px;color:var(--c-text-3);margin:4px 0 0">Portafolio de evidencias — Ciclo de evaluación CONOCER.</p>
+          </div>
+        </div>
+        <div id="alumno-gce-lista"><p class="loading-txt">Cargando...</p></div>
+      </div>
 `;
 
 document.getElementById('rp-asesor').innerHTML = `
@@ -121,12 +132,24 @@ document.getElementById('rp-asesor').innerHTML = `
 `;
 
 document.getElementById('rp-evaluador').innerHTML = `
-      <div class="sec-header">
-        <h2>📋 Mis evaluados</h2>
-        <button class="btn-sm" onclick="cargarPanelEvaluador()">↺ Actualizar</button>
-      </div>
-      <p style="font-size:12px;color:var(--c-text-3);margin:-6px 0 16px">
-        Alumnos que tienes asignados para evaluar ante el CONOCER.
-      </p>
-      <div id="evaluador-lista"><p class="loading-txt">Cargando...</p></div>
+  <nav class="role-tab-bar">
+    <button class="role-tab-btn active" id="ev-tab-ec0217" onclick="evShowTab('ec0217')">📋 EC0217</button>
+    <button class="role-tab-btn"        id="ev-tab-gce"    onclick="evShowTab('gce')">🏛️ GCE</button>
+  </nav>
+  <div id="ev-panel-ec0217" class="role-tab-panel active">
+    <div class="sec-header">
+      <h2>Mis evaluados EC0217</h2>
+      <button class="btn-sm" onclick="cargarPanelEvaluador()">↺ Actualizar</button>
+    </div>
+    <p style="font-size:12px;color:var(--c-text-3);margin:-6px 0 16px">Alumnos asignados para evaluar ante el CONOCER.</p>
+    <div id="evaluador-lista"><p class="loading-txt">Cargando...</p></div>
+  </div>
+  <div id="ev-panel-gce" class="role-tab-panel">
+    <div class="sec-header">
+      <h2>Candidatos GCE asignados</h2>
+      <button class="btn-sm" onclick="_cargarGCEEvaluador()">↺ Actualizar</button>
+    </div>
+    <p style="font-size:12px;color:var(--c-text-3);margin:-6px 0 16px">Candidatos de portafolio de evidencias CONOCER bajo tu evaluación.</p>
+    <div id="evaluador-gce-lista"><p class="loading-txt">Cargando...</p></div>
+  </div>
 `;

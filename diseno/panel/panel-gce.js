@@ -22,7 +22,29 @@ async function gceInit() {
     gceCargarEstandares(),
     gceCargarProcesos(),
     gceCargarUsuarios(),
+    gceCargarCreditos(),
   ]);
+}
+
+async function gceCargarCreditos() {
+  try {
+    const { data } = await _supabase.from('profiles').select('credits').eq('id', _perfil.id).single();
+    const n  = data?.credits ?? 0;
+    const el = document.getElementById('gce-creditos-count');
+    if (el) el.textContent = n;
+    const bar = document.getElementById('gce-creditos-bar');
+    if (bar) bar.style.color = n < 3 ? '#ef4444' : 'var(--c-text-3)';
+  } catch { /* ignore */ }
+}
+
+function gceBuyCredits() {
+  // Si el usuario tiene rol admin, ir a Mi Plan; si solo es ce_admin, abrir checkout directo
+  if (_perfil?.rol === 'admin' || _perfil?.rol === 'super_admin') {
+    switchRol('admin');
+    setTimeout(() => typeof admShowTab === 'function' && admShowTab('mi-plan'), 300);
+  } else {
+    mostrarToast('Contacta al administrador de la plataforma para recargar créditos.');
+  }
 }
 
 function gceShowTab(name) {

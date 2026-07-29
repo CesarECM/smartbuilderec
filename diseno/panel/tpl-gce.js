@@ -2,6 +2,11 @@ document.getElementById('rp-ce_admin').innerHTML = `
   <nav class="role-tab-bar">
     <button class="role-tab-btn active" id="gce-tab-evaluaciones" onclick="gceShowTab('evaluaciones')">🗂️ Evaluaciones</button>
     <button class="role-tab-btn"        id="gce-tab-resumen"      onclick="gceShowTab('resumen')">📊 Resumen</button>
+    <div style="flex:1"></div>
+    <div id="gce-creditos-bar" style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--c-text-3);padding:0 6px">
+      🪙 <span id="gce-creditos-count">—</span> créditos
+      <button class="btn-sm" onclick="gceBuyCredits()" title="Comprar créditos extra">+ Comprar</button>
+    </div>
   </nav>
 
   <!-- ── Evaluaciones ──────────────────────────────────────── -->

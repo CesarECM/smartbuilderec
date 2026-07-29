@@ -15,7 +15,61 @@
       await Promise.all([
         tiene91  ? _cargarEC0091()  : Promise.resolve(),
         tiene616 ? _cargarEC0616()  : Promise.resolve(),
+        _cargarGCECandidato(),
       ]);
+    }
+
+    // ── GCE — portafolio del candidato ───────────────────────────
+
+    const _GCE_ESTADOS = {
+      registro:      { label: 'Registro',       color: '#94a3b8' },
+      diagnostico:   { label: 'Diagnóstico',    color: '#60a5fa' },
+      plan_acordado: { label: 'Plan acordado',  color: '#fbbf24' },
+      evidencias:    { label: 'Evidencias',     color: '#fb923c' },
+      juicio:        { label: 'Juicio',         color: '#a78bfa' },
+      cierre:        { label: 'Cierre',         color: '#2dd4bf' },
+      certificado:   { label: 'Certificado',    color: '#4ade80' },
+    };
+
+    async function _cargarGCECandidato() {
+      const { data, error } = await _supabase
+        .from('procesos_evaluacion')
+        .select('id, estado, juicio, created_at, estandares_competencia(codigo, titulo)')
+        .eq('candidato_id', _perfil.id)
+        .order('created_at', { ascending: false });
+
+      const sec = document.getElementById('alumno-gce-section');
+      const el  = document.getElementById('alumno-gce-lista');
+      if (!data?.length) return;  // oculto si no hay procesos
+
+      if (sec) sec.style.display = '';
+      const ct = document.getElementById('alumno-gce-ec');
+      if (ct && data.length) ct.textContent = data[0].estandares_competencia?.codigo || 'GCE';
+
+      if (error || !data.length) {
+        if (el) el.innerHTML = '<p class="empty-txt">Sin procesos de evaluación registrados.</p>';
+        return;
+      }
+
+      if (el) el.innerHTML = data.map(p => {
+        const ec  = p.estandares_competencia || {};
+        const est = _GCE_ESTADOS[p.estado] || { label: p.estado, color: '#94a3b8' };
+        const jui = p.juicio === 'C' ? ' · <b style="color:#065f46">COMPETENTE</b>'
+                  : p.juicio === 'TNC' ? ' · <b style="color:#b91c1c">TODAVÍA NO COMPETENTE</b>' : '';
+        return `<div class="alm-plan-card">
+          <div class="alm-plan-top">
+            <div class="alm-plan-info">
+              <div class="alm-plan-title">${ec.codigo || '—'} — ${ec.titulo || 'Portafolio de Evidencias'}</div>
+              <div class="alm-plan-meta">
+                <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;color:#fff;background:${est.color}">${est.label}</span>${jui}
+              </div>
+            </div>
+            <div class="alm-plan-actions">
+              <a href="gce?proceso_id=${p.id}" class="btn-primary" style="text-decoration:none">Continuar portafolio →</a>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     // ── EC0091 ───────────────────────────────────────────────────
