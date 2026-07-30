@@ -149,3 +149,21 @@ def aceptar_invitacion(data: InvitacionAceptar, request: Request):
         "aceptada_at": datetime.now(timezone.utc).isoformat(),
     }).eq("id", d["id"]).execute()
     return {"ok": True, "tipo": d["tipo"]}
+
+
+# ── S9: Listar invitaciones ──────────────────────────────────────
+
+@router.get("/invitaciones")
+def listar_invitaciones(request: Request):
+    sb = get_supabase()
+    uid = _caller(request)
+    perfil = _get_profile(sb, uid)
+
+    q = sb.table("gce_invitaciones") \
+        .select("id, tipo, candidato_email, estado, estandar_ids, created_at, expires_at, aceptada_at") \
+        .order("created_at", desc=True)
+
+    if perfil.get("rol") != "super_admin":
+        q = q.eq("ce_id", uid)
+
+    return {"invitaciones": q.execute().data or []}
