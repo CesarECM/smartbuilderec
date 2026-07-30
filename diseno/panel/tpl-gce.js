@@ -3,6 +3,7 @@ document.getElementById('rp-ce_admin').innerHTML = `
     <button class="role-tab-btn active" id="gce-tab-evaluaciones" onclick="gceShowTab('evaluaciones')">🗂️ Evaluaciones</button>
     <button class="role-tab-btn"        id="gce-tab-resumen"        onclick="gceShowTab('resumen')">📊 Resumen</button>
     <button class="role-tab-btn"        id="gce-tab-invitaciones"   onclick="gceInvShowTab()">📨 Invitaciones</button>
+    <button class="role-tab-btn"        id="gce-tab-equipo"          onclick="gceEqShowTab()">👥 Mi Equipo</button>
     <div style="flex:1"></div>
     <div id="gce-creditos-bar" style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--c-text-3);padding:0 6px">
       🪙 <span id="gce-creditos-count">—</span> créditos
@@ -87,6 +88,23 @@ document.getElementById('rp-ce_admin').innerHTML = `
     <!-- Lista -->
     <h3 style="font-size:13px;margin:0 0 10px;color:var(--c-text)">Invitaciones enviadas</h3>
     <div id="gce-inv-lista"><p class="loading-txt">Cargando...</p></div>
+  </div>
+
+  <!-- ── Mi Equipo ──────────────────────────────────────── -->
+  <div id="gce-panel-equipo" class="role-tab-panel">
+    <div class="sec-header">
+      <div>
+        <h2>Mi Equipo</h2>
+        <p style="font-size:12px;color:var(--c-text-3);margin:4px 0 0">Evaluadores registrados y candidatos activos en tus procesos.</p>
+      </div>
+      <button class="btn-sm" onclick="gceEqCargar()">🔄 Recargar</button>
+    </div>
+
+    <h3 style="font-size:13px;margin:0 0 10px;color:var(--c-text)">Evaluadores</h3>
+    <div id="gce-eq-evaluadores" style="margin-bottom:24px"><p class="loading-txt">Cargando...</p></div>
+
+    <h3 style="font-size:13px;margin:0 0 10px;color:var(--c-text)">Candidatos activos</h3>
+    <div id="gce-eq-candidatos"></div>
   </div>
 
   <!-- ── Modal: nueva evaluación ──────────────────────────── -->
