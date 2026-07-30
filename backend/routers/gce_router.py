@@ -163,6 +163,64 @@ def mis_estandares(request: Request):
     return {"estandares": estandares, "filtrado": True}
 
 
+@router.get("/equipo")
+def mi_equipo(request: Request):
+    """Evaluadores + candidatos activos del CE logueado."""
+    sb = get_supabase()
+    uid = _caller(request)
+    perfil = _get_profile(sb, uid)
+    if not _puede_gestionar(sb, uid, perfil):
+        raise HTTPException(403, "Se requiere rol ce_admin.")
+
+    # 1. Evaluadores del CE
+    ev_rows = sb.table("ce_evaluador_relaciones") \
+        .select("evaluador_id").eq("ce_id", uid).execute()
+    ev_ids = [r["evaluador_id"] for r in (ev_rows.data or [])]
+    evaluadores = []
+    if ev_ids:
+        prof_res = sb.table("profiles") \
+            .select("id, nombre, apellido, email").in_("id", ev_ids).execute()
+        evaluadores = prof_res.data or []
+
+    # 2. Candidatos con procesos activos (estado != certificado)
+    proc_rows = sb.table("procesos_evaluacion") \
+        .select("candidato_id, estandar_id, estado, evaluador_id, "
+                "estandares_competencia(id, codigo, titulo)") \
+        .eq("ce_id", uid).neq("estado", "certificado").execute()
+
+    cand_ids = list({r["candidato_id"] for r in (proc_rows.data or []) if r.get("candidato_id")})
+    cand_profiles: dict = {}
+    if cand_ids:
+        cp = sb.table("profiles").select("id, nombre, apellido, email").in_("id", cand_ids).execute()
+        cand_profiles = {p["id"]: p for p in (cp.data or [])}
+
+    candidatos_map: dict = {}
+    for row in (proc_rows.data or []):
+        cid = row["candidato_id"]
+        if cid not in candidatos_map:
+            prof = cand_profiles.get(cid, {})
+            candidatos_map[cid] = {
+                "id":       cid,
+                "nombre":   prof.get("nombre"),
+                "apellido": prof.get("apellido"),
+                "email":    prof.get("email"),
+                "procesos": [],
+            }
+        ec = row.get("estandares_competencia") or {}
+        candidatos_map[cid]["procesos"].append({
+            "estandar_id":     row["estandar_id"],
+            "estandar_codigo": ec.get("codigo"),
+            "estandar_titulo": ec.get("titulo"),
+            "estado":          row["estado"],
+            "evaluador_id":    row.get("evaluador_id"),
+        })
+
+    return {
+        "evaluadores":        evaluadores,
+        "candidatos_activos": list(candidatos_map.values()),
+    }
+
+
 @router.get("/candidatos/buscar")
 def buscar_candidatos(q: str, request: Request):
     """Busca candidatos del CE (admin_id = ce_uid) por nombre o email."""
