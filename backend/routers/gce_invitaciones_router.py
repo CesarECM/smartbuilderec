@@ -108,53 +108,51 @@ def verificar_invitacion(token: str):
 @router.post("/invitaciones/aceptar")
 def aceptar_invitacion(data: InvitacionAceptar, request: Request):
     sb = get_supabase()
-    uid = _caller(request)
-    inv = sb.table("gce_invitaciones").select("*") \
-        .eq("token", data.token).eq("estado", "pendiente").maybe_single().execute()
-    if not (inv and inv.data):
-        raise HTTPException(404, "Invitación no encontrada o ya procesada.")
-    d = inv.data
-    if _inv_expirada(d["expires_at"]):
-        sb.table("gce_invitaciones").update({"estado": "expirada"}).eq("id", d["id"]).execute()
-        raise HTTPException(410, "La invitación ha expirado.")
+    try:
+        uid = _caller(request)
+        inv = sb.table("gce_invitaciones").select("*") \
+            .eq("token", data.token).eq("estado", "pendiente").maybe_single().execute()
+        if not (inv and inv.data):
+            raise HTTPException(404, "Invitación no encontrada o ya procesada.")
+        d = inv.data
+        if _inv_expirada(d["expires_at"]):
+            sb.table("gce_invitaciones").update({"estado": "expirada"}).eq("id", d["id"]).execute()
+            raise HTTPException(410, "La invitación ha expirado.")
 
-    if d["tipo"] == "candidato":
-        ec_ids = d.get("estandar_ids") or []
-        if not ec_ids:
-            raise HTTPException(422, "Invitación sin ECs asignados.")
-        adm = sb.table("profiles").select("credits").eq("id", d["ce_id"]).maybe_single().execute()
-        creditos = (adm.data or {}).get("credits", 0) or 0
-        n = len(ec_ids)
-        if creditos < n:
-            raise HTTPException(402, f"Sin créditos suficientes ({creditos} disponibles, {n} requeridos).")
-        for eid in ec_ids:
-            sb.table("procesos_evaluacion").insert(
-                {"ce_id": d["ce_id"], "candidato_id": uid, "estandar_id": eid}
+        if d["tipo"] == "candidato":
+            ec_ids = d.get("estandar_ids") or []
+            if not ec_ids:
+                raise HTTPException(422, "Invitación sin ECs asignados.")
+            adm = sb.table("profiles").select("credits").eq("id", d["ce_id"]).maybe_single().execute()
+            creditos = (adm.data or {}).get("credits", 0) or 0
+            n = len(ec_ids)
+            if creditos < n:
+                raise HTTPException(402, f"Sin créditos suficientes ({creditos} disponibles, {n} requeridos).")
+            for eid in ec_ids:
+                sb.table("procesos_evaluacion").insert(
+                    {"ce_id": d["ce_id"], "candidato_id": uid, "estandar_id": eid}
+                ).execute()
+            sb.table("profiles").update({"credits": creditos - n}).eq("id", d["ce_id"]).execute()
+        else:
+            sb.table("user_roles").upsert(
+                {"user_id": uid, "role": "evaluador", "assigned_by": d["ce_id"]},
+                on_conflict="user_id,role"
             ).execute()
-        sb.table("profiles").update({"credits": creditos - n}).eq("id", d["ce_id"]).execute()
-        sb.table("credit_transactions").insert({
-            "user_id":     d["ce_id"],
-            "type":        "gce_invitacion",
-            "amount":      -n,
-            "source":      f"invitacion:{d['id']}",
-            "description": f"Candidato aceptó invitación ({n} EC{'s' if n > 1 else ''})",
-        }).execute()
-    else:
-        sb.table("user_roles").upsert(
-            {"user_id": uid, "role": "evaluador", "assigned_by": d["ce_id"]},
-            on_conflict="user_id,role"
-        ).execute()
-        sb.table("ce_evaluador_relaciones").upsert(
-            {"ce_id": d["ce_id"], "evaluador_id": uid},
-            on_conflict="ce_id,evaluador_id"
-        ).execute()
+            sb.table("ce_evaluador_relaciones").upsert(
+                {"ce_id": d["ce_id"], "evaluador_id": uid},
+                on_conflict="ce_id,evaluador_id"
+            ).execute()
 
-    sb.table("gce_invitaciones").update({
-        "estado":      "aceptada",
-        "candidato_id": uid,
-        "aceptada_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", d["id"]).execute()
-    return {"ok": True, "tipo": d["tipo"]}
+        sb.table("gce_invitaciones").update({
+            "estado":       "aceptada",
+            "candidato_id": uid,
+            "aceptada_at":  datetime.now(timezone.utc).isoformat(),
+        }).eq("id", d["id"]).execute()
+        return {"ok": True, "tipo": d["tipo"]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Error al procesar la invitación: {str(e)}")
 
 
 # ── S9: Listar invitaciones ──────────────────────────────────────
