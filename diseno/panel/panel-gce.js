@@ -2,9 +2,10 @@
 // MÓDULO GCE — Gestor del Ciclo de Evaluación (ce_admin)
 // ══════════════════════════════════════════════════════════════
 
-var _gce_procesos    = [];
-var _gce_estandares  = [];
-var _gce_evaluadores = [];
+var _gce_procesos             = [];
+var _gce_estandares           = [];
+var _gce_estandares_filtrado  = false;
+var _gce_evaluadores          = [];
 
 const GCE_ESTADOS = {
   registro:      { label: 'Registro',       color: '#94a3b8' },
@@ -56,9 +57,10 @@ function gceShowTab(name) {
 
 async function gceCargarEstandares() {
   try {
-    const d = await apiFetch('/gce/estandares');
-    _gce_estandares = d.estandares || [];
-  } catch { _gce_estandares = []; }
+    const d = await apiFetch('/gce/mis-estandares');
+    _gce_estandares          = d.estandares || [];
+    _gce_estandares_filtrado = d.filtrado   || false;
+  } catch { _gce_estandares = []; _gce_estandares_filtrado = false; }
 }
 
 async function gceCargarProcesos() {
@@ -231,9 +233,12 @@ async function gceAbrirModalNuevo() {
     gceLog(_gce_estandares.length ? `${_gce_estandares.length} ECs cargados` : 'ERROR: sin ECs en la tabla');
   }
 
+  const _ecVacio = _gce_estandares_filtrado
+    ? '⚠️ Tu OC no te ha autorizado ningún EC aún'
+    : '⚠️ Sin ECs — revisa Debug log';
   document.getElementById('gce-selEC').innerHTML = _gce_estandares.length
     ? '<option value="">— Selecciona EC —</option>' + _gce_estandares.map(e => `<option value="${e.id}">${e.codigo} — ${e.titulo}</option>`).join('')
-    : '<option value="">⚠️ Sin ECs — revisa Debug log</option>';
+    : `<option value="">${_ecVacio}</option>`;
 
   document.getElementById('gce-selEvaluador').innerHTML =
     '<option value="">Sin asignar por ahora</option>' +

@@ -129,6 +129,40 @@ def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
     return res.data[0] if res.data else {}
 
 
+@router.get("/mis-estandares")
+def mis_estandares(request: Request):
+    """ECs autorizados para el CE logueado; todos los activos si no tiene OC."""
+    sb = get_supabase()
+    uid = _caller(request)
+    perfil = _get_profile(sb, uid)
+
+    if perfil.get("rol") == "super_admin":
+        res = sb.table("estandares_competencia") \
+            .select("id, codigo, titulo").eq("activo", True).order("codigo").execute()
+        return {"estandares": res.data or [], "filtrado": False}
+
+    tiene_oc = bool(
+        sb.table("oc_ce_relaciones").select("oc_id").eq("ce_id", uid).execute().data
+    )
+    if not tiene_oc:
+        res = sb.table("estandares_competencia") \
+            .select("id, codigo, titulo").eq("activo", True).order("codigo").execute()
+        return {"estandares": res.data or [], "filtrado": False}
+
+    autorizados = sb.table("ce_estandares_autorizados") \
+        .select("estandar_id, estandares_competencia(id, codigo, titulo)") \
+        .eq("ce_id", uid).execute()
+    estandares = [
+        {
+            "id":     row["estandar_id"],
+            "codigo": (row.get("estandares_competencia") or {}).get("codigo"),
+            "titulo": (row.get("estandares_competencia") or {}).get("titulo"),
+        }
+        for row in (autorizados.data or [])
+    ]
+    return {"estandares": estandares, "filtrado": True}
+
+
 @router.get("/candidatos/buscar")
 def buscar_candidatos(q: str, request: Request):
     """Busca candidatos del CE (admin_id = ce_uid) por nombre o email."""
