@@ -63,7 +63,7 @@ def agregar_ce(data: AgregarCEBody, request: Request):
 
     perfil_ce = sb.table("profiles").select("id, nombre, apellido, email") \
         .eq("email", data.email.strip().lower()).maybe_single().execute()
-    if not perfil_ce.data:
+    if not (perfil_ce and perfil_ce.data):
         raise HTTPException(404, "Usuario no encontrado.")
 
     ce_id = perfil_ce.data["id"]
@@ -73,7 +73,7 @@ def agregar_ce(data: AgregarCEBody, request: Request):
 
     existente = sb.table("oc_ce_relaciones") \
         .select("id").eq("oc_id", uid).eq("ce_id", ce_id).maybe_single().execute()
-    if existente.data:
+    if existente and existente.data:
         raise HTTPException(409, "Este CE ya está bajo tu organismo.")
 
     sb.table("oc_ce_relaciones").insert({"oc_id": uid, "ce_id": ce_id}).execute()
@@ -106,7 +106,7 @@ def set_estandares_ce(ce_id: str, data: SetEstandaresBody, request: Request):
     # Verificar que el CE pertenece a este OC
     rel = sb.table("oc_ce_relaciones").select("id") \
         .eq("oc_id", uid).eq("ce_id", ce_id).maybe_single().execute()
-    if not rel.data:
+    if not (rel and rel.data):
         raise HTTPException(403, "Este CE no pertenece a tu organismo.")
 
     # Reemplazar: borrar existentes e insertar nuevos
