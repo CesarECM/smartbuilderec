@@ -56,6 +56,7 @@ from routers import ia_ec0616_router, docs_ec0616_router
 from routers import estandares_router
 from routers import gce_router
 from routers import docs_gce_router
+from routers import oc_router
 
 app.include_router(stripe_router.router,          tags=["stripe"])
 app.include_router(planes_router.router)
@@ -81,6 +82,7 @@ app.include_router(docs_ec0616_router.router)
 app.include_router(estandares_router.router)
 app.include_router(gce_router.router)
 app.include_router(docs_gce_router.router)
+app.include_router(oc_router.router)
 
 
 @app.get("/")
