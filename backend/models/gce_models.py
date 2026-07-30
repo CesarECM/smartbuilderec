@@ -39,3 +39,9 @@ ESTADOS_VALIDOS = (
     "registro", "diagnostico", "plan_acordado",
     "evidencias", "juicio", "cierre", "certificado",
 )
+
+
+class InvitacionCreate(BaseModel):
+    email: str
+    tipo: str                  # 'candidato' | 'evaluador'
+    estandar_ids: list[str] = []

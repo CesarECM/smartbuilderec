@@ -3,7 +3,7 @@ import os
 from fastapi import APIRouter, HTTPException, Request
 
 from database import get_supabase
-from models.gce_models import ProcesoCreate, ProcesoUpdate, ESTADOS_VALIDOS
+from models.gce_models import ProcesoCreate, ProcesoUpdate, ESTADOS_VALIDOS, InvitacionCreate
 from services.erp_helpers import _caller, _get_profile, _get_extra_roles
 from services.email_service import send_template
 
@@ -185,3 +185,49 @@ def buscar_candidatos(q: str, request: Request):
         .execute()
     )
     return {"candidatos": res.data or []}
+
+
+# ── S7: Invitaciones ─────────────────────────────────────────────
+
+@router.post("/invitaciones", status_code=201)
+def crear_invitacion(data: InvitacionCreate, request: Request):
+    sb = get_supabase()
+    uid = _caller(request)
+    perfil = _get_profile(sb, uid)
+    if not _puede_gestionar(sb, uid, perfil):
+        raise HTTPException(403, "Se requiere rol ce_admin.")
+
+    email = data.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(422, "Email inválido.")
+    if data.tipo not in ("candidato", "evaluador"):
+        raise HTTPException(422, "tipo debe ser 'candidato' o 'evaluador'.")
+    if data.tipo == "candidato" and not data.estandar_ids:
+        raise HTTPException(422, "Selecciona al menos un EC para el candidato.")
+
+    dup = sb.table("gce_invitaciones") \
+        .select("id").eq("ce_id", uid).eq("candidato_email", email) \
+        .eq("tipo", data.tipo).eq("estado", "pendiente").maybe_single().execute()
+    if dup and dup.data:
+        raise HTTPException(409, "Ya existe una invitación pendiente para este email.")
+
+    payload = {
+        "ce_id":           uid,
+        "tipo":            data.tipo,
+        "candidato_email": email,
+        "estandar_ids":    data.estandar_ids if data.estandar_ids else None,
+    }
+    res = sb.table("gce_invitaciones").insert(payload).execute()
+    inv = res.data[0] if res.data else {}
+    token = inv.get("token", "")
+
+    ce_nombre = " ".join(filter(None, [perfil.get("nombre"), perfil.get("apellido")])) \
+                or perfil.get("email", "")
+    frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
+    slug = "gce_invitacion_candidato" if data.tipo == "candidato" else "gce_invitacion_evaluador"
+    send_template(slug, email, {
+        "ce_nombre":      ce_nombre,
+        "link_invitacion": f"{frontend_url}/gce-invitacion?token={token}",
+    })
+
+    return inv
