@@ -54,20 +54,36 @@ function gceInvRenderLista() {
     return;
   }
   el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Correo</th><th>Tipo</th><th>Estado</th><th>Enviada</th></tr></thead>
+    <thead><tr><th>Correo</th><th>Tipo</th><th>Estado</th><th>Enviada</th><th></th></tr></thead>
     <tbody>${_gceInv_lista.map(inv => {
       const color = _GCE_INV_COLOR[inv.estado] || '#94a3b8';
       const badge = `<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;color:#fff;background:${color}">${inv.estado}</span>`;
       const fecha = new Date(inv.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
       const tipo  = inv.tipo === 'candidato' ? '👤 Candidato' : '🔬 Evaluador';
+      const btnElim = inv.estado === 'pendiente'
+        ? `<button class="btn-sm danger" onclick="gceInvEliminar('${inv.id}')" title="Eliminar">✕</button>`
+        : '';
       return `<tr>
         <td>${inv.candidato_email}</td>
         <td style="font-size:12px">${tipo}</td>
         <td>${badge}</td>
         <td style="font-size:12px;color:var(--c-text-4)">${fecha}</td>
+        <td>${btnElim}</td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
+}
+
+async function gceInvEliminar(id) {
+  if (!confirm('¿Eliminar esta invitación pendiente?')) return;
+  try {
+    await apiFetch(`/gce/invitaciones/${id}`, { method: 'DELETE' });
+    _gceInv_cargado = false;
+    await gceInvCargar();
+    mostrarToast('Invitación eliminada.');
+  } catch (e) {
+    mostrarToast('Error: ' + e.message);
+  }
 }
 
 async function gceInvEnviar() {

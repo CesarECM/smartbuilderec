@@ -173,3 +173,22 @@ def listar_invitaciones(request: Request):
         q = q.eq("ce_id", uid)
 
     return {"invitaciones": q.execute().data or []}
+
+
+@router.delete("/invitaciones/{inv_id}", status_code=204)
+def eliminar_invitacion(inv_id: str, request: Request):
+    sb = get_supabase()
+    uid = _caller(request)
+    perfil = _get_profile(sb, uid)
+
+    inv = sb.table("gce_invitaciones").select("id, ce_id, estado") \
+        .eq("id", inv_id).maybe_single().execute()
+    if not (inv and inv.data):
+        raise HTTPException(404, "Invitación no encontrada.")
+    d = inv.data
+    if perfil.get("rol") != "super_admin" and d["ce_id"] != uid:
+        raise HTTPException(403, "Sin permiso para eliminar esta invitación.")
+    if d["estado"] != "pendiente":
+        raise HTTPException(409, "Solo se pueden eliminar invitaciones pendientes.")
+
+    sb.table("gce_invitaciones").delete().eq("id", inv_id).execute()
