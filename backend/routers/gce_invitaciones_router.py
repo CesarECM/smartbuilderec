@@ -38,6 +38,12 @@ def crear_invitacion(data: InvitacionCreate, request: Request):
         raise HTTPException(422, "tipo debe ser 'candidato' o 'evaluador'.")
     if data.tipo == "candidato" and not data.estandar_ids:
         raise HTTPException(422, "Selecciona al menos un EC para el candidato.")
+    if data.tipo == "candidato":
+        n = len(data.estandar_ids)
+        cr = sb.table("profiles").select("credits").eq("id", uid).maybe_single().execute()
+        creditos = (cr.data or {}).get("credits", 0) or 0
+        if creditos < n:
+            raise HTTPException(402, f"Sin créditos suficientes ({creditos} disponibles, {n} requeridos). Recarga tu plan antes de invitar.")
 
     dup = sb.table("gce_invitaciones") \
         .select("id").eq("ce_id", uid).eq("candidato_email", email) \
