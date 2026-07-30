@@ -53,33 +53,41 @@ def crear_proceso(data: ProcesoCreate, request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(500, f"Error al crear proceso: {str(e)}")
+        msg = str(e)
+        if "23505" in msg or "unique" in msg.lower():
+            raise HTTPException(409, "Este candidato ya tiene un proceso activo para ese estándar.")
+        raise HTTPException(500, f"Error al crear proceso: {msg}")
 
 
 @router.get("/procesos")
 def listar_procesos(request: Request):
     sb = get_supabase()
-    uid = _caller(request)
-    caller = _get_profile(sb, uid)
+    try:
+        uid = _caller(request)
+        caller = _get_profile(sb, uid)
 
-    q = (
-        sb.table("procesos_evaluacion")
-        .select(
-            "id, estado, juicio, credito_canjeado, created_at, "
-            "candidato_id, evaluador_id, estandar_id, ce_id"
+        q = (
+            sb.table("procesos_evaluacion")
+            .select(
+                "id, estado, juicio, credito_canjeado, created_at, "
+                "candidato_id, evaluador_id, estandar_id, ce_id"
+            )
+            .order("created_at", desc=True)
         )
-        .order("created_at", desc=True)
-    )
 
-    if caller.get("rol") == "super_admin":
-        pass
-    elif "oc_admin" in _get_extra_roles(sb, uid):
-        q = q.eq("oc_id", uid)
-    else:
-        q = q.eq("ce_id", uid)
+        if caller.get("rol") == "super_admin":
+            pass
+        elif "oc_admin" in _get_extra_roles(sb, uid):
+            q = q.eq("oc_id", uid)
+        else:
+            q = q.eq("ce_id", uid)
 
-    res = q.execute()
-    return {"procesos": res.data or []}
+        res = q.execute()
+        return {"procesos": res.data or []}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Error al listar procesos: {str(e)}")
 
 
 @router.get("/procesos/{proceso_id}")
