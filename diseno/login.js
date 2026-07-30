@@ -4,12 +4,18 @@ function _panelPorRol(rol) {
   return "panel";
 }
 
+function _destino() {
+  const r = new URLSearchParams(location.search).get('redirect');
+  // Solo permite redirección relativa (evita open redirect)
+  return (r && !r.startsWith('http') && !r.startsWith('//')) ? r : 'panel';
+}
+
 // Redirigir si ya hay sesión activa
 (async () => {
   const session = await getSession();
   if (session) {
     const perfil = await getUserProfile();
-    window.location.href = _panelPorRol(perfil?.rol);
+    window.location.href = _destino();
   }
 })();
 
@@ -57,7 +63,7 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
     await login(email, password);
     setMsg("Sesión iniciada. Redirigiendo...", "ok");
     const perfil = await getUserProfile();
-    window.location.href = _panelPorRol(perfil?.rol);
+    window.location.href = _destino();
   } catch (err) {
     const t = err.message || "";
     if (t.includes("Invalid login") || t.includes("invalid_credentials")) {
