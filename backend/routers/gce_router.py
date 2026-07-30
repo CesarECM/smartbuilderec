@@ -249,14 +249,41 @@ def buscar_candidatos(q: str, request: Request):
     if not q or len(q.strip()) < 2:
         return {"candidatos": []}
     lq = q.strip().lower()
-    # super_admin ve todos; ce_admin/oc_admin solo ven sus usuarios
-    query = sb.table("profiles").select("id, nombre, apellido, email")
-    if perfil.get("rol") != "super_admin":
-        query = query.eq("admin_id", uid)
-    res = (
-        query
+    if perfil.get("rol") == "super_admin":
+        res = (
+            sb.table("profiles").select("id, nombre, apellido, email")
+            .or_(f"nombre.ilike.%{lq}%,apellido.ilike.%{lq}%,email.ilike.%{lq}%")
+            .limit(10).execute()
+        )
+        return {"candidatos": res.data or []}
+
+    # CE: buscar entre candidatos con admin_id + candidatos que aceptaron invitación
+    inv_rows = sb.table("gce_invitaciones") \
+        .select("candidato_id").eq("ce_id", uid) \
+        .eq("tipo", "candidato").eq("estado", "aceptada").execute()
+    inv_ids = [r["candidato_id"] for r in (inv_rows.data or []) if r.get("candidato_id")]
+
+    seen, candidatos = set(), []
+    # 1. usuarios registrados bajo este admin
+    r1 = (
+        sb.table("profiles").select("id, nombre, apellido, email")
+        .eq("admin_id", uid)
         .or_(f"nombre.ilike.%{lq}%,apellido.ilike.%{lq}%,email.ilike.%{lq}%")
-        .limit(10)
-        .execute()
+        .limit(10).execute()
     )
-    return {"candidatos": res.data or []}
+    for p in (r1.data or []):
+        seen.add(p["id"]); candidatos.append(p)
+
+    # 2. candidatos GCE (por invitación)
+    if inv_ids:
+        r2 = (
+            sb.table("profiles").select("id, nombre, apellido, email")
+            .in_("id", inv_ids)
+            .or_(f"nombre.ilike.%{lq}%,apellido.ilike.%{lq}%,email.ilike.%{lq}%")
+            .limit(10).execute()
+        )
+        for p in (r2.data or []):
+            if p["id"] not in seen:
+                candidatos.append(p)
+
+    return {"candidatos": candidatos[:10]}
