@@ -136,7 +136,8 @@ async function authGuard(rolesPermitidos = []) {
 
   const profile = await getUserProfile();
   if (!profile) {
-    window.location.href = "login";
+    await _supabase.auth.signOut();
+    window.location.href = "login?razon=sin_perfil";
     return null;
   }
 
