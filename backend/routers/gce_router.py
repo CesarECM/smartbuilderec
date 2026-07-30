@@ -83,9 +83,12 @@ def listar_procesos(request: Request):
             .order("created_at", desc=True)
         )
 
+        extra = _get_extra_roles(sb, uid)
         if caller.get("rol") == "super_admin":
             pass
-        elif "oc_admin" in _get_extra_roles(sb, uid):
+        elif "ce_admin" in extra:
+            q = q.eq("ce_id", uid)
+        elif "oc_admin" in extra:
             q = q.eq("oc_id", uid)
         else:
             q = q.eq("ce_id", uid)
