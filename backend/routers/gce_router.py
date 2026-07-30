@@ -19,33 +19,41 @@ def _puede_gestionar(sb, uid: str, perfil: dict) -> bool:
 @router.post("/procesos", status_code=201)
 def crear_proceso(data: ProcesoCreate, request: Request):
     sb = get_supabase()
-    uid = _caller(request)
-    caller = _get_profile(sb, uid)
-    if not _puede_gestionar(sb, uid, caller):
-        raise HTTPException(403, "Se requiere rol ce_admin.")
+    try:
+        uid = _caller(request)
+        caller = _get_profile(sb, uid)
+        if not _puede_gestionar(sb, uid, caller):
+            raise HTTPException(403, "Se requiere rol ce_admin.")
 
-    credito_canjeado = False
-    if caller.get("rol") != "super_admin":
-        adm = sb.table("profiles").select("credits").eq("id", uid).maybe_single().execute()
-        creditos = (adm.data or {}).get("credits", 0) or 0
-        if creditos < 1:
-            raise HTTPException(402, "Sin créditos suficientes. Recarga tu plan para continuar.")
-        sb.table("profiles").update({"credits": creditos - 1}).eq("id", uid).execute()
-        sb.table("credit_transactions").insert({
-            "user_id":     uid,
-            "type":        "gce_proceso_manual",
-            "amount":      -1,
-            "source":      f"proceso_manual:{data.candidato_id}:{data.estandar_id}",
-            "description": "Proceso de evaluación creado manualmente",
-        }).execute()
-        credito_canjeado = True
+        credito_canjeado = False
+        if caller.get("rol") != "super_admin":
+            adm = sb.table("profiles").select("credits").eq("id", uid).maybe_single().execute()
+            creditos = (adm.data or {}).get("credits", 0) or 0
+            if creditos < 1:
+                raise HTTPException(402, "Sin créditos suficientes. Recarga tu plan para continuar.")
+            sb.table("profiles").update({"credits": creditos - 1}).eq("id", uid).execute()
+            try:
+                sb.table("credit_transactions").insert({
+                    "user_id":     uid,
+                    "type":        "gce_proceso_manual",
+                    "amount":      -1,
+                    "source":      f"proceso_manual:{data.candidato_id}:{data.estandar_id}",
+                    "description": "Proceso de evaluación creado manualmente",
+                }).execute()
+            except Exception:
+                pass  # registro de auditoría opcional
+            credito_canjeado = True
 
-    payload = data.model_dump()
-    payload["ce_id"]            = uid
-    payload["credito_canjeado"] = credito_canjeado
+        payload = data.model_dump()
+        payload["ce_id"]            = uid
+        payload["credito_canjeado"] = credito_canjeado
 
-    res = sb.table("procesos_evaluacion").insert(payload).execute()
-    return res.data[0] if res.data else {}
+        res = sb.table("procesos_evaluacion").insert(payload).execute()
+        return res.data[0] if res.data else {}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Error al crear proceso: {str(e)}")
 
 
 @router.get("/procesos")
