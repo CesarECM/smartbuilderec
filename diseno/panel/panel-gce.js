@@ -266,7 +266,7 @@ async function gceGuardarNuevo() {
     await apiFetch('/gce/procesos', { method: 'POST', body: { candidato_id, estandar_id, evaluador_id } });
     gceCerrarModalNuevo();
     _gce_procesos = [];
-    await gceCargarProcesos();
+    await Promise.all([gceCargarProcesos(), gceCargarCreditos()]);
     mostrarToast('✓ Proceso de evaluación creado.');
   } catch (e) {
     mostrarToast('Error: ' + e.message);
