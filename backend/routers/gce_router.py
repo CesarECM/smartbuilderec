@@ -29,7 +29,7 @@ def crear_proceso(data: ProcesoCreate, request: Request):
         dup = sb.table("procesos_evaluacion").select("id") \
             .eq("candidato_id", data.candidato_id) \
             .eq("estandar_id", data.estandar_id) \
-            .maybe_single().execute()
+            .limit(1).execute()
         if dup and dup.data:
             raise HTTPException(409, "Este candidato ya tiene un proceso activo para ese estándar.")
 
