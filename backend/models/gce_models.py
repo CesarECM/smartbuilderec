@@ -45,3 +45,7 @@ class InvitacionCreate(BaseModel):
     email: str
     tipo: str                  # 'candidato' | 'evaluador'
     estandar_ids: list[str] = []
+
+
+class InvitacionAceptar(BaseModel):
+    token: str

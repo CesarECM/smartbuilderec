@@ -18,6 +18,7 @@ _SOPORTE_PUBLICOS = {
     ("POST", "/admin/cron/vigencias"),
     ("POST", "/auth/reset-password"),
     ("POST", "/wizard/sync-fallback"),
+    ("GET",  "/gce/invitaciones/verificar"),
 }
 
 
