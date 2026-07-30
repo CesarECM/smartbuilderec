@@ -128,8 +128,9 @@
         document.getElementById('inv-card').style.display = 'none';
         showEstado('✅', '¡Invitación aceptada!',
           d.tipo === 'candidato'
-            ? 'Tu proceso de evaluación ha sido creado. Revisa tu panel para ver el avance.'
-            : 'Ahora formas parte del equipo como evaluador. Ve a tu panel para comenzar.');
+            ? 'Tu proceso de evaluación ha sido creado. En un momento te llevamos a tu panel…'
+            : 'Ahora formas parte del equipo como evaluador. En un momento te llevamos a tu panel…');
+        setTimeout(() => { window.location.href = 'panel'; }, 2500);
       } catch (e) {
         btn.disabled = false; btn.textContent = '✓ Aceptar invitación';
         alert('Error: ' + e.message);

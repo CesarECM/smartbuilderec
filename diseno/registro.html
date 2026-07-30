@@ -212,8 +212,7 @@
               headers: { 'Authorization': `Bearer ${data.session.access_token}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({ token: _invToken }),
             });
-            const ok = r.ok;
-            setTimeout(() => { window.location.href = ok ? `gce-invitacion?token=${_invToken}` : 'panel'; }, 800);
+            setTimeout(() => { window.location.href = 'panel'; }, 1200);
           } else {
             setMsg("Cuenta creada. Revisa tu correo — el enlace de confirmación te llevará de regreso a la invitación.", "ok");
             btn.textContent = "Cuenta creada ✓";
