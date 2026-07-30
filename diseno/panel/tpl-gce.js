@@ -1,7 +1,8 @@
 document.getElementById('rp-ce_admin').innerHTML = `
   <nav class="role-tab-bar">
     <button class="role-tab-btn active" id="gce-tab-evaluaciones" onclick="gceShowTab('evaluaciones')">🗂️ Evaluaciones</button>
-    <button class="role-tab-btn"        id="gce-tab-resumen"      onclick="gceShowTab('resumen')">📊 Resumen</button>
+    <button class="role-tab-btn"        id="gce-tab-resumen"        onclick="gceShowTab('resumen')">📊 Resumen</button>
+    <button class="role-tab-btn"        id="gce-tab-invitaciones"   onclick="gceInvShowTab()">📨 Invitaciones</button>
     <div style="flex:1"></div>
     <div id="gce-creditos-bar" style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--c-text-3);padding:0 6px">
       🪙 <span id="gce-creditos-count">—</span> créditos
@@ -43,6 +44,49 @@ document.getElementById('rp-ce_admin').innerHTML = `
       <h3 style="font-size:13px;margin:0 0 12px;color:var(--c-text)">Pipeline por estado</h3>
       <div id="gce-pipeline"></div>
     </div>
+  </div>
+
+  <!-- ── Invitaciones ─────────────────────────────────────── -->
+  <div id="gce-panel-invitaciones" class="role-tab-panel">
+    <div class="sec-header">
+      <div>
+        <h2>Invitaciones</h2>
+        <p style="font-size:12px;color:var(--c-text-3);margin:4px 0 0">Invita candidatos o evaluadores por correo.</p>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <div style="background:var(--c-surface);border-radius:10px;padding:20px;margin-bottom:20px;max-width:480px">
+      <h3 style="margin:0 0 16px;font-size:13px;color:var(--c-text)">Nueva invitación</h3>
+
+      <label style="display:block;margin-bottom:12px">
+        <span style="font-size:12px;color:var(--c-text-3);display:block;margin-bottom:4px">Tipo *</span>
+        <select id="gce-inv-tipo" onchange="gceInvToggleTipo()"
+          style="width:100%;padding:8px 10px;border:1px solid var(--c-border);border-radius:6px;background:var(--c-bg);color:var(--c-text);font-size:13px">
+          <option value="candidato">👤 Candidato</option>
+          <option value="evaluador">🔬 Evaluador</option>
+        </select>
+      </label>
+
+      <label style="display:block;margin-bottom:12px">
+        <span style="font-size:12px;color:var(--c-text-3);display:block;margin-bottom:4px">Correo electrónico *</span>
+        <input id="gce-inv-email" type="email" placeholder="correo@ejemplo.com"
+          style="width:100%;padding:8px 10px;border:1px solid var(--c-border);border-radius:6px;background:var(--c-bg);color:var(--c-text);font-size:13px;box-sizing:border-box">
+      </label>
+
+      <div id="gce-inv-ecs-wrap" style="margin-bottom:12px">
+        <span style="font-size:12px;color:var(--c-text-3);display:block;margin-bottom:6px">Estándares de Competencia *</span>
+        <div id="gce-inv-ecs-checks" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+
+      <button id="gce-inv-btn" onclick="gceInvEnviar()" class="btn-primary" style="width:100%">
+        Enviar invitación
+      </button>
+    </div>
+
+    <!-- Lista -->
+    <h3 style="font-size:13px;margin:0 0 10px;color:var(--c-text)">Invitaciones enviadas</h3>
+    <div id="gce-inv-lista"><p class="loading-txt">Cargando...</p></div>
   </div>
 
   <!-- ── Modal: nueva evaluación ──────────────────────────── -->
