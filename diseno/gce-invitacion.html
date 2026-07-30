@@ -100,12 +100,12 @@
       } else {
         const dest = encodeURIComponent(`gce-invitacion?token=${token}`);
         actions.innerHTML = `
-          <a href="login?redirect=${dest}" style="display:block">
-            <button class="btn-aceptar" style="background:${color};color:#fff;width:100%">Iniciar sesión para aceptar</button>
-          </a>
           <a href="registro?invitacion=${encodeURIComponent(token)}" style="display:block">
-            <button class="btn-sec">Crear cuenta nueva</button>
-          </a>`;
+            <button class="btn-aceptar" style="background:${color};color:#fff;width:100%">Crear mi cuenta y aceptar →</button>
+          </a>
+          <p style="text-align:center;margin:4px 0 0;font-size:12px;color:var(--c-text-4)">
+            ¿Ya tienes cuenta? <a href="login?redirect=${dest}" style="color:${color}">Inicia sesión</a>
+          </p>`;
       }
 
       document.getElementById('inv-card').style.display = 'block';
