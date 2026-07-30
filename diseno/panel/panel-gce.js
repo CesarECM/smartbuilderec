@@ -263,12 +263,17 @@ async function gceGuardarNuevo() {
   const btn = document.getElementById('gce-btnGuardar');
   btn.disabled = true; btn.textContent = 'Creando...';
   try {
-    await apiFetch('/gce/procesos', { method: 'POST', body: { candidato_id, estandar_id, evaluador_id } });
+    gceLog('POST /gce/procesos ' + JSON.stringify({ candidato_id, estandar_id, evaluador_id }));
+    const res = await apiFetch('/gce/procesos', { method: 'POST', body: { candidato_id, estandar_id, evaluador_id } });
+    gceLog('Proceso creado: ' + JSON.stringify(res));
     gceCerrarModalNuevo();
     _gce_procesos = [];
+    gceLog('Recargando procesos...');
     await Promise.all([gceCargarProcesos(), gceCargarCreditos()]);
+    gceLog('Procesos en memoria: ' + _gce_procesos.length);
     mostrarToast('✓ Proceso de evaluación creado.');
   } catch (e) {
+    gceLog('ERROR crear proceso: ' + e.message);
     mostrarToast('Error: ' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = 'Crear proceso';

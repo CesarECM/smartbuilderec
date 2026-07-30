@@ -25,6 +25,14 @@ def crear_proceso(data: ProcesoCreate, request: Request):
         if not _puede_gestionar(sb, uid, caller):
             raise HTTPException(403, "Se requiere rol ce_admin.")
 
+        # Verificar duplicado antes de descontar créditos
+        dup = sb.table("procesos_evaluacion").select("id") \
+            .eq("candidato_id", data.candidato_id) \
+            .eq("estandar_id", data.estandar_id) \
+            .maybe_single().execute()
+        if dup and dup.data:
+            raise HTTPException(409, "Este candidato ya tiene un proceso activo para ese estándar.")
+
         credito_canjeado = False
         if caller.get("rol") != "super_admin":
             adm = sb.table("profiles").select("credits").eq("id", uid).maybe_single().execute()
@@ -41,7 +49,7 @@ def crear_proceso(data: ProcesoCreate, request: Request):
                     "description": "Proceso de evaluación creado manualmente",
                 }).execute()
             except Exception:
-                pass  # registro de auditoría opcional
+                pass
             credito_canjeado = True
 
         payload = data.model_dump()
