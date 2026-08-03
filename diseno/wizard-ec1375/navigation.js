@@ -77,6 +77,7 @@ export function mostrarSeccion(id) {
   if (navId) document.getElementById(navId)?.classList.add("active");
   _abrirGrupoActivo();
   actualizarProgressBar();
+  if (id === "sec75Expediente") window.cargarExpediente75?.();
 }
 
 function _abrirGrupoActivo() {
