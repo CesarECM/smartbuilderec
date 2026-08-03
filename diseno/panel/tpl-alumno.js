@@ -108,7 +108,18 @@ document.getElementById('rp-alumno').innerHTML = `
         <div id="alumno-ec0616-lista"><p class="loading-txt">Cargando...</p></div>
       </div>
 
-      <!-- ─ Sección 6: Mis procesos GCE ──────────────────────────── -->
+      <!-- ─ Sección 6: Mis expedientes EC1375 ─────────────────────── -->
+      <div id="alumno-ec1375-section" style="display:none">
+        <div class="sec-header sec-gap">
+          <div><h2>🌿 Mis expedientes <span class="count-tag">EC1375</span></h2></div>
+          <div class="sec-actions">
+            <a href="ec1375?new=1" class="btn-primary">+ Nuevo expediente</a>
+          </div>
+        </div>
+        <div id="alumno-ec1375-lista"><p class="loading-txt">Cargando...</p></div>
+      </div>
+
+      <!-- ─ Sección 7: Mis procesos GCE ──────────────────────────── -->
       <div id="alumno-gce-section" style="display:none">
         <div class="sec-header sec-gap">
           <div>

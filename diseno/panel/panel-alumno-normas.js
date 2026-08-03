@@ -1,20 +1,24 @@
     // ══════════════════════════════════════════════════════════════
-    // PANEL ALUMNO — Normas extras EC0091 / EC0616
+    // PANEL ALUMNO — Normas extras EC0091 / EC0616 / EC1375
     // Muestra secciones solo si el usuario tiene la norma habilitada.
     // ══════════════════════════════════════════════════════════════
 
     async function cargarPanelNormasExtras() {
-      const tiene91  = _extraRoles.includes('norma_ec0091');
-      const tiene616 = _extraRoles.includes('norma_ec0616');
+      const tiene91   = _extraRoles.includes('norma_ec0091');
+      const tiene616  = _extraRoles.includes('norma_ec0616');
+      const tiene1375 = _extraRoles.includes('norma_ec1375');
 
-      const sec91  = document.getElementById('alumno-ec0091-section');
-      const sec616 = document.getElementById('alumno-ec0616-section');
-      if (sec91)  sec91.style.display  = tiene91  ? '' : 'none';
-      if (sec616) sec616.style.display = tiene616 ? '' : 'none';
+      const sec91   = document.getElementById('alumno-ec0091-section');
+      const sec616  = document.getElementById('alumno-ec0616-section');
+      const sec1375 = document.getElementById('alumno-ec1375-section');
+      if (sec91)   sec91.style.display   = tiene91   ? '' : 'none';
+      if (sec616)  sec616.style.display  = tiene616  ? '' : 'none';
+      if (sec1375) sec1375.style.display = tiene1375 ? '' : 'none';
 
       await Promise.all([
-        tiene91  ? _cargarEC0091()  : Promise.resolve(),
-        tiene616 ? _cargarEC0616()  : Promise.resolve(),
+        tiene91   ? _cargarEC0091()  : Promise.resolve(),
+        tiene616  ? _cargarEC0616()  : Promise.resolve(),
+        tiene1375 ? _cargarEC1375()  : Promise.resolve(),
         _cargarGCECandidato(),
       ]);
     }

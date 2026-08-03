@@ -1,0 +1,51 @@
+/* ─── ec1375.css — Estilos específicos wizard EC1375 ─────────────────────── */
+/* La mayor parte de estilos viene de index.css y styles/main.css             */
+
+.checklist-ec1375 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checklist-ec1375 label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.checklist-ec1375 input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.signos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.ia-box-75 {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.ia-box-75 .ia-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: var(--c-primary);
+}
