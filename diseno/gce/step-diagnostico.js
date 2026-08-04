@@ -52,7 +52,10 @@ export function initStepDiagnostico() {
   }
 
   _siNoState = {};
-  window.gceSiNoMarcar = _siNoMarcar;
+  _todosSI   = false;
+  window.gceSiNoMarcar      = _siNoMarcar;
+  window.gceDiagMarcarTodos = _marcarTodos;
+  _renderToolbar(cfg.reactivos || []);
   _renderReactivos(cfg.reactivos || []);
 
   const footer = document.getElementById("gce-diag-footer");
@@ -60,6 +63,35 @@ export function initStepDiagnostico() {
 
   document.getElementById("gce-btn-finalizar-diag")
     ?.addEventListener("click", finalizarDiagnostico);
+}
+
+// ── Toolbar marcar / desmarcar todos ─────────────────────────────────────────
+
+function _renderToolbar(reactivos) {
+  const siNos = reactivos.filter(r => r.tipo === "si_no");
+  if (!siNos.length) return;
+  const el = document.getElementById("gce-diag-reactivos");
+  if (!el) return;
+  el.insertAdjacentHTML("beforebegin", `
+    <div id="gce-diag-toolbar" style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button id="gce-btn-marcar-todos" onclick="gceDiagMarcarTodos()"
+        class="btn-sm"
+        style="font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--c-border);
+               background:var(--c-surface);color:var(--c-text-2);cursor:pointer">
+        ✅ Marcar todos SI
+      </button>
+    </div>`);
+}
+
+let _todosSI = false;
+
+function _marcarTodos() {
+  const cfg   = state.estandar?.config?.diagnostico;
+  const nuevo = !_todosSI;
+  (cfg?.reactivos || []).filter(r => r.tipo === "si_no").forEach(r => _siNoMarcar(r.num, nuevo));
+  _todosSI = nuevo;
+  const btn = document.getElementById("gce-btn-marcar-todos");
+  if (btn) btn.textContent = nuevo ? "⬜ Desmarcar todos" : "✅ Marcar todos SI";
 }
 
 // ── Render de reactivos ───────────────────────────────────────────────────────
