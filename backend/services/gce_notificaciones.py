@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 from services.email_service import send_template
 
@@ -90,3 +91,70 @@ def notificar_evaluador_asignado(sb, proceso_id: str, evaluador_id: str) -> None
         })
     except Exception as e:
         print(f"⚠ gce_proceso_asignado email error: {e}")
+
+
+def build_notifs(proceso: dict, uid: str, cand_map: dict, frontend_url: str) -> list:
+    estado    = proceso["estado"]
+    datos     = proceso.get("datos") or {}
+    ec_codigo = (proceso.get("estandares_competencia") or {}).get("codigo", "EC")
+    pid       = proceso["id"]
+    link      = f"{frontend_url}/gce?proceso_id={pid}"
+
+    cand   = cand_map.get(proceso.get("candidato_id"), {})
+    nombre = " ".join(filter(None, [cand.get("nombre"), cand.get("apellido")])) or "el candidato"
+
+    ts = proceso.get("updated_at") or proceso.get("created_at", "")
+    try:
+        dt    = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        horas = (datetime.now(timezone.utc) - dt).total_seconds() / 3600
+    except Exception:
+        horas = 0
+
+    es_ce = uid == proceso.get("ce_id")
+    es_ev = uid == proceso.get("evaluador_id")
+    es_ca = uid == proceso.get("candidato_id")
+
+    plan     = datos.get("plan_evaluacion", {})
+    firma_ev = plan.get("firma_evaluador")
+    firma_ca = plan.get("firma_candidato")
+
+    def n(tipo, msg, accion_label, accion_link="", accion_tipo="link"):
+        t = "alerta" if tipo == "urgente" and horas > 24 else tipo
+        return {
+            "proceso_id": pid, "ec_codigo": ec_codigo, "candidato_nombre": nombre,
+            "tipo": t, "mensaje": msg, "accion_label": accion_label,
+            "accion_link": accion_link or link, "accion_tipo": accion_tipo,
+            "horas_sin_cambio": round(horas, 1),
+        }
+
+    notifs = []
+    if estado == "registro":
+        if es_ca: notifs.append(n("urgente", "Llena tu Ficha de Registro para comenzar", "Ir al proceso"))
+        if es_ce: notifs.append(n("urgente", f"Comparte el enlace con {nombre} para que llene su Ficha", "Copiar enlace", link, "copiar"))
+        if es_ev: notifs.append(n("en_espera", f"{nombre} está llenando su Ficha de Registro", "Ver proceso"))
+    elif estado == "diagnostico":
+        if es_ca: notifs.append(n("urgente", "Completa el Diagnóstico de competencias (~30 min)", "Ir al proceso"))
+        if es_ce: notifs.append(n("en_espera", f"{nombre} está realizando el Diagnóstico", "Ver proceso"))
+        if es_ev: notifs.append(n("en_espera", f"{nombre} está realizando el Diagnóstico", "Ver proceso"))
+    elif estado == "plan_acordado":
+        if not firma_ev:
+            if es_ev: notifs.append(n("urgente", f"Llena el Plan de Evaluación para {nombre}", "Ir al proceso"))
+            if es_ca: notifs.append(n("en_espera", "El evaluador está preparando el Plan de Evaluación", "Ver proceso"))
+            if es_ce: notifs.append(n("en_espera", "El evaluador debe llenar el Plan de Evaluación", "Ver proceso"))
+        elif not firma_ca:
+            if es_ca: notifs.append(n("urgente", "El evaluador preparó el Plan. Revísalo y confírmalo", "Ir al proceso"))
+            if es_ev: notifs.append(n("en_espera", f"Esperando que {nombre} confirme el Plan", "Ver proceso"))
+            if es_ce: notifs.append(n("urgente", f"{nombre} no ha confirmado el Plan. Compártele el enlace", "Copiar enlace", link, "copiar"))
+        else:
+            if es_ev: notifs.append(n("urgente", f"Plan acordado. Aplica el IEC a {nombre}", "Ir al proceso"))
+            if es_ca: notifs.append(n("en_espera", "Evaluación en marcha. Recibirás un aviso con el resultado", "Ver proceso"))
+            if es_ce: notifs.append(n("en_espera", "Plan acordado. El evaluador aplica el IEC", "Ver proceso"))
+    elif estado == "juicio":
+        if es_ev: notifs.append(n("urgente", f"Emite la Cédula de Evaluación para {nombre}", "Ir al proceso"))
+        if es_ca: notifs.append(n("en_espera", "El evaluador está preparando tu Cédula de Evaluación", "Ver proceso"))
+        if es_ce: notifs.append(n("en_espera", "El evaluador está emitiendo la Cédula", "Ver proceso"))
+    elif estado == "cierre":
+        if es_ca: notifs.append(n("urgente", "Tu Cédula está lista. Completa la Encuesta de Satisfacción", "Ir al proceso"))
+        if es_ev: notifs.append(n("en_espera", f"Esperando que {nombre} complete la Encuesta", "Ver proceso"))
+        if es_ce: notifs.append(n("en_espera", f"Esperando que {nombre} complete la Encuesta", "Ver proceso"))
+    return notifs

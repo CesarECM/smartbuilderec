@@ -25,6 +25,8 @@
 
       switchRol(rolDefecto);
 
+      if (typeof initNotificaciones === "function") initNotificaciones();
+
       // Retorno desde Stripe checkout de planes
       const params = new URLSearchParams(window.location.search);
       const payment = params.get('payment');
