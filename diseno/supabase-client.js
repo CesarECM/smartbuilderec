@@ -25,3 +25,5 @@ const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, 
     detectSessionInUrl: true,        // necesario para Google OAuth y Magic Links
   }
 });
+// Exponer para módulos ES (gce/main.js, etc.) que no pueden acceder a const global
+window._supabase = _supabase;
