@@ -7,6 +7,8 @@ from models.gce_models import ProcesoCreate, ProcesoUpdate, ESTADOS_VALIDOS
 from services.erp_helpers import _caller, _get_profile, _get_extra_roles
 from services.gce_notificaciones import (
     notificar_candidato_avance,
+    notificar_por_estado,
+    notificar_por_firmas,
     notificar_proceso_creado,
     notificar_evaluador_asignado,
 )
@@ -136,6 +138,13 @@ def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
     if "estado" in payload and payload["estado"] not in ESTADOS_VALIDOS:
         raise HTTPException(400, f"Estado inválido: {payload['estado']}")
 
+    # Pre-fetch datos anteriores si hay actualización de plan (para detectar firmas nuevas)
+    datos_anteriores = {}
+    if "datos" in payload:
+        prev = sb.table("procesos_evaluacion").select("datos") \
+            .eq("id", proceso_id).maybe_single().execute()
+        datos_anteriores = (prev.data or {}).get("datos") or {}
+
     res = (
         sb.table("procesos_evaluacion")
         .update(payload)
@@ -144,6 +153,9 @@ def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
     )
     if "estado" in payload:
         notificar_candidato_avance(sb, proceso_id, payload["estado"])
+        notificar_por_estado(sb, proceso_id, payload["estado"])
+    if "datos" in payload:
+        notificar_por_firmas(sb, proceso_id, payload["datos"], datos_anteriores)
     if payload.get("evaluador_id"):
         notificar_evaluador_asignado(sb, proceso_id, payload["evaluador_id"])
 

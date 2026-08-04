@@ -158,3 +158,84 @@ def build_notifs(proceso: dict, uid: str, cand_map: dict, frontend_url: str) -> 
         if es_ev: notifs.append(n("en_espera", f"Esperando que {nombre} complete la Encuesta", "Ver proceso"))
         if es_ce: notifs.append(n("en_espera", f"Esperando que {nombre} complete la Encuesta", "Ver proceso"))
     return notifs
+
+
+def _fetch_partes(sb, proceso_id: str) -> dict:
+    proc = sb.table("procesos_evaluacion") \
+        .select("candidato_id, evaluador_id, ce_id, estandar_id") \
+        .eq("id", proceso_id).maybe_single().execute()
+    if not proc.data:
+        return {}
+    p = proc.data
+    get_prof = lambda uid: (sb.table("profiles").select("nombre, apellido, email")
+                            .eq("id", uid).maybe_single().execute().data or {}) if uid else {}
+    ec = sb.table("estandares_competencia").select("codigo") \
+        .eq("id", p["estandar_id"]).maybe_single().execute()
+    nombre_completo = lambda d: " ".join(filter(None, [d.get("nombre"), d.get("apellido")])) or d.get("email", "")
+    ce   = get_prof(p.get("ce_id"))
+    ev   = get_prof(p.get("evaluador_id"))
+    ca   = get_prof(p.get("candidato_id"))
+    ec_codigo = (ec.data or {}).get("codigo", "EC")
+    return {"ce": ce, "ev": ev, "ca": ca, "ec_codigo": ec_codigo,
+            "ce_nombre": nombre_completo(ce), "ev_nombre": nombre_completo(ev), "cand_nombre": nombre_completo(ca)}
+
+
+def notificar_por_estado(sb, proceso_id: str, nuevo_estado: str) -> None:
+    try:
+        partes = _fetch_partes(sb, proceso_id)
+        if not partes:
+            return
+        url = f"{_FRONTEND_URL()}/gce?proceso_id={proceso_id}"
+        ce, ev, ca = partes["ce"], partes["ev"], partes["ca"]
+        codigo, cand_n = partes["ec_codigo"], partes["cand_nombre"]
+
+        if nuevo_estado == "diagnostico" and ce.get("email"):
+            send_template("gce_ficha_completa", ce["email"], {
+                "nombre": ce.get("nombre", ce["email"]), "candidato_nombre": cand_n,
+                "ec_codigo": codigo, "link_portafolio": url,
+            })
+        elif nuevo_estado == "plan_acordado" and ev.get("email"):
+            send_template("gce_diagnostico_completo", ev["email"], {
+                "nombre": ev.get("nombre", ev["email"]), "candidato_nombre": cand_n,
+                "ec_codigo": codigo, "link_portafolio": url,
+            })
+        elif nuevo_estado == "certificado" and ce.get("email"):
+            send_template("gce_proceso_completado", ce["email"], {
+                "nombre": ce.get("nombre", ce["email"]), "candidato_nombre": cand_n,
+                "ec_codigo": codigo, "link_portafolio": url,
+            })
+    except Exception as e:
+        print(f"⚠ gce notificar_por_estado error: {e}")
+
+
+def notificar_por_firmas(sb, proceso_id: str, datos_nuevo: dict, datos_anterior: dict) -> None:
+    try:
+        plan_nuevo = (datos_nuevo or {}).get("plan_evaluacion", {})
+        plan_ant   = (datos_anterior or {}).get("plan_evaluacion", {})
+        firma_ev_nueva  = plan_nuevo.get("firma_evaluador")
+        firma_ca_nueva  = plan_nuevo.get("firma_candidato")
+        firma_ev_antes  = plan_ant.get("firma_evaluador")
+        firma_ca_antes  = plan_ant.get("firma_candidato")
+
+        if not firma_ev_nueva and not firma_ca_nueva:
+            return
+        partes = _fetch_partes(sb, proceso_id)
+        if not partes:
+            return
+        url = f"{_FRONTEND_URL()}/gce?proceso_id={proceso_id}"
+        ce, ca = partes["ce"], partes["ca"]
+        codigo = partes["ec_codigo"]
+
+        if firma_ev_nueva and not firma_ev_antes and ca.get("email"):
+            send_template("gce_plan_listo", ca["email"], {
+                "nombre": ca.get("nombre", ca["email"]),
+                "ec_codigo": codigo, "link_portafolio": url,
+            })
+        if firma_ev_nueva and firma_ca_nueva and not firma_ca_antes and ce.get("email"):
+            cand_n = partes["cand_nombre"]
+            send_template("gce_plan_acordado", ce["email"], {
+                "nombre": ce.get("nombre", ce["email"]), "candidato_nombre": cand_n,
+                "ec_codigo": codigo, "link_portafolio": url,
+            })
+    except Exception as e:
+        print(f"⚠ gce notificar_por_firmas error: {e}")
