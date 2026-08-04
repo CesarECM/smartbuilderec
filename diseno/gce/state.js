@@ -29,3 +29,8 @@ export function esCandidato() {
 export function esEvaluador() {
   return state.perfil?.id === state.proceso?.evaluador_id;
 }
+
+/** ¿El usuario activo es el Centro de Evaluación del proceso? */
+export function esCE() {
+  return state.perfil?.id === state.proceso?.ce_id;
+}

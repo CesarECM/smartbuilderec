@@ -5,7 +5,11 @@ from fastapi import APIRouter, HTTPException, Request
 from database import get_supabase
 from models.gce_models import ProcesoCreate, ProcesoUpdate, ESTADOS_VALIDOS
 from services.erp_helpers import _caller, _get_profile, _get_extra_roles
-from services.email_service import send_template
+from services.gce_notificaciones import (
+    notificar_candidato_avance,
+    notificar_proceso_creado,
+    notificar_evaluador_asignado,
+)
 
 router = APIRouter(prefix="/gce", tags=["gce"])
 
@@ -25,7 +29,6 @@ def crear_proceso(data: ProcesoCreate, request: Request):
         if not _puede_gestionar(sb, uid, caller):
             raise HTTPException(403, "Se requiere rol ce_admin.")
 
-        # Verificar duplicado antes de descontar créditos
         dup = sb.table("procesos_evaluacion").select("id") \
             .eq("candidato_id", data.candidato_id) \
             .eq("estandar_id", data.estandar_id) \
@@ -57,7 +60,11 @@ def crear_proceso(data: ProcesoCreate, request: Request):
         payload["credito_canjeado"] = credito_canjeado
 
         res = sb.table("procesos_evaluacion").insert(payload).execute()
-        return res.data[0] if res.data else {}
+        proceso_nuevo = res.data[0] if res.data else {}
+
+        notificar_proceso_creado(sb, proceso_nuevo.get("id", ""),
+                                 data.candidato_id, data.estandar_id, caller)
+        return proceso_nuevo
     except HTTPException:
         raise
     except Exception as e:
@@ -118,39 +125,6 @@ def obtener_proceso(proceso_id: str, request: Request):
     return res.data
 
 
-_ESTADOS_NOTIFICAR = {"juicio", "cierre"}
-_LABELS_ESTADO = {
-    "juicio": "Juicio de evaluación emitido",
-    "cierre": "Cédula de Evaluación disponible",
-}
-
-
-def _notificar_candidato(sb, proceso_id: str, nuevo_estado: str) -> None:
-    if nuevo_estado not in _ESTADOS_NOTIFICAR:
-        return
-    try:
-        proc = sb.table("procesos_evaluacion") \
-            .select("candidato_id, estandar_id") \
-            .eq("id", proceso_id).maybe_single().execute()
-        if not proc.data:
-            return
-        cand = sb.table("profiles").select("nombre, email") \
-            .eq("id", proc.data["candidato_id"]).maybe_single().execute()
-        ec = sb.table("estandares_competencia").select("codigo") \
-            .eq("id", proc.data["estandar_id"]).maybe_single().execute()
-        if not cand.data or not cand.data.get("email"):
-            return
-        frontend_url = os.getenv("FRONTEND_URL", "https://smartbuilderec.vercel.app")
-        send_template("gce_avance_proceso", cand.data["email"], {
-            "nombre":          cand.data.get("nombre", cand.data["email"]),
-            "ec_codigo":       (ec.data or {}).get("codigo", "GCE"),
-            "estado_label":    _LABELS_ESTADO[nuevo_estado],
-            "link_portafolio": f"{frontend_url}/gce?proceso_id={proceso_id}",
-        })
-    except Exception as e:
-        print(f"⚠️ gce notify error: {e}")
-
-
 @router.patch("/procesos/{proceso_id}")
 def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
     sb = get_supabase()
@@ -169,7 +143,10 @@ def actualizar_proceso(proceso_id: str, data: ProcesoUpdate, request: Request):
         .execute()
     )
     if "estado" in payload:
-        _notificar_candidato(sb, proceso_id, payload["estado"])
+        notificar_candidato_avance(sb, proceso_id, payload["estado"])
+    if payload.get("evaluador_id"):
+        notificar_evaluador_asignado(sb, proceso_id, payload["evaluador_id"])
+
     return res.data[0] if res.data else {}
 
 
@@ -216,7 +193,6 @@ def mi_equipo(request: Request):
     if not _puede_gestionar(sb, uid, perfil):
         raise HTTPException(403, "Se requiere rol ce_admin.")
 
-    # 1. Evaluadores del CE
     ev_rows = sb.table("ce_evaluador_relaciones") \
         .select("evaluador_id").eq("ce_id", uid).execute()
     ev_ids = [r["evaluador_id"] for r in (ev_rows.data or [])]
@@ -226,7 +202,6 @@ def mi_equipo(request: Request):
             .select("id, nombre, apellido, email").in_("id", ev_ids).execute()
         evaluadores = prof_res.data or []
 
-    # 2. Candidatos con procesos activos (estado != certificado)
     proc_rows = sb.table("procesos_evaluacion") \
         .select("candidato_id, estandar_id, estado, evaluador_id, "
                 "estandares_competencia(id, codigo, titulo)") \
@@ -284,14 +259,12 @@ def buscar_candidatos(q: str, request: Request):
         )
         return {"candidatos": res.data or []}
 
-    # CE: buscar entre candidatos con admin_id + candidatos que aceptaron invitación
     inv_rows = sb.table("gce_invitaciones") \
         .select("candidato_id").eq("ce_id", uid) \
         .eq("tipo", "candidato").eq("estado", "aceptada").execute()
     inv_ids = [r["candidato_id"] for r in (inv_rows.data or []) if r.get("candidato_id")]
 
     seen, candidatos = set(), []
-    # 1. usuarios registrados bajo este admin
     r1 = (
         sb.table("profiles").select("id, nombre, apellido, email")
         .eq("admin_id", uid)
@@ -301,7 +274,6 @@ def buscar_candidatos(q: str, request: Request):
     for p in (r1.data or []):
         seen.add(p["id"]); candidatos.append(p)
 
-    # 2. candidatos GCE (por invitación)
     if inv_ids:
         r2 = (
             sb.table("profiles").select("id, nombre, apellido, email")

@@ -1,6 +1,6 @@
 // ─── gce/step-ficha.js — Ficha de Registro del Candidato ─────────────────────
 
-import { state, setDatos, getDatos, esCandidato } from "./state.js";
+import { state, setDatos, getDatos, esCandidato, esCE } from "./state.js";
 
 const FID = id => document.getElementById("gce-f-" + id);
 const FVAL = id => FID(id)?.value?.trim() || "";
@@ -150,9 +150,16 @@ export function getTemplate() {
 
 export function initStepFicha() {
   cargarFicha();
-  if (!esCandidato()) {
+  const esCand   = esCandidato();
+  const esCentro = esCE();
+
+  if (!esCand && !esCentro) {
+    // Evaluador u OC: solo lectura
     document.querySelectorAll("#gce-form-ficha input, #gce-form-ficha select, #gce-form-ficha textarea")
       .forEach(el => el.setAttribute("disabled", "true"));
+  }
+  if (!esCand) {
+    // Solo el candidato avanza al Diagnóstico
     document.querySelector("#gce-paso-ficha .wizard-nav-btns")?.remove();
   }
 }
