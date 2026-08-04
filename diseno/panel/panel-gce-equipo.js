@@ -76,3 +76,21 @@ function gceEqRenderCandidatos() {
     <tbody>${filas}</tbody>
   </table></div>`;
 }
+
+function gceRenderStats() {
+  const enCurso = _gce_procesos.filter(p => p.estado !== 'certificado').length;
+  const cert    = _gce_procesos.filter(p => p.estado === 'certificado').length;
+  const $s = id => document.getElementById(id);
+  if ($s('gce-statTotal'))   $s('gce-statTotal').textContent   = _gce_procesos.length;
+  if ($s('gce-statEnCurso')) $s('gce-statEnCurso').textContent = enCurso;
+  if ($s('gce-statCert'))    $s('gce-statCert').textContent    = cert;
+  const pipe  = $s('gce-pipeline');
+  if (!pipe) return;
+  const total  = _gce_procesos.length;
+  const counts = {};
+  _gce_procesos.forEach(p => { counts[p.estado] = (counts[p.estado] || 0) + 1; });
+  pipe.innerHTML = Object.entries(GCE_ESTADOS).map(([k, v]) => {
+    const n = counts[k] || 0, pct = total ? Math.round((n / total) * 100) : 0;
+    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--c-text-3)">${v.label}</span><span style="font-size:12px;font-weight:700">${n}</span></div><div style="height:8px;background:var(--c-border);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${v.color};border-radius:4px;transition:width .35s"></div></div></div>`;
+  }).join('');
+}

@@ -116,6 +116,16 @@ function gceNombre(u) {
   return [u?.nombre, u?.apellido].filter(Boolean).join(' ') || u?.email || '—';
 }
 
+const _GCE_NEXT = {
+  registro:      'Candidato llena Ficha de Registro',
+  diagnostico:   'Candidato completa el Diagnóstico',
+  plan_acordado: 'Evaluador elabora el Plan',
+  evidencias:    'Evaluación de evidencias en curso',
+  juicio:        'Evaluador emite la Cédula',
+  cierre:        'Candidato completa la Encuesta',
+  certificado:   'Proceso completado ✓',
+};
+
 function gceBadge(estado) {
   const e = GCE_ESTADOS[estado] || { label: estado, color: '#94a3b8' };
   return `<span style="display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;color:#fff;background:${e.color};white-space:nowrap">${e.label}</span>`;
@@ -138,27 +148,10 @@ function gceRenderTabla() {
     _gce_procesos.map(p => {
       const ec  = _gce_estandares.find(e => e.id === p.estandar_id) || {};
       const fec = new Date(p.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
-      return `<tr><td><div style="font-weight:600;color:var(--c-text)">${gceNombre(p._candidato)}</div><div style="font-size:11px;color:var(--c-text-3)">${p._candidato?.email || ''}</div></td><td><span class="norma-badge" style="font-size:9px">${ec.codigo || '—'}</span></td><td>${gceBadge(p.estado)}</td><td>${gceEvSelect(p.id, p.evaluador_id)}</td><td style="font-size:12px;color:var(--c-text-4)">${fec}</td><td><button class="btn-sm" onclick="gceCopiarEnlace('${p.id}')" title="Copiar enlace">🔗</button></td></tr>`;
+      const qSigue = _GCE_NEXT[p.estado] ? `<div style="font-size:10px;color:var(--c-text-3);margin-top:3px">${_GCE_NEXT[p.estado]}</div>` : '';
+      return `<tr><td><div style="font-weight:600;color:var(--c-text)">${gceNombre(p._candidato)}</div><div style="font-size:11px;color:var(--c-text-3)">${p._candidato?.email || ''}</div></td><td><span class="norma-badge" style="font-size:9px">${ec.codigo || '—'}</span></td><td>${gceBadge(p.estado)}${qSigue}</td><td>${gceEvSelect(p.id, p.evaluador_id)}</td><td style="font-size:12px;color:var(--c-text-4)">${fec}</td><td><button class="btn-sm" onclick="gceCopiarEnlace('${p.id}')" title="Copiar enlace">🔗</button></td></tr>`;
     }).join('')
   }</tbody></table></div>`;
-}
-
-function gceRenderStats() {
-  const enCurso = _gce_procesos.filter(p => p.estado !== 'certificado').length;
-  const cert    = _gce_procesos.filter(p => p.estado === 'certificado').length;
-  const $s = id => document.getElementById(id);
-  if ($s('gce-statTotal'))  $s('gce-statTotal').textContent  = _gce_procesos.length;
-  if ($s('gce-statEnCurso')) $s('gce-statEnCurso').textContent = enCurso;
-  if ($s('gce-statCert'))   $s('gce-statCert').textContent   = cert;
-  const pipe  = $s('gce-pipeline');
-  if (!pipe) return;
-  const total = _gce_procesos.length;
-  const counts = {};
-  _gce_procesos.forEach(p => { counts[p.estado] = (counts[p.estado] || 0) + 1; });
-  pipe.innerHTML = Object.entries(GCE_ESTADOS).map(([k, v]) => {
-    const n = counts[k] || 0, pct = total ? Math.round((n / total) * 100) : 0;
-    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--c-text-3)">${v.label}</span><span style="font-size:12px;font-weight:700">${n}</span></div><div style="height:8px;background:var(--c-border);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${v.color};border-radius:4px;transition:width .35s"></div></div></div>`;
-  }).join('');
 }
 
 var _gce_buscarTimer = null;
