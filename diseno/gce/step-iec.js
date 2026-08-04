@@ -1,6 +1,6 @@
 // ─── gce/step-iec.js — IEC digital con auto-cálculo y juicio ─────────────────
 
-import { state, setDatos, getDatos, esCandidato } from "./state.js";
+import { state, setDatos, getDatos, puedeEditar } from "./state.js";
 import { BACKEND_URL } from "./config.js";
 import { actualizarSidebar } from "./navigation.js";
 
@@ -39,7 +39,7 @@ export function initStepIEC() {
     return;
   }
 
-  const esEditor = !esCandidato();
+  const esEditor = puedeEditar("iec");
   const d        = getDatos("iec");
   const puntajeMin = cfg.puntaje_minimo ?? 0;
 

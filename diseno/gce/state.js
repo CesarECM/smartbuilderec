@@ -34,3 +34,13 @@ export function esEvaluador() {
 export function esCE() {
   return state.perfil?.id === state.proceso?.ce_id;
 }
+
+/**
+ * ¿El usuario activo puede editar el paso dado?
+ * pasos 3-5 (plan, iec, cedula): solo evaluador y CE
+ * pasos 1-2 y 6 (ficha, diagnostico, encuesta): todos
+ */
+export function puedeEditar(paso) {
+  if (["plan", "iec", "cedula"].includes(paso)) return esEvaluador() || esCE();
+  return true;
+}

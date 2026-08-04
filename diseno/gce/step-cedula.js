@@ -1,6 +1,6 @@
 // ─── gce/step-cedula.js — Cédula de Evaluación ────────────────────────────────
 
-import { state, setDatos, getDatos, esCandidato, esEvaluador } from "./state.js";
+import { state, setDatos, getDatos, esCandidato, puedeEditar } from "./state.js";
 import { BACKEND_URL } from "./config.js";
 import { actualizarSidebar, mostrarPaso } from "./navigation.js";
 
@@ -32,7 +32,7 @@ function _renderCedula() {
   const estado = state.proceso?.estado || "";
   const juicio = state.proceso?.juicio || d.juicio || null;
   const isCand = esCandidato();
-  const editando = esEvaluador() && (estado === "juicio" || estado === "cierre");
+  const editando = puedeEditar("cedula") && (estado === "juicio" || estado === "cierre");
 
   body.innerHTML = "";
   if (juicio) body.insertAdjacentHTML("beforeend", _bannerJuicio(juicio));

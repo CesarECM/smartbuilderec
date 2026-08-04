@@ -1,6 +1,6 @@
 // ─── gce/step-plan.js — Plan de Evaluación + Acuerdo ─────────────────────────
 
-import { state, setDatos, getDatos, esCandidato } from "./state.js";
+import { state, setDatos, getDatos, esCandidato, esEvaluador, esCE, puedeEditar } from "./state.js";
 import { BACKEND_URL } from "./config.js";
 import { actualizarSidebar } from "./navigation.js";
 
@@ -71,7 +71,7 @@ export function initStepPlan() {
   _renderInfoConfig();
   cargarPlan();
   _renderFirmas();
-  if (esCandidato()) {
+  if (!puedeEditar("plan")) {
     document.querySelectorAll("#gce-form-plan input").forEach(el => el.setAttribute("disabled", "true"));
   }
 }
@@ -146,8 +146,9 @@ function _firmaBox(tipo, firmaActual, esRol) {
 
 function _renderFirmas() {
   const d    = getDatos("plan_evaluacion");
-  const isCand = esCandidato();
-  const isEval = !isCand;
+  // CE y evaluador pueden confirmar como evaluador; candidato puro solo confirma como candidato
+  const isEval = esEvaluador() || esCE();
+  const isCand = esCandidato() && !isEval;
 
   document.getElementById("gce-plan-box-ev")?.innerHTML !== undefined &&
     (document.getElementById("gce-plan-box-ev").innerHTML = _firmaBox("ev", d.firma_evaluador, isEval));
