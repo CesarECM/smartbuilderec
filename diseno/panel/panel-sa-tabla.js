@@ -12,6 +12,7 @@
       { id: 'admin',        label: '👑 Admin',     locked: false, userOnly: false },
       { id: 'norma_ec0091', label: '🔬 EC0091',   locked: false, userOnly: false },
       { id: 'norma_ec0616', label: '🏥 EC0616',   locked: false, userOnly: false },
+      { id: 'norma_ec1375', label: '🌿 EC1375',   locked: false, userOnly: false },
       { id: 'ce_admin',     label: '🏫 GCE',      locked: false, userOnly: false },
       { id: 'oc_admin',     label: '🏛️ OC',       locked: false, userOnly: false },
       // super_admin excluido — no asignable desde UI
