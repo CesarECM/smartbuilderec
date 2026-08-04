@@ -3,6 +3,8 @@
 import { state, setDatos, getDatos, esCandidato } from "./state.js";
 import { BACKEND_URL } from "./config.js";
 
+let _siNoState = {};
+
 // ── Template shell (los reactivos se inyectan en initStepDiagnostico) ─────────
 
 export function getTemplate() {
@@ -49,6 +51,8 @@ export function initStepDiagnostico() {
     return;
   }
 
+  _siNoState = {};
+  window.gceSiNoMarcar = _siNoMarcar;
   _renderReactivos(cfg.reactivos || []);
 
   const footer = document.getElementById("gce-diag-footer");
@@ -64,6 +68,9 @@ function _renderReactivos(reactivos) {
   const el = document.getElementById("gce-diag-reactivos");
   if (!el) return;
   el.innerHTML = reactivos.map(r => {
+    if (r.tipo === "grupo_header")    return _htmlGrupoHeader(r);
+    if (r.tipo === "seccion_header")  return _htmlSeccionHeader(r);
+    if (r.tipo === "si_no")           return _htmlSiNo(r);
     if (r.tipo === "opcion_multiple") return _htmlOpcionMultiple(r);
     if (r.tipo === "relacion")        return _htmlRelacion(r);
     return "";
@@ -98,6 +105,51 @@ function _htmlRelacion(r) {
   </div>`;
 }
 
+function _htmlGrupoHeader(r) {
+  return `<div style="margin:20px 0 6px;padding:8px 12px;background:#ecfdf5;border-left:3px solid #065f46;border-radius:4px">
+    <span style="font-size:12px;font-weight:700;color:#065f46">${r.texto}</span>
+  </div>`;
+}
+
+function _htmlSeccionHeader(r) {
+  return `<div style="margin:10px 0 4px;font-size:10px;font-weight:700;color:var(--c-text-3);letter-spacing:.08em">${r.texto}</div>`;
+}
+
+function _htmlSiNo(r) {
+  const val   = _siNoState[r.num];
+  const siAct = val === true;
+  const noAct = val === false;
+  const _btn  = (lbl, isTrue) => {
+    const act   = isTrue ? siAct : noAct;
+    const color = isTrue ? "#065f46" : "#b91c1c";
+    const bg    = isTrue ? "#ecfdf5" : "#fef2f2";
+    return `<button type="button" data-sino-val="${isTrue}"
+      onclick="gceSiNoMarcar(${r.num},${isTrue})"
+      style="padding:3px 10px;border-radius:4px;font-weight:700;font-size:11px;cursor:pointer;
+             border:1px solid ${act ? color : "var(--c-border)"};
+             background:${act ? bg : "none"};color:${act ? color : "var(--c-text-3)"}">${lbl}</button>`;
+  };
+  return `<div id="gce-sino-${r.num}" style="display:flex;align-items:center;gap:8px;padding:5px 4px;border-bottom:1px solid var(--c-border)">
+    <span style="flex:1;font-size:12px;color:var(--c-text-2)">${r.num}. ${r.descripcion}</span>
+    <div style="display:flex;gap:4px;flex-shrink:0">${_btn("SI", true)}${_btn("NO", false)}</div>
+  </div>`;
+}
+
+function _siNoMarcar(num, val) {
+  _siNoState[num] = val;
+  const row = document.getElementById(`gce-sino-${num}`);
+  if (!row) return;
+  row.querySelectorAll("button[data-sino-val]").forEach(btn => {
+    const isSI  = btn.dataset.sinoVal === "true";
+    const act   = isSI ? val === true : val === false;
+    const color = isSI ? "#065f46" : "#b91c1c";
+    const bg    = isSI ? "#ecfdf5" : "#fef2f2";
+    btn.style.borderColor = act ? color : "var(--c-border)";
+    btn.style.background  = act ? bg    : "none";
+    btn.style.color       = act ? color : "var(--c-text-3)";
+  });
+}
+
 // ── Cálculo de resultado ──────────────────────────────────────────────────────
 
 function _calcularResultado() {
@@ -112,10 +164,13 @@ function _calcularResultado() {
     } else if (r.tipo === "relacion") {
       const chk = document.querySelector(`.gce-relacion-confirm[data-num="${r.num}"]`);
       if (chk?.checked) correctas++;
+    } else if (r.tipo === "si_no") {
+      if (_siNoState[r.num] === true) correctas++;
     }
   });
 
-  const total = reactivos.length;
+  const _HEADERS = new Set(["grupo_header", "seccion_header"]);
+  const total = reactivos.filter(r => !_HEADERS.has(r.tipo)).length;
   const tabla = cfg.tabla_interpretacion || [];
   const entry = tabla.find(t => correctas >= t.min && correctas <= t.max)
              || tabla[tabla.length - 1]
