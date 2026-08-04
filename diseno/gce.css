@@ -145,6 +145,29 @@ textarea.form-input {
   border-top: 1px solid var(--c-border);
 }
 
+/* ── Banners de acción ───────────────────────────────────────── */
+#gce-action-banner { max-width:820px; margin:0 auto; padding:12px 24px 0 }
+
+.gce-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.gce-banner-urgente  { background:#fef2f2; border-color:#fca5a5; color:#7f1d1d }
+.gce-banner-alerta   { background:#fff7ed; border-color:#fcd34d; color:#78350f }
+.gce-banner-info     { background:#eff6ff; border-color:#bfdbfe; color:#1e40af }
+.gce-banner-espera   { background:#f0fdf4; border-color:#86efac; color:#14532d }
+.gce-banner-icono    { font-size:18px; flex-shrink:0; margin-top:1px }
+.gce-banner-texto    { flex:1 }
+.gce-banner-titulo   { font-weight:700; margin-bottom:2px }
+.gce-banner-msg      { opacity:.85 }
+
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .form-grid-2 {

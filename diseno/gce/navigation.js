@@ -2,6 +2,7 @@
 
 import { PASOS, ESTADO_A_PASO } from "./config.js";
 import { state, getDatos } from "./state.js";
+import { actualizarBanner } from "./banner.js";
 
 // ── Sidebar HTML ─────────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export function mostrarPaso(id) {
 
   state.pasoActivo = id;
   actualizarSidebar();
+  actualizarBanner();
 
   const menuToggle = document.getElementById("menuToggle");
   if (menuToggle && window.innerWidth <= 768) {
