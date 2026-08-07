@@ -14,7 +14,7 @@ def asignar_rol(data: AsignarRolRequest, request: Request):
     caller = _get_profile(sb, caller_id)
     _require_role(caller, "super_admin")
 
-    if data.role not in ("evaluador", "asesor", "norma_ec0091", "norma_ec0616", "norma_ec1375", "oc_admin", "ce_admin"):
+    if data.role not in ("evaluador", "asesor", "norma_ec0091", "norma_ec0616", "norma_ec0616_tutor", "norma_ec1375", "oc_admin", "ce_admin"):
         raise HTTPException(status_code=400, detail="role no válido.")
 
     user_res = sb.table("profiles").select("id, nombre, email").eq("id", data.user_id).single().execute()
@@ -38,7 +38,7 @@ def quitar_rol(user_id: str, role: str, request: Request):
     caller = _get_profile(sb, caller_id)
     _require_role(caller, "super_admin")
 
-    if role not in ("evaluador", "asesor", "norma_ec0091", "norma_ec0616", "norma_ec1375", "oc_admin", "ce_admin"):
+    if role not in ("evaluador", "asesor", "norma_ec0091", "norma_ec0616", "norma_ec0616_tutor", "norma_ec1375", "oc_admin", "ce_admin"):
         raise HTTPException(status_code=400, detail="role no válido.")
 
     sb.table("user_roles").delete().eq("user_id", user_id).eq("role", role).execute()

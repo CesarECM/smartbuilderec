@@ -108,6 +108,22 @@ document.getElementById('rp-alumno').innerHTML = `
         <div id="alumno-ec0616-lista"><p class="loading-txt">Cargando...</p></div>
       </div>
 
+      <!-- ─ Sección 5b: Portafolio Tutor EC0616 ───────────────────── -->
+      <div id="alumno-ec0616t-section" style="display:none">
+        <div class="sec-header sec-gap">
+          <div>
+            <h2>🗂️ Portafolio Tutor <span class="count-tag">EC0616 PE</span></h2>
+            <p style="font-size:12px;color:var(--c-text-3);margin:4px 0 0">
+              Llena el Portafolio de Evidencias completo en una sola sesión.
+            </p>
+          </div>
+          <div class="sec-actions">
+            <a href="ec0616-tutor?new=1" class="btn-primary">+ Nuevo portafolio PE</a>
+          </div>
+        </div>
+        <div id="alumno-ec0616t-lista"><p class="loading-txt">Cargando...</p></div>
+      </div>
+
       <!-- ─ Sección 6: Mis expedientes EC1375 ─────────────────────── -->
       <div id="alumno-ec1375-section" style="display:none">
         <div class="sec-header sec-gap">
