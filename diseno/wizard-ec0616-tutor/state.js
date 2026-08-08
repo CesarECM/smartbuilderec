@@ -2,7 +2,7 @@
 
 import { PREFIJO, ID_KEY } from "./config.js";
 
-export const state = { perfil: null, iecData: null };
+export const state = { perfil: null, iecData: null, tutor_config: null };
 
 export function getDatos(seccion) {
   const raw = localStorage.getItem(`${PREFIJO}${seccion}`);

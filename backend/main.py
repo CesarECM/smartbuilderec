@@ -52,7 +52,7 @@ from routers import ia_cierre_router, ia_evaluacion_router, ia_materiales_router
 from routers import docs_router, health_router, cron_admin_router
 from routers import sync_fallback_router
 from routers import ia_ec0091_router, docs_ec0091_router
-from routers import ia_ec0616_router, docs_ec0616_router
+from routers import ia_ec0616_router, docs_ec0616_router, ec0616_tutor_router
 from routers import ia_ec1375_router, docs_ec1375_router
 from routers import estandares_router
 from routers import gce_router
@@ -82,6 +82,7 @@ app.include_router(ia_ec0091_router.router)
 app.include_router(docs_ec0091_router.router)
 app.include_router(ia_ec0616_router.router)
 app.include_router(docs_ec0616_router.router)
+app.include_router(ec0616_tutor_router.router)
 app.include_router(ia_ec1375_router.router)
 app.include_router(docs_ec1375_router.router)
 app.include_router(estandares_router.router)

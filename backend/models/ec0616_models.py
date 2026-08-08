@@ -27,3 +27,19 @@ class EC0616GenerateDocRequest(BaseModel):
     postmortem: dict[str, Any] = {}
     autocuidado: dict[str, Any] = {}
     registro_id: Optional[str] = None
+
+
+class EC0616TutorGenerateDocRequest(BaseModel):
+    ficha: dict[str, Any] = {}
+    confidencial: dict[str, Any] = {}
+    diagnostico: dict[str, Any] = {}
+    plan: dict[str, Any] = {}
+    iec1: dict[str, Any] = {}
+    iec2: dict[str, Any] = {}
+    iec3: dict[str, Any] = {}
+    iec4: dict[str, Any] = {}
+    iec5: dict[str, Any] = {}
+    iec6: dict[str, Any] = {}
+    iec7: dict[str, Any] = {}
+    cierre: dict[str, Any] = {}
+    registro_id: Optional[str] = None
