@@ -272,6 +272,7 @@ export function initIAEvaluacion() {
   if (btnTodo) btnTodo.addEventListener("click", () => _generarTodoEvaluaciones(btnTodo));
 
   document.getElementById("btnGenerarDiagnostica")?.addEventListener("click", () => generarEvaluacionIA("diagnostica"));
+  document.getElementById("btnGenerarFormativa")?.addEventListener("click",   generarFormativaIA);
   document.getElementById("btnGenerarSumativa")?.addEventListener("click",    () => generarEvaluacionIA("sumativa"));
 
   document.getElementById("btnGenerarAPFDiagnostica")?.addEventListener("click", () => generarAPFIA("diagnostica"));
