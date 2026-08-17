@@ -33,22 +33,20 @@ async function getUserProfile() {
     return fallback;
   }
 
-  // Si el usuario pertenece a un admin, heredar el branding del admin
+  // Si el usuario pertenece a un admin, heredar el branding vía RPC (SECURITY DEFINER)
+  // El query directo a profiles falla por RLS cuando el user lee la fila del admin.
   if (data.admin_id && !data.branding_color_primario && !data.branding_logo_url) {
-    const { data: adminBranding } = await _supabase
-      .from("profiles")
-      .select("branding_logo_url, branding_empresa, branding_color_primario, branding_color_acento, branding_color_oscuro, branding_color_profundo, branding_color_fondo, branding_color_borde")
-      .eq("id", data.admin_id)
-      .single();
-    if (adminBranding) {
-      data.branding_logo_url       = adminBranding.branding_logo_url;
-      data.branding_empresa        = adminBranding.branding_empresa;
-      data.branding_color_primario = adminBranding.branding_color_primario;
-      data.branding_color_acento   = adminBranding.branding_color_acento;
-      data.branding_color_oscuro   = adminBranding.branding_color_oscuro;
-      data.branding_color_profundo = adminBranding.branding_color_profundo;
-      data.branding_color_fondo    = adminBranding.branding_color_fondo;
-      data.branding_color_borde    = adminBranding.branding_color_borde;
+    const { data: adminBranding } = await _supabase.rpc("get_admin_branding");
+    const row = Array.isArray(adminBranding) ? adminBranding[0] : adminBranding;
+    if (row) {
+      data.branding_logo_url       = row.branding_logo_url;
+      data.branding_empresa        = row.branding_empresa;
+      data.branding_color_primario = row.branding_color_primario;
+      data.branding_color_acento   = row.branding_color_acento;
+      data.branding_color_oscuro   = row.branding_color_oscuro;
+      data.branding_color_profundo = row.branding_color_profundo;
+      data.branding_color_fondo    = row.branding_color_fondo;
+      data.branding_color_borde    = row.branding_color_borde;
     }
   }
 
