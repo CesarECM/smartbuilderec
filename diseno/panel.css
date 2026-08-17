@@ -211,4 +211,10 @@
     .branding-msg           { font-size: 13px; }
     .branding-msg.ok        { color: var(--c-success); }
     .branding-msg.err       { color: var(--c-danger); }
+    /* Paleta expandida */
+    .branding-field-hint    { font-size: 11px; color: var(--c-text-4); margin: 2px 0 0; line-height: 1.3; }
+    .branding-palette-header { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .brd-generar-btn        { align-self: flex-end; white-space: nowrap; flex-shrink: 0; }
+    .branding-palette-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 500px) { .branding-palette-grid { grid-template-columns: 1fr; } }
 

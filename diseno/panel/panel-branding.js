@@ -1,35 +1,96 @@
 // panel-branding.js — Lógica del panel de configuración de marca blanca
 
-var _brd_pendingFile = null; // archivo de logo seleccionado pero no subido aún
+var _brd_pendingFile = null;
+
+// ── Helpers internos ─────────────────────────────────────────────────────────
+
+function _brdIsHex(v) { return /^#[0-9A-Fa-f]{6}$/.test((v || '').trim()); }
+
+function _setBrdPicker(capToken, hex) {
+  const picker = document.getElementById(`brd-color${capToken}`);
+  const input  = document.getElementById(`brd-color${capToken}Hex`);
+  if (picker) picker.value = hex;
+  if (input)  input.value  = hex;
+}
+
+function _getBrdOverrides() {
+  return {
+    oscuro:   document.getElementById('brd-colorOscuroHex')?.value.trim()   || null,
+    profundo: document.getElementById('brd-colorProfundoHex')?.value.trim() || null,
+    fondo:    document.getElementById('brd-colorFondoHex')?.value.trim()    || null,
+    borde:    document.getElementById('brd-colorBordeHex')?.value.trim()    || null,
+  };
+}
 
 // ── Preview en tiempo real ───────────────────────────────────────────────────
 
+// Aplica todos los colores actuales al <style id="sbe-branding">
+function brandingPreviewFull() {
+  const hexP = document.getElementById('brd-colorPHex')?.value.trim()
+            || document.getElementById('brd-colorP')?.value;
+  const hexA = document.getElementById('brd-colorAHex')?.value.trim()
+            || document.getElementById('brd-colorA')?.value;
+  if (!hexP || typeof window._generarCSSBranding !== 'function') return;
+  const css = window._generarCSSBranding(hexP, hexA, _getBrdOverrides());
+  let el = document.getElementById('sbe-branding');
+  if (!el) { el = document.createElement('style'); el.id = 'sbe-branding'; document.head.appendChild(el); }
+  el.textContent = css;
+}
+
+// Sincroniza los hex-inputs de primario/acento y actualiza preview
 function brandingPreviewColor() {
   const hexP = document.getElementById('brd-colorP')?.value;
   const hexA = document.getElementById('brd-colorA')?.value;
-  document.getElementById('brd-colorPHex').value = hexP;
-  document.getElementById('brd-colorAHex').value = hexA;
-  if (typeof _generarCSSBranding === 'function') {
-    const css = _generarCSSBranding(hexP, hexA);
-    let el = document.getElementById('sbe-branding');
-    if (!el) { el = document.createElement('style'); el.id = 'sbe-branding'; document.head.appendChild(el); }
-    el.textContent = css;
-  }
+  const pHex = document.getElementById('brd-colorPHex');
+  const aHex = document.getElementById('brd-colorAHex');
+  if (pHex) pHex.value = hexP;
+  if (aHex) aHex.value = hexA;
+  brandingPreviewFull();
 }
 
+// Sincroniza picker desde hex-input (primario y acento)
 function brandingSyncHex(tipo) {
   const hexInput = document.getElementById(`brd-color${tipo}Hex`);
   const picker   = document.getElementById(`brd-color${tipo}`);
   if (!hexInput || !picker) return;
   const val = hexInput.value.trim();
-  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-    picker.value = val;
-    brandingPreviewColor();
-  }
+  if (_brdIsHex(val)) { picker.value = val; brandingPreviewFull(); }
+}
+function brandingsSyncHex(tipo) { brandingSyncHex(tipo); }
+
+// Sincroniza picker derivado desde su hex-input y actualiza preview
+function brandingSyncToken(token) {
+  const cap    = token.charAt(0).toUpperCase() + token.slice(1);
+  const input  = document.getElementById(`brd-color${cap}Hex`);
+  const picker = document.getElementById(`brd-color${cap}`);
+  if (!input || !picker) return;
+  const val = input.value.trim();
+  if (_brdIsHex(val)) { picker.value = val; brandingPreviewFull(); }
 }
 
-// Alias para el oninput del acento (typo corregido en handler)
-function brandingsSyncHex(tipo) { brandingSyncHex(tipo); }
+// Sincroniza hex-input desde picker derivado y actualiza preview
+function brandingPreviewToken(token) {
+  const cap   = token.charAt(0).toUpperCase() + token.slice(1);
+  const hex   = document.getElementById(`brd-color${cap}`)?.value;
+  const input = document.getElementById(`brd-color${cap}Hex`);
+  if (input && hex) input.value = hex;
+  brandingPreviewFull();
+}
+
+// Recalcula los 4 tokens derivados a partir del color principal
+function brandingGenerarPaleta() {
+  const hexP = document.getElementById('brd-colorPHex')?.value.trim()
+            || document.getElementById('brd-colorP')?.value;
+  if (!hexP || !_brdIsHex(hexP) || typeof window._computarDerivados !== 'function') return;
+  const d = window._computarDerivados(hexP);
+  _setBrdPicker('Oscuro',   d.oscuro);
+  _setBrdPicker('Profundo', d.profundo);
+  _setBrdPicker('Fondo',    d.fondo);
+  _setBrdPicker('Borde',    d.borde);
+  brandingPreviewFull();
+}
+
+// ── Preview de logo y empresa ────────────────────────────────────────────────
 
 function brandingPreviewLogo(input) {
   if (!input.files?.[0]) return;
@@ -66,7 +127,6 @@ async function brandingGuardar() {
     const { data: { user } } = await _supabase.auth.getUser();
     let logoUrl = _perfil.branding_logo_url || null;
 
-    // Subir logo si hay archivo pendiente
     if (_brd_pendingFile) {
       const ext  = _brd_pendingFile.name.split('.').pop().toLowerCase();
       const path = `${user.id}/logo.${ext}`;
@@ -79,26 +139,38 @@ async function brandingGuardar() {
       _brd_pendingFile = null;
     }
 
-    const empresa = (document.getElementById('brd-empresa')?.value || '').trim();
-    const colorP  = document.getElementById('brd-colorP')?.value  || null;
-    const colorA  = document.getElementById('brd-colorA')?.value  || null;
+    const empresa    = (document.getElementById('brd-empresa')?.value         || '').trim();
+    const colorP     = document.getElementById('brd-colorPHex')?.value.trim() || null;
+    const colorA     = document.getElementById('brd-colorAHex')?.value.trim() || null;
+    const colorOsc   = document.getElementById('brd-colorOscuroHex')?.value.trim()   || null;
+    const colorProf  = document.getElementById('brd-colorProfundoHex')?.value.trim() || null;
+    const colorFondo = document.getElementById('brd-colorFondoHex')?.value.trim()    || null;
+    const colorBorde = document.getElementById('brd-colorBordeHex')?.value.trim()    || null;
 
     const { error } = await _supabase.from('profiles').update({
       branding_logo_url:      logoUrl,
       branding_empresa:        empresa  || null,
       branding_color_primario: colorP,
       branding_color_acento:   colorA,
+      branding_color_oscuro:   colorOsc,
+      branding_color_profundo: colorProf,
+      branding_color_fondo:    colorFondo,
+      branding_color_borde:    colorBorde,
     }).eq('id', user.id);
 
     if (error) throw new Error(error.message);
 
-    // Actualizar _perfil global
-    _perfil.branding_logo_url      = logoUrl;
-    _perfil.branding_empresa        = empresa || null;
-    _perfil.branding_color_primario = colorP;
-    _perfil.branding_color_acento   = colorA;
+    Object.assign(_perfil, {
+      branding_logo_url:      logoUrl,
+      branding_empresa:        empresa || null,
+      branding_color_primario: colorP,
+      branding_color_acento:   colorA,
+      branding_color_oscuro:   colorOsc,
+      branding_color_profundo: colorProf,
+      branding_color_fondo:    colorFondo,
+      branding_color_borde:    colorBorde,
+    });
 
-    // Re-render del botón de logo si había logo nuevo
     if (logoUrl) {
       const actions = document.querySelector('.branding-logo-actions');
       if (actions && !actions.querySelector('.danger')) {
@@ -122,12 +194,9 @@ async function brandingEliminarLogo() {
   if (!confirm('¿Eliminar el logo actual?')) return;
   try {
     const { data: { user } } = await _supabase.auth.getUser();
-    // Intentar eliminar archivos comunes del bucket
     await _supabase.storage.from('branding').remove([
-      `${user.id}/logo.png`,
-      `${user.id}/logo.jpg`,
-      `${user.id}/logo.jpeg`,
-      `${user.id}/logo.webp`,
+      `${user.id}/logo.png`, `${user.id}/logo.jpg`,
+      `${user.id}/logo.jpeg`, `${user.id}/logo.webp`,
     ]);
     await _supabase.from('profiles').update({ branding_logo_url: null }).eq('id', user.id);
     _perfil.branding_logo_url = null;
@@ -139,7 +208,6 @@ async function brandingEliminarLogo() {
     if (lbl) lbl.textContent = '⬆️ Subir logo';
     const delBtn = document.querySelector('.branding-logo-actions .danger');
     if (delBtn) delBtn.remove();
-
     const headerLogoEl = document.getElementById('headerLogo');
     if (headerLogoEl) headerLogoEl.src = 'img/ECM%20blanco%20sin%20fondo.png';
     _brdMsg('Logo eliminado', 'ok');
@@ -155,15 +223,17 @@ async function brandingRestaurar() {
   try {
     const { data: { user } } = await _supabase.auth.getUser();
     await _supabase.from('profiles').update({
-      branding_logo_url:      null,
-      branding_empresa:        null,
-      branding_color_primario: null,
-      branding_color_acento:   null,
+      branding_logo_url: null, branding_empresa: null,
+      branding_color_primario: null, branding_color_acento: null,
+      branding_color_oscuro: null,   branding_color_profundo: null,
+      branding_color_fondo: null,    branding_color_borde: null,
     }).eq('id', user.id);
 
     Object.assign(_perfil, {
       branding_logo_url: null, branding_empresa: null,
       branding_color_primario: null, branding_color_acento: null,
+      branding_color_oscuro: null,   branding_color_profundo: null,
+      branding_color_fondo: null,    branding_color_borde: null,
     });
 
     if (typeof limpiarBranding === 'function') limpiarBranding();
@@ -173,7 +243,6 @@ async function brandingRestaurar() {
     if (headerLogoEl)  headerLogoEl.src         = 'img/ECM%20blanco%20sin%20fondo.png';
     if (headerTitleEl) headerTitleEl.textContent = 'SmartBuilderEC';
 
-    // Re-renderizar el panel con valores por defecto
     const container = document.getElementById('adm-panel-branding');
     if (container) container.innerHTML = _htmlBrandingPanel(_perfil);
 
@@ -183,7 +252,7 @@ async function brandingRestaurar() {
   }
 }
 
-// ── Helper ───────────────────────────────────────────────────────────────────
+// ── Helper de mensajes ───────────────────────────────────────────────────────
 
 function _brdMsg(texto, tipo) {
   const el = document.getElementById('brd-msg');

@@ -25,11 +25,6 @@
     return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
   }
 
-  function _hsl(h, s, l) {
-    return `hsl(${h}, ${s}%, ${l}%)`;
-  }
-
-  // Convierte HSL a [r, g, b] enteros (para generar rgba en sombras)
   function _hslToRgb(h, s, l) {
     s /= 100; l /= 100;
     const k = n => (n + h / 30) % 12;
@@ -38,36 +33,41 @@
     return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
   }
 
-  // Genera la cadena de CSS variables que sobrescriben variables.css
-  function _generarCSS(hexP, hexA) {
-    const p = _hexToHSL(hexP);
+  function _hslToHex(h, s, l) {
+    const [r, g, b] = _hslToRgb(h, s, l);
+    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Genera la cadena de CSS variables que sobrescriben variables.css.
+  // overrides: { oscuro, profundo, fondo, borde } — hex strings opcionales para tokens editables.
+  function _generarCSS(hexP, hexA, overrides = {}) {
+    const { h, s } = _hexToHSL(hexP);
     const a = hexA ? _hexToHSL(hexA) : null;
-    const { h, s } = p;
-    const [rD, gD, bD] = _hslToRgb(h, s, 25); // tono oscuro del primario (para sombras)
+    const [rD, gD, bD] = _hslToRgb(h, s, 25);
+
+    const oscuro   = (_esHex(overrides.oscuro)   ? overrides.oscuro   : null) ?? _hslToHex(h, s, 25);
+    const profundo = (_esHex(overrides.profundo)  ? overrides.profundo : null) ?? _hslToHex(h, s, 10);
+    const fondo    = (_esHex(overrides.fondo)     ? overrides.fondo    : null) ?? _hslToHex(h, Math.round(s * 0.6), 96);
+    const borde    = (_esHex(overrides.borde)     ? overrides.borde    : null) ?? _hslToHex(h, Math.round(s * 0.35), 88);
 
     const lines = [
-      // Escala de azules → sustituida por escala del color primario
-      `--c-blue-900: ${_hsl(h, s, 10)};`,
-      `--c-blue-800: ${_hsl(h, s, 18)};`,
-      `--c-blue-700: ${_hsl(h, s, 25)};`,
+      `--c-blue-900: ${profundo};`,
+      `--c-blue-800: ${_hslToHex(h, s, 18)};`,
+      `--c-blue-700: ${oscuro};`,
       `--c-blue-600: ${hexP};`,
-      `--c-blue-500: ${_hsl(h, s, 42)};`,
-      `--c-blue-400: ${_hsl(h, s, 58)};`,
-      `--c-blue-100: ${_hsl(h, Math.round(s * 0.6), 88)};`,
-      `--c-blue-50:  ${_hsl(h, Math.round(s * 0.4), 94)};`,
-      // Sidebar gradient
-      `--sb-bg: linear-gradient(180deg, ${_hsl(h, s, 25)} 0%, ${_hsl(h, s, 10)} 100%);`,
+      `--c-blue-500: ${_hslToHex(h, s, 42)};`,
+      `--c-blue-400: ${_hslToHex(h, s, 58)};`,
+      `--c-blue-100: ${_hslToHex(h, Math.round(s * 0.6), 88)};`,
+      `--c-blue-50:  ${_hslToHex(h, Math.round(s * 0.4), 94)};`,
+      `--sb-bg: linear-gradient(180deg, ${oscuro} 0%, ${profundo} 100%);`,
       `--sb-accent: ${hexA || hexP};`,
-      // Texto con tono del primario
-      `--c-text-2: ${_hsl(h, Math.round(s * 0.7), 28)};`,
-      `--c-text-3: ${_hsl(h, Math.round(s * 0.5), 48)};`,
-      `--c-text-4: ${_hsl(h, Math.round(s * 0.35), 65)};`,
-      // Fondos y bordes con tint del primario
-      `--c-bg:        ${_hsl(h, Math.round(s * 0.6), 96)};`,
-      `--c-surface-2: ${_hsl(h, Math.round(s * 0.3), 98)};`,
-      `--c-border:    ${_hsl(h, Math.round(s * 0.35), 88)};`,
-      `--c-border-s:  ${_hsl(h, Math.round(s * 0.4), 80)};`,
-      // Sombras con el tono oscuro del primario
+      `--c-text-2: ${_hslToHex(h, Math.round(s * 0.7), 28)};`,
+      `--c-text-3: ${_hslToHex(h, Math.round(s * 0.5), 48)};`,
+      `--c-text-4: ${_hslToHex(h, Math.round(s * 0.35), 65)};`,
+      `--c-bg:        ${fondo};`,
+      `--c-surface-2: ${_hslToHex(h, Math.round(s * 0.3), 98)};`,
+      `--c-border:    ${borde};`,
+      `--c-border-s:  ${_hslToHex(h, Math.round(s * 0.4), 80)};`,
       `--shadow-sm: 0 2px 8px rgba(${rD},${gD},${bD},0.09);`,
       `--shadow-md: 0 4px 16px rgba(${rD},${gD},${bD},0.13);`,
       `--shadow-lg: 0 10px 32px rgba(${rD},${gD},${bD},0.18);`,
@@ -76,8 +76,8 @@
     if (a) {
       lines.push(
         `--c-ai:       ${hexA};`,
-        `--c-ai-dark:  ${_hsl(a.h, a.s, Math.max(a.l - 15, 5))};`,
-        `--c-ai-light: ${_hsl(a.h, Math.round(a.s * 0.5), 92)};`,
+        `--c-ai-dark:  ${_hslToHex(a.h, a.s, Math.max(a.l - 15, 5))};`,
+        `--c-ai-light: ${_hslToHex(a.h, Math.round(a.s * 0.5), 92)};`,
         `--shadow-ai:  0 4px 20px ${hexA}52;`,
       );
     }
@@ -118,30 +118,43 @@
 
   // ── API pública ──────────────────────────────────────────────────
 
-  // Valida que un string sea hex de 6 dígitos
   function _esHex(v) {
     return typeof v === 'string' && /^#[0-9A-Fa-f]{6}$/.test(v.trim());
   }
 
-  // Aplica el branding completo a partir del objeto _perfil
   function inyectarBranding(perfil) {
     if (!perfil) return;
     const hexP = perfil.branding_color_primario;
     const hexA = perfil.branding_color_acento;
     if (_esHex(hexP)) {
-      _inyectarCSS(_generarCSS(hexP.trim(), _esHex(hexA) ? hexA.trim() : null));
+      const overrides = {
+        oscuro:   perfil.branding_color_oscuro   || null,
+        profundo: perfil.branding_color_profundo  || null,
+        fondo:    perfil.branding_color_fondo     || null,
+        borde:    perfil.branding_color_borde     || null,
+      };
+      _inyectarCSS(_generarCSS(hexP.trim(), _esHex(hexA) ? hexA.trim() : null, overrides));
     } else {
       _limpiarCSS();
     }
     _aplicarHeader(perfil.branding_logo_url || null, perfil.branding_empresa || null);
   }
 
-  // Elimina el branding (restaura colores por defecto)
   function limpiarBranding() {
     _limpiarCSS();
   }
 
-  window.inyectarBranding = inyectarBranding;
-  window.limpiarBranding  = limpiarBranding;
-  window._generarCSSBranding = _generarCSS; // expuesto para preview en tiempo real
+  window.inyectarBranding    = inyectarBranding;
+  window.limpiarBranding     = limpiarBranding;
+  window._generarCSSBranding = _generarCSS;
+  // Calcula los 4 tokens derivados como hex a partir del color primario
+  window._computarDerivados  = function (hexP) {
+    const { h, s } = _hexToHSL(hexP);
+    return {
+      oscuro:   _hslToHex(h, s, 25),
+      profundo: _hslToHex(h, s, 10),
+      fondo:    _hslToHex(h, Math.round(s * 0.6), 96),
+      borde:    _hslToHex(h, Math.round(s * 0.35), 88),
+    };
+  };
 })();
