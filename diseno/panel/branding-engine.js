@@ -29,11 +29,21 @@
     return `hsl(${h}, ${s}%, ${l}%)`;
   }
 
+  // Convierte HSL a [r, g, b] enteros (para generar rgba en sombras)
+  function _hslToRgb(h, s, l) {
+    s /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const c = s * Math.min(l, 1 - l);
+    const f = n => l - c * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
+  }
+
   // Genera la cadena de CSS variables que sobrescriben variables.css
   function _generarCSS(hexP, hexA) {
     const p = _hexToHSL(hexP);
     const a = hexA ? _hexToHSL(hexA) : null;
     const { h, s } = p;
+    const [rD, gD, bD] = _hslToRgb(h, s, 25); // tono oscuro del primario (para sombras)
 
     const lines = [
       // Escala de azules → sustituida por escala del color primario
@@ -52,6 +62,15 @@
       `--c-text-2: ${_hsl(h, Math.round(s * 0.7), 28)};`,
       `--c-text-3: ${_hsl(h, Math.round(s * 0.5), 48)};`,
       `--c-text-4: ${_hsl(h, Math.round(s * 0.35), 65)};`,
+      // Fondos y bordes con tint del primario
+      `--c-bg:        ${_hsl(h, Math.round(s * 0.6), 96)};`,
+      `--c-surface-2: ${_hsl(h, Math.round(s * 0.3), 98)};`,
+      `--c-border:    ${_hsl(h, Math.round(s * 0.35), 88)};`,
+      `--c-border-s:  ${_hsl(h, Math.round(s * 0.4), 80)};`,
+      // Sombras con el tono oscuro del primario
+      `--shadow-sm: 0 2px 8px rgba(${rD},${gD},${bD},0.09);`,
+      `--shadow-md: 0 4px 16px rgba(${rD},${gD},${bD},0.13);`,
+      `--shadow-lg: 0 10px 32px rgba(${rD},${gD},${bD},0.18);`,
     ];
 
     if (a) {

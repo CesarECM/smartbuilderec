@@ -31,12 +31,12 @@
       transition: border-color 0.2s;
     }
     .materiales-textarea:focus {
-      border-color: #1F3B6D;
+      border-color: var(--c-blue-600);
       outline: none;
     }
     .loader-materiales {
       font-size: 13px;
-      color: #1F3B6D;
+      color: var(--c-blue-600);
       margin-bottom: 8px;
       font-style: italic;
     }
