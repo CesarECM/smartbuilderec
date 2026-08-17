@@ -32,6 +32,22 @@ async function getUserProfile() {
       .single();
     return fallback;
   }
+
+  // Si el usuario pertenece a un admin, heredar el branding del admin
+  if (data.admin_id && !data.branding_color_primario && !data.branding_logo_url) {
+    const { data: adminBranding } = await _supabase
+      .from("profiles")
+      .select("branding_logo_url, branding_empresa, branding_color_primario, branding_color_acento")
+      .eq("id", data.admin_id)
+      .single();
+    if (adminBranding) {
+      data.branding_logo_url      = adminBranding.branding_logo_url;
+      data.branding_empresa        = adminBranding.branding_empresa;
+      data.branding_color_primario = adminBranding.branding_color_primario;
+      data.branding_color_acento   = adminBranding.branding_color_acento;
+    }
+  }
+
   return data;
 }
 
