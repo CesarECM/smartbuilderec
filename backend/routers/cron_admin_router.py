@@ -18,7 +18,8 @@ def get_perfil(request: Request):
     sb = get_supabase()
     res = sb.table("profiles").select(
         "id, nombre, apellido, rol, credits, activo, "
-        "branding_logo_url, branding_empresa, branding_color_primario, branding_color_acento"
+        "branding_logo_url, branding_empresa, branding_color_primario, branding_color_acento, "
+        "branding_color_oscuro, branding_color_profundo, branding_color_fondo, branding_color_borde"
     ).eq("id", user_id).single().execute()
     return res.data or {}
 
