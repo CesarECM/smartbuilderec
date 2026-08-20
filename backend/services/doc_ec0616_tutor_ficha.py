@@ -1,15 +1,14 @@
 # ─── services/doc_ec0616_tutor_ficha.py — Ficha de Registro EC0616 Modo Tutor ──
+# Clona la estructura oficial OC0046: tabla header + tabla principal 12×8.
 
 import io
 import base64
 
 from docx import Document
-from docx.shared import Pt, Inches, Cm, RGBColor
+from docx.shared import Pt, Inches, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-
-_VERDE = RGBColor(0x06, 0x5F, 0x46)
 
 _EC = (
     "EC0616: PRESTACIÓN DE SERVICIOS AUXILIARES DE ENFERMERÍA EN CUIDADOS BÁSICOS "
@@ -21,7 +20,7 @@ _RENAP_INTRO = (
     "solicita al candidato la autorización para la publicación de los datos personales a fin de "
     "dar cumplimiento a lo dispuesto en el capítulo séptimo de las Reglas Generales y criterios "
     "para la integración del Sistema Nacional de Competencias, referente al \"Registro Nacional "
-    "de Personas Con Competencias Certificadas\" (RENAP)(1) por medio del cual las personas con "
+    "de Personas Con Competencias Certificadas\" (RENAP) por medio del cual las personas con "
     "competencias certificadas, pueden voluntariamente dar a conocer sus datos personales, para "
     "facilitar su localización, en caso de que organizaciones sindicales, empresas, sector "
     "académico, sector social o público, o alguna otra institución pública o privada, requieran "
@@ -29,11 +28,11 @@ _RENAP_INTRO = (
 )
 
 _RENAP_CONS = (
-    "doy mi consentimiento al CONOCER para que, en términos del artículo 21(2) de la Ley Federal "
+    "doy mi consentimiento al CONOCER para que, en términos del artículo 21 de la Ley Federal "
     "de Transparencia y Acceso a la Información Pública Gubernamental, difunda, distribuya y "
     "publique la información contenida en el documento que se inscribe, para los propósitos del "
     "RENAP. Lo anterior, sin perjuicio de que estoy enterado de que en términos del artículo 22, "
-    "fracción III(3) de la misma Ley, no es necesario mi consentimiento respecto de información "
+    "fracción III de la misma Ley, no es necesario mi consentimiento respecto de información "
     "que se transmita entre sujetos obligados o entre dependencias y entidades, cuando los datos "
     "respectivos se utilicen para el ejercicio de facultades propias de los mismos."
 )
@@ -41,19 +40,22 @@ _RENAP_CONS = (
 _RENAP_NOTA = (
     "Los datos personales recabados serán protegidos y serán incorporados y tratados en el Sistema "
     "de datos personales RENAP con fundamento en las reglas generales y criterios para integración "
-    "y operación del Sistema Nacional de Competencias y cuya finalidad es integrar una base de datos "
-    "con información sobre las personas que han obtenido uno o más Certificados de Competencia, con "
-    "base en Estándares de Competencia inscritos en el Registro Nacional de Estándares de "
-    "Competencia, el cual fue registrado en el Listado de sistemas de Datos Personales ante el "
-    "Instituto Federal de Acceso a la Información Pública (www.ifai.org.mx) y podrán ser "
-    "trasmitidos a sujetos obligados o dependencias y entidades con la finalidad del uso en "
-    "facultades propias de las mismas. Además de otras trasmisiones previstas en Ley. La Unidad "
-    "Administrativa responsable del Sistema es el Consejo Nacional de Normalización y Certificación "
-    "de Competencias Laborales."
+    "y operación del Sistema Nacional de Competencias y cuya finalidad es integrar una base de "
+    "datos con información sobre las personas que han obtenido uno o más Certificados de "
+    "Competencia, con base en Estándares de Competencia inscritos en el Registro Nacional de "
+    "Estándares de Competencia, el cual fue registrado en el Listado de sistemas de Datos "
+    "Personales ante el Instituto Federal de Acceso a la Información Pública (www.ifai.org.mx) "
+    "y podrán ser trasmitidos a sujetos obligados o dependencias y entidades con la finalidad del "
+    "uso en facultades propias de las mismas. Además de otras trasmisiones previstas en Ley. La "
+    "Unidad Administrativa responsable del Sistema es el Consejo Nacional de Normalización y "
+    "Certificación de Competencias Laborales."
 )
 
+# Anchos de columnas tabla principal (8 cols, total ~18 cm)
+_T1_W = [5.5, 2.5, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5]
 
-# ── Utilidades ────────────────────────────────────────────────────────────────
+
+# ── Utilidades internas ───────────────────────────────────────────────────────
 
 def _docx_bytes(doc: Document) -> bytes:
     buf = io.BytesIO()
@@ -62,12 +64,8 @@ def _docx_bytes(doc: Document) -> bytes:
     return buf.read()
 
 
-def _titulo(doc: Document, texto: str, size: int = 12) -> None:
-    h = doc.add_heading("", level=1)
-    h.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = h.add_run(texto)
-    r.font.color.rgb = _VERDE
-    r.font.size = Pt(size)
+def _chk(val: bool) -> str:
+    return "(X)" if val else "(   )"
 
 
 def _foto_stream(b64: str | None):
@@ -80,53 +78,59 @@ def _foto_stream(b64: str | None):
         return None
 
 
-def _cell_p(cell, text: str = "", bold: bool = False, size: int = 9, space_after: int = 2):
+def _set_tbl_grid(table, widths_cm: list) -> None:
+    """Define los anchos de columna en el w:tblGrid de la tabla."""
+    tbl = table._tbl
+    tblGrid = tbl.find(qn("w:tblGrid"))
+    if tblGrid is None:
+        tblGrid = OxmlElement("w:tblGrid")
+        tbl.insert(0, tblGrid)
+    for old in tblGrid.findall(qn("w:gridCol")):
+        tblGrid.remove(old)
+    for w in widths_cm:
+        gc = OxmlElement("w:gridCol")
+        gc.set(qn("w:w"), str(int(Cm(w).pt * 20)))
+        tblGrid.append(gc)
+
+
+def _w(cell, text: str, bold: bool = False, size: int = 9, italic: bool = False) -> None:
+    """Escribe en el párrafo inicial de la celda."""
+    p = cell.paragraphs[0]
+    p.paragraph_format.space_after  = Pt(2)
+    p.paragraph_format.space_before = Pt(2)
+    r = p.add_run(text)
+    r.font.size = Pt(size)
+    r.bold   = bold
+    r.italic = italic
+
+
+def _wa(cell, text: str, bold: bool = False, size: int = 9, italic: bool = False) -> None:
+    """Agrega un párrafo adicional a la celda."""
     p = cell.add_paragraph()
-    p.paragraph_format.space_after = Pt(space_after)
-    if text:
-        r = p.add_run(text)
-        r.font.size = Pt(size)
-        r.bold = bold
-    return p
-
-
-def _campo(cell, label: str, value, size: int = 9) -> None:
-    p = cell.add_paragraph()
-    p.paragraph_format.space_after = Pt(2)
-    lb = p.add_run(f"{label}: ")
-    lb.font.size = Pt(size)
-    lb.bold = True
-    vr = p.add_run(str(value) if value else "—")
-    vr.font.size = Pt(size)
-
-
-def _chk(val: bool) -> str:
-    return "(X)" if val else "( )"
-
-
-def _set_cell_w(cell, cm: float) -> None:
-    tc = cell._tc
-    tcPr = tc.get_or_add_tcPr()
-    for old in tcPr.findall(qn("w:tcW")):
-        tcPr.remove(old)
-    tcW = OxmlElement("w:tcW")
-    tcW.set(qn("w:w"), str(int(Cm(cm).pt * 20)))
-    tcW.set(qn("w:type"), "dxa")
-    tcPr.append(tcW)
+    p.paragraph_format.space_after  = Pt(2)
+    p.paragraph_format.space_before = Pt(0)
+    r = p.add_run(text)
+    r.font.size = Pt(size)
+    r.bold   = bold
+    r.italic = italic
 
 
 # ── Sección Información Confidencial ─────────────────────────────────────────
 
 def _gen_confidencial(doc: Document, ficha: dict, conf: dict) -> None:
-    _titulo(doc, "Información Confidencial:", size=11)
-    def _row(text: str):
+    h = doc.add_heading("", level=2)
+    h.add_run("Información Confidencial:").font.size = Pt(11)
+
+    def _row(text: str, italic: bool = False):
         p = doc.add_paragraph(text)
         p.runs[0].font.size = Pt(9)
+        p.runs[0].italic = italic
         p.paragraph_format.space_after = Pt(3)
 
-    doc.add_paragraph("Marca con una \"x\" en el recuadro de la respuesta elegida.").runs[0].font.size = Pt(9)
+    p_inst = doc.add_paragraph('Marca con una "x" en el recuadro de la respuesta elegida.')
+    p_inst.runs[0].font.size = Pt(9)
 
-    lee     = conf.get("leer_escribir")     == "si"
+    lee      = conf.get("leer_escribir")    == "si"
     estudios = conf.get("tiene_estudios")   == "si"
     _row(
         f"¿Sabe Leer y Escribir? {_chk(lee)} Sí {_chk(not lee)} No     "
@@ -152,16 +156,17 @@ def _gen_confidencial(doc: Document, ficha: dict, conf: dict) -> None:
     if trabaja:
         _row(
             f"Empresa/Institución: {conf.get('empresa_trabajo') or '—'}     "
-            f"Dirección: {conf.get('direccion_trabajo') or '—'}     "
             f"Tel: {conf.get('telefono_trabajo') or '—'}"
         )
 
-    doc.add_paragraph("Experiencia Laboral:").runs[0].font.size = Pt(9)
+    _row("Experiencia Laboral:")
+    doc.paragraphs[-1].runs[0].bold = True
     for n in range(1, 4):
-        emp = conf.get(f"exp{n}_empresa")
-        per = conf.get(f"exp{n}_periodo")
-        act = conf.get(f"exp{n}_actividades")
-        _row(f"  {n}. {emp or '—'} | {per or '—'} | {act or '—'}")
+        _row(
+            f"  {n}. {conf.get(f'exp{n}_empresa') or '—'} | "
+            f"{conf.get(f'exp{n}_periodo') or '—'} | "
+            f"{conf.get(f'exp{n}_actividades') or '—'}"
+        )
 
     _row(f"Observaciones: {conf.get('observaciones') or '—'}")
 
@@ -196,103 +201,124 @@ def _gen_confidencial(doc: Document, ficha: dict, conf: dict) -> None:
 def generar_ficha(ficha: dict, conf: dict) -> bytes:
     doc = Document()
     sec = doc.sections[0]
-    sec.left_margin  = Cm(2)
-    sec.right_margin = Cm(2)
-    sec.top_margin   = Cm(2)
-    sec.bottom_margin = Cm(2)
+    sec.left_margin = sec.right_margin = sec.top_margin = sec.bottom_margin = Cm(1.2)
 
-    # ── Encabezado ──
-    _titulo(doc, "FICHA DE REGISTRO")
-    p_ec = doc.add_paragraph()
-    p_ec.paragraph_format.space_after = Pt(4)
-    p_ec.add_run(f"Estándar de Competencia: {_EC}").font.size = Pt(8)
-    p_ec.add_run(f"   Fecha: {ficha.get('fecha_evaluacion', '')}").font.size = Pt(8)
+    # ── Tabla 0: Encabezado (Estándar + Fecha) ────────────────────────────────
+    t0 = doc.add_table(rows=1, cols=5)
+    t0.style = "Table Grid"
+    _set_tbl_grid(t0, [3.3, 8.5, 0.5, 2.5, 3.2])
+    c = t0.rows[0].cells
+    _w(c[0], "Estándar de Competencia:", bold=True, size=8)
+    _w(c[1], _EC, size=8)
+    _w(c[3], "Fecha:", bold=True, size=8)
+    _w(c[4], ficha.get("fecha_evaluacion") or "—", size=8)
 
-    p_dp = doc.add_paragraph("Datos Personales:")
-    p_dp.runs[0].bold = True
-    p_dp.runs[0].font.size = Pt(10)
+    # ── Párrafo "Datos Personales:" ───────────────────────────────────────────
+    p_dp = doc.add_paragraph()
+    r_dp = p_dp.add_run("Datos Personales:")
+    r_dp.bold = True
+    r_dp.font.size = Pt(10)
+    p_dp.paragraph_format.space_before = Pt(4)
+    p_dp.paragraph_format.space_after  = Pt(2)
 
-    # ── Texto introductorio RENAP ──
-    p_intro = doc.add_paragraph(_RENAP_INTRO)
-    p_intro.runs[0].font.size = Pt(8)
-    p_intro.paragraph_format.space_after = Pt(4)
+    # ── Tabla 1: Principal (12 filas × 8 cols) ────────────────────────────────
+    t1 = doc.add_table(rows=12, cols=8)
+    t1.style = "Table Grid"
+    _set_tbl_grid(t1, _T1_W)
 
-    # ── Tabla 2 columnas ──────────────────────────────────────────────────────
-    table = doc.add_table(rows=1, cols=2)
-    _set_cell_w(table.cell(0, 0), 10.0)
-    _set_cell_w(table.cell(0, 1),  7.0)
+    # R0 — Intro CONOCER (ancho completo)
+    t1.cell(0, 0).merge(t1.cell(0, 7))
+    _w(t1.cell(0, 0), _RENAP_INTRO, size=8)
 
-    # Celda izquierda: consentimiento RENAP
-    left = table.cell(0, 0)
+    # R1 — separador vacío
+    t1.cell(1, 1).merge(t1.cell(1, 7))
+
+    # R2-R10 col 0 — Consentimiento RENAP (fusión vertical)
+    t1.cell(2, 0).merge(t1.cell(10, 0))
     cons = ficha.get("consentimiento_renap", "no") == "si"
-    p_left = left.paragraphs[0]
-    p_left.paragraph_format.space_after = Pt(12)
-    r_si = p_left.add_run(f"SI {_chk(cons)}  NO {_chk(not cons)}  ")
-    r_si.font.size = Pt(9)
-    r_si.bold = True
-    p_left.add_run(_RENAP_CONS).font.size = Pt(8)
+    _w(t1.cell(2, 0), f"SI {_chk(cons)}  NO {_chk(not cons)}", bold=True, size=9)
+    _wa(t1.cell(2, 0), _RENAP_CONS, size=8)
+    _wa(t1.cell(2, 0), "")
+    _wa(t1.cell(2, 0), "_____________________________", size=9)
+    _wa(t1.cell(2, 0), "Nombre y Firma", size=8)
 
-    _cell_p(left, "_____________________________", size=9, space_after=0)
-    _cell_p(left, "Nombre y Firma", size=8)
-
-    # Celda derecha: datos personales + foto
-    right = table.cell(0, 1)
-    _campo(right, "Nombre(s)",       ficha.get("nombre_candidato"))
-    _campo(right, "Primer Apellido", ficha.get("apellido_paterno"))
-    _campo(right, "Segundo Apellido",ficha.get("apellido_materno"))
-
+    # R2-R6 col 1 — Foto (fusión vertical)
+    t1.cell(2, 1).merge(t1.cell(6, 1))
+    foto_cell = t1.cell(2, 1)
+    _w(foto_cell, "Fotografía Digital\n(Reciente)", size=8, bold=True)
     foto = _foto_stream(ficha.get("foto_base64"))
     if foto:
-        p_foto = right.add_paragraph()
-        p_foto.paragraph_format.space_after = Pt(4)
-        p_foto.add_run().add_picture(foto, width=Inches(1.0), height=Inches(1.25))
+        p_foto = foto_cell.add_paragraph()
+        p_foto.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_foto.paragraph_format.space_after = Pt(2)
+        p_foto.add_run().add_picture(foto, width=Inches(0.9), height=Inches(1.2))
 
-    _campo(right, "Lugar de Nacimiento", ficha.get("lugar_nacimiento"))
-    _campo(right, "Nacionalidad",        ficha.get("nacionalidad"))
-    _campo(right, "CURP",               ficha.get("curp"))
+    # R2 — Nombre Completo
+    t1.cell(2, 2).merge(t1.cell(2, 3))
+    _w(t1.cell(2, 2), "Nombre Completo:", bold=True, size=9)
+    t1.cell(2, 4).merge(t1.cell(2, 7))
+    nombre = f"{ficha.get('nombre_candidato', '')} {ficha.get('apellidos_candidato', '')}".strip()
+    _w(t1.cell(2, 4), nombre or "—", size=9)
 
+    # R3 — Lugar de Nacimiento
+    t1.cell(3, 2).merge(t1.cell(3, 3))
+    _w(t1.cell(3, 2), "Lugar de Nacimiento:", bold=True, size=9)
+    t1.cell(3, 4).merge(t1.cell(3, 7))
+    _w(t1.cell(3, 4), ficha.get("lugar_nacimiento") or "—", size=9)
+
+    # R4 — Nacionalidad
+    t1.cell(4, 2).merge(t1.cell(4, 3))
+    _w(t1.cell(4, 2), "Nacionalidad:", bold=True, size=9)
+    t1.cell(4, 4).merge(t1.cell(4, 7))
+    _w(t1.cell(4, 4), ficha.get("nacionalidad") or "Mexicana", size=9)
+
+    # R5 — CURP
+    t1.cell(5, 2).merge(t1.cell(5, 3))
+    _w(t1.cell(5, 2), "CURP:", bold=True, size=9)
+    t1.cell(5, 4).merge(t1.cell(5, 7))
+    _w(t1.cell(5, 4), ficha.get("curp") or "—", size=9)
+
+    # R6 — Género + Fecha de Nacimiento
+    t1.cell(6, 2).merge(t1.cell(6, 3))
+    _w(t1.cell(6, 2), "Género:", bold=True, size=9)
     genero = ficha.get("genero", "")
-    p_gen = right.add_paragraph()
-    p_gen.paragraph_format.space_after = Pt(2)
-    p_gen.add_run(
-        f"Género: {_chk(genero == 'H')} Hombre  {_chk(genero == 'M')} Mujer     "
-        f"Fecha de Nacimiento: {ficha.get('fecha_nacimiento', '')}"
-    ).font.size = Pt(9)
+    _w(t1.cell(6, 4), f"{_chk(genero == 'H')} H   {_chk(genero == 'M')} M", size=9)
+    t1.cell(6, 5).merge(t1.cell(6, 6))
+    _w(t1.cell(6, 5), "Fecha de Nacimiento:", bold=True, size=9)
+    _w(t1.cell(6, 7), ficha.get("fecha_nacimiento") or "—", size=9)
 
-    p_dom_h = right.add_paragraph("Domicilio Particular")
-    p_dom_h.runs[0].bold = True
-    p_dom_h.runs[0].font.size = Pt(9)
-    p_dom_h.paragraph_format.space_after = Pt(2)
+    # R7 — Header Domicilio
+    t1.cell(7, 1).merge(t1.cell(7, 7))
+    _w(t1.cell(7, 1), "Domicilio Particular", bold=True, size=9)
 
-    p_dom1 = right.add_paragraph()
-    p_dom1.paragraph_format.space_after = Pt(2)
-    p_dom1.add_run(
-        f"Calle: {ficha.get('domicilio_calle') or '—'}   "
-        f"Número: {ficha.get('domicilio_numero') or '—'}   "
-        f"C.P.: {ficha.get('domicilio_cp') or '—'}   "
-        f"Colonia: {ficha.get('domicilio_colonia') or '—'}"
-    ).font.size = Pt(8)
+    # R8 — Calle / Núm / CP / Colonia
+    t1.cell(8, 1).merge(t1.cell(8, 7))
+    _w(t1.cell(8, 1),
+       f"Calle: {ficha.get('domicilio_calle') or '—'}   "
+       f"Núm: {ficha.get('domicilio_numero') or '—'}   "
+       f"C.P.: {ficha.get('domicilio_cp') or '—'}   "
+       f"Colonia: {ficha.get('domicilio_colonia') or '—'}",
+       size=9)
 
-    p_dom2 = right.add_paragraph()
-    p_dom2.paragraph_format.space_after = Pt(2)
-    p_dom2.add_run(
-        f"Ciudad: {ficha.get('domicilio_ciudad') or '—'}     "
-        f"Entidad Federativa: {ficha.get('domicilio_entidad') or '—'}"
-    ).font.size = Pt(8)
+    # R9 — Municipio / Entidad
+    t1.cell(9, 1).merge(t1.cell(9, 2))
+    t1.cell(9, 3).merge(t1.cell(9, 5))
+    t1.cell(9, 6).merge(t1.cell(9, 7))
+    _w(t1.cell(9, 1), f"Municipio: {ficha.get('domicilio_ciudad') or '—'}", size=9)
+    _w(t1.cell(9, 3), f"Entidad Federativa: {ficha.get('domicilio_entidad') or '—'}", size=9)
 
-    p_cont = right.add_paragraph()
-    p_cont.paragraph_format.space_after = Pt(2)
-    p_cont.add_run(
-        f"E-mail: {ficha.get('email') or '—'}     "
-        f"Teléfono: {ficha.get('telefono') or '—'}"
-    ).font.size = Pt(8)
+    # R10 — E-mail / Teléfono / Celular
+    t1.cell(10, 1).merge(t1.cell(10, 2))
+    t1.cell(10, 3).merge(t1.cell(10, 5))
+    t1.cell(10, 6).merge(t1.cell(10, 7))
+    _w(t1.cell(10, 1), f"E-mail: {ficha.get('email') or '—'}", size=9)
+    _w(t1.cell(10, 3), f"Teléfono: {ficha.get('telefono') or '—'}", size=9)
 
-    # ── Nota RENAP al pie ──
-    p_nota = doc.add_paragraph(_RENAP_NOTA)
-    p_nota.runs[0].font.size = Pt(7)
-    p_nota.paragraph_format.space_before = Pt(6)
+    # R11 — Nota RENAP (ancho completo)
+    t1.cell(11, 0).merge(t1.cell(11, 7))
+    _w(t1.cell(11, 0), _RENAP_NOTA, size=7, italic=True)
 
-    # ── Información Confidencial (página 2) ──
+    # ── Información Confidencial (página 2) ───────────────────────────────────
     doc.add_page_break()
     _gen_confidencial(doc, ficha, conf)
 
