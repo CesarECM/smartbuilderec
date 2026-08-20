@@ -70,11 +70,13 @@ export function cargarFicha() {
     const r = document.querySelector(`input[name="ftConsentimiento"][value="${d.consentimiento_renap}"]`);
     if (r) r.checked = true;
   }
+  if (d.foto_base64) _mostrarFotoPreview(d.foto_base64);
 }
 
 export function guardarFicha() {
   if (!validarFicha()) return;
   const apP = _g("ftApellidoP"), apM = _g("ftApellidoM");
+  const fotoPrev = getDatos(SEC).foto_base64 || "";
   setDatos(SEC, {
     nombre_candidato:    _g("ftNombre"),
     apellido_paterno:    apP,
@@ -97,11 +99,36 @@ export function guardarFicha() {
     nombre_ce:           _g("ftCE"),
     fecha_evaluacion:    _g("ftFechaEval"),
     consentimiento_renap:_r("ftConsentimiento"),
+    foto_base64:         fotoPrev,
   });
   setCompleto(SEC);
   document.getElementById("navT-ficha")?.classList.add("completed");
   window.desbloquearT?.("navT-confidencial");
   window.mostrarSeccionT?.("secTConfidencial");
+}
+
+function _mostrarFotoPreview(b64) {
+  const el = document.getElementById("ft-foto-preview");
+  if (el) el.innerHTML = `<img src="${b64}" style="width:100%;height:100%;object-fit:cover;">`;
+}
+
+function _redimensionarFoto(file, cb) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX_W = 400, MAX_H = 500;
+      let [w, h] = [img.width, img.height];
+      if (w / h > MAX_W / MAX_H) { w = MAX_W; h = Math.round(img.height * MAX_W / img.width); }
+      else { h = MAX_H; w = Math.round(img.width * MAX_H / img.height); }
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      cb(c.toDataURL("image/jpeg", 0.85));
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 export function initStepFicha() {
@@ -111,6 +138,13 @@ export function initStepFicha() {
   });
   document.getElementById("btnFTSig")?.addEventListener("click", guardarFicha);
   window.guardarFicha = guardarFicha;
+  document.getElementById("ftFoto")?.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) _redimensionarFoto(file, b64 => {
+      const d = getDatos(SEC); d.foto_base64 = b64; setDatos(SEC, d);
+      _mostrarFotoPreview(b64);
+    });
+  });
 }
 
 export function getTemplate() {
@@ -136,6 +170,24 @@ export function getTemplate() {
         <label style="font-size:13px;font-weight:600;">¿Otorga consentimiento para el tratamiento de datos personales? *</label>
         ${radio2("ftConsentimiento","si","Sí","no","No")}
         <span class="error-msg" id="err-ft-cons">Campo requerido.</span>
+      </div>
+
+      <h3 style="font-size:14px;color:#374151;margin:16px 0 10px;">Fotografía del Candidato</h3>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;">Foto reciente (obligatoria para generar el portafolio)</label>
+        <div style="display:flex;gap:16px;align-items:flex-start;margin-top:8px;">
+          <div id="ft-foto-preview" style="width:100px;height:130px;border:2px dashed #d1d5db;
+               border-radius:6px;display:flex;align-items:center;justify-content:center;
+               background:#f9fafb;overflow:hidden;flex-shrink:0;">
+            <span style="font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Sin<br>foto</span>
+          </div>
+          <div>
+            <input type="file" id="ftFoto" accept="image/*" style="font-size:13px;">
+            <p style="font-size:11px;color:#9ca3af;margin-top:6px;line-height:1.4;">
+              Formatos: JPG, PNG, WEBP. Se redimensionará a 400×500 px.
+            </p>
+          </div>
+        </div>
       </div>
 
       <h3 style="font-size:14px;color:#374151;margin:0 0 10px;">Datos Personales</h3>

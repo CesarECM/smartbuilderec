@@ -27,6 +27,14 @@ export async function descargarZipTutor() {
   if (loader) { loader.style.display = "block"; }
   if (msg)    { msg.style.display = "none"; }
 
+  const fichaData = JSON.parse(localStorage.getItem(`${PREFIJO}ficha`) || "{}");
+  if (!fichaData.foto_base64) {
+    if (msg) { msg.style.display = "block"; msg.style.color = "#b91c1c"; msg.textContent = "⚠️ Debes subir la fotografía del candidato antes de generar el portafolio."; }
+    if (btn) { btn.disabled = false; btn.textContent = "📦 Generar portafolio (.zip)"; }
+    if (loader) loader.style.display = "none";
+    return;
+  }
+
   try {
     const payload    = _recolectarPayload();
     const session    = typeof getSession === "function" ? await getSession() : null;

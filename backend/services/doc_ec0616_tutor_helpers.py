@@ -7,6 +7,7 @@ from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from services.pdf_ec0616_tutor_helpers import generar_pdf_ec0616_tutor
+from services.doc_ec0616_tutor_ficha import generar_ficha
 
 _VERDE = RGBColor(0x06, 0x5F, 0x46)
 
@@ -61,63 +62,6 @@ def _encabezado(doc: Document, ficha: dict) -> None:
     _fila(doc, "Evaluador", ficha.get("nombre_evaluador"))
     _fila(doc, "Fecha de evaluación", ficha.get("fecha_evaluacion"))
     doc.add_paragraph()
-
-
-# ── Doc 1: Ficha de Registro ──────────────────────────────────────────────────
-
-def generar_ficha(ficha: dict, conf: dict) -> bytes:
-    doc = Document()
-    _titulo(doc, "Ficha de Registro del Candidato")
-    _titulo(doc, "Norma EC0616 — Auxiliar de Enfermería")
-    doc.add_paragraph()
-
-    _seccion(doc, "Datos Personales")
-    nombre = f"{ficha.get('nombre_candidato', '')} {ficha.get('apellidos_candidato', '')}".strip()
-    _fila(doc, "Nombre completo", nombre)
-    _fila(doc, "CURP", ficha.get("curp"))
-    _fila(doc, "Fecha de nacimiento", ficha.get("fecha_nacimiento"))
-    _fila(doc, "Género", ficha.get("genero"))
-    _fila(doc, "Lugar de nacimiento", ficha.get("lugar_nacimiento"))
-    _fila(doc, "Nacionalidad", ficha.get("nacionalidad"))
-
-    _seccion(doc, "Domicilio")
-    dom = " ".join(filter(None, [
-        ficha.get("domicilio_calle"), ficha.get("domicilio_numero"),
-        ficha.get("domicilio_colonia"), ficha.get("domicilio_cp"),
-        ficha.get("domicilio_ciudad"), ficha.get("domicilio_entidad"),
-    ]))
-    _fila(doc, "Domicilio", dom or None)
-    _fila(doc, "Correo electrónico", ficha.get("email"))
-    _fila(doc, "Teléfono", ficha.get("telefono"))
-
-    _seccion(doc, "Datos de la Evaluación")
-    _fila(doc, "Centro de Evaluación", ficha.get("nombre_ce"))
-    _fila(doc, "Evaluador", ficha.get("nombre_evaluador"))
-    _fila(doc, "Fecha de evaluación", ficha.get("fecha_evaluacion"))
-    _fila(doc, "Consentimiento RENAP", ficha.get("consentimiento_renap"))
-
-    _seccion(doc, "Información Complementaria")
-    _fila(doc, "Sabe leer y escribir", conf.get("leer_escribir"))
-    _fila(doc, "Cuenta con estudios", conf.get("tiene_estudios"))
-    if conf.get("estudios_cuales"):
-        _fila(doc, "  Tipo de estudios", conf.get("estudios_cuales"))
-        _fila(doc, "  Último grado", conf.get("ultimo_grado"))
-    _fila(doc, "Trabaja actualmente", conf.get("trabaja_actualmente"))
-    if conf.get("puesto_trabajo"):
-        _fila(doc, "  Puesto", conf.get("puesto_trabajo"))
-        _fila(doc, "  Empresa/institución", conf.get("empresa_trabajo"))
-    _fila(doc, "Discapacidad", conf.get("tiene_discapacidad"))
-    if conf.get("discapacidad_tipo"):
-        _fila(doc, "  Tipo", ", ".join(conf.get("discapacidad_tipo") or []))
-    _fila(doc, "Idiomas", conf.get("idiomas"))
-    _fila(doc, "Certificación previa", conf.get("tiene_certificacion"))
-    if conf.get("certificacion_cuales"):
-        _fila(doc, "  Cuáles", conf.get("certificacion_cuales"))
-
-    doc.add_paragraph()
-    doc.add_paragraph("Firma del candidato: ___________________")
-    doc.add_paragraph("Firma del evaluador: ___________________")
-    return _docx_bytes(doc)
 
 
 # ── Doc 2: Diagnóstico ────────────────────────────────────────────────────────

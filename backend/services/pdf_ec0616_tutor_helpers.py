@@ -1,9 +1,11 @@
 # ─── services/pdf_ec0616_tutor_helpers.py — PDF Portafolio Modo Tutor EC0616 ──
 
 import io
+import base64 as _b64lib
 
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable,
+    Image as RLImage,
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import letter
@@ -33,6 +35,18 @@ _ENCUESTA_LABELS = {
     "instalaciones":          "Condiciones de las instalaciones",
     "tiempo_adecuado":        "Tiempo de evaluación adecuado",
 }
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _foto_rl(b64: str | None, w_inch: float = 1.2, h_inch: float = 1.5):
+    if not b64:
+        return None
+    try:
+        data = b64.split(",", 1)[-1] if "," in b64 else b64
+        return RLImage(io.BytesIO(_b64lib.b64decode(data)), width=w_inch * inch, height=h_inch * inch)
+    except Exception:
+        return None
+
 
 # ── Helpers de estilo ─────────────────────────────────────────────────────────
 
@@ -98,6 +112,10 @@ def generar_pdf_ec0616_tutor(payload: dict, iec_reactivos: list) -> bytes:
 
     # ── 1. Ficha de Registro ───────────────────────────────────────────────────
     story.append(Paragraph("1. Ficha de Registro del Candidato", sec))
+    foto_elem = _foto_rl(ficha.get("foto_base64"))
+    if foto_elem:
+        story.append(foto_elem)
+        story.append(Spacer(1, 0.1 * inch))
     story.append(_tabla_kv([
         ("Nombre completo",      nombre or None),
         ("CURP",                 ficha.get("curp")),
