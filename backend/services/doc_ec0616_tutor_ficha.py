@@ -2,10 +2,11 @@
 # Clona estructura y formato oficial OC0046: tabla header + tabla 12×8.
 
 import io
+import os
 import base64
 
 from docx import Document
-from docx.shared import Pt, Inches, Cm
+from docx.shared import Pt, Inches, Cm  # Cm usado en _set_tbl_grid
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -55,6 +56,9 @@ _RENAP_NOTA = (
 )
 
 _T1_W = [5.5, 2.5, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5]  # 8 cols, total ~18 cm
+
+# Template vacío basado en el documento original (estilos + tema + settings)
+_TEMPLATE = os.path.join(os.path.dirname(__file__), "ec0616_ficha_template.docx")
 
 
 # ── Utilidades de formato ─────────────────────────────────────────────────────
@@ -276,9 +280,8 @@ def _gen_confidencial(doc: Document, ficha: dict, conf: dict) -> None:
 # ── Función principal ─────────────────────────────────────────────────────────
 
 def generar_ficha(ficha: dict, conf: dict) -> bytes:
-    doc = Document()
-    sec = doc.sections[0]
-    sec.left_margin = sec.right_margin = sec.top_margin = sec.bottom_margin = Cm(1.2)
+    # Hereda estilos, tema, settings y márgenes del original
+    doc = Document(_TEMPLATE)
 
     # ── Tabla 0: Encabezado ───────────────────────────────────────────────────
     t0 = doc.add_table(rows=1, cols=5)
