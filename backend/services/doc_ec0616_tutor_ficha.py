@@ -1,18 +1,17 @@
 # ─── services/doc_ec0616_tutor_ficha.py — Ficha de Registro EC0616 Modo Tutor ──
-# Clona la estructura y formato oficial OC0046: tabla header + tabla 12×8.
+# Clona estructura y formato oficial OC0046: tabla header + tabla 12×8.
 
 import io
 import base64
 
 from docx import Document
-from docx.shared import Pt, Inches, Cm, RGBColor
+from docx.shared import Pt, Inches, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-# Fondos del original
-_F_GRIS_OSC = "BFBFBF"   # labels tabla header + labels tabla 1
-_F_GRIS_CLR = "F2F2F2"   # filas RENAP (intro, consent, nota pie)
+_F_GRIS_OSC = "BFBFBF"   # labels: foto, campos, domicilio, contacto
+_F_GRIS_CLR = "F2F2F2"   # filas RENAP: intro, consent, nota pie
 
 _EC = (
     "EC0616: PRESTACIÓN DE SERVICIOS AUXILIARES DE ENFERMERÍA EN CUIDADOS BÁSICOS "
@@ -55,8 +54,7 @@ _RENAP_NOTA = (
     "Certificación de Competencias Laborales."
 )
 
-# Anchos columnas tabla principal (8 cols, total ~18 cm con márgenes 1.2 cm)
-_T1_W = [5.5, 2.5, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5]
+_T1_W = [5.5, 2.5, 2.0, 2.0, 1.5, 1.5, 1.5, 1.5]  # 8 cols, total ~18 cm
 
 
 # ── Utilidades de formato ─────────────────────────────────────────────────────
@@ -97,7 +95,6 @@ def _set_tbl_grid(table, widths_cm: list) -> None:
 
 
 def _shd(cell, fill: str) -> None:
-    """Aplica fondo de color a una celda."""
     tcPr = cell._tc.get_or_add_tcPr()
     for old in tcPr.findall(qn("w:shd")):
         tcPr.remove(old)
@@ -109,7 +106,6 @@ def _shd(cell, fill: str) -> None:
 
 
 def _vcenter(cell) -> None:
-    """Alineación vertical centrada en la celda."""
     tcPr = cell._tc.get_or_add_tcPr()
     for old in tcPr.findall(qn("w:vAlign")):
         tcPr.remove(old)
@@ -118,12 +114,53 @@ def _vcenter(cell) -> None:
     tcPr.append(v)
 
 
+def _cell_margins(cell, dxa: int = 57) -> None:
+    """Márgenes internos de celda (padding). El original usa 57 dxa en C0."""
+    tcPr = cell._tc.get_or_add_tcPr()
+    tcMar = tcPr.find(qn("w:tcMar"))
+    if tcMar is None:
+        tcMar = OxmlElement("w:tcMar")
+        tcPr.append(tcMar)
+    for side in ["top", "left", "bottom", "right"]:
+        for old in tcMar.findall(qn(f"w:{side}")):
+            tcMar.remove(old)
+        el = OxmlElement(f"w:{side}")
+        el.set(qn("w:w"),    str(dxa))
+        el.set(qn("w:type"), "dxa")
+        tcMar.append(el)
+
+
+def _set_border(cell, side: str, val: str) -> None:
+    """Establece un borde de celda. val='nil' lo suprime."""
+    tcPr = cell._tc.get_or_add_tcPr()
+    tcB = tcPr.find(qn("w:tcBorders"))
+    if tcB is None:
+        tcB = OxmlElement("w:tcBorders")
+        tcPr.append(tcB)
+    for old in tcB.findall(qn(f"w:{side}")):
+        tcB.remove(old)
+    el = OxmlElement(f"w:{side}")
+    el.set(qn("w:val"), val)
+    if val != "nil":
+        el.set(qn("w:color"), "auto")
+        el.set(qn("w:sz"),    "4")
+        el.set(qn("w:space"), "0")
+    tcB.append(el)
+
+
+def _nil(cell, *sides: str) -> None:
+    """Suprime bordes específicos de una celda."""
+    for side in sides:
+        _set_border(cell, side, "nil")
+
+
 def _run(para, text: str, bold: bool = False, size: int = 9,
          italic: bool = False, font: str | None = None) -> None:
+    """Agrega un run al párrafo. Solo escribe bold/italic en XML si son True."""
     r = para.add_run(text)
-    r.font.size  = Pt(size)
-    r.bold       = bold
-    r.italic     = italic
+    r.font.size = Pt(size)
+    if bold:   r.bold   = True
+    if italic: r.italic = True
     if font:
         r.font.name = font
         r._element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:cs"), font)
@@ -131,10 +168,9 @@ def _run(para, text: str, bold: bool = False, size: int = 9,
 
 def _w(cell, text: str, bold: bool = False, size: int = 9,
        align=None, italic: bool = False, font: str | None = None) -> None:
-    """Escribe en el párrafo inicial de la celda."""
+    """Escribe en el párrafo inicial de la celda (sin forzar spacing)."""
     p = cell.paragraphs[0]
-    p.paragraph_format.space_after  = Pt(0)
-    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(0)
     if align is not None:
         p.alignment = align
     _run(p, text, bold=bold, size=size, italic=italic, font=font)
@@ -144,11 +180,23 @@ def _wa(cell, text: str, bold: bool = False, size: int = 9,
         align=None, italic: bool = False, font: str | None = None) -> None:
     """Agrega un párrafo adicional a la celda."""
     p = cell.add_paragraph()
-    p.paragraph_format.space_after  = Pt(0)
-    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(0)
     if align is not None:
         p.alignment = align
-    _run(p, text, bold=bold, size=size, italic=italic, font=font)
+    if text:
+        _run(p, text, bold=bold, size=size, italic=italic, font=font)
+
+
+def _line_spacing(cell, line: int = 240, rule: str = "auto") -> None:
+    """Establece interlineado en todos los párrafos de la celda."""
+    for p in cell.paragraphs:
+        pPr = p._p.get_or_add_pPr()
+        spc = pPr.find(qn("w:spacing"))
+        if spc is None:
+            spc = OxmlElement("w:spacing")
+            pPr.append(spc)
+        spc.set(qn("w:line"),     str(line))
+        spc.set(qn("w:lineRule"), rule)
 
 
 # ── Sección Información Confidencial ─────────────────────────────────────────
@@ -166,8 +214,8 @@ def _gen_confidencial(doc: Document, ficha: dict, conf: dict) -> None:
     p_inst = doc.add_paragraph('Marca con una "x" en el recuadro de la respuesta elegida.')
     p_inst.runs[0].font.size = Pt(9)
 
-    lee      = conf.get("leer_escribir")    == "si"
-    estudios = conf.get("tiene_estudios")   == "si"
+    lee      = conf.get("leer_escribir")   == "si"
+    estudios = conf.get("tiene_estudios")  == "si"
     _row(
         f"¿Sabe Leer y Escribir? {_chk(lee)} Sí {_chk(not lee)} No     "
         f"¿Cuenta con Estudios? {_chk(estudios)} Sí {_chk(not estudios)} No     "
@@ -232,26 +280,16 @@ def generar_ficha(ficha: dict, conf: dict) -> bytes:
     sec = doc.sections[0]
     sec.left_margin = sec.right_margin = sec.top_margin = sec.bottom_margin = Cm(1.2)
 
-    # ── Tabla 0: Encabezado (Estándar de Competencia + Fecha) ─────────────────
+    # ── Tabla 0: Encabezado ───────────────────────────────────────────────────
     t0 = doc.add_table(rows=1, cols=5)
     t0.style = "Table Grid"
     _set_tbl_grid(t0, [3.3, 8.5, 0.5, 2.5, 3.2])
     c = t0.rows[0].cells
-
-    # C0 — label gris, texto RIGHT
     _shd(c[0], _F_GRIS_OSC)
     _w(c[0], "Estándar de Competencia:", bold=True, align=WD_ALIGN_PARAGRAPH.RIGHT)
-
-    # C1 — EC name, 10pt, no negrita
     _w(c[1], _EC, size=10)
-
-    # C2 — separador vacío
-
-    # C3 — "Fecha:" gris, RIGHT
     _shd(c[3], _F_GRIS_OSC)
     _w(c[3], "Fecha:", bold=True, align=WD_ALIGN_PARAGRAPH.RIGHT)
-
-    # C4 — valor fecha
     _w(c[4], ficha.get("fecha_evaluacion") or "—")
 
     # ── Párrafo "Datos Personales:" ───────────────────────────────────────────
@@ -267,49 +305,52 @@ def generar_ficha(ficha: dict, conf: dict) -> bytes:
     t1.style = "Table Grid"
     _set_tbl_grid(t1, _T1_W)
 
-    # ── R0: Intro CONOCER — gris claro, 9pt, JUSTIFY, valign CENTER ──────────
+    # ── R0: Intro CONOCER ─────────────────────────────────────────────────────
     t1.cell(0, 0).merge(t1.cell(0, 7))
-    _shd(t1.cell(0, 0), _F_GRIS_CLR)
-    _vcenter(t1.cell(0, 0))
-    _w(t1.cell(0, 0), _RENAP_INTRO, size=9, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+    c0 = t1.cell(0, 0)
+    _shd(c0, _F_GRIS_CLR)
+    _vcenter(c0)
+    _nil(c0, "bottom")                              # borde inferior suprimido
+    _w(c0, _RENAP_INTRO, size=9, align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     # ── R1: separador vacío ───────────────────────────────────────────────────
     t1.cell(1, 1).merge(t1.cell(1, 7))
 
     # ── R2-R10 C0: Consentimiento RENAP (fusión vertical) ────────────────────
-    # El original repite el texto en cada fila (sin fusión real). Usamos fusión
-    # vertical para mantener un solo bloque limpio visualmente.
     t1.cell(2, 0).merge(t1.cell(10, 0))
     cc = t1.cell(2, 0)
     _shd(cc, _F_GRIS_CLR)
+    _cell_margins(cc, 57)                           # 57 dxa = margen original
+    _nil(cc, "top")                                 # borde superior suprimido
 
-    # Párrafo 1: "SI (X) NO (   ) doy mi consentimiento..." — JUSTIFY
-    # "SI" y "NO" en negrita, resto en normal, todo 8pt
+    # p0: SI/NO en runs separados (bold/normal), 8pt, JUSTIFY
     cons = ficha.get("consentimiento_renap", "no") == "si"
     p0 = cc.paragraphs[0]
     p0.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p0.paragraph_format.space_after = Pt(0)
-    _run(p0, "SI ",  bold=True,  size=8)
-    _run(p0, _chk(cons),  bold=False, size=8)
-    _run(p0, "  NO", bold=True,  size=8)
-    _run(p0, _RENAP_CONS, bold=False, size=8)
+    _run(p0, "SI ",        bold=True,  size=8)
+    _run(p0, _chk(cons),               size=8)
+    _run(p0, "  NO",       bold=True,  size=8)
+    _run(p0, _RENAP_CONS,              size=8)
 
-    # Párrafo 2: línea firma — CENTER, 8pt
+    # p1, p2: párrafos vacíos de separación (como en el original)
+    _wa(cc, "")
+    _wa(cc, "")
+
+    # p3, p4: firma
     _wa(cc, "_____________________________", size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
     _wa(cc, "Nombre y Firma",               size=8, align=WD_ALIGN_PARAGRAPH.CENTER)
 
-    # ── R2-R6 C1: Celda fotografía (fusión vertical) ─────────────────────────
+    # ── R2-R6 C1: Fotografía (fusión vertical) ────────────────────────────────
     t1.cell(2, 1).merge(t1.cell(6, 1))
     fc = t1.cell(2, 1)
     _shd(fc, _F_GRIS_OSC)
     _vcenter(fc)
-    # "Fotografía Digital " bold + "(Reciente)" no bold — 10pt, CENTER
-    p_foto_label = fc.paragraphs[0]
-    p_foto_label.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_foto_label.paragraph_format.space_after = Pt(4)
-    _run(p_foto_label, "Fotografía Digital ", bold=True,  size=10)
-    _run(p_foto_label, "(Reciente)",          bold=False, size=10)
-    # Foto del candidato (si existe)
+    p_lbl = fc.paragraphs[0]
+    p_lbl.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_lbl.paragraph_format.space_after = Pt(4)
+    _run(p_lbl, "Fotografía Digital ", bold=True,  size=10)
+    _run(p_lbl, "(Reciente)",           bold=False, size=10)
     foto = _foto_stream(ficha.get("foto_base64"))
     if foto:
         p_img = fc.add_paragraph()
@@ -317,49 +358,46 @@ def generar_ficha(ficha: dict, conf: dict) -> bytes:
         p_img.paragraph_format.space_after = Pt(0)
         p_img.add_run().add_picture(foto, width=Inches(0.9), height=Inches(1.2))
 
-    # ── Helper local: celda label gris (C2-C3) ───────────────────────────────
-    def _label(row, text, align=WD_ALIGN_PARAGRAPH.RIGHT):
+    # ── Helper: celda label gris ──────────────────────────────────────────────
+    def _label(row: int, text: str, align=WD_ALIGN_PARAGRAPH.RIGHT) -> None:
         t1.cell(row, 2).merge(t1.cell(row, 3))
         lc = t1.cell(row, 2)
         _shd(lc, _F_GRIS_OSC)
         _vcenter(lc)
         _w(lc, text, bold=True, size=10, align=align)
 
-    def _value(row):
+    def _value(row: int):
         t1.cell(row, 4).merge(t1.cell(row, 7))
         vc = t1.cell(row, 4)
         _vcenter(vc)
         return vc
 
-    # ── R2: Nombre Completo ───────────────────────────────────────────────────
+    # ── R2-R6: Datos personales ───────────────────────────────────────────────
     _label(2, "Nombre Completo:")
     nombre = f"{ficha.get('nombre_candidato', '')} {ficha.get('apellidos_candidato', '')}".strip()
     _w(_value(2), nombre or "—", size=10)
 
-    # ── R3: Lugar de Nacimiento ───────────────────────────────────────────────
     _label(3, "Lugar de Nacimiento:")
     _w(_value(3), ficha.get("lugar_nacimiento") or "—", size=10)
 
-    # ── R4: Nacionalidad ──────────────────────────────────────────────────────
     _label(4, "Nacionalidad:")
     _w(_value(4), ficha.get("nacionalidad") or "Mexicana", size=10)
 
-    # ── R5: CURP ─────────────────────────────────────────────────────────────
     _label(5, "CURP:")
     _w(_value(5), ficha.get("curp") or "—", size=10)
 
-    # ── R6: Género + Fecha de Nacimiento ──────────────────────────────────────
+    # R6: Género + Fecha Nacimiento
     _label(6, "Género:")
     genero = ficha.get("genero", "")
-    gc = t1.cell(6, 4)
-    _vcenter(gc)
-    _w(gc, f"{_chk(genero == 'H')} H   {_chk(genero == 'M')} M", size=10)
+    gc6 = t1.cell(6, 4)
+    _vcenter(gc6)
+    _w(gc6, f"{_chk(genero == 'H')} H   {_chk(genero == 'M')} M", size=10)
 
     t1.cell(6, 5).merge(t1.cell(6, 6))
-    fc6 = t1.cell(6, 5)
-    _shd(fc6, _F_GRIS_OSC)
-    _vcenter(fc6)
-    _w(fc6, "Fecha de Nacimiento:", bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
+    fn6 = t1.cell(6, 5)
+    _shd(fn6, _F_GRIS_OSC)
+    _vcenter(fn6)
+    _w(fn6, "Fecha de Nacimiento:", bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
 
     vc7 = t1.cell(6, 7)
     _vcenter(vc7)
@@ -374,8 +412,9 @@ def generar_ficha(ficha: dict, conf: dict) -> bytes:
 
     # ── R8: Calle / Núm / CP / Colonia ───────────────────────────────────────
     t1.cell(8, 1).merge(t1.cell(8, 7))
-    _vcenter(t1.cell(8, 1))
-    _w(t1.cell(8, 1),
+    r8c = t1.cell(8, 1)
+    _vcenter(r8c)
+    _w(r8c,
        f"Calle: {ficha.get('domicilio_calle') or '—'}   "
        f"Núm: {ficha.get('domicilio_numero') or '—'}   "
        f"C.P.: {ficha.get('domicilio_cp') or '—'}   "
@@ -388,34 +427,42 @@ def generar_ficha(ficha: dict, conf: dict) -> bytes:
     t1.cell(9, 6).merge(t1.cell(9, 7))
     _vcenter(t1.cell(9, 1))
     _vcenter(t1.cell(9, 3))
-    _w(t1.cell(9, 1), f"Municipio: {ficha.get('domicilio_ciudad') or '—'}",       size=10)
+    _w(t1.cell(9, 1), f"Municipio: {ficha.get('domicilio_ciudad') or '—'}",           size=10)
     _w(t1.cell(9, 3), f"Entidad Federativa: {ficha.get('domicilio_entidad') or '—'}", size=10)
 
-    # ── R10: E-mail / Teléfono / Celular (labels grises + valores) ───────────
+    # ── R10: E-mail / Teléfono / Celular ─────────────────────────────────────
     t1.cell(10, 1).merge(t1.cell(10, 2))
     t1.cell(10, 3).merge(t1.cell(10, 5))
     t1.cell(10, 6).merge(t1.cell(10, 7))
 
+    # Label + valor en la misma celda gris (label bold, valor normal)
     ec = t1.cell(10, 1)
     _shd(ec, _F_GRIS_OSC)
     _vcenter(ec)
-    _w(ec, f"E-mail: {ficha.get('email') or '—'}", bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
+    _nil(ec, "right")                               # sin borde derecho
+    _w(ec,  "E-mail",                  bold=True,  size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
+    _wa(ec, ficha.get("email") or "—",             size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
 
-    tc = t1.cell(10, 3)
-    _shd(tc, _F_GRIS_OSC)
-    _vcenter(tc)
-    _w(tc, f"Teléfono: {ficha.get('telefono') or '—'}", bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
+    tc10 = t1.cell(10, 3)
+    _shd(tc10, _F_GRIS_OSC)
+    _vcenter(tc10)
+    _nil(tc10, "left", "right")                     # sin bordes laterales
+    _w(tc10,  "Teléfono",                 bold=True,  size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
+    _wa(tc10, ficha.get("telefono") or "—",          size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
 
-    cc6 = t1.cell(10, 6)
-    _shd(cc6, _F_GRIS_OSC)
-    _vcenter(cc6)
-    _w(cc6, "Teléfono Celular:", bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
+    cc10 = t1.cell(10, 6)
+    _shd(cc10, _F_GRIS_OSC)
+    _vcenter(cc10)
+    _nil(cc10, "left")                              # sin borde izquierdo
+    _w(cc10,  "Teléfono Celular",  bold=True,  size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
+    _wa(cc10, "—",                             size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
 
-    # ── R11: Nota RENAP pie — gris claro, Arial 8pt, sin itálica ─────────────
+    # ── R11: Nota RENAP pie ───────────────────────────────────────────────────
     t1.cell(11, 0).merge(t1.cell(11, 7))
     nc = t1.cell(11, 0)
     _shd(nc, _F_GRIS_CLR)
-    _w(nc, _RENAP_NOTA, size=8, italic=False, font="Arial")
+    _w(nc, _RENAP_NOTA, size=8, font="Arial")
+    _line_spacing(nc, line=240, rule="auto")        # interlineado simple original
 
     # ── Información Confidencial (página 2) ───────────────────────────────────
     doc.add_page_break()
