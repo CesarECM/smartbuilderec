@@ -64,6 +64,73 @@ def add_extra_pack(user_id: str, payment_intent_id: str, credits: int = 10, sb=N
     print(f"[credits] Pack extra user={user_id} +{credits} créditos")
 
 
+def enrich_transactions(raw: list, sb) -> list:
+    """Agrega candidato_nombre y candidato_email a transacciones con source GCE."""
+    inv_ids, proceso_ids, direct_cand_ids = [], [], []
+    for t in raw:
+        src = t.get("source") or ""
+        if src.startswith("gce_invitacion:"):
+            inv_ids.append(src.split(":", 1)[1])
+        elif src.startswith("gce_proceso_manual:"):
+            parts = src.split(":")
+            if len(parts) >= 2 and parts[1]:
+                direct_cand_ids.append(parts[1])
+        elif src.startswith("proceso:"):
+            proceso_ids.append(src.split(":", 1)[1])
+
+    inv_map: dict = {}
+    if inv_ids:
+        res = sb.table("gce_invitaciones") \
+            .select("id, candidato_id, candidato_email").in_("id", inv_ids).execute()
+        for row in (res.data or []):
+            inv_map[row["id"]] = row
+
+    proc_map: dict = {}
+    if proceso_ids:
+        res = sb.table("procesos_evaluacion") \
+            .select("id, candidato_id").in_("id", proceso_ids).execute()
+        for row in (res.data or []):
+            proc_map[row["id"]] = row
+
+    cand_ids = set(direct_cand_ids)
+    for inv in inv_map.values():
+        if inv.get("candidato_id"):
+            cand_ids.add(inv["candidato_id"])
+    for proc in proc_map.values():
+        if proc.get("candidato_id"):
+            cand_ids.add(proc["candidato_id"])
+
+    profile_map: dict = {}
+    if cand_ids:
+        res = sb.table("profiles") \
+            .select("id, nombre, apellido, email").in_("id", list(cand_ids)).execute()
+        for row in (res.data or []):
+            profile_map[row["id"]] = row
+
+    for t in raw:
+        src = t.get("source") or ""
+        cand_id, fallback_email = None, None
+
+        if src.startswith("gce_invitacion:"):
+            inv = inv_map.get(src.split(":", 1)[1], {})
+            cand_id, fallback_email = inv.get("candidato_id"), inv.get("candidato_email")
+        elif src.startswith("gce_proceso_manual:"):
+            parts = src.split(":")
+            cand_id = parts[1] if len(parts) >= 2 else None
+        elif src.startswith("proceso:"):
+            cand_id = proc_map.get(src.split(":", 1)[1], {}).get("candidato_id")
+
+        prof = profile_map.get(cand_id) if cand_id else None
+        if prof:
+            nombre = " ".join(filter(None, [prof.get("nombre"), prof.get("apellido")])) or prof.get("email", "")
+            t["candidato_nombre"] = nombre
+            t["candidato_email"]  = prof.get("email", "")
+        elif fallback_email:
+            t["candidato_email"] = fallback_email
+
+    return raw
+
+
 def expire_stale_packs(sb=None) -> dict:
     sb = sb or get_supabase()
     now_iso = datetime.now(timezone.utc).isoformat()

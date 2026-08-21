@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from database import get_supabase
 from services.credits_service import (
-    add_extra_pack, expire_stale_packs, get_credits_summary,
+    add_extra_pack, enrich_transactions, expire_stale_packs, get_credits_summary,
 )
 from services.subscription_service import PLAN_CREDITS
 
@@ -146,7 +146,7 @@ def get_status(request: Request, as_user_id: str = ""):
         txs = sb.table("credit_transactions") \
             .select("type, amount, description, created_at, source") \
             .eq("user_id", target_id).order("created_at", desc=True).limit(30).execute()
-        summary["transactions"] = txs.data or []
+        summary["transactions"] = enrich_transactions(txs.data or [], sb)
         return summary
     except HTTPException:
         raise
