@@ -133,6 +133,16 @@ def aceptar_invitacion(data: InvitacionAceptar, request: Request):
                     {"ce_id": d["ce_id"], "candidato_id": uid, "estandar_id": eid}
                 ).execute()
             sb.table("profiles").update({"credits": creditos - n}).eq("id", d["ce_id"]).execute()
+            try:
+                sb.table("credit_transactions").insert({
+                    "user_id":     d["ce_id"],
+                    "type":        "consumed",
+                    "amount":      -n,
+                    "source":      f"gce_invitacion:{d['id']}",
+                    "description": f"Candidato aceptó invitación GCE ({n} EC{'s' if n > 1 else ''})",
+                }).execute()
+            except Exception as e:
+                print(f"[credits] Warn: log fallido en aceptar_invitacion: {e}")
         else:
             sb.table("user_roles").upsert(
                 {"user_id": uid, "role": "evaluador", "assigned_by": d["ce_id"]},

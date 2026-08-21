@@ -111,6 +111,25 @@
       document.getElementById('inv-card').style.display = 'block';
     }
 
+    const _ERR_MSGS = {
+      402: 'El proceso no pudo completarse. Contacta a tu Centro de Evaluación para continuar.',
+      404: 'Invitación no válida. Solicita una nueva a tu Centro de Evaluación.',
+      409: 'Esta invitación ya fue procesada anteriormente.',
+      410: 'Esta invitación ya expiró. Solicita una nueva a tu Centro de Evaluación.',
+      500: 'Error temporal del servidor. Intenta de nuevo en unos minutos.',
+    };
+
+    function showCardError(msg) {
+      let el = document.getElementById('inv-error-msg');
+      if (!el) {
+        el = document.createElement('p');
+        el.id = 'inv-error-msg';
+        el.style.cssText = 'font-size:13px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-top:12px;line-height:1.5;margin-bottom:0';
+        document.querySelector('.inv-body').appendChild(el);
+      }
+      el.textContent = msg;
+    }
+
     async function aceptar(accessToken) {
       const btn = document.getElementById('btn-aceptar');
       btn.disabled = true; btn.textContent = 'Procesando...';
@@ -121,8 +140,9 @@
           body: JSON.stringify({ token }),
         });
         if (!r.ok) {
-          const err = await r.json().catch(() => ({}));
-          throw new Error(err.detail || `Error ${r.status}`);
+          btn.disabled = false; btn.textContent = '✓ Aceptar invitación';
+          showCardError(_ERR_MSGS[r.status] || 'Ocurrió un error. Intenta de nuevo.');
+          return;
         }
         const d = await r.json();
         document.getElementById('inv-card').style.display = 'none';
@@ -131,9 +151,9 @@
             ? 'Tu proceso de evaluación ha sido creado. En un momento te llevamos a tu panel…'
             : 'Ahora formas parte del equipo como evaluador. En un momento te llevamos a tu panel…');
         setTimeout(() => { window.location.href = 'panel'; }, 2500);
-      } catch (e) {
+      } catch {
         btn.disabled = false; btn.textContent = '✓ Aceptar invitación';
-        alert('Error: ' + e.message);
+        showCardError('Sin conexión al servidor. Revisa tu internet e intenta de nuevo.');
       }
     }
 

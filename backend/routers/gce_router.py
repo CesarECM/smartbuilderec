@@ -48,13 +48,13 @@ def crear_proceso(data: ProcesoCreate, request: Request):
             try:
                 sb.table("credit_transactions").insert({
                     "user_id":     uid,
-                    "type":        "gce_proceso_manual",
+                    "type":        "consumed",
                     "amount":      -1,
-                    "source":      f"proceso_manual:{data.candidato_id}:{data.estandar_id}",
-                    "description": "Proceso de evaluación creado manualmente",
+                    "source":      f"gce_proceso_manual:{data.candidato_id}:{data.estandar_id}",
+                    "description": "Proceso GCE creado manualmente",
                 }).execute()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[credits] Warn: log fallido en crear_proceso: {e}")
             credito_canjeado = True
 
         payload = data.model_dump()

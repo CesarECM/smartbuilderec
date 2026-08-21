@@ -2,10 +2,10 @@
 
 function _htmlPlanTab(statusData) {
   const plan   = statusData?.plan;
-  const planLabels = { basico: 'Básico', profesional: 'Profesional', partner: 'Partner' };
+  const planLabels = { basico: 'Básico', profesional: 'Profesional', partner: 'Partner', manual: 'Manual' };
   const planLabel  = planLabels[plan] || null;
 
-  if (!plan) return _htmlPlanTabEmpty();
+  if (!plan) return _htmlPlanTabEmpty(statusData);
 
   const planC  = statusData.plan_credits   ?? 0;
   const extraC = statusData.extra_credits  ?? 0;
@@ -48,16 +48,18 @@ function _htmlPlanTab(statusData) {
     return `<div class="plan-pack-item">🪙 ${p.remaining} créditos · vencen ${exp}</div>`;
   }).join('') : '<p style="font-size:13px;color:var(--c-text-4)">Sin packs activos.</p>';
 
+  const _TX_LABELS = { plan_reset: 'Asignación', extra_purchase: 'Créditos extra', consumed: 'Usado',
+                       expired: 'Vencido', plan_upgrade: 'Cambio de plan', restored: 'Restaurado' };
   const txRows = txs.length ? txs.slice(0, 15).map(t => {
     const sign  = t.amount > 0 ? '+' : '';
     const color = t.amount > 0 ? '#16a34a' : '#dc2626';
     const fecha = new Date(t.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
-    const typeLabel = { plan_reset:'Renovación', extra_purchase:'Créditos extra', consumed:'Usado',
-                        expired:'Vencido', plan_upgrade:'Cambio de plan' }[t.type] || t.type;
+    const label = _TX_LABELS[t.type] || t.type;
+    const desc  = t.description ? `<br><span style="font-size:11px;color:var(--c-text-4);font-weight:400">${t.description}</span>` : '';
     return `<tr>
-      <td style="font-size:12px;color:var(--c-text-4)">${fecha}</td>
-      <td style="font-size:13px;color:var(--c-text-2)">${typeLabel}</td>
-      <td style="font-weight:700;color:${color};text-align:right">${sign}${t.amount}</td>
+      <td style="font-size:12px;color:var(--c-text-4);white-space:nowrap">${fecha}</td>
+      <td style="font-size:13px;color:var(--c-text-2);font-weight:600">${label}${desc}</td>
+      <td style="font-weight:700;color:${color};text-align:right;white-space:nowrap">${sign}${t.amount}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--c-text-4);font-size:13px;padding:16px">Sin transacciones aún.</td></tr>';
 
@@ -120,14 +122,41 @@ function _htmlPlanTab(statusData) {
   </div>`;
 }
 
-function _htmlPlanTabEmpty() {
+function _htmlPlanTabEmpty(statusData) {
+  const txs = statusData?.transactions ?? [];
+  const _TX_LABELS = { plan_reset: 'Asignación', extra_purchase: 'Créditos extra', consumed: 'Usado',
+                       expired: 'Vencido', plan_upgrade: 'Cambio de plan', restored: 'Restaurado' };
+  const txRows = txs.length ? txs.slice(0, 15).map(t => {
+    const sign  = t.amount > 0 ? '+' : '';
+    const color = t.amount > 0 ? '#16a34a' : '#dc2626';
+    const fecha = new Date(t.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
+    const label = _TX_LABELS[t.type] || t.type;
+    const desc  = t.description ? `<br><span style="font-size:11px;color:var(--c-text-4);font-weight:400">${t.description}</span>` : '';
+    return `<tr>
+      <td style="font-size:12px;color:var(--c-text-4);white-space:nowrap">${fecha}</td>
+      <td style="font-size:13px;color:var(--c-text-2);font-weight:600">${label}${desc}</td>
+      <td style="font-weight:700;color:${color};text-align:right;white-space:nowrap">${sign}${t.amount}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--c-text-4);font-size:13px;padding:16px">Sin transacciones aún.</td></tr>';
+
   return `
-  <div class="plan-tab-wrap" style="text-align:center;padding:40px 20px">
-    <div style="font-size:40px;margin-bottom:12px">💳</div>
-    <h3 style="font-size:18px;font-weight:700;color:var(--c-text);margin-bottom:8px">Sin plan activo</h3>
-    <p style="font-size:14px;color:var(--c-text-3);max-width:360px;margin:0 auto 20px">
-      Elige un plan para gestionar instructores de forma automática con créditos mensuales renovables.
-    </p>
-    <a href="pagos.html" class="btn-primary" style="text-decoration:none;display:inline-block">Ver planes y precios →</a>
+  <div class="plan-tab-wrap">
+    <div style="text-align:center;padding:24px 20px 20px;border-bottom:1px solid var(--c-border);margin-bottom:20px">
+      <div style="font-size:36px;margin-bottom:10px">💳</div>
+      <h3 style="font-size:16px;font-weight:700;color:var(--c-text);margin-bottom:6px">Cuenta sin suscripción Stripe</h3>
+      <p style="font-size:13px;color:var(--c-text-3);max-width:360px;margin:0 auto 14px">
+        Los créditos son gestionados manualmente. Contacta al administrador del sistema.
+      </p>
+      <a href="pagos.html" class="btn-sm" style="text-decoration:none">Ver planes y precios →</a>
+    </div>
+    <div class="plan-actions-row">
+      <h3 class="plan-section-title">Historial de créditos</h3>
+      <div class="table-wrap" style="margin-top:8px">
+        <table class="data-table">
+          <thead><tr><th>Fecha</th><th>Concepto</th><th style="text-align:right">Créditos</th></tr></thead>
+          <tbody>${txRows}</tbody>
+        </table>
+      </div>
+    </div>
   </div>`;
 }

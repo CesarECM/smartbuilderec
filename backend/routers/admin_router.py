@@ -57,6 +57,25 @@ def create_admin(data: CreateAdminRequest, request: Request):
             "admin_id": None,
         }).eq("id", user_id).execute()
 
+        now = datetime.now(timezone.utc)
+        try:
+            sb.table("admin_subscriptions").upsert({
+                "user_id": user_id, "plan": "manual",
+                "plan_credits_total": data.credits,
+                "plan_credits_remaining": data.credits,
+                "plan_period_start": now.isoformat(),
+                "plan_period_end": data.vigencia_hasta,
+                "status": "active",
+                "updated_at": now.isoformat(),
+            }, on_conflict="user_id").execute()
+            sb.table("credit_transactions").insert({
+                "user_id": user_id, "type": "plan_reset", "amount": data.credits,
+                "source": "manual",
+                "description": f"Cuenta creada manualmente con {data.credits} créditos",
+            }).execute()
+        except Exception as e:
+            print(f"[credits] Warn: log fallido en create_admin: {e}")
+
         link_acceso = f"{frontend_url}/reset-password.html"
         try:
             link_res = sb.auth.admin.generate_link({
@@ -101,6 +120,11 @@ def renew_admin(data: RenewAdminRequest, request: Request):
     sb = get_supabase()
     _require_super_admin(caller_id, sb)
 
+    old_credits: int | None = None
+    if data.credits is not None:
+        old_res = sb.table("profiles").select("credits").eq("id", data.admin_id).maybe_single().execute()
+        old_credits = (old_res.data or {}).get("credits", 0) or 0
+
     updates: dict = {}
     if data.credits is not None:
         if data.credits < 0:
@@ -120,6 +144,25 @@ def renew_admin(data: RenewAdminRequest, request: Request):
     res = sb.table("profiles").update(updates).eq("id", data.admin_id).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Admin no encontrado.")
+
+    if data.credits is not None and old_credits is not None and data.credits != old_credits:
+        delta = data.credits - old_credits
+        now = datetime.now(timezone.utc)
+        try:
+            sb.table("credit_transactions").insert({
+                "user_id": data.admin_id,
+                "type": "restored" if delta > 0 else "consumed",
+                "amount": delta,
+                "source": "super_admin_renewal",
+                "description": f"Ajuste manual: {'+' if delta > 0 else ''}{delta} créditos (total: {data.credits})",
+            }).execute()
+            sb.table("admin_subscriptions").update({
+                "plan_credits_total": data.credits,
+                "plan_credits_remaining": data.credits,
+                "updated_at": now.isoformat(),
+            }).eq("user_id", data.admin_id).execute()
+        except Exception as e:
+            print(f"[credits] Warn: log fallido en renew_admin: {e}")
 
     # Notificar al admin que su cuenta fue renovada
     try:
