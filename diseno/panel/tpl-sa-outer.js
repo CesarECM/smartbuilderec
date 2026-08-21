@@ -24,7 +24,7 @@ document.getElementById('rp-super_admin').innerHTML = `
             <option value="">Mi cuenta</option>
           </select>
         </div>
-        <div id="adm-planContainer"><p class="loading-txt">Cargando...</p></div>
+        <div id="sa-adm-planContainer"><p class="loading-txt">Cargando...</p></div>
       </div>
       <div id="sa-panel-mi-perfil"  class="role-tab-panel"></div>
 `;

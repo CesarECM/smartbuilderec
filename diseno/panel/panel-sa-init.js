@@ -34,7 +34,7 @@
       if (name === 'mi-plan' && !_sa_tabsLoaded['mi-plan']) {
         _sa_tabsLoaded['mi-plan'] = true;
         _saPoblarPlanSelect();
-        typeof admPlanInit === 'function' && admPlanInit();
+        saPlanInit();
       }
       if (name === 'mi-perfil' && !_sa_tabsLoaded['mi-perfil']) {
         _sa_tabsLoaded['mi-perfil'] = true;
@@ -46,8 +46,22 @@
       }
     }
 
+    async function saPlanInit(asUserId = '') {
+      const container = document.getElementById('sa-adm-planContainer');
+      if (!container) return;
+      container.innerHTML = '<p class="loading-txt">Cargando plan...</p>';
+      try {
+        const qs = asUserId ? `?as_user_id=${encodeURIComponent(asUserId)}` : '';
+        const data = await apiFetch(`/planes/status${qs}`);
+        container.innerHTML = typeof _htmlPlanTab === 'function'
+          ? _htmlPlanTab(data) : '<p class="error-txt">Template no disponible.</p>';
+      } catch (e) {
+        container.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
+      }
+    }
+
     function saPlanVerComo(userId) {
-      typeof admPlanInit === 'function' && admPlanInit(userId);
+      saPlanInit(userId);
     }
 
     function _saPoblarPlanSelect() {
