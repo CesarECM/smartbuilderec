@@ -65,8 +65,10 @@ def add_extra_pack(user_id: str, payment_intent_id: str, credits: int = 10, sb=N
 
 
 def enrich_transactions(raw: list, sb) -> list:
-    """Agrega candidato_nombre y candidato_email a transacciones con source GCE."""
+    """Agrega candidato_nombre, candidato_email y estandar_codigo a transacciones GCE."""
     inv_ids, proceso_ids, direct_cand_ids = [], [], []
+    direct_estandar_ids: set = set()
+
     for t in raw:
         src = t.get("source") or ""
         if src.startswith("gce_invitacion:"):
@@ -75,22 +77,35 @@ def enrich_transactions(raw: list, sb) -> list:
             parts = src.split(":")
             if len(parts) >= 2 and parts[1]:
                 direct_cand_ids.append(parts[1])
+            if len(parts) >= 3 and parts[2]:
+                direct_estandar_ids.add(parts[2])
         elif src.startswith("proceso:"):
             proceso_ids.append(src.split(":", 1)[1])
 
     inv_map: dict = {}
     if inv_ids:
         res = sb.table("gce_invitaciones") \
-            .select("id, candidato_id, candidato_email").in_("id", inv_ids).execute()
+            .select("id, candidato_id, candidato_email, estandar_ids").in_("id", inv_ids).execute()
         for row in (res.data or []):
             inv_map[row["id"]] = row
+            for eid in (row.get("estandar_ids") or []):
+                direct_estandar_ids.add(eid)
 
     proc_map: dict = {}
     if proceso_ids:
         res = sb.table("procesos_evaluacion") \
-            .select("id, candidato_id").in_("id", proceso_ids).execute()
+            .select("id, candidato_id, estandar_id").in_("id", proceso_ids).execute()
         for row in (res.data or []):
             proc_map[row["id"]] = row
+            if row.get("estandar_id"):
+                direct_estandar_ids.add(row["estandar_id"])
+
+    estandar_map: dict = {}
+    if direct_estandar_ids:
+        res = sb.table("estandares_competencia") \
+            .select("id, codigo").in_("id", list(direct_estandar_ids)).execute()
+        for row in (res.data or []):
+            estandar_map[row["id"]] = row["codigo"]
 
     cand_ids = set(direct_cand_ids)
     for inv in inv_map.values():
@@ -110,15 +125,26 @@ def enrich_transactions(raw: list, sb) -> list:
     for t in raw:
         src = t.get("source") or ""
         cand_id, fallback_email = None, None
+        estandar_ids_tx: list = []
 
         if src.startswith("gce_invitacion:"):
             inv = inv_map.get(src.split(":", 1)[1], {})
             cand_id, fallback_email = inv.get("candidato_id"), inv.get("candidato_email")
+            estandar_ids_tx = inv.get("estandar_ids") or []
         elif src.startswith("gce_proceso_manual:"):
             parts = src.split(":")
             cand_id = parts[1] if len(parts) >= 2 else None
+            if len(parts) >= 3 and parts[2]:
+                estandar_ids_tx = [parts[2]]
         elif src.startswith("proceso:"):
-            cand_id = proc_map.get(src.split(":", 1)[1], {}).get("candidato_id")
+            proc = proc_map.get(src.split(":", 1)[1], {})
+            cand_id = proc.get("candidato_id")
+            if proc.get("estandar_id"):
+                estandar_ids_tx = [proc["estandar_id"]]
+
+        codigos = [estandar_map[e] for e in estandar_ids_tx if e in estandar_map]
+        if codigos:
+            t["estandar_codigos"] = codigos
 
         prof = profile_map.get(cand_id) if cand_id else None
         if prof:

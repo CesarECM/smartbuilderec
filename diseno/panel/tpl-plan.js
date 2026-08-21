@@ -30,6 +30,9 @@ function _txRow(t) {
   const label  = _TX_LABELS[t.type] || t.type;
   const srcTag = _txSourceTag(t.source || '');
 
+  const codigos = (t.estandar_codigos || []).map(c =>
+    `<span class="tx-ec-tag">${c}</span>`).join(' ');
+
   let candidatoHtml = '';
   if (t.candidato_nombre || t.candidato_email) {
     const nombre = t.candidato_nombre || t.candidato_email;
@@ -43,7 +46,7 @@ function _txRow(t) {
     ? `<br><span style="font-size:11px;color:var(--c-text-4);font-weight:400">${t.description}</span>` : '';
   return `<tr>
     <td style="font-size:12px;color:var(--c-text-4);white-space:nowrap">${fecha}<br><span style="font-size:10px">${hora}</span></td>
-    <td style="font-size:13px;color:var(--c-text-2);font-weight:600">${label} ${srcTag}${candidatoHtml}${desc}</td>
+    <td style="font-size:13px;color:var(--c-text-2);font-weight:600">${label} ${srcTag} ${codigos}${candidatoHtml}${desc}</td>
     <td style="font-weight:700;color:${color};text-align:right;white-space:nowrap">${sign}${t.amount}</td>
   </tr>`;
 }
