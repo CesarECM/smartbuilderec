@@ -4,6 +4,12 @@
 
 BEGIN;
 
+-- ── 0. Actualizar CHECK constraint ──────────────────────────────────────────
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_rol_check;
+ALTER TABLE public.profiles
+  ADD CONSTRAINT profiles_rol_check
+  CHECK (rol IN ('super_admin', 'ce', 'user'));
+
 -- ── 1. Actualizar datos ──────────────────────────────────────────────────────
 UPDATE public.profiles SET rol = 'ce' WHERE rol = 'admin';
 
