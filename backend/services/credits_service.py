@@ -14,7 +14,7 @@ def get_credits_summary(user_id: str, sb=None) -> dict:
     sub_res = sb.table("admin_subscriptions") \
         .select("plan, plan_credits_remaining, plan_credits_total, plan_period_end, status") \
         .eq("user_id", user_id).maybe_single().execute()
-    sub = sub_res.data or {}
+    sub = (sub_res.data if sub_res else None) or {}
 
     packs_res = sb.table("credit_packs") \
         .select("credits_remaining, expires_at") \
