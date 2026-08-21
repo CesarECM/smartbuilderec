@@ -132,15 +132,19 @@ def checkout_creditos_extra(data: CheckoutExtraRequest, request: Request):
 # ── Estado de suscripción + créditos ──────────────────────────────────────────
 
 @router.get("/status")
-def get_status(request: Request):
+def get_status(request: Request, as_user_id: str = ""):
     caller_id = _require_admin(request)
     sb = get_supabase()
-    _get_admin_profile(caller_id, sb)
-    summary = get_credits_summary(caller_id, sb)
+    caller_profile = _get_admin_profile(caller_id, sb)
 
+    target_id = caller_id
+    if as_user_id and caller_profile.get("rol") == "super_admin":
+        target_id = as_user_id
+
+    summary = get_credits_summary(target_id, sb)
     txs = sb.table("credit_transactions") \
         .select("type, amount, description, created_at") \
-        .eq("user_id", caller_id).order("created_at", desc=True).limit(20).execute()
+        .eq("user_id", target_id).order("created_at", desc=True).limit(20).execute()
     summary["transactions"] = txs.data or []
     return summary
 

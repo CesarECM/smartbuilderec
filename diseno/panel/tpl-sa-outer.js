@@ -17,7 +17,13 @@ document.getElementById('rp-super_admin').innerHTML = `
       <div id="sa-panel-soporte"    class="role-tab-panel"></div>
       <div id="sa-panel-logs"       class="role-tab-panel"></div>
       <div id="sa-panel-mi-plan"    class="role-tab-panel">
-        <div class="sec-header"><h2>💳 Mi Plan</h2></div>
+        <div class="sec-header">
+          <h2>💳 Mi Plan</h2>
+          <select id="sa-plan-user-select" onchange="saPlanVerComo(this.value)"
+            style="font-size:13px;padding:5px 10px;border-radius:6px;border:1.5px solid var(--c-border);background:var(--c-surface);color:var(--c-text);cursor:pointer;max-width:260px">
+            <option value="">Mi cuenta</option>
+          </select>
+        </div>
         <div id="adm-planContainer"><p class="loading-txt">Cargando...</p></div>
       </div>
       <div id="sa-panel-mi-perfil"  class="role-tab-panel"></div>

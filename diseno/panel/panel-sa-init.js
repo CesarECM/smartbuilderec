@@ -33,6 +33,7 @@
       if (name === 'logs'      && !_sa_tabsLoaded.logs)      { _sa_tabsLoaded.logs      = true; saCargarLogs(); }
       if (name === 'mi-plan' && !_sa_tabsLoaded['mi-plan']) {
         _sa_tabsLoaded['mi-plan'] = true;
+        _saPoblarPlanSelect();
         typeof admPlanInit === 'function' && admPlanInit();
       }
       if (name === 'mi-perfil' && !_sa_tabsLoaded['mi-perfil']) {
@@ -43,6 +44,23 @@
           if (_perfil.curp) typeof validarCurpInput === 'function' && validarCurpInput();
         }
       }
+    }
+
+    function saPlanVerComo(userId) {
+      typeof admPlanInit === 'function' && admPlanInit(userId);
+    }
+
+    function _saPoblarPlanSelect() {
+      const sel = document.getElementById('sa-plan-user-select');
+      if (!sel || sel.dataset.poblado) return;
+      if (!_sa_admins.length) { setTimeout(_saPoblarPlanSelect, 400); return; }
+      _sa_admins.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = `${[a.nombre, a.apellido].filter(Boolean).join(' ')} (${a.email})`;
+        sel.appendChild(opt);
+      });
+      sel.dataset.poblado = '1';
     }
 
     function saToggleVigenciaSection() {

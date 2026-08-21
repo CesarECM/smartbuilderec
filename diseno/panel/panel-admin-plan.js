@@ -13,13 +13,16 @@
       : { 'Content-Type': 'application/json' };
   }
 
-  async function admPlanInit() {
+  async function admPlanInit(asUserId = '') {
     const container = document.getElementById('adm-planContainer');
     if (!container) return;
     container.innerHTML = '<p class="loading-txt">Cargando plan...</p>';
     try {
       const headers = await _getHeaders();
-      const res = await fetch(`${BACKEND_URL}/planes/status`, { headers });
+      const url = asUserId
+        ? `${BACKEND_URL}/planes/status?as_user_id=${encodeURIComponent(asUserId)}`
+        : `${BACKEND_URL}/planes/status`;
+      const res = await fetch(url, { headers });
       if (!res.ok) throw new Error(await res.text());
       _planStatus = await res.json();
       container.innerHTML = typeof _htmlPlanTab === 'function'
