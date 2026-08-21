@@ -7,6 +7,7 @@ document.getElementById('rp-super_admin').innerHTML = `
         <button class="role-tab-btn"        id="sa-tab-config"     onclick="saShowTab('config')">⚙️ Config</button>
         <button class="role-tab-btn"        id="sa-tab-logs"       onclick="saShowTab('logs')">📋 Logs</button>
         <button class="role-tab-btn"        onclick="window.location.href='erp-admin'">🏫 ERP →</button>
+        <button class="role-tab-btn"        id="sa-tab-mi-plan"    onclick="saShowTab('mi-plan')">💳 Mi Plan</button>
         <button class="role-tab-btn"        id="sa-tab-mi-perfil"  onclick="saShowTab('mi-perfil')">👤 Mi Perfil</button>
       </nav>
       <div id="sa-panel-resumen"    class="role-tab-panel active"></div>
@@ -15,5 +16,9 @@ document.getElementById('rp-super_admin').innerHTML = `
       <div id="sa-panel-config"     class="role-tab-panel"></div>
       <div id="sa-panel-soporte"    class="role-tab-panel"></div>
       <div id="sa-panel-logs"       class="role-tab-panel"></div>
+      <div id="sa-panel-mi-plan"    class="role-tab-panel">
+        <div class="sec-header"><h2>💳 Mi Plan</h2></div>
+        <div id="adm-planContainer"><p class="loading-txt">Cargando...</p></div>
+      </div>
       <div id="sa-panel-mi-perfil"  class="role-tab-panel"></div>
 `;

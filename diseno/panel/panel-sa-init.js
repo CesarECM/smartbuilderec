@@ -5,7 +5,7 @@
     var _sa_renovarAdminId  = null;
     var _sa_tabsLoaded = {
       resumen: true, usuarios: false,
-      plataforma: false, config: false, soporte: false, logs: false, 'mi-perfil': false
+      plataforma: false, config: false, soporte: false, logs: false, 'mi-plan': false, 'mi-perfil': false
     };
     var _sa_vigenciaLoaded = false;
     var _sa_tplSlugActivo  = null;
@@ -31,6 +31,10 @@
       if (name === 'config'    && !_sa_tabsLoaded.config)    { _sa_tabsLoaded.config    = true; saCargarPlantillas(); }
       if (name === 'soporte'   && !_sa_tabsLoaded.soporte)   { _sa_tabsLoaded.soporte   = true; saCargarKB(); }
       if (name === 'logs'      && !_sa_tabsLoaded.logs)      { _sa_tabsLoaded.logs      = true; saCargarLogs(); }
+      if (name === 'mi-plan' && !_sa_tabsLoaded['mi-plan']) {
+        _sa_tabsLoaded['mi-plan'] = true;
+        typeof admPlanInit === 'function' && admPlanInit();
+      }
       if (name === 'mi-perfil' && !_sa_tabsLoaded['mi-perfil']) {
         _sa_tabsLoaded['mi-perfil'] = true;
         const saPerfilContainer = document.getElementById('sa-perfilFormContainer');
