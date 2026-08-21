@@ -21,11 +21,11 @@ CREATE TABLE public.profiles (
   apellido               TEXT,
   email                  TEXT,
   rol                    TEXT        NOT NULL DEFAULT 'user'
-                                     CHECK (rol IN ('super_admin', 'admin', 'user')),
+                                     CHECK (rol IN ('super_admin', 'ce', 'user')),
   -- admin_id: NULL si el usuario pagó por Stripe o se registró directamente.
-  -- Apunta al admin que lo gestiona si accedió con código de un solo uso.
+  -- Apunta al CE que lo gestiona si accedió con código de un solo uso.
   admin_id               UUID        REFERENCES public.profiles(id) ON DELETE SET NULL,
-  -- credits solo aplica para rol='admin': cuántos usuarios puede tener activos.
+  -- credits solo aplica para rol='ce': cuántos usuarios puede tener activos.
   credits                INT         NOT NULL DEFAULT 0,
   stripe_customer_id     TEXT,
   stripe_subscription_id TEXT,
