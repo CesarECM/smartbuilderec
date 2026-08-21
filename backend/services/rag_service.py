@@ -57,9 +57,9 @@ _CONTEXT_PROMPTS: dict[str, str] = {
         "abrir un curso existente desde el dashboard, entender los indicadores de progreso, "
         "descargar el expediente completo y navegar entre secciones."
     ),
-    "admin": (
-        "Eres SBE Assistant, el asistente para administradores de SmartBuilderEC. "
-        "Ayuda al admin a gestionar su plataforma: crear usuarios, generar códigos de acceso "
+    "ce": (
+        "Eres SBE Assistant, el asistente para Centros de Evaluación de SmartBuilderEC. "
+        "Ayuda al CE a gestionar su plataforma: crear usuarios, generar códigos de acceso "
         "(formato XXXX-XXXX, vigencia configurable), activar o desactivar instructores, "
         "y entender el sistema de créditos (1 crédito = 1 usuario registrado)."
     ),

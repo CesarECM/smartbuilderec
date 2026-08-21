@@ -41,7 +41,7 @@
     'login':            { contexto: 'acceso',        greeting: '¿Problemas para ingresar? Puedo ayudarte a recuperar tu acceso.' },
     'index':            { contexto: 'wizard_ec0217', greeting: '¡Hola, instructor! Soy tu guía para el expediente EC0217.01. ¿En qué paso del wizard necesitas ayuda?' },
     'dashboard':        { contexto: 'navegacion',    greeting: '¿Cómo puedo ayudarte? Puedo orientarte sobre cómo crear o abrir un curso.' },
-    'admin':            { contexto: 'admin',         greeting: '¿Necesitas ayuda con la gestión de usuarios o códigos de acceso?' },
+    'ce':               { contexto: 'ce',         greeting: '¿Necesitas ayuda con la gestión de usuarios o códigos de acceso?' },
     'superadmin':       { contexto: 'superadmin',    greeting: '¿En qué puedo ayudarte con la gestión de la plataforma?' },
     'checkout-success': { contexto: 'onboarding',    greeting: '¡Pago procesado! ¿Necesitas ayuda para comenzar a usar la plataforma?' },
   };

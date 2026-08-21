@@ -70,7 +70,7 @@ def resumen_global(request: Request):
     _require_role(caller, "super_admin")
 
     total_alumnos = sb.table("profiles").select("id", count="exact", head=True).eq("rol", "user").execute().count or 0
-    total_admins  = sb.table("profiles").select("id", count="exact", head=True).eq("rol", "admin").execute().count or 0
+    total_admins  = sb.table("profiles").select("id", count="exact", head=True).eq("rol", "ce").execute().count or 0
     total_asig    = sb.table("asignaciones").select("id", count="exact", head=True).execute().count or 0
     total_pagos   = sb.table("pagos").select("id", count="exact", head=True).execute().count or 0
 

@@ -11,13 +11,13 @@ def listar_alumnos(request: Request, sin_pagos: bool = False):
     sb = get_supabase()
     caller_id = _caller(request)
     caller = _get_profile(sb, caller_id)
-    _require_role(caller, "admin", "super_admin")
+    _require_role(caller, "ce", "super_admin")
 
     q = sb.table("profiles").select(
         "id, nombre, apellido, email, activo, created_at, vigencia_hasta"
     ).eq("rol", "user")
 
-    if caller.get("rol") == "admin":
+    if caller.get("rol") == "ce":
         q = q.eq("admin_id", caller_id)
 
     q = q.order("created_at", desc=True)

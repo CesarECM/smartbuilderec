@@ -33,7 +33,7 @@ def _is_asesor(sb, user_id: str) -> bool:
 def _can_manage_alumno(sb, caller: dict, alumno_id: str) -> bool:
     if caller.get("rol") == "super_admin":
         return True
-    if caller.get("rol") == "admin":
+    if caller.get("rol") == "ce":
         res = sb.table("profiles").select("admin_id").eq("id", alumno_id).single().execute()
         return (res.data or {}).get("admin_id") == caller["id"]
     return False

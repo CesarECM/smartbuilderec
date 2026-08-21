@@ -50,7 +50,7 @@ def create_admin(data: CreateAdminRequest, request: Request):
         sb.table("profiles").update({
             "nombre": data.nombre,
             "apellido": data.apellido,
-            "rol": "admin",
+            "rol": "ce",
             "credits": data.credits,
             "activo": True,
             "vigencia_hasta": data.vigencia_hasta,
@@ -205,7 +205,7 @@ def _procesar_vigencias(sb) -> dict:
     now = datetime.now(timezone.utc)
     res = sb.table("profiles").select(
         "id, nombre, email, vigencia_hasta, activo"
-    ).eq("rol", "admin").execute()
+    ).eq("rol", "ce").execute()
 
     admins = res.data or []
     enviados = []

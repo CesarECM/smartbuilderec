@@ -42,10 +42,10 @@ def listar_tickets(request: Request, estado: Optional[str] = None):
     uid = user.get("sub")
     prof = sb.table("profiles").select("rol").eq("id", uid).single().execute()
     rol = prof.data.get("rol") if prof.data else None
-    if rol not in ("admin", "super_admin"):
+    if rol not in ("ce", "super_admin"):
         raise HTTPException(status_code=403, detail="Sin permisos.")
     query = sb.table("soporte_tickets").select("id,numero,asunto,categoria,estado,prioridad,user_email,user_nombre,created_at,updated_at")
-    if rol == "admin":
+    if rol == "ce":
         usuarios = sb.table("profiles").select("id").eq("admin_id", uid).execute()
         uids = [u["id"] for u in (usuarios.data or [])]
         if not uids:

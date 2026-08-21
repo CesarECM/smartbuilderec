@@ -42,9 +42,9 @@ def admin_create_user(data: CreateUserRequest, request: Request):
 
     caller_res = sb.table("profiles").select("rol, id, nombre").eq("id", caller_id).single().execute()
     caller = caller_res.data or {}
-    if caller.get("rol") not in ("admin", "super_admin"):
+    if caller.get("rol") not in ("ce", "super_admin"):
         raise HTTPException(status_code=403, detail="Solo admins pueden crear usuarios.")
-    if caller.get("rol") == "admin" and caller.get("id") != data.admin_id:
+    if caller.get("rol") == "ce" and caller.get("id") != data.admin_id:
         raise HTTPException(status_code=403, detail="No puedes crear usuarios para otro admin.")
 
     try:
@@ -132,13 +132,13 @@ def admin_delete_user(user_id: str, request: Request):
 
     caller_res = sb.table("profiles").select("rol, id, email").eq("id", caller_id).single().execute()
     caller = caller_res.data or {}
-    if caller.get("rol") not in ("admin", "super_admin"):
+    if caller.get("rol") not in ("ce", "super_admin"):
         raise HTTPException(status_code=403, detail="Sin permisos para eliminar usuarios.")
 
     target_res = sb.table("profiles").select("admin_id, rol, email").eq("id", user_id).single().execute()
     target = target_res.data or {}
 
-    if caller.get("rol") == "admin":
+    if caller.get("rol") == "ce":
         if target.get("admin_id") != caller_id:
             raise HTTPException(status_code=403, detail="No puedes eliminar usuarios de otro admin.")
         if target.get("rol") != "user":

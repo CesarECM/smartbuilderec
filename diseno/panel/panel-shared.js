@@ -35,8 +35,8 @@
       if (extraRoles.includes('evaluador')) roles.push({ id: 'evaluador',  label: '📋 Evaluador' });
       if (extraRoles.includes('ce_admin'))  roles.push({ id: 'ce_admin',   label: '🏫 GCE' });
       if (extraRoles.includes('oc_admin'))  roles.push({ id: 'oc_admin',   label: '🏛️ OC' });
-      if (perfil.rol === 'admin' || perfil.rol === 'super_admin')
-        roles.push({ id: 'admin', label: '👑 Admin' });
+      if (perfil.rol === 'ce' || perfil.rol === 'super_admin')
+        roles.push({ id: 'ce', label: '🏫 CE' });
       if (perfil.rol === 'super_admin')
         roles.push({ id: 'super_admin', label: '🛡️ Super Admin' });
       return roles;

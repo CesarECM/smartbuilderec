@@ -108,10 +108,10 @@
 
     async function saCargarStats() {
       const [rAdmins, rUsuarios, rPlan, rCreditos] = await Promise.all([
-        _supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('rol', 'admin'),
+        _supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('rol', 'ce'),
         _supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('rol', 'user'),
         _supabase.from('planeaciones').select('id', { count: 'exact', head: true }),
-        _supabase.from('profiles').select('credits').eq('rol', 'admin'),
+        _supabase.from('profiles').select('credits').eq('rol', 'ce'),
       ]);
       const totalCreditos = (rCreditos.data || []).reduce((s, a) => s + (a.credits || 0), 0);
       document.getElementById('sa-statAdmins').textContent       = rAdmins.count   ?? '—';

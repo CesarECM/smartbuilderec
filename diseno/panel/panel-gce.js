@@ -40,7 +40,7 @@ async function gceCargarCreditos() {
 function gceBuyCredits() {
   // Si el usuario tiene rol admin, ir a Mi Plan; si solo es ce_admin, abrir checkout directo
   if (_perfil?.rol === 'admin' || _perfil?.rol === 'super_admin') {
-    switchRol('admin');
+    switchRol('ce');
     setTimeout(() => typeof admShowTab === 'function' && admShowTab('mi-plan'), 300);
   } else {
     mostrarToast('Contacta al administrador de la plataforma para recargar créditos.');

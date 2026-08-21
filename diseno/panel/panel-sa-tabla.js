@@ -9,7 +9,7 @@
       { id: 'alumno',       label: '🎓 Alumno',    locked: true,  userOnly: false },
       { id: 'asesor',       label: '🤝 Asesor',    locked: false, userOnly: false },
       { id: 'evaluador',    label: '📋 Evaluador', locked: false, userOnly: false },
-      { id: 'admin',        label: '👑 Admin',     locked: false, userOnly: false },
+      { id: 'ce',           label: '🏫 CE',        locked: false, userOnly: false },
       { id: 'norma_ec0091', label: '🔬 EC0091',   locked: false, userOnly: false },
       { id: 'norma_ec0616',       label: '🏥 EC0616',   locked: false, userOnly: false },
       { id: 'norma_ec0616_tutor', label: '🗂️ PE Tutor', locked: false, userOnly: false },
@@ -54,7 +54,7 @@
       });
 
       _sa_unified_all = perfiles;
-      _sa_admins = perfiles.filter(u => u.rol === 'admin');
+      _sa_admins = perfiles.filter(u => u.rol === 'ce');
 
       // Cargar planeaciones de todos los alumnos en paralelo con la tabla
       _sa_planMap = {};
@@ -94,7 +94,7 @@
       if (_sa_extraMap[u.id]?.has('norma_ec1375'))       set.add('norma_ec1375');
       if (_sa_extraMap[u.id]?.has('ce_admin'))           set.add('ce_admin');
       if (_sa_extraMap[u.id]?.has('oc_admin'))     set.add('oc_admin');
-      if (u.rol === 'admin' || u.rol === 'super_admin') set.add('admin');
+      if (u.rol === 'ce' || u.rol === 'super_admin') set.add('admin');
       return set;
     }
 
@@ -102,7 +102,7 @@
       const id  = u.id;
       const ns  = nombre.replace(/'/g, "\\'");
       const vig = u.vigencia_hasta || '';
-      if (u.rol === 'admin') {
+      if (u.rol === 'ce') {
         return `
           <button onclick="saToggleMenuFila(event,'${id}');saVerDetalleAdmin('${id}')">📋 Ver detalle</button>
           <button onclick="saToggleMenuFila(event,'${id}');saAbrirModalRenovar('${id}','${ns}',${u.credits??0},'${vig}')">💳 Créditos &amp; vigencia</button>
@@ -181,16 +181,16 @@
             const tip = r.locked ? 'Rol base — siempre activo' : (on ? 'Clic para desactivar' : 'Clic para activar');
             return `<span class="${cls}" data-role="${r.id}" ${oc} title="${tip}">${r.label}</span>`;
           }).join('');
-          const avatarStyle = u.rol === 'admin'
+          const avatarStyle = u.rol === 'ce'
             ? 'background:#fef3c7;color:#92400e'
             : 'background:#ede9fe;color:#5b21b6;font-size:13px';
-          const credLine  = u.rol === 'admin'
+          const credLine  = u.rol === 'ce'
             ? `<div style="font-size:11px;color:var(--c-text-3);margin-top:3px" id="sa-credline-${u.id}">💳 <span id="sa-creditDisplay-${u.id}">${u.credits??0}</span> créditos</div>`
             : '';
-          const adminLine = u.rol !== 'admin' && u.adminNombre
+          const adminLine = u.rol !== 'ce' && u.adminNombre
             ? `<div style="font-size:11px;color:var(--c-text-3);margin-top:1px">👑 ${u.adminNombre}</div>`
             : '';
-          const vigBadge  = u.rol === 'admin'
+          const vigBadge  = u.rol === 'ce'
             ? `<span style="margin-left:4px">${renderVigenciaBadge(u.vigencia_hasta, u.activo)}</span>`
             : '';
 

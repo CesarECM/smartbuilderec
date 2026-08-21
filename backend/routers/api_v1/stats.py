@@ -70,7 +70,7 @@ def stats_users(
     por_rol_user = sb.table("profiles").select("id", count="exact", head=True) \
         .eq("rol", "user").execute()
     por_rol_admin = sb.table("profiles").select("id", count="exact", head=True) \
-        .eq("rol", "admin").execute()
+        .eq("rol", "ce").execute()
 
     activos_res = sb.table("profiles").select("id", count="exact", head=True) \
         .eq("activo", True).execute()
@@ -81,7 +81,7 @@ def stats_users(
         "periodo": periodo,
         "nuevos_registros": nuevos_res.count or 0,
         "total_instructores": por_rol_user.count or 0,
-        "total_admins": por_rol_admin.count or 0,
+        "total_ces": por_rol_admin.count or 0,
         "activos": activos_res.count or 0,
         "inactivos": inactivos_res.count or 0,
     })

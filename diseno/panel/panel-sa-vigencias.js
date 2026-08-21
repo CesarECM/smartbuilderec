@@ -98,13 +98,13 @@
       btn.disabled = false; btn.textContent = 'Buscar';
       res.classList.add('visible');
       if (error || !usuario) { res.classList.add('err'); res.innerHTML = `No se encontró ningún usuario con el correo <strong>${email}</strong>.`; return; }
-      if (usuario.rol === 'admin')       { res.classList.add('warn'); res.innerHTML = `<strong>${usuario.nombre||usuario.email}</strong> ya es administrador.`; return; }
+      if (usuario.rol === 'ce')          { res.classList.add('warn'); res.innerHTML = `<strong>${usuario.nombre||usuario.email}</strong> ya es Centro de Evaluación.`; return; }
       if (usuario.rol === 'super_admin') { res.classList.add('warn'); res.innerHTML = `<strong>${usuario.nombre||usuario.email}</strong> es Super Admin.`; return; }
       const nombre = [usuario.nombre, usuario.apellido].filter(Boolean).join(' ') || usuario.email;
       res.classList.add('ok');
       res.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div><strong>${nombre}</strong> · ${usuario.email}</div>
-        <button class="btn-primary" onclick="saPromoverAAdmin('${usuario.id}','${nombre.replace(/'/g,"\\'")}',${creditos})">Promover con ${creditos} créditos</button>
+        <button class="btn-primary" onclick="saPromoverAAdmin('${usuario.id}','${nombre.replace(/'/g,"\\'")}',${creditos})">Promover a CE con ${creditos} créditos</button>
       </div>`;
     }
 
@@ -114,15 +114,15 @@
       const btn = document.querySelector('#sa-resultadoBusqueda .btn-primary');
       if (btn) btn.disabled = true;
       const { error } = await _supabase.from('profiles')
-        .update({ rol: 'admin', credits: creditos, admin_id: null, vigencia_hasta: vigencia })
+        .update({ rol: 'ce', credits: creditos, admin_id: null, vigencia_hasta: vigencia })
         .eq('id', userId);
       if (error) { alert('Error al promover: ' + error.message); if (btn) btn.disabled = false; return; }
       const res = document.getElementById('sa-resultadoBusqueda');
       res.className = 'resultado-busqueda visible ok';
-      res.innerHTML = `✓ <strong>${nombre}</strong> ahora es administrador con ${creditos} créditos.`;
+      res.innerHTML = `✓ <strong>${nombre}</strong> ahora es Centro de Evaluación con ${creditos} créditos.`;
       document.getElementById('sa-buscarEmail').value    = '';
       document.getElementById('sa-vigenciaAsignar').value = '';
-      mostrarToast('Admin promovido correctamente');
+      mostrarToast('CE promovido correctamente');
       _sa_vigenciaLoaded = false;
       await Promise.all([saCargarStats(), saCargarTablaUnificada()]);
     }
@@ -132,9 +132,9 @@
       cont.innerHTML = '<p class="loading-txt">Cargando...</p>';
       const { data: admins, error } = await _supabase.from('profiles')
         .select('id,nombre,apellido,email,credits,activo,vigencia_hasta')
-        .eq('rol', 'admin').order('vigencia_hasta', { ascending: true, nullsFirst: false });
+        .eq('rol', 'ce').order('vigencia_hasta', { ascending: true, nullsFirst: false });
       if (error) { cont.innerHTML = `<p class="error-txt">Error: ${error.message}</p>`; return; }
-      if (!admins?.length) { cont.innerHTML = '<p class="empty-txt">No hay admins registrados.</p>'; return; }
+      if (!admins?.length) { cont.innerHTML = '<p class="empty-txt">No hay CEs registrados.</p>'; return; }
 
       const rojos     = admins.filter(a => _claseVigencia(a.vigencia_hasta, a.activo) === 'vb-rojo');
       const amarillos = admins.filter(a => _claseVigencia(a.vigencia_hasta, a.activo) === 'vb-amarillo');

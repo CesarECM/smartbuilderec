@@ -12,7 +12,7 @@
         actionsEl.innerHTML = `
           <span style="color:rgba(255,255,255,0.7);font-size:13px;">Hola, ${meta.nombre || nombre}</span>
           <a href="dashboard.html" class="btn-nav-login">Mi cuenta</a>
-          ${rol === "instructor" || rol === "admin" ? '<a href="index.html" class="btn-nav-register">Wizard</a>' : '<a href="catalogo.html" class="btn-nav-register">Mis cursos</a>'}
+          ${rol === "instructor" || rol === "ce" ? '<a href="index.html" class="btn-nav-register">Wizard</a>' : '<a href="catalogo.html" class="btn-nav-register">Mis cursos</a>'}
         `;
       }
     })();

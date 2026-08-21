@@ -83,7 +83,7 @@ def _create_or_get_admin(email: str, nombre: str, customer_id: str, plan: str, s
         })
         user_id = result.user.id
         sb.table("profiles").update({
-            "nombre": nombre, "rol": "admin", "activo": True,
+            "nombre": nombre, "rol": "ce", "activo": True,
             "stripe_customer_id": customer_id, "credits": 0,
         }).eq("id", user_id).execute()
 

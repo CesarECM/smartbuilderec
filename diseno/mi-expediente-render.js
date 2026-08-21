@@ -158,7 +158,7 @@
         }
         _renderViewAsBanner(viewAs);
       }
-      if (perfil.rol === "admin") { window.location.href = "admin"; return; }
+      if (perfil.rol === "ce") { window.location.href = "admin"; return; }
 
       const nombre = [perfil.nombre, perfil.apellido].filter(Boolean).join(" ") || "usuario";
       document.getElementById("headerAvatar").textContent = iniciales(perfil.nombre, perfil.apellido);

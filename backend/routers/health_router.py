@@ -14,7 +14,7 @@ def _test_vigencias_proximas():
     hoy    = date.today().isoformat()
     limite = (date.today() + timedelta(days=7)).isoformat()
     r = sb.table("profiles").select("id", count="exact", head=True) \
-        .eq("rol", "admin").eq("activo", True) \
+        .eq("rol", "ce").eq("activo", True) \
         .gte("vigencia_hasta", hoy).lte("vigencia_hasta", limite).execute()
     n = r.count or 0
     if n > 0:
@@ -27,7 +27,7 @@ def _test_admins_sin_creditos():
     from database import get_supabase as _gsb
     sb = _gsb()
     r = sb.table("profiles").select("id", count="exact", head=True) \
-        .eq("rol", "admin").eq("activo", True).eq("credits", 0).execute()
+        .eq("rol", "ce").eq("activo", True).eq("credits", 0).execute()
     n = r.count or 0
     if n > 0:
         return {"status": "warning", "pendientes": n,

@@ -25,14 +25,14 @@
         }
 
         // Admin — degradar o promover (abre modal de créditos)
-        if (role === 'admin') {
+        if (role === 'ce') {
           if (estaActivo) {
-            if (!confirm('¿Quitar rol Admin? El usuario pasará a ser Alumno.')) return;
+            if (!confirm('¿Quitar rol CE? El usuario pasará a ser Alumno.')) return;
             const { error } = await _supabase.from('profiles').update({ rol: 'user' }).eq('id', userId);
             if (error) throw new Error(error.message);
             const u = _sa_unified_all.find(x => x.id === userId);
             if (u) { u.rol = 'user'; sa_RefrescarFilaRoles(u); }
-            mostrarToast('Rol Admin eliminado');
+            mostrarToast('Rol CE eliminado');
           } else {
             // Abre modal de promover (reutiliza adm-modalPromover)
             _sa_promoverUserId = userId;
@@ -64,16 +64,16 @@
       if (!vigencia) { msg.textContent = 'Selecciona una fecha de vigencia.'; msg.className = 'form-msg err'; return; }
       btn.disabled = true; btn.textContent = 'Promoviendo...'; msg.textContent = '';
       const { error } = await _supabase.from('profiles')
-        .update({ rol: 'admin', credits: creditos, admin_id: null, vigencia_hasta: vigencia })
+        .update({ rol: 'ce', credits: creditos, admin_id: null, vigencia_hasta: vigencia })
         .eq('id', _sa_promoverUserId);
       btn.disabled = false; btn.textContent = 'Promover';
       if (error) { msg.textContent = error.message; msg.className = 'form-msg err'; return; }
       const u = _sa_unified_all.find(x => x.id === _sa_promoverUserId);
-      if (u) { u.rol = 'admin'; sa_RefrescarFilaRoles(u); }
+      if (u) { u.rol = 'ce'; sa_RefrescarFilaRoles(u); }
       admCerrarModalPromover();
       document.getElementById('adm-btnConfirmarPromover').onclick = admConfirmarPromover;
       _sa_promoverUserId = null;
-      mostrarToast('Usuario promovido a Admin');
+      mostrarToast('Usuario promovido a CE');
       await Promise.all([saCargarStats(), saCargarTablaUnificada()]);
     }
 

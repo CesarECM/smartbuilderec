@@ -14,7 +14,7 @@ def crear_asignacion(data: AsignacionRequest, request: Request):
     sb = get_supabase()
     caller_id = _caller(request)
     caller = _get_profile(sb, caller_id)
-    _require_role(caller, "admin", "super_admin")
+    _require_role(caller, "ce", "super_admin")
 
     if not _can_manage_alumno(sb, caller, data.alumno_id):
         raise HTTPException(status_code=403, detail="No puedes gestionar a este alumno.")
@@ -53,7 +53,7 @@ def listar_asignaciones(request: Request, norma_id: Optional[str] = None):
     sb = get_supabase()
     caller_id = _caller(request)
     caller = _get_profile(sb, caller_id)
-    _require_role(caller, "admin", "super_admin")
+    _require_role(caller, "ce", "super_admin")
 
     q = sb.table("asignaciones").select(
         "id, alumno_id, norma_id, asesor_id, evaluador_id, admin_id, created_at, "
@@ -61,7 +61,7 @@ def listar_asignaciones(request: Request, norma_id: Optional[str] = None):
         "profiles!asignaciones_alumno_id_fkey(nombre, apellido, email)"
     )
 
-    if caller.get("rol") == "admin":
+    if caller.get("rol") == "ce":
         q = q.eq("admin_id", caller_id)
     if norma_id:
         q = q.eq("norma_id", norma_id)
@@ -75,13 +75,13 @@ def eliminar_asignacion(asignacion_id: str, request: Request):
     sb = get_supabase()
     caller_id = _caller(request)
     caller = _get_profile(sb, caller_id)
-    _require_role(caller, "admin", "super_admin")
+    _require_role(caller, "ce", "super_admin")
 
     asig_res = sb.table("asignaciones").select("alumno_id, admin_id").eq("id", asignacion_id).single().execute()
     if not asig_res.data:
         raise HTTPException(status_code=404, detail="Asignación no encontrada.")
 
-    if caller.get("rol") == "admin" and asig_res.data.get("admin_id") != caller_id:
+    if caller.get("rol") == "ce" and asig_res.data.get("admin_id") != caller_id:
         raise HTTPException(status_code=403, detail="No puedes eliminar asignaciones de otro admin.")
 
     sb.table("asignaciones").delete().eq("id", asignacion_id).execute()
@@ -93,7 +93,7 @@ def registrar_pago_manual(data: PagoManualRequest, request: Request):
     sb = get_supabase()
     caller_id = _caller(request)
     caller = _get_profile(sb, caller_id)
-    _require_role(caller, "admin", "super_admin")
+    _require_role(caller, "ce", "super_admin")
 
     if not _can_manage_alumno(sb, caller, data.alumno_id):
         raise HTTPException(status_code=403, detail="No puedes registrar pagos para este alumno.")
@@ -146,13 +146,13 @@ def eliminar_pago(pago_id: str, request: Request):
     sb = get_supabase()
     caller_id = _caller(request)
     caller = _get_profile(sb, caller_id)
-    _require_role(caller, "admin", "super_admin")
+    _require_role(caller, "ce", "super_admin")
 
     pago_res = sb.table("pagos").select("alumno_id, registrado_por").eq("id", pago_id).single().execute()
     if not pago_res.data:
         raise HTTPException(status_code=404, detail="Pago no encontrado.")
 
-    if caller.get("rol") == "admin":
+    if caller.get("rol") == "ce":
         if pago_res.data.get("registrado_por") != caller_id:
             raise HTTPException(status_code=403, detail="Solo puedes eliminar pagos que tú registraste.")
 

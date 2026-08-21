@@ -16,7 +16,7 @@ def mis_servicios(request: Request):
     caller = _get_profile(sb, caller_id)
     extra_roles = _get_extra_roles(sb, caller_id)
 
-    if caller.get("rol") == "admin":
+    if caller.get("rol") == "ce":
         raise HTTPException(
             status_code=400,
             detail="Los administradores usan /erp/admin/alumnos para ver servicios."
@@ -119,7 +119,7 @@ def detalle_alumno(alumno_id: str, request: Request):
     extra_roles = _get_extra_roles(sb, caller_id)
 
     tiene_acceso = (
-        caller.get("rol") in ("admin", "super_admin")
+        caller.get("rol") in ("ce", "super_admin")
         and _can_manage_alumno(sb, caller, alumno_id)
     ) or (
         "evaluador" in extra_roles and _is_assigned_as(sb, caller_id, alumno_id, "evaluador_id")
