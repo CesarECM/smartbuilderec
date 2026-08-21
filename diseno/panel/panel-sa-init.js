@@ -48,14 +48,24 @@
 
     async function saPlanInit(asUserId = '') {
       const container = document.getElementById('sa-adm-planContainer');
-      if (!container) return;
+      const dbg = window._sbeDebug;
+      const qs  = asUserId ? `?as_user_id=${encodeURIComponent(asUserId)}` : '';
+      const url = `/planes/status${qs}`;
+
+      if (!container) {
+        dbg?.log('saPlanInit', 'error', url, 'sa-adm-planContainer no encontrado en DOM');
+        return;
+      }
       container.innerHTML = '<p class="loading-txt">Cargando plan...</p>';
+      dbg?.log('saPlanInit', 'req', url, { asUserId: asUserId || '(propio)' });
+
       try {
-        const qs = asUserId ? `?as_user_id=${encodeURIComponent(asUserId)}` : '';
-        const data = await apiFetch(`/planes/status${qs}`);
+        const data = await apiFetch(url);
+        dbg?.log('saPlanInit', 'ok', url, data);
         container.innerHTML = typeof _htmlPlanTab === 'function'
           ? _htmlPlanTab(data) : '<p class="error-txt">Template no disponible.</p>';
       } catch (e) {
+        dbg?.log('saPlanInit', 'error', url, e.message);
         container.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
       }
     }
