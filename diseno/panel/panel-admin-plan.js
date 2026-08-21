@@ -140,6 +140,7 @@
     .plan-section-title { font-size: 14px; font-weight: 700; color: var(--c-text, #111827); margin: 0 0 10px; }
     .plan-btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .plan-pack-item { font-size: 13px; color: var(--c-text-2, #374151); background: #fafafa; border: 1px solid var(--c-border, #e5e7eb); border-radius: 6px; padding: 5px 10px; display: inline-block; }
+    .tx-src-tag { font-size: 10px; font-weight: 600; background: #eff6ff; color: #1d4ed8; border-radius: 4px; padding: 1px 6px; vertical-align: middle; margin-left: 4px; white-space: nowrap; }
   `;
   document.head.appendChild(style);
 })();

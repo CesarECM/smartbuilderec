@@ -1,5 +1,43 @@
 /* MPS #009 — Template HTML de la pestaña "Mi Plan" en el panel admin */
 
+const _TX_LABELS = {
+  plan_reset:     'Asignación de plan',
+  extra_purchase: 'Créditos extra',
+  consumed:       'Crédito usado',
+  gce_portafolio: 'Portafolio GCE',
+  expired:        'Vencido',
+  plan_upgrade:   'Cambio de plan',
+  restored:       'Restaurado',
+  recovery:       'Recuperación',
+};
+
+function _txSourceTag(source) {
+  if (!source) return '';
+  if (source.startsWith('gce_invitacion:'))    return '<span class="tx-src-tag">GCE · Invitación</span>';
+  if (source.startsWith('gce_proceso_manual:'))return '<span class="tx-src-tag">GCE · Manual</span>';
+  if (source.startsWith('proceso:'))           return '<span class="tx-src-tag">GCE · Portafolio</span>';
+  if (source === 'super_admin_renewal')        return '<span class="tx-src-tag">Ajuste superadmin</span>';
+  if (source === 'manual')                     return '<span class="tx-src-tag">Manual</span>';
+  return '';
+}
+
+function _txRow(t) {
+  const sign   = t.amount > 0 ? '+' : '';
+  const color  = t.amount > 0 ? '#16a34a' : '#dc2626';
+  const dt     = new Date(t.created_at);
+  const fecha  = dt.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+  const hora   = dt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const label  = _TX_LABELS[t.type] || t.type;
+  const srcTag = _txSourceTag(t.source || '');
+  const desc   = t.description
+    ? `<br><span style="font-size:11px;color:var(--c-text-4);font-weight:400">${t.description}</span>` : '';
+  return `<tr>
+    <td style="font-size:12px;color:var(--c-text-4);white-space:nowrap">${fecha}<br><span style="font-size:10px">${hora}</span></td>
+    <td style="font-size:13px;color:var(--c-text-2);font-weight:600">${label} ${srcTag}${desc}</td>
+    <td style="font-weight:700;color:${color};text-align:right;white-space:nowrap">${sign}${t.amount}</td>
+  </tr>`;
+}
+
 function _htmlPlanTab(statusData) {
   const plan   = statusData?.plan;
   const planLabels = { basico: 'Básico', profesional: 'Profesional', partner: 'Partner', manual: 'Manual' };
@@ -48,20 +86,8 @@ function _htmlPlanTab(statusData) {
     return `<div class="plan-pack-item">🪙 ${p.remaining} créditos · vencen ${exp}</div>`;
   }).join('') : '<p style="font-size:13px;color:var(--c-text-4)">Sin packs activos.</p>';
 
-  const _TX_LABELS = { plan_reset: 'Asignación', extra_purchase: 'Créditos extra', consumed: 'Usado',
-                       expired: 'Vencido', plan_upgrade: 'Cambio de plan', restored: 'Restaurado' };
-  const txRows = txs.length ? txs.slice(0, 15).map(t => {
-    const sign  = t.amount > 0 ? '+' : '';
-    const color = t.amount > 0 ? '#16a34a' : '#dc2626';
-    const fecha = new Date(t.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
-    const label = _TX_LABELS[t.type] || t.type;
-    const desc  = t.description ? `<br><span style="font-size:11px;color:var(--c-text-4);font-weight:400">${t.description}</span>` : '';
-    return `<tr>
-      <td style="font-size:12px;color:var(--c-text-4);white-space:nowrap">${fecha}</td>
-      <td style="font-size:13px;color:var(--c-text-2);font-weight:600">${label}${desc}</td>
-      <td style="font-weight:700;color:${color};text-align:right;white-space:nowrap">${sign}${t.amount}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--c-text-4);font-size:13px;padding:16px">Sin transacciones aún.</td></tr>';
+  const txRows = txs.length ? txs.map(_txRow).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:var(--c-text-4);font-size:13px;padding:16px">Sin transacciones aún.</td></tr>';
 
   return `
   <div class="plan-tab-wrap">
@@ -111,33 +137,13 @@ function _htmlPlanTab(statusData) {
         </table>
       </div>
     </div>
-
-    <div class="plan-actions-row" style="margin-top:16px">
-      ${status !== 'canceled'
-        ? `<button class="btn-sm" style="color:#dc2626;border-color:#fecaca" onclick="admPlanCancel()">Cancelar suscripción</button>`
-        : `<p style="font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin:0">
-            Tu suscripción está cancelada y vencerá el ${renewalStr}. Después no podrás agregar más usuarios.
-           </p>`}
-    </div>
   </div>`;
 }
 
 function _htmlPlanTabEmpty(statusData) {
   const txs = statusData?.transactions ?? [];
-  const _TX_LABELS = { plan_reset: 'Asignación', extra_purchase: 'Créditos extra', consumed: 'Usado',
-                       expired: 'Vencido', plan_upgrade: 'Cambio de plan', restored: 'Restaurado' };
-  const txRows = txs.length ? txs.slice(0, 15).map(t => {
-    const sign  = t.amount > 0 ? '+' : '';
-    const color = t.amount > 0 ? '#16a34a' : '#dc2626';
-    const fecha = new Date(t.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short' });
-    const label = _TX_LABELS[t.type] || t.type;
-    const desc  = t.description ? `<br><span style="font-size:11px;color:var(--c-text-4);font-weight:400">${t.description}</span>` : '';
-    return `<tr>
-      <td style="font-size:12px;color:var(--c-text-4);white-space:nowrap">${fecha}</td>
-      <td style="font-size:13px;color:var(--c-text-2);font-weight:600">${label}${desc}</td>
-      <td style="font-weight:700;color:${color};text-align:right;white-space:nowrap">${sign}${t.amount}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--c-text-4);font-size:13px;padding:16px">Sin transacciones aún.</td></tr>';
+  const txRows = txs.length ? txs.map(_txRow).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:var(--c-text-4);font-size:13px;padding:16px">Sin transacciones aún.</td></tr>';
 
   return `
   <div class="plan-tab-wrap">

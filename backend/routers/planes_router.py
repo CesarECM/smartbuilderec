@@ -144,8 +144,8 @@ def get_status(request: Request, as_user_id: str = ""):
 
         summary = get_credits_summary(target_id, sb)
         txs = sb.table("credit_transactions") \
-            .select("type, amount, description, created_at") \
-            .eq("user_id", target_id).order("created_at", desc=True).limit(20).execute()
+            .select("type, amount, description, created_at, source") \
+            .eq("user_id", target_id).order("created_at", desc=True).limit(30).execute()
         summary["transactions"] = txs.data or []
         return summary
     except HTTPException:
