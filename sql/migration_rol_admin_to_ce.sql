@@ -4,14 +4,16 @@
 
 BEGIN;
 
--- ── 0. Actualizar CHECK constraint ──────────────────────────────────────────
+-- ── 0. Quitar constraint viejo (aún permite 'admin') ────────────────────────
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_rol_check;
-ALTER TABLE public.profiles
-  ADD CONSTRAINT profiles_rol_check
-  CHECK (rol IN ('super_admin', 'ce', 'user'));
 
 -- ── 1. Actualizar datos ──────────────────────────────────────────────────────
 UPDATE public.profiles SET rol = 'ce' WHERE rol = 'admin';
+
+-- ── 2. Poner constraint nuevo (ya sin 'admin') ───────────────────────────────
+ALTER TABLE public.profiles
+  ADD CONSTRAINT profiles_rol_check
+  CHECK (rol IN ('super_admin', 'ce', 'user'));
 
 -- ── 2. Policies: profiles ────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "profiles_select_my_users" ON public.profiles;
