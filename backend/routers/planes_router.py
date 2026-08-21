@@ -133,20 +133,26 @@ def checkout_creditos_extra(data: CheckoutExtraRequest, request: Request):
 
 @router.get("/status")
 def get_status(request: Request, as_user_id: str = ""):
-    caller_id = _require_admin(request)
-    sb = get_supabase()
-    caller_profile = _get_admin_profile(caller_id, sb)
+    try:
+        caller_id = _require_admin(request)
+        sb = get_supabase()
+        caller_profile = _get_admin_profile(caller_id, sb)
 
-    target_id = caller_id
-    if as_user_id and caller_profile.get("rol") == "super_admin":
-        target_id = as_user_id
+        target_id = caller_id
+        if as_user_id and caller_profile.get("rol") == "super_admin":
+            target_id = as_user_id
 
-    summary = get_credits_summary(target_id, sb)
-    txs = sb.table("credit_transactions") \
-        .select("type, amount, description, created_at") \
-        .eq("user_id", target_id).order("created_at", desc=True).limit(20).execute()
-    summary["transactions"] = txs.data or []
-    return summary
+        summary = get_credits_summary(target_id, sb)
+        txs = sb.table("credit_transactions") \
+            .select("type, amount, description, created_at") \
+            .eq("user_id", target_id).order("created_at", desc=True).limit(20).execute()
+        summary["transactions"] = txs.data or []
+        return summary
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[planes/status] Error inesperado as_user_id={as_user_id!r}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
 
 # ── Upgrade de plan (inmediato, mid-cycle) ────────────────────────────────────

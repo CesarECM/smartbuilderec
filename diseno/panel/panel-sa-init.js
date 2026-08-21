@@ -49,23 +49,32 @@
     async function saPlanInit(asUserId = '') {
       const container = document.getElementById('sa-adm-planContainer');
       const dbg = window._sbeDebug;
-      const qs  = asUserId ? `?as_user_id=${encodeURIComponent(asUserId)}` : '';
-      const url = `/planes/status${qs}`;
+      const qs      = asUserId ? `?as_user_id=${encodeURIComponent(asUserId)}` : '';
+      const fullUrl = `${BACKEND_URL}/planes/status${qs}`;
 
       if (!container) {
-        dbg?.log('saPlanInit', 'error', url, 'sa-adm-planContainer no encontrado en DOM');
+        dbg?.log('saPlanInit', 'error', fullUrl, 'sa-adm-planContainer no encontrado');
         return;
       }
       container.innerHTML = '<p class="loading-txt">Cargando plan...</p>';
-      dbg?.log('saPlanInit', 'req', url, { asUserId: asUserId || '(propio)' });
+      dbg?.log('saPlanInit', 'req', fullUrl, { asUserId: asUserId || '(propio)' });
 
       try {
-        const data = await apiFetch(url);
-        dbg?.log('saPlanInit', 'ok', url, data);
+        const headers = await getAuthHeaders();
+        const res = await fetch(fullUrl, { headers });
+        dbg?.log('saPlanInit', res.ok ? 'res' : 'warn', fullUrl,
+          { status: res.status, cors: res.headers.get('access-control-allow-origin') });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        dbg?.log('saPlanInit', 'ok', fullUrl, data);
         container.innerHTML = typeof _htmlPlanTab === 'function'
           ? _htmlPlanTab(data) : '<p class="error-txt">Template no disponible.</p>';
       } catch (e) {
-        dbg?.log('saPlanInit', 'error', url, e.message);
+        dbg?.log('saPlanInit', 'net-error', fullUrl,
+          { message: e.message, type: e.name, stack: (e.stack || '').split('\n')[1] || '' });
         container.innerHTML = `<p class="error-txt">Error: ${e.message}</p>`;
       }
     }
