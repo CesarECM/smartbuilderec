@@ -1,4 +1,4 @@
-document.getElementById('rp-admin').innerHTML = `
+document.getElementById('rp-ce').innerHTML = `
       <nav class="role-tab-bar">
         <button class="role-tab-btn active" id="adm-tab-resumen"    onclick="admShowTab('resumen')">📊 Resumen</button>
         <button class="role-tab-btn"        id="adm-tab-mis-cursos" onclick="admShowTab('mis-cursos')">📚 Mis Cursos</button>

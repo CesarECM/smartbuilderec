@@ -22,8 +22,8 @@
     }
 
     function admShowTab(name) {
-      document.querySelectorAll('#rp-admin .role-tab-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('#rp-admin .role-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#rp-ce .role-tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('#rp-ce .role-tab-btn').forEach(b => b.classList.remove('active'));
       const panel = document.getElementById('adm-panel-' + name);
       const btn   = document.getElementById('adm-tab-'   + name);
       if (panel) panel.classList.add('active');

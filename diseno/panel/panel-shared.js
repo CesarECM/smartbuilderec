@@ -72,7 +72,7 @@
         case 'evaluador':   typeof cargarPanelEvaluador === 'function' && await cargarPanelEvaluador(); break;
         case 'ce_admin':    typeof gceInit              === 'function' && await gceInit();              break;
         case 'oc_admin':    typeof ocInit               === 'function' && await ocInit();               break;
-        case 'admin':       typeof admInit              === 'function' && await admInit();              break;
+        case 'ce':          typeof admInit              === 'function' && await admInit();              break;
         case 'super_admin': typeof saInit               === 'function' && await saInit();               break;
       }
     }
