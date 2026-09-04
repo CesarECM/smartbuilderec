@@ -2,5 +2,12 @@
   "outputDirectory": "diseno",
   "buildCommand": "",
   "framework": null,
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/((?!mantenimiento$)[^.]*)",
+      "destination": "/mantenimiento",
+      "permanent": false
+    }
+  ]
 }
