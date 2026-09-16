@@ -105,7 +105,10 @@
 
   // ── Toast de estado de guardado ───────────────────────────────────────────
 
-  function _toastSync(tipo, mensaje) {
+  const _SOPORTE_EMAIL = "soporte@smartbuilderec.com";
+
+  function _toastSync(tipo, mensaje, opciones) {
+    const { code, action, soporte } = opciones || {};
     let el = document.getElementById("_sbe-save-toast");
     if (!el) {
       el = document.createElement("div");
@@ -113,7 +116,7 @@
       el.style.cssText = [
         "position:fixed", "bottom:24px", "right:80px", "z-index:8000",
         "padding:7px 14px", "border-radius:8px", "font-size:12px",
-        "font-weight:600", "color:#fff", "pointer-events:none",
+        "font-weight:600", "color:#fff",
         "box-shadow:0 2px 8px rgba(0,0,0,0.20)", "transition:opacity 0.35s",
         "opacity:0"
       ].join(";");
@@ -121,6 +124,9 @@
     }
     clearTimeout(el._t);
     el.style.opacity = "1";
+    el.style.pointerEvents = "none";
+    el.style.minWidth = "";
+    el.style.maxWidth = "";
     if (tipo === "saving") {
       el.style.background = "#374151";
       el.textContent = "⏳ Guardando...";
@@ -133,9 +139,43 @@
       el.textContent = mensaje || "⚠️ Pendiente de guardar";
       el._t = setTimeout(() => { el.style.opacity = "0"; }, 6000);
     } else if (tipo === "error") {
-      el.style.background = "#b91c1c";
-      el.textContent = mensaje || "⚠️ Error al guardar";
-      el._t = setTimeout(() => { el.style.opacity = "0"; }, 7000);
+      el.style.background = "#7f1d1d";
+      el.style.pointerEvents = "auto";
+      el.style.minWidth = "240px";
+      el.style.maxWidth = "320px";
+      // Línea 1: mensaje + botón cerrar
+      let html = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">`;
+      html += `<span style="flex:1;line-height:1.5">⚠️ ${mensaje || "Error al guardar"}</span>`;
+      html += `<button data-sbe-close style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0;line-height:1">✕</button>`;
+      html += `</div>`;
+      // Línea 2: código + acciones (si aplica)
+      if (code || action || soporte) {
+        html += `<div style="display:flex;align-items:center;gap:6px;margin-top:7px;flex-wrap:wrap">`;
+        if (code) {
+          html += `<span style="font-family:monospace;background:rgba(0,0,0,0.35);padding:2px 6px;border-radius:3px;font-size:10px;letter-spacing:.5px">${code}</span>`;
+        }
+        if (action?.label && action.fn) {
+          html += `<button data-sbe-action style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;cursor:pointer;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600">${action.label}</button>`;
+        } else if (action?.label && action.href) {
+          html += `<a href="${action.href}" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;text-decoration:none">${action.label}</a>`;
+        }
+        if (soporte) {
+          const _asunto = encodeURIComponent(`Error wizard — ${code || "?"}`);
+          const _cuerpo = encodeURIComponent(`Hola, tuve un problema al guardar mi curso.\nCódigo de error: ${code || "?"}\nFecha: ${new Date().toLocaleString("es-MX")}`);
+          html += `<a href="mailto:${_SOPORTE_EMAIL}?subject=${_asunto}&body=${_cuerpo}" style="color:rgba(255,255,255,0.65);font-size:10px;text-decoration:underline">Contactar soporte</a>`;
+        }
+        html += `</div>`;
+      }
+      el.innerHTML = html;
+      el.querySelector("[data-sbe-close]")?.addEventListener("click", () => {
+        el.style.opacity = "0"; clearTimeout(el._t);
+      });
+      if (action?.fn) {
+        el.querySelector("[data-sbe-action]")?.addEventListener("click", () => {
+          el.style.opacity = "0"; clearTimeout(el._t); action.fn();
+        });
+      }
+      el._t = setTimeout(() => { el.style.opacity = "0"; }, 15000);
     }
   }
 

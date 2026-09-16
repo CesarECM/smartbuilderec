@@ -7,6 +7,14 @@
   "use strict";
   const _c = window._sbeCore;
 
+  const ERR = {
+    SESSION: "SBE-S401",
+    UPDATE:  "SBE-S001",
+    INSERT:  "SBE-S002",
+    LIMIT:   "SBE-S003",
+    DELETED: "SBE-S004",
+  };
+
   function scheduleSyncToSupabase() {
     clearTimeout(_c.syncTimer);
     _c.emitir("sbe:sync-pending");
@@ -25,7 +33,13 @@
       const session = await getSession();
       window._sbeDebug?.log("sync", session ? "ok" : "error", "session", { uid: session?.user?.id?.slice(0, 8) || "null", adminMode: _c.adminMode });
       if (!session) {
-        _c.toastSync("error", "⚠️ Sesión expirada — vuelve a iniciar sesión");
+        if (typeof window.logEvento === 'function')
+          window.logEvento('wizard.sync.error', { tipo: 'session', error: 'no-session', code: ERR.SESSION });
+        _c.emitir("sbe:sync-error", { code: ERR.SESSION });
+        _c.toastSync("error", "Tu sesión expiró. Vuelve a iniciar sesión para continuar.", {
+          code: ERR.SESSION,
+          action: { label: "Iniciar sesión", href: "/login" }
+        });
         return;
       }
 
@@ -33,7 +47,8 @@
       window._sbeDebug?.log("sync", "req", "estado", { tieneDatos: !!estado.datos, nombreCurso: estado.datos?.nombreCurso || "(vacío)", claves: Object.keys(estado).join(",") || "(ninguno)" });
       if (!estado.datos || typeof estado.datos !== "object") {
         window._sbeDebug?.log("sync", "warn", "estado-vacio", "Sin ec0217_datos en cache — guardado cancelado");
-        _c.toastSync("ok");
+        _c.emitir("sbe:sync-noguardado");
+        _c.toastSync("warn", "Sin datos registrados aún");
         return;
       }
 
@@ -44,25 +59,32 @@
       window._sbeDebug?.log("sync", "req", "ruta", { planeacionId: planeacionId || "(ninguno)", nombreCurso, paso: pasoActual, ruta: planeacionId ? "UPDATE" : (_c.adminMode ? "admin-skip" : "INSERT") });
 
       if (planeacionId) {
-        // UPDATE
+        // UPDATE — no sobreescribir nombre_curso con string vacío
+        const updatePayload = { datos: estado, paso_actual: pasoActual };
+        if (nombreCurso) updatePayload.nombre_curso = nombreCurso;
         window._sbeDebug?.log("sync", "req", "update", { id: planeacionId, nombre: nombreCurso, paso: pasoActual });
         const { data: updated, error } = await _supabase
           .from("planeaciones")
-          .update({ datos: estado, nombre_curso: nombreCurso, paso_actual: pasoActual })
+          .update(updatePayload)
           .eq("id", planeacionId)
           .select("id");
         window._sbeDebug?.log("sync", error ? "error" : (updated?.length ? "ok" : "warn"), "update-result", { rows: updated?.length ?? 0, error: error?.message || null });
         if (error) {
           console.warn("[storage] Error al actualizar:", error.message);
-          _c.emitir("sbe:sync-error");
-          _c.toastSync("error", "⚠️ No se pudo guardar. Revisa tu conexión.");
+          _c.emitir("sbe:sync-error", { code: ERR.UPDATE });
+          _c.toastSync("error", "No se pudieron guardar los cambios. Revisa tu conexión.", {
+            code: ERR.UPDATE,
+            action: { label: "Reintentar", fn: syncToSupabase },
+            soporte: true
+          });
           if (typeof window.logEvento === 'function')
-            window.logEvento('wizard.sync.error', { tipo: 'update', error: error.message, planeacion_id: planeacionId });
+            window.logEvento('wizard.sync.error', { tipo: 'update', error: error.message, planeacion_id: planeacionId, code: ERR.UPDATE });
           return;
         }
         if (!updated?.length) {
           if (_c.adminMode) {
-            _c.toastSync("error", "⚠️ La planeación ya no existe. Cierra esta ventana.");
+            _c.emitir("sbe:sync-error", { code: ERR.DELETED });
+            _c.toastSync("error", "La planeación ya no existe. Cierra esta ventana.", { code: ERR.DELETED });
             return;
           }
           console.warn("[storage] Planeación eliminada externamente. Limpiando ID stale.");
@@ -89,7 +111,11 @@
             .eq("user_id", session.user.id);
           window._sbeDebug?.log("sync", total >= 5 ? "warn" : "ok", "limite", { total, max: 5 });
           if (total >= 5) {
-            _c.toastSync("error", "⚠️ Límite de 5 cursos alcanzado — elimina uno desde tu panel");
+            _c.emitir("sbe:sync-error", { code: ERR.LIMIT });
+            _c.toastSync("error", "Límite de 5 cursos activos alcanzado.", {
+              code: ERR.LIMIT,
+              action: { label: "Ir a mi panel", href: "/panel" }
+            });
             if (typeof showAlert === "function") {
               showAlert(
                 "Has alcanzado el límite de 5 cursos activos.\n\nPara guardar este nuevo curso, elimina uno desde tu panel de alumno.",
@@ -108,10 +134,14 @@
         window._sbeDebug?.log("sync", error ? "error" : "ok", "insert-result", { id: data?.id || null, error: error?.message || null });
         if (error) {
           console.warn("[storage] Error al crear:", error.message);
-          _c.emitir("sbe:sync-error");
-          _c.toastSync("error", "⚠️ No se pudo crear el curso. Intenta de nuevo.");
+          _c.emitir("sbe:sync-error", { code: ERR.INSERT });
+          _c.toastSync("error", "No se pudo crear el curso.", {
+            code: ERR.INSERT,
+            action: { label: "Reintentar", fn: syncToSupabase },
+            soporte: true
+          });
           if (typeof window.logEvento === 'function')
-            window.logEvento('wizard.sync.error', { tipo: 'insert', error: error.message });
+            window.logEvento('wizard.sync.error', { tipo: 'insert', error: error.message, code: ERR.INSERT });
           if (!sessionStorage.getItem("sbe_fallback_sent"))
             _enviarRespaldoAdmin(session, nombreCurso, estado, error.message);
           return;

@@ -28,8 +28,10 @@ export function initSyncUI() {
     icon.textContent = "⚠️"; text.textContent = "Sin guardar";
     text.style.color = "#fbbf24";
   });
-  window.addEventListener("sbe:sync-error", () => {
-    icon.textContent = "⚠️"; text.textContent = "Error al guardar";
+  window.addEventListener("sbe:sync-error", (e) => {
+    const code = e.detail?.code;
+    icon.textContent = "⚠️";
+    text.textContent = code ? `Error · ${code}` : "Error al guardar";
     text.style.color = "#f87171";
   });
   window.addEventListener("sbe:progress", (e) => {
