@@ -34,4 +34,21 @@ build/
 # Archivos raros o temporales
 *.docx
 *.pptx
+*.pdf
 .vercel
+
+# Supabase CLI (refs de proyecto / temporales sensibles)
+supabase/.temp/
+
+# Materiales de referencia locales (binarios grandes, datos de candidatos)
+EC/
+capturas/
+Formatos de ejemplo/
+
+# Scripts y SQL de un solo uso (ya ejecutados en Supabase)
+scripts/ec0616_*
+scripts/extraer_iec_ec0616.py
+scripts/generar_mapa_gce*.py
+scripts/generar_sql_ec0616*.py
+scripts/iec_ec0616_reactivos.json
+sql/update_ec0616_*.sql
