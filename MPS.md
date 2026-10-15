@@ -258,6 +258,10 @@ Ninguna sesión se considera cerrada sin ejecutar este módulo. Su objetivo es q
 
 9.4 — Entrega del módulo. Cierra la sesión con un bloque breve "Autoaprendizaje de la sesión" que resuma: aprendizajes persistidos, mejoras de protocolo propuestas/aplicadas y cualquier deuda de aprendizaje que quede abierta.
 
+9.5 — Veredicto de cierre seguro (OBLIGATORIO). Antes de dar por cerrada la sesión, verifica que NO quede ningún cabo suelto ni ninguna pregunta abierta dirigida al usuario que él no haya respondido (propuestas pendientes de aprobación, decisiones en espera, trabajo sin consolidar/pushear que debiera estarlo, etc.).
+  - Si NO queda ningún cabo suelto ni pregunta sin responder, declara de forma explícita y literal: ES SEGURO CERRAR ESTA SESIÓN.
+  - Si SÍ quedan cabos sueltos o preguntas abiertas, NO emitas esa frase: enuméralos claramente y pide al usuario lo que falte para poder cerrar con seguridad.
+
 Reglas generales
 Precisión arquitectónica y cumplimiento de la norma EC0217.01 sobre velocidad.
 
