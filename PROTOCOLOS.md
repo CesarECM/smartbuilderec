@@ -15,7 +15,7 @@ Registro vivo de los protocolos del marco de trabajo. Lo mantiene actualizado el
 | **MPS** | Creación/implementación de features nuevas (PASO 0→9) | ❌ working tree + nota |
 | **PCCA-X** | Corrección de errores (invoca Protocolo PCCA-X v2.0) | ❌ working tree + nota |
 | **INTEGRADOR** | Consolida memorias, commits atómicos, push a prod (con check pre-push) | ✅ **único** |
-| **IDEAS** | Captura/evalúa ideas → `RUTA_MAESTRA.md` | ❌ no toca código |
+| **IDEAS** | Captura/evalúa ideas → `RUTA_MAESTRA.md` (+ línea en `pendiente_commit.md`) | ❌ no toca código |
 | **MARCO/META** | Evolución del propio marco/protocolos (auto-invocado) | ❌ working tree + nota |
 
 Regla transversal: **solo el modo Integrador** puede commitear o hacer `git push`.

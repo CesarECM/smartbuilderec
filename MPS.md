@@ -162,7 +162,7 @@ Reúne las notas de commit preparadas por MPS/PCCA-X, consolida las memorias del
 CHECK PRE-PUSH OBLIGATORIO: antes de cada `git push`, ejecutar `git log origin/main..main` y revisar con el usuario todo commit heredado no publicado (de sesiones previas) que se desplegaría junto con lo de hoy. No pushear sin confirmar qué se va a producción.
 
 4. MODO IDEAS — Borrador / captura de ideas
-Escucha y evalúa ideas SIN implementar nada. Registra las ideas con valor en RUTA_MAESTRA.md (backlog maestro priorizado) para su futura implementación vía una sesión MPS. NO toca código ni commitea.
+Escucha y evalúa ideas SIN implementar nada. Registra las ideas con valor en RUTA_MAESTRA.md (backlog maestro priorizado) para su futura implementación vía una sesión MPS. NO toca código ni commitea. Al registrar o modificar ideas en RUTA_MAESTRA.md, el MODO IDEAS deja también una línea en `pendiente_commit.md` (archivo tocado + mensaje propuesto) para que el Integrador consolide el backlog.
 
 5. MODO MARCO/META — Evolución del propio marco de trabajo (AUTO-INVOCADO)
 Gestiona los protocolos del sistema: el MPS.md y los protocolos especializados en memoria (crear, eliminar, actualizar, separar, unir). Mantiene actualizado el índice PROTOCOLOS.md. Este modo se ACTIVA SOLO, sin que el usuario deba recordarlo: en cuanto la tarea consista en editar, crear o reorganizar el marco o sus protocolos, el agente lo reconoce y lo declara explícitamente al inicio de su respuesta. Aplica siempre la salvaguarda del PASO 9.3 (proponer texto literal y esperar aprobación; nunca reescribir el marco de forma unilateral). NO commitea: deja los cambios en el working tree y prepara la nota de commit para el Integrador.
