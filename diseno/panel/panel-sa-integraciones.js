@@ -26,6 +26,8 @@
         return { tag: 'VAR_FALTANTE', desc: msg };
       if (m.includes('invalid api key') || m.includes('authentication') || m.includes('unauthorized') || m.includes('api key') || m.includes('401'))
         return { tag: 'CLAVE_INVÁLIDA', desc: msg };
+      if (m.includes('no credits') || m.includes('insufficient_quota') || m.includes('credits remaining'))
+        return { tag: 'SIN_CRÉDITOS', desc: msg };
       if (m.includes('rate limit') || m.includes('429') || m.includes('too many'))
         return { tag: 'RATE_LIMIT', desc: msg };
       if (m.includes('timeout') || m.includes('timed out') || m.includes('connection') || m.includes('network'))

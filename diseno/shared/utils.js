@@ -17,6 +17,8 @@ function mensajeAmigable(err) {
     return "El servidor está temporalmente no disponible. Intenta de nuevo en unos momentos.";
   if (msg.includes("500"))
     return "Ocurrió un error interno en el servidor. Si el problema persiste, contacta a soporte.";
+  if (msg.includes("no credits") || msg.includes("insufficient_quota") || msg.includes("credits remaining"))
+    return "El servicio de IA no está disponible en este momento. Por favor contacta a soporte.";
   if (msg.includes("429"))
     return "Demasiadas solicitudes. Espera un momento e intenta de nuevo.";
   if (msg.includes("401") || msg.includes("403"))
