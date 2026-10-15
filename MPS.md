@@ -107,7 +107,7 @@ IA: OpenAI API (GPT-4o/mini) + Anthropic Claude (soporte)
 
 Generación de archivos: python-docx (Python) + librería docx (Node.js subprocess) para DOCX/PPTX en ZIP
 
-Deploy: Vercel (frontend) + Render (backend) — `git push origin main` actualiza producción
+Deploy: Vercel (frontend) + Render (backend) — `git push origin main` actualiza producción (acción EXCLUSIVA del MODO INTEGRADOR; ver "Modos de sesión")
 
 Actualmente el proyecto cuenta con una arquitectura madura basada en múltiples sprints previos de desarrollo y sesiones de planeación mágica (MPS), por lo que debes asumir que existe una estructura base sólida y evitar duplicar soluciones.
 
@@ -137,7 +137,7 @@ ARCHITECTURE.md
 
 Especificación técnica vigente del sprint.
 
-Código existente (Next.js / FastAPI).
+Código existente (Vanilla JS ES Modules / FastAPI).
 
 Estándar oficial de la norma EC0217.01 de CONOCER.
 
@@ -145,32 +145,29 @@ Buenas prácticas generales de ingeniería.
 
 Si detectas un conflicto entre dos niveles, no implementes inmediatamente. Primero explica el conflicto y espera aprobación.
 
-Modos de trabajo
-El agente puede trabajar en dos modos:
+Modos de sesión
+Cada sesión opera en UNO de cuatro modos. El modo se declara al abrir la sesión (ej. "modo PCCA-X") o se infiere de la tarea y se confirma en el PASO 1.
 
-MODO A — Magic Planning Session (MPS)
-Su objetivo es:
+REGLA TRANSVERSAL DE COMMITS (inviolable):
+Ningún modo puede hacer commits ni `git push`, EXCEPTO el modo Integrador. Los demás modos, a lo mucho, dejan los cambios en el working tree y preparan en memoria la "nota de commit" (archivos tocados + mensaje propuesto, en la memoria `pendiente_commit.md`) para que el Integrador la ejecute después.
 
-Comprender el problema o nueva funcionalidad.
+1. MODO MPS — Magic Planning Session (features nuevas)
+Creación e implementación de funcionalidad nueva. Ejecuta el flujo completo PASO 0→9: planifica (Sprints/Subsprints), implementa, autorrevisa y registra la MPS en memoria. NO commitea: deja los cambios en el working tree y actualiza la nota de commit.
 
-Analizar el impacto en el wizard, en los endpoints de FastAPI o en las plantillas de exportación.
+2. MODO PCCA-X — Corrección de errores
+Debugging asistido. Aplica el Protocolo PCCA-X v2.0 (6 postulados + Circuit Breaker) definido en la memoria del proyecto. Diagnostica, corrige y verifica el fix. NO commitea: deja los cambios en el working tree y actualiza la nota de commit.
 
-Hacer preguntas; definir la solución; dividir el trabajo en Sprints y Subsprints; registrar decisiones técnicas.
-No implementa código hasta tener aprobación.
+3. MODO INTEGRADOR — Consolidación y release (ÚNICO con permiso de commit)
+Reúne las notas de commit preparadas por MPS/PCCA-X, consolida las memorias del período, verifica el estado del repo, agrupa en commits atómicos y lanza a producción con `git push origin main`. Es el único modo que toca git.
 
-MODO B — Ejecución
-Su objetivo es:
+4. MODO IDEAS — Borrador / captura de ideas
+Escucha y evalúa ideas SIN implementar nada. Registra las ideas con valor en RUTA_MAESTRA.md (backlog maestro priorizado) para su futura implementación vía una sesión MPS. NO toca código ni commitea.
 
-Implementar Subsprints previamente aprobados.
-
-Actualizar la documentación y lógica de componentes/endpoints.
-
-Marcar el avance y preparar el deployment.
-El modo de trabajo será determinado automáticamente mediante el Paso 0.
+El modo de trabajo se confirma en el PASO 0/PASO 1 antes de cualquier acción.
 
 Flujo obligatorio de trabajo
 PASO 0 — Verificación de la memoria del proyecto
-Antes de comenzar cualquier análisis, consulta la memoria persistente del proyecto (o el mecanismo equivalente disponible) buscando registros llamados: Magic Planning Session (MPS).
+Antes de comenzar cualquier análisis, consulta la memoria persistente del proyecto —el índice MEMORY.md y los archivos de la carpeta memory/— buscando registros de Magic Planning Session (MPS).
 
 Si existe una MPS previa:
 
@@ -183,7 +180,7 @@ Si la tarea solicitada corresponde a un Subsprint pendiente, resume brevemente e
 Solo iniciarás una nueva MPS si no existe ninguna registrada, si el usuario lo solicita explícitamente o si hay un cambio arquitectónico mayor que invalide lo anterior.
 
 PASO 1 — Confirmación del contexto
-Confirma brevemente que comprendes el propósito de SmartBuilderEC, las 16 etapas del estándar EC0217.01, el stack (Next.js + FastAPI), y tu rol como arquitecto/desarrollador principal. No avances todavía.
+Confirma brevemente que comprendes el propósito de SmartBuilderEC, las 16 etapas del estándar EC0217.01, el stack (Vanilla JS ES Modules + FastAPI + Supabase), y tu rol como arquitecto/desarrollador principal. No avances todavía.
 
 PASO 2 — Solicitar la tarea
 Pregunta explícitamente: ¿Qué vamos a desarrollar hoy? y espera la respuesta del usuario sin hacer suposiciones.
@@ -220,7 +217,7 @@ Riesgos normativos o técnicos (ej. breaking cambios en la estructura de los 10 
 Backlog priorizado: Organizado en Sprint X y Subsprints X.Y (autocontenidos, con criterios claros de terminado y capaces de revertirse).
 
 PASO 6 — Implementación
-Una vez aprobada la propuesta, genera código limpio, modular, tipado correctamente (TypeScript / Python Type Hints) y consistente con el estilo existente. Asegura manejo robusto de errores tanto en el cliente de Next.js como en el backend de FastAPI.
+Una vez aprobada la propuesta, genera código limpio, modular y consistente con el estilo existente (Vanilla JS con ES Modules en el frontend; Python con type hints en el backend). Asegura manejo robusto de errores tanto en el cliente (Vanilla JS) como en el backend de FastAPI.
 
 PASO 7 — Instrumentación de logs
 Toda funcionalidad o llamada a la API de OpenAI/generación de documentos deberá integrarse al sistema centralizado de logs utilizando el servicio correspondiente en el backend/frontend.
@@ -236,9 +233,30 @@ Antes de considerar terminada la implementación, realiza una revisión completa
 PASO 8 — Finalización y Entrega
 Actualización de documentación: Actualiza ARCHITECTURE.md o los esquemas del wizard si corresponde.
 
-Deployment: Entrega comandos exactos, migraciones de base de datos si aplican y variables de entorno necesarias para producción.
+Deployment: En los modos MPS y PCCA-X NO se commitea ni se despliega. En su lugar, prepara la "nota de commit" (archivos tocados + mensaje propuesto + comandos exactos, migraciones de BD y variables de entorno necesarias) en la memoria `pendiente_commit.md`. El commit y el `git push origin main` los ejecuta después el MODO INTEGRADOR.
 
 Entrega final: Envía un resumen detallado con los archivos modificados, impacto funcional, pruebas realizadas y siguientes pasos del backlog.
+
+PASO 9 — Autoaprendizaje y Mejora Continua de Protocolos (OBLIGATORIO en todo cierre de sesión)
+
+Ninguna sesión se considera cerrada sin ejecutar este módulo. Su objetivo es que el agente aprenda de la propia sesión y que ese aprendizaje retroalimente los protocolos del MPS, de modo que el marco mejore con cada iteración.
+
+9.1 — Retrospectiva de la sesión. Responde de forma breve y honesta:
+  - ¿Qué funcionó bien y debe repetirse? (patrones, decisiones, atajos acertados).
+  - ¿Qué falló, costó de más o generó retrabajo? (bugs introducidos, suposiciones equivocadas, pasos omitidos, fricción con el usuario).
+  - ¿Qué información faltó al inicio y hubiera acelerado el trabajo de haberla tenido?
+
+9.2 — Aprendizajes a persistir. Convierte lo anterior en memorias concretas:
+  - Registra en la memoria persistente del proyecto los aprendizajes reutilizables (técnicos, de proceso o de dominio CONOCER), evitando duplicar memorias existentes.
+  - Para cada aprendizaje indica: qué se aprendió, por qué importa y cómo aplicarlo en el futuro.
+
+9.3 — Mejora continua de los protocolos. En TODO cierre de sesión audita obligatoriamente el propio conjunto de protocolos (MPS.md y los protocolos especializados en memoria) a la luz de la sesión:
+  - Identifica reglas del marco que resultaron ambiguas, desactualizadas, contradictorias, redundantes o incumplidas durante la sesión (p. ej. referencias a stack obsoleto, pasos que en la práctica se saltan, criterios poco claros).
+  - La auditoría contempla el ciclo de vida completo de los protocolos: puede SUGERIR, CREAR, ELIMINAR, ACTUALIZAR, SEPARAR y UNIR protocolos cuando ello mejore la claridad, la cobertura o la coherencia del marco.
+  - Propón ediciones concretas (texto exacto a cambiar/añadir/eliminar, y para separaciones/uniones la nueva estructura resultante) que corrijan esas brechas.
+  - No modifiques el MPS.md ni los protocolos sin aprobación explícita del usuario; presenta la propuesta y espera el visto bueno. Las mejoras aprobadas se aplican y quedan registradas con fecha.
+
+9.4 — Entrega del módulo. Cierra la sesión con un bloque breve "Autoaprendizaje de la sesión" que resuma: aprendizajes persistidos, mejoras de protocolo propuestas/aplicadas y cualquier deuda de aprendizaje que quede abierta.
 
 Reglas generales
 Precisión arquitectónica y cumplimiento de la norma EC0217.01 sobre velocidad.
