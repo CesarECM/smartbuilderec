@@ -146,7 +146,7 @@ Buenas prácticas generales de ingeniería.
 Si detectas un conflicto entre dos niveles, no implementes inmediatamente. Primero explica el conflicto y espera aprobación.
 
 Modos de sesión
-Cada sesión opera en UNO de cuatro modos. El modo se declara al abrir la sesión (ej. "modo PCCA-X") o se infiere de la tarea y se confirma en el PASO 1.
+Cada sesión opera en UNO de cinco modos. El modo se declara al abrir la sesión (ej. "modo PCCA-X") o se infiere de la tarea y se confirma en el PASO 1.
 
 REGLA TRANSVERSAL DE COMMITS (inviolable):
 Ningún modo puede hacer commits ni `git push`, EXCEPTO el modo Integrador. Los demás modos, a lo mucho, dejan los cambios en el working tree y preparan en memoria la "nota de commit" (archivos tocados + mensaje propuesto, en la memoria `pendiente_commit.md`) para que el Integrador la ejecute después.
@@ -159,9 +159,13 @@ Debugging asistido. Aplica el Protocolo PCCA-X v2.0 (6 postulados + Circuit Brea
 
 3. MODO INTEGRADOR — Consolidación y release (ÚNICO con permiso de commit)
 Reúne las notas de commit preparadas por MPS/PCCA-X, consolida las memorias del período, verifica el estado del repo, agrupa en commits atómicos y lanza a producción con `git push origin main`. Es el único modo que toca git.
+CHECK PRE-PUSH OBLIGATORIO: antes de cada `git push`, ejecutar `git log origin/main..main` y revisar con el usuario todo commit heredado no publicado (de sesiones previas) que se desplegaría junto con lo de hoy. No pushear sin confirmar qué se va a producción.
 
 4. MODO IDEAS — Borrador / captura de ideas
 Escucha y evalúa ideas SIN implementar nada. Registra las ideas con valor en RUTA_MAESTRA.md (backlog maestro priorizado) para su futura implementación vía una sesión MPS. NO toca código ni commitea.
+
+5. MODO MARCO/META — Evolución del propio marco de trabajo (AUTO-INVOCADO)
+Gestiona los protocolos del sistema: el MPS.md y los protocolos especializados en memoria (crear, eliminar, actualizar, separar, unir). Mantiene actualizado el índice PROTOCOLOS.md. Este modo se ACTIVA SOLO, sin que el usuario deba recordarlo: en cuanto la tarea consista en editar, crear o reorganizar el marco o sus protocolos, el agente lo reconoce y lo declara explícitamente al inicio de su respuesta. Aplica siempre la salvaguarda del PASO 9.3 (proponer texto literal y esperar aprobación; nunca reescribir el marco de forma unilateral). NO commitea: deja los cambios en el working tree y prepara la nota de commit para el Integrador.
 
 El modo de trabajo se confirma en el PASO 0/PASO 1 antes de cualquier acción.
 
@@ -255,6 +259,7 @@ Ninguna sesión se considera cerrada sin ejecutar este módulo. Su objetivo es q
   - La auditoría contempla el ciclo de vida completo de los protocolos: puede SUGERIR, CREAR, ELIMINAR, ACTUALIZAR, SEPARAR y UNIR protocolos cuando ello mejore la claridad, la cobertura o la coherencia del marco.
   - Propón ediciones concretas (texto exacto a cambiar/añadir/eliminar, y para separaciones/uniones la nueva estructura resultante) que corrijan esas brechas.
   - No modifiques el MPS.md ni los protocolos sin aprobación explícita del usuario; presenta la propuesta y espera el visto bueno. Las mejoras aprobadas se aplican y quedan registradas con fecha.
+  - Mantén actualizado el índice PROTOCOLOS.md siempre que se cree, elimine o reorganice cualquier protocolo.
 
 9.4 — Entrega del módulo. Cierra la sesión con un bloque breve "Autoaprendizaje de la sesión" que resuma: aprendizajes persistidos, mejoras de protocolo propuestas/aplicadas y cualquier deuda de aprendizaje que quede abierta.
 
