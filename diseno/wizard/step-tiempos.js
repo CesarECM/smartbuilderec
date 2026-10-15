@@ -11,24 +11,46 @@ function _getDuracionRequerida() {
   } catch (_) { return DURACION_MINIMA_MIN; }
 }
 
+// Estructura canónica de 30 actividades. Los títulos y nombres de sección
+// DEBEN coincidir exactamente con los que el backend busca al armar la Carta
+// Descriptiva (backend/services/doc_planeacion_filas.py → _tiempo/_subtotal).
+// Suma = 120 min (= DURACION_MINIMA_MIN).
 const _DEFAULT_TIEMPOS = [
-  { seccion: "Apertura", filas: [
-    { titulo: "Encuadre y presentación del instructor", tiempo: 10 },
-    { titulo: "Técnica de integración grupal",          tiempo: 10 },
-    { titulo: "Evaluación diagnóstica",                 tiempo: 10 },
+  { seccion: "Inicio / Encuadre del curso", filas: [
+    { titulo: "Presentación del Instructor",             tiempo: 1 },
+    { titulo: "Lista de asistencia",                     tiempo: 1 },
+    { titulo: "Presentación de los participantes",       tiempo: 1 },
+    { titulo: "Técnica Rompe Hielo o de integración",    tiempo: 5 },
+    { titulo: "Objetivos del curso/sesión",              tiempo: 2 },
+    { titulo: "Descripción general",                     tiempo: 1 },
+    { titulo: "Temario del curso/sesión",                tiempo: 1 },
+    { titulo: "Preguntas de la experiencia",             tiempo: 3 },
+    { titulo: "Beneficios del curso",                    tiempo: 2 },
+    { titulo: "Tipo de evaluaciones",                    tiempo: 2 },
+    { titulo: "Expectativas del curso/sesión",           tiempo: 3 },
+    { titulo: "Reglas de operación del curso",           tiempo: 1 },
+    { titulo: "Contrato de aprendizaje",                 tiempo: 3 },
+    { titulo: "Evaluación diagnóstica",                  tiempo: 5 },
   ]},
-  { seccion: "Desarrollo", filas: [
-    { titulo: "Técnica expositiva",          tiempo: 30 },
-    { titulo: "Técnica demostrativa",        tiempo: 20 },
-    { titulo: "Técnica energizante",         tiempo: 10 },
-    { titulo: "Técnica de diálogo/discusión",tiempo: 15 },
+  { seccion: "Desarrollo del curso", filas: [
+    { titulo: "Técnica expositiva",        tiempo: 25 },
+    { titulo: "Técnica demostrativa",      tiempo: 20 },
+    { titulo: "Evaluación formativa",      tiempo: 5 },
+    { titulo: "Descanso",                  tiempo: 3 },
+    { titulo: "Técnica Energizante",       tiempo: 3 },
+    { titulo: "Técnica diálogo-discusión", tiempo: 15 },
+    { titulo: "Evaluación final",          tiempo: 5 },
   ]},
-  { seccion: "Cierre", filas: [
-    { titulo: "Resumen y compromisos de aplicación", tiempo: 5 },
-  ]},
-  { seccion: "Evaluación", filas: [
-    { titulo: "Evaluación sumativa",  tiempo: 5 },
-    { titulo: "Evaluación de reacción", tiempo: 5 },
+  { seccion: "Cierre del curso", filas: [
+    { titulo: "Conclusión",                                 tiempo: 1 },
+    { titulo: "Resumen general del curso",                  tiempo: 1 },
+    { titulo: "Logro de expectativas del curso",            tiempo: 1 },
+    { titulo: "Logro de los objetivos",                     tiempo: 1 },
+    { titulo: "Sugerencias de continuidad del aprendizaje", tiempo: 1 },
+    { titulo: "Referencia(s) bibliográfica",                tiempo: 1 },
+    { titulo: "Compromisos de aplicación del aprendizaje",  tiempo: 1 },
+    { titulo: "Evaluación de satisfacción",                 tiempo: 5 },
+    { titulo: "Cierre",                                     tiempo: 1 },
   ]},
 ];
 
