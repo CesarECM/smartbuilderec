@@ -1,4 +1,4 @@
-from services.doc_planeacion_xml import _tiempo, _subtotal, _inst
+from services.doc_planeacion_xml import _tiempo, _subtotal, _suma, _inst
 
 
 def _filas_previo(_d):
@@ -17,7 +17,7 @@ def _filas_apertura(d):
     obj = d.get('objetivos') or {}; tem = d.get('temario') or {}; ev = d.get('evaluaciones') or {}
     rh     = tec.get('rhNombre', 'Técnica Rompe Hielo')
     rh_raw = tec.get('rhDetalle', '')
-    rh_t   = _tiempo(d, "Presentación del Instructor")
+    rh_t   = _tiempo(d, "Técnica Rompe Hielo o de integración")
     partes = [p for p in rh_raw.split('\n\n') if not any(p.strip().startswith(x) for x in ('d)','e)','f)'))]
     partes = [
         p.replace('c) Mencionará el tiempo para realizarla.', f'c) Mencionará el tiempo para realizarla: {rh_t}')
@@ -38,7 +38,8 @@ def _filas_apertura(d):
              "El instructor propiciará la presentación de los participantes.",
              f'El instructor aplicará la Técnica Rompe Hielo / Integración: "{rh}".\n{rh_det}',
          ],
-         'duracion': _tiempo(d, "Presentación del Instructor"),
+         'duracion': _suma(d, ["Presentación del Instructor", "Lista de asistencia",
+                               "Presentación de los participantes", "Técnica Rompe Hielo o de integración"]),
          'tecnica': f"Técnica grupal:\n{rh}", 'material': "Lista de asistencia\nMateriales de la técnica"},
         {'etapa': "2. Presentación del curso",
          'actividades': [
@@ -49,7 +50,9 @@ def _filas_apertura(d):
              f"El instructor explicará los beneficios del curso/sesión.\n{d.get('beneficios','')}",
              f"El instructor especificará el tipo de evaluaciones a realizar.\n\na) Evaluación Diagnóstica ({_inst(ev.get('instDiagnostica'),'Cuestionario')}) — Al inicio. {pct_d}% solo referencial.\nb) Evaluación Formativa ({_inst(ev.get('instFormativa'),'Lista de cotejo')}) — Intermedia. {pct_f}%.\nc) Evaluación Sumativa ({_inst(ev.get('instSumativa'),'Cuestionario')}) — Al final. {pct_s}%.\nd) Criterios: Conocimientos Teóricos, Actitud y comportamiento, Evaluaciones aplicadas.",
          ],
-         'duracion': _tiempo(d, "Objetivos del curso/sesión"),
+         'duracion': _suma(d, ["Objetivos del curso/sesión", "Descripción general",
+                               "Temario del curso/sesión", "Preguntas de la experiencia",
+                               "Beneficios del curso", "Tipo de evaluaciones"]),
          'tecnica': "", 'material': "Laptop, proyector, PowerPoint"},
         {'etapa': "3. Acuerdos y compromisos",
          'actividades': [
@@ -57,7 +60,8 @@ def _filas_apertura(d):
              f"El instructor acordará las reglas de operación.\n{NL.join(reglas)}",
              "El instructor realizará el contrato de aprendizaje con los participantes.",
          ],
-         'duracion': _tiempo(d, "Reglas de operación del curso"),
+         'duracion': _suma(d, ["Expectativas del curso/sesión", "Reglas de operación del curso",
+                               "Contrato de aprendizaje"]),
          'tecnica': "", 'material': "Hojas blancas\nFormatos de contrato de aprendizaje"},
         {'etapa': "4. Evaluación diagnóstica",
          'actividades': [

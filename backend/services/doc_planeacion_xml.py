@@ -166,6 +166,19 @@ def _subtotal(d, seccion):
             return f"{sum(int(f.get('tiempo') or 0) for f in (b.get('filas') or []))} min"
     return "—"
 
+def _suma(d, titulos):
+    """Suma los tiempos de varias actividades (una etapa de la carta que agrupa
+    varias microactividades del wizard). Devuelve '' si no encuentra ninguna."""
+    norm = lambda s: ' '.join(str(s or '').lower().split())
+    wanted = {norm(t) for t in titulos}
+    total, found = 0, False
+    for b in (d.get('tiempos') or []):
+        for f in (b.get('filas') or []):
+            if norm(f.get('titulo', '')) in wanted:
+                total += int(f.get('tiempo') or 0)
+                found = True
+    return f"{total} min" if found else ""
+
 def _inst(texto, fallback=""):
     if not texto: return fallback
     lines = [l.strip() for l in str(texto).split('\n') if l.strip()]
