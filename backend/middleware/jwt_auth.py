@@ -19,6 +19,9 @@ _SOPORTE_PUBLICOS = {
     ("POST", "/auth/reset-password"),
     ("POST", "/wizard/sync-fallback"),
     ("GET",  "/gce/invitaciones/verificar"),
+    # EC0366 — prototipo del wizard de creación de cursos (sin cuentas todavía)
+    ("POST", "/ec0366/ia/info-general"),
+    ("POST", "/ec0366/generate-doc"),
 }
 
 
